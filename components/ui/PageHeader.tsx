@@ -1,0 +1,15 @@
+interface PageHeaderProps {
+  title: string;
+  subtitle?: string;
+}
+
+export default function PageHeader({ title, subtitle }: PageHeaderProps) {
+  return (
+    <div className="page-header">
+      <div className="container">
+        <h1>{title}</h1>
+        {subtitle && <p>{subtitle}</p>}
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,406 @@
+{
+  "common": {
+    "siteName": "LovelyGirls Praha",
+    "tagline": "Prémiové společnice v Praze",
+    "available_now": "K dispozici",
+    "by_appointment": "Po domluvě",
+    "today": "Dnes",
+    "tomorrow": "Zítra",
+    "view_profile": "Otevřít profil",
+    "book_now": "Rezervovat",
+    "verified": "Ověřená",
+    "vip": "VIP",
+    "new_badge": "Nová",
+    "show_all": "Zobrazit vše",
+    "back_home": "Zpět na úvod",
+    "contact_us": "Napsat"
+  },
+  "nav": {
+    "home": "Úvod",
+    "girls": "Dívky",
+    "schedule": "Rozvrh",
+    "pricing": "Ceník",
+    "discounts": "Slevy",
+    "faq": "Časté dotazy",
+    "reviews": "Recenze",
+    "contact": "Kontakt",
+    "about": "O nás",
+    "terms": "Podmínky",
+    "privacy": "Soukromí",
+    "blog": "Blog",
+    "join": "Přidat se",
+    "membership": "VIP členství",
+    "membership_apply": "Žádost"
+  },
+  "geo": {
+    "home_lead": "LovelyGirls Praha provozuje 4 soukromé apartmány v Praze 1, 2, 3 a 8. Všech 13 ověřených společnic, otevřeno denně 10:00–22:30.",
+    "divky_lead": "12 ověřených společnic v Praze, denně 10:00–22:30. Filtrujte podle dostupnosti, lokace nebo barvy vlasů.",
+    "cenik_lead": "Programy 30 minut od 2 000 Kč, 60 minut 2 500 Kč. Hotovost a karta v apartmánu.",
+    "faq_lead": "Odpovědi na 30 nejčastějších otázek o rezervaci, cenách, diskrétnosti a apartmánech.",
+    "slevy_lead": "Věrnostní program: 10 % po 3. návštěvě, 12 % po 5., 15 % po 10. Plus časově omezené akce.",
+    "rozvrh_lead": "Aktuální rozvrh společnic na dnes a 6 dní dopředu, podle apartmánu."
+  },
+  "homepage": {
+    "hero_title": "Diskrétní společnice v centru Prahy",
+    "hero_subtitle": "Ověřené profily, soukromé apartmány, rychlý kontakt přes WhatsApp nebo Telegram.",
+    "cta_browse": "Procházet společnice",
+    "cta_today": "Dnes online",
+    "cta_contact": "Napsat",
+    "topbar": {
+      "open_label": "Otevřeno",
+      "hours": "10:00 — 22:30",
+      "verified": "Ověřené profily",
+      "discreet": "Diskrétní apartmány",
+      "call_btn": "Zavolat"
+    },
+    "hero": {
+      "eyebrow": "Diskrétní · Ověřené · Soukromé",
+      "h1_main": "Společnice Praha",
+      "h1_accent": "Luxusní escort",
+      "subtitle": "Soukromé apartmány v centru, ověřené profily a rychlý kontakt. Diskrétně a bez registrace.",
+      "cta_browse": "Zobrazit dívky →",
+      "cta_today": "Dnes online",
+      "cta_contact": "Jak nás kontaktovat",
+      "stats_girls": "společnic",
+      "stats_now": "online nyní",
+      "stats_reviews": "recenzí"
+    },
+    "featuredNew": {
+      "eyebrow": "Nově na webu",
+      "h2": "Právě přidána",
+      "sub": "Seznamte se s naší nejnovější společnicí",
+      "badge": "NOVÁ",
+      "link_text": "Otevřít profil"
+    },
+    "girlsGrid": {
+      "eyebrow": "Dnes na apartmánu",
+      "h2": "Naše společnice",
+      "sub": "Vyberte si a napište. Všechny profily ověřujeme osobně.",
+      "show_all": "Zobrazit všech {count} společnic"
+    },
+    "activity": {
+      "eyebrow": "Aktualizace",
+      "h2": "Co je nového",
+      "sub": "Nejnovější aktivita našich společnic",
+      "added_photos": "přidala {count} nových fotografií",
+      "added_photo": "přidala novou fotografii",
+      "received_review": "obdržela recenzi {rating}★",
+      "no_recent": "Zatím žádné nedávné aktualizace."
+    },
+    "trust": {
+      "verified": {
+        "title": "Ověřené profily",
+        "text": "Aktuální fotografie u každé společnice"
+      },
+      "fast": {
+        "title": "Rychlá odpověď",
+        "text": "Reagujeme do 5 minut přes WhatsApp"
+      },
+      "discreet": {
+        "title": "Plná diskrétnost",
+        "text": "Soukromý apartmán, bez registrace"
+      },
+      "loyalty": {
+        "title": "Věrnostní program",
+        "text": "Slevy a výhody pro stálé klienty"
+      }
+    },
+    "reviews": {
+      "eyebrow": "Co říkají klienti",
+      "h2": "Ověřené recenze",
+      "sub": "Reálné zkušenosti od reálných klientů",
+      "show_all": "Všechny recenze"
+    },
+    "hashtags": {
+      "eyebrow": "Vyhledávané",
+      "h2": "Oblíbené kategorie",
+      "sub": "Vyberte společnici podle preferencí"
+    },
+    "locations": {
+      "eyebrow": "Naše apartmány",
+      "h2": "Diskrétní apartmány v Praze",
+      "sub": "Soukromé byty v centru, dostupné MHD i autem",
+      "note": "Soukromý vchod",
+      "address_after_booking": "Přesnou adresu zašleme po potvrzení termínu na WhatsApp nebo Telegram.",
+      "main_apartment": "Hlavní apartmán",
+      "detail_cta": "Zobrazit apartmán →"
+    },
+    "contact": {
+      "eyebrow": "Jak nás kontaktovat",
+      "h2": "3 kroky k diskrétnímu setkání",
+      "sub": "Bez registrace. Bez čekání. Bez komplikací.",
+      "step1": {
+        "title": "Vyberte si společnici",
+        "text": "Prohlédněte profily, fotografie a aktuální dostupnost"
+      },
+      "step2": {
+        "title": "Napište nám",
+        "text": "Pošlete zprávu přes WhatsApp nebo Telegram — odpovídáme do 5 minut"
+      },
+      "step3": {
+        "title": "Užijte si setkání",
+        "text": "Obdržíte adresu apartmánu a přijdete v dohodnutý čas"
+      }
+    },
+    "finalCta": {
+      "eyebrow": "Napište nám",
+      "h2": "Máte čas dnes?",
+      "sub": "Odpovídáme do 5 minut. Diskrétně.",
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram",
+      "call": "Zavolat"
+    }
+  },
+  "card": {
+    "today_hours": "Dnes {hours}",
+    "by_appointment_short": "Po domluvě",
+    "age": "{age} let",
+    "height_cm": "cm",
+    "weight_kg": "kg",
+    "bust_label": "prsa",
+    "location_format": "Praha · {district}",
+    "away_label": "Po domluvě"
+  },
+  "schedule": {
+    "page_title": "Dnešní rozvrh společnic",
+    "page_description": "Kdo dnes a zítra pracuje.",
+    "all_locations": "Všechny apartmány",
+    "no_one_today": "Dnes nikdo nepracuje.",
+    "working_now": "Pracuje nyní",
+    "starting_at": "Začíná v {time}"
+  },
+  "footer": {
+    "about": "O nás",
+    "terms": "Obchodní podmínky",
+    "privacy": "Ochrana soukromí",
+    "cookies": "Cookies",
+    "age_disclaimer": "Pouze pro dospělé 18+",
+    "rights": "Všechna práva vyhrazena.",
+    "brand_desc": "Diskrétní escort služby v Praze. Ověřené společnice v soukromých apartmánech v centru.",
+    "pages_heading": "Stránky",
+    "contact_heading": "Kontakt",
+    "legal_heading": "Právní informace",
+    "compliance": "Provozováno v souladu s českým právem",
+    "disclaimer": "Veškeré informace umístěné na tomto webu jsou zveřejňovány pro reklamní účely poskytovatelů služeb. Provozovatel této stránky neodpovídá za správnost a aktuálnost zveřejněných informací ani za poskytované služby. Podmínkou inzerce je pronájem pokoje.",
+    "call_btn": "Zavolat",
+    "brand_copy": "LovelyGirls Praha © {year}"
+  },
+  "ageGate": {
+    "title": "Pouze pro dospělé",
+    "subtitle": "Stránka obsahuje obsah pouze pro dospělé. Vstupem potvrzujete, že je vám 18 let nebo více a že jste zletilí podle zákonů své země.",
+    "enter": "Vstoupit",
+    "leave": "Odejít"
+  },
+  "languageSwitcher": {
+    "label": "Jazyk",
+    "cs": "Čeština",
+    "en": "English",
+    "de": "Deutsch",
+    "uk": "Українська"
+  },
+  "girls": {
+    "h1": "Společnice Praha",
+    "sub": "Ověřené profily, diskrétní apartmány v centru Prahy",
+    "results_count": "{count} společnic",
+    "search_placeholder": "Hledat podle jména…",
+    "filter": {
+      "all": "Všechny",
+      "available": "Online nyní"
+    },
+    "sort": {
+      "newest": "Nejnovější",
+      "name": "Jméno A–Z",
+      "available_first": "Online jako první"
+    },
+    "no_results": "Žádné společnice neodpovídají filtru. Zkuste jiné nastavení."
+  },
+  "profil": {
+    "verified": "Fotografie ověřené",
+    "tabs": {
+      "miry": "Míry",
+      "vzhled": "Vzhled",
+      "sluzby": "Služby"
+    },
+    "acc": {
+      "section_miry": "Míry",
+      "section_vzhled": "Vzhled & detaily",
+      "section_sluzby": "Služby",
+      "height": "Výška",
+      "weight": "Váha",
+      "bust": "Prsa",
+      "waist": "Pas",
+      "hips": "Boky",
+      "bust_natural": "přírodní",
+      "bust_implant": "implantát",
+      "eyes": "Oči",
+      "hair": "Vlasy",
+      "tattoo": "Tetování",
+      "piercing": "Piercing",
+      "yes": "Ano",
+      "no": "Ne"
+    },
+    "bio_label": "O mně",
+    "height_label": "Výška",
+    "weight_label": "Váha",
+    "bust_label": "Prsa",
+    "eyes_label": "Oči",
+    "hair_label": "Vlasy",
+    "cta": {
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram",
+      "call": "Zavolat"
+    },
+    "gallery": {
+      "h2": "Galerie"
+    },
+    "pricing": {
+      "h2": "Ceník"
+    },
+    "reviews": {
+      "h2": "Recenze",
+      "show_all": "Zobrazit všechny recenze ({count}) →"
+    },
+    "services": {
+      "h2": "Služby & zkušenosti",
+      "included": "V ceně",
+      "extra": "Příplatkové",
+      "on_request": "Na domluvě",
+      "tag_negotiable": "Domluva"
+    },
+    "body_art": {
+      "h2": "Tetování & piercing",
+      "tattoo": "Tetování",
+      "piercing": "Piercing",
+      "coverage": "pokrytí těla",
+      "tattoo_levels": {
+        "none": "Bez tetování",
+        "discreet": "Diskrétní",
+        "visible": "Viditelné",
+        "significant": "Výrazné",
+        "full": "Celé tělo"
+      },
+      "piercing_levels": {
+        "none": "Bez piercingu",
+        "ears": "Uši",
+        "multiple": "Více míst",
+        "body": "Tělo"
+      }
+    },
+    "styl_h": "STYL & ŠATNÍK",
+    "styl_sub": "přizpůsobí se · řekni styl předem",
+    "styl_note": "{name} se přizpůsobí jakémukoliv stylu — gala, business, plavky, lingerie. Stačí říct předem.",
+    "kde_h": "KDE JI NAJDEŠ",
+    "kde_sub": "incall · 3 apartmány Praha",
+    "kde_address_note": "Adresu obdržíš po potvrzení termínu.",
+    "jazyky_h": "JAZYKY",
+    "experience_h": "ZKUŠENOSTI & SLUŽBY",
+    "experience_col_programy": "Programy",
+    "experience_col_spolecenske": "Společenské",
+    "experience_col_privatni": "Privátní",
+    "lang_level_native": "Rodný",
+    "lang_level_fluent": "Plynně",
+    "lang_level_basic": "Základy"
+  },
+  "blog": {
+    "h1": "Blog",
+    "eyebrow": "Průvodce & tipy",
+    "sub": "Vše o diskrétních společnicích v Praze. Tipy, průvodci a novinky.",
+    "read_more": "Přečíst →",
+    "related": "Další články",
+    "by": "Autor",
+    "published": "Publikováno",
+    "empty": "Žádné články."
+  },
+  "onas": {
+    "eyebrow": "O nás",
+    "h1": "LovelyGirls Praha",
+    "lead": "Prémiová escort agentura v centru Prahy. Diskrétnost, ověřené profily a soukromé apartmány.",
+    "s1_h2": "Kdo jsme",
+    "s1_text": "LovelyGirls Praha je prémiová escort agentura se soukromými apartmány v centru. Spolupracujeme pouze s ověřenými společnicemi — žádné falešné fotografie, žádné překvapení.",
+    "s2_h2": "Naše hodnoty",
+    "s2_text": "Stojíme na diskrétnosti a transparentnosti. Žádné skryté poplatky, žádné databáze klientů, žádné účtenky. Co se stane v apartmánu, zůstává v apartmánu.",
+    "s3_h2": "Proč si vybrat nás",
+    "s3_text": "Soukromé apartmány v centru Prahy. Otevřeno denně 10:00–22:30. Odpovídáme do 5 minut přes WhatsApp nebo Telegram. Bez registrace."
+  },
+  "kontakt": {
+    "eyebrow": "Kontakt",
+    "h1": "Napište nebo zavolejte",
+    "lead": "Odpovídáme do 5 minut. Bez registrace, plná diskrétnost.",
+    "whatsapp_label": "WhatsApp",
+    "telegram_label": "Telegram",
+    "phone_label": "Telefon",
+    "whatsapp_value": "+420 XXX XXX XXX",
+    "telegram_value": "@lovelygirls_prague",
+    "phone_value": "+420 XXX XXX XXX",
+    "whatsapp_desc": "Nejrychlejší odpověď",
+    "telegram_desc": "Plně anonymně",
+    "phone_desc": "Denně 10:00–22:30"
+  },
+  "podminky": {
+    "eyebrow": "Právní informace",
+    "h1": "Obchodní podmínky",
+    "lead": "Podmínky používání webu LovelyGirls Praha.",
+    "s1_h2": "1. Úvodní ustanovení",
+    "s1_text": "Tento web je provozován výhradně pro reklamní účely poskytovatelů služeb. Provozovatel webu nezprostředkovává sexuální služby a nenese odpovědnost za poskytované služby inzerovaných osob.",
+    "s2_h2": "2. Věkové omezení",
+    "s2_text": "Web je určen výhradně osobám starším 18 let. Vstupem na web potvrzujete, že jste dosáhli věku 18 let a jste plnoletí podle zákonů vaší země.",
+    "s3_h2": "3. Podmínky inzerce",
+    "s3_text": "Podmínkou inzerce na tomto webu je pronájem pokoje. Provozovatel webu neposkytuje ani nezprostředkovává sexuální služby."
+  },
+  "soukromi": {
+    "eyebrow": "Ochrana osobních údajů",
+    "h1": "Zásady ochrany soukromí",
+    "lead": "Jak nakládáme s vašimi osobními údaji.",
+    "s1_h2": "Jaké údaje shromažďujeme",
+    "s1_text": "Při návštěvě webu shromažďujeme anonymizované analytické údaje (počet návštěv, zobrazené stránky). Osobní údaje shromažďujeme pouze v případě, že nás sami kontaktujete.",
+    "s2_h2": "Cookies",
+    "s2_text": "Web používá nezbytné cookies pro správné fungování (souhlas s věkovým omezením). Analytické cookies používáme v anonymizované podobě.",
+    "s3_h2": "Vaše práva",
+    "s3_text": "Máte právo požádat o výmaz svých osobních údajů. Kontaktujte nás přes WhatsApp nebo Telegram."
+  },
+  "join": {
+    "h1": "Přidejte se k týmu",
+    "sub": "Vyplňte přihlášku a náš tým vás kontaktuje do 24 hodin.",
+    "section": {
+      "personal": "Osobní údaje",
+      "appearance": "Vzhled",
+      "contact": "Kontakt",
+      "bio": "O vás",
+      "services": "Služby a dostupnost"
+    },
+    "field": {
+      "name": "Jméno",
+      "age": "Věk",
+      "height": "Výška (cm)",
+      "weight": "Váha (kg)",
+      "bust": "Velikost prsou",
+      "bust_natural": "Typ prsou",
+      "bust_natural_yes": "Přírodní",
+      "bust_natural_no": "Implantát",
+      "waist": "Pas (cm)",
+      "hips": "Boky (cm)",
+      "hair": "Barva vlasů",
+      "eyes": "Barva očí",
+      "tattoo": "Tetování",
+      "tattoo_desc": "Popis tetování",
+      "piercing": "Piercing",
+      "phone": "Telefon",
+      "email": "E-mail",
+      "telegram": "Telegram",
+      "bio_cs": "O sobě (česky)",
+      "bio_en": "O sobě (anglicky)",
+      "languages": "Jazyky (oddělené čárkou)",
+      "services": "Služby (oddělené čárkou)",
+      "availability": "Dostupnost"
+    },
+    "services_basic_label": "Základní služby (vždy zahrnuté v ceně)",
+    "services_extra_label": "Extra služby (které chceš nabízet?)",
+    "services_extra_hint": "Zaškrtni vše, co dáváš. Co označíš, se ukáže v tvém profilu na webu.",
+    "lang_picker_label": "Jazyk formuláře",
+    "submit": "Odeslat přihlášku",
+    "success": {
+      "title": "Přihláška odeslána",
+      "body": "Děkujeme. Náš tým vás kontaktuje do 24 hodin."
+    }
+  }
+}

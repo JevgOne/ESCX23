@@ -1,0 +1,406 @@
+{
+  "common": {
+    "siteName": "LovelyGirls Prague",
+    "tagline": "Premium companions in Prague",
+    "available_now": "Available",
+    "by_appointment": "By appointment",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "view_profile": "Open profile",
+    "book_now": "Book now",
+    "verified": "Verified",
+    "vip": "VIP",
+    "new_badge": "New",
+    "show_all": "Show all",
+    "back_home": "Back to home",
+    "contact_us": "Message us"
+  },
+  "nav": {
+    "home": "Home",
+    "girls": "Girls",
+    "schedule": "Schedule",
+    "pricing": "Pricing",
+    "discounts": "Discounts",
+    "faq": "FAQ",
+    "reviews": "Reviews",
+    "contact": "Contact",
+    "about": "About us",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "blog": "Blog",
+    "join": "Join us",
+    "membership": "VIP membership",
+    "membership_apply": "Apply"
+  },
+  "geo": {
+    "home_lead": "LovelyGirls Prague is an in-person verified companion agency with 13 active companions across 4 private apartments in Prague 2, Prague 8, Prague 1, and Prague 3, open daily 10:00–22:30.",
+    "divky_lead": "LovelyGirls Prague currently lists 13 verified companions aged 19–32, filterable by location, language, height, and same-day availability.",
+    "cenik_lead": "At LovelyGirls Prague, companion programs start at 2,500 CZK for 30 minutes, 2,500 CZK for 60 minutes, and 4,500 CZK for 2 hours; all prices include the apartment fee.",
+    "faq_lead": "Hiring an adult companion is legal in the Czech Republic for clients aged 18+; LovelyGirls Prague verifies every companion in person and operates from registered apartments in Prague.",
+    "slevy_lead": "LovelyGirls Prague offers a 10–15 % loyalty discount after 3, 5, and 10 visits, a morning discount from 10:00–13:00 on weekdays, and a birthday discount of 20 %.",
+    "rozvrh_lead": "LovelyGirls Prague schedule: see which companions are available today and this week, filterable by apartment location."
+  },
+  "homepage": {
+    "hero_title": "Discreet companions in central Prague",
+    "hero_subtitle": "Verified profiles, private apartments, instant contact via WhatsApp or Telegram.",
+    "cta_browse": "Browse companions",
+    "cta_today": "Online today",
+    "cta_contact": "Message us",
+    "topbar": {
+      "open_label": "Open",
+      "hours": "10:00 — 22:30",
+      "verified": "Verified profiles",
+      "discreet": "Discreet apartments",
+      "call_btn": "Call"
+    },
+    "hero": {
+      "eyebrow": "Discreet · Verified · Private",
+      "h1_main": "Prague Companions",
+      "h1_accent": "Luxury escort",
+      "subtitle": "Private apartments in the city centre, hand-verified profiles and instant contact. Discreet, no registration.",
+      "cta_browse": "View companions →",
+      "cta_today": "Online today",
+      "cta_contact": "How to reach us",
+      "stats_girls": "companions",
+      "stats_now": "online now",
+      "stats_reviews": "reviews"
+    },
+    "featuredNew": {
+      "eyebrow": "New on site",
+      "h2": "Just added",
+      "sub": "Meet our newest companion",
+      "badge": "NEW",
+      "link_text": "Open profile"
+    },
+    "girlsGrid": {
+      "eyebrow": "Today at the apartment",
+      "h2": "Our companions",
+      "sub": "Pick one and message us. Every profile is personally verified.",
+      "show_all": "Show all {count} companions"
+    },
+    "activity": {
+      "eyebrow": "Latest updates",
+      "h2": "What's new",
+      "sub": "Recent activity from our companions",
+      "added_photos": "added {count} new photos",
+      "added_photo": "added a new photo",
+      "received_review": "received a {rating}★ review",
+      "no_recent": "No recent updates."
+    },
+    "trust": {
+      "verified": {
+        "title": "Verified profiles",
+        "text": "Current photos for every companion"
+      },
+      "fast": {
+        "title": "Fast reply",
+        "text": "We respond within 5 minutes on WhatsApp"
+      },
+      "discreet": {
+        "title": "Full discretion",
+        "text": "Private apartment, no registration"
+      },
+      "loyalty": {
+        "title": "Loyalty program",
+        "text": "Discounts and perks for regulars"
+      }
+    },
+    "reviews": {
+      "eyebrow": "Client voices",
+      "h2": "Verified reviews",
+      "sub": "Real experiences from real clients",
+      "show_all": "All reviews"
+    },
+    "hashtags": {
+      "eyebrow": "Popular searches",
+      "h2": "Favourite categories",
+      "sub": "Find the companion that fits your preferences"
+    },
+    "locations": {
+      "eyebrow": "Our apartments",
+      "h2": "Discreet apartments in Prague",
+      "sub": "Private flats in the centre, easy to reach by metro, tram or car",
+      "note": "Private entrance",
+      "address_after_booking": "We share the exact address on WhatsApp or Telegram once your appointment is confirmed.",
+      "main_apartment": "Main apartment",
+      "detail_cta": "View apartment →"
+    },
+    "contact": {
+      "eyebrow": "How to reach us",
+      "h2": "3 steps to a discreet meeting",
+      "sub": "No registration. No waiting. No complications.",
+      "step1": {
+        "title": "Pick a companion",
+        "text": "Browse profiles, photos and live availability"
+      },
+      "step2": {
+        "title": "Message us",
+        "text": "Send a message on WhatsApp or Telegram — we reply within 5 minutes"
+      },
+      "step3": {
+        "title": "Enjoy the meeting",
+        "text": "You'll get the apartment address and arrive at the agreed time"
+      }
+    },
+    "finalCta": {
+      "eyebrow": "Message us",
+      "h2": "Free tonight?",
+      "sub": "We reply within 5 minutes. Always discreet.",
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram",
+      "call": "Call"
+    }
+  },
+  "card": {
+    "today_hours": "Today {hours}",
+    "by_appointment_short": "By appointment",
+    "age": "{age} y/o",
+    "height_cm": "cm",
+    "weight_kg": "kg",
+    "bust_label": "bust",
+    "location_format": "Prague · {district}",
+    "away_label": "By appointment"
+  },
+  "schedule": {
+    "page_title": "Today's schedule",
+    "page_description": "Who is working today and tomorrow.",
+    "all_locations": "All locations",
+    "no_one_today": "No one is working today.",
+    "working_now": "Working now",
+    "starting_at": "Starting at {time}"
+  },
+  "footer": {
+    "about": "About us",
+    "terms": "Terms of service",
+    "privacy": "Privacy policy",
+    "cookies": "Cookies",
+    "age_disclaimer": "Adults 18+ only",
+    "rights": "All rights reserved.",
+    "brand_desc": "Discreet escort services in Prague. Verified companions in private apartments in the city centre.",
+    "pages_heading": "Pages",
+    "contact_heading": "Contact",
+    "legal_heading": "Legal",
+    "compliance": "Operating under Czech law",
+    "disclaimer": "All information on this website is published for advertising purposes of the service providers. The operator of this website is not responsible for the accuracy and currency of the published information nor for the services provided. The condition of the advertisement is the rental of a room.",
+    "call_btn": "Call",
+    "brand_copy": "LovelyGirls Prague © {year}"
+  },
+  "ageGate": {
+    "title": "Adults only",
+    "subtitle": "This site contains content for adults 18+. By entering you confirm you are of legal age in your country.",
+    "enter": "Enter",
+    "leave": "Leave"
+  },
+  "languageSwitcher": {
+    "label": "Language",
+    "cs": "Čeština",
+    "en": "English",
+    "de": "Deutsch",
+    "uk": "Українська"
+  },
+  "girls": {
+    "h1": "Prague Companions",
+    "sub": "Verified profiles in discreet apartments in central Prague",
+    "results_count": "{count} companions",
+    "search_placeholder": "Search by name…",
+    "filter": {
+      "all": "All",
+      "available": "Online now"
+    },
+    "sort": {
+      "newest": "Newest",
+      "name": "Name A–Z",
+      "available_first": "Online first"
+    },
+    "no_results": "No companions match the filter. Try different settings."
+  },
+  "profil": {
+    "verified": "Photos verified",
+    "tabs": {
+      "miry": "Measurements",
+      "vzhled": "Appearance",
+      "sluzby": "Services"
+    },
+    "acc": {
+      "section_miry": "Measurements",
+      "section_vzhled": "Appearance & details",
+      "section_sluzby": "Services",
+      "height": "Height",
+      "weight": "Weight",
+      "bust": "Bust",
+      "waist": "Waist",
+      "hips": "Hips",
+      "bust_natural": "natural",
+      "bust_implant": "implants",
+      "eyes": "Eyes",
+      "hair": "Hair",
+      "tattoo": "Tattoo",
+      "piercing": "Piercing",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "bio_label": "About me",
+    "height_label": "Height",
+    "weight_label": "Weight",
+    "bust_label": "Bust",
+    "eyes_label": "Eyes",
+    "hair_label": "Hair",
+    "cta": {
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram",
+      "call": "Call"
+    },
+    "gallery": {
+      "h2": "Gallery"
+    },
+    "pricing": {
+      "h2": "Pricing"
+    },
+    "reviews": {
+      "h2": "Reviews",
+      "show_all": "Show all reviews ({count}) →"
+    },
+    "services": {
+      "h2": "Services & experiences",
+      "included": "Included",
+      "extra": "Extras",
+      "on_request": "On request",
+      "tag_negotiable": "Negotiable"
+    },
+    "body_art": {
+      "h2": "Tattoo & piercing",
+      "tattoo": "Tattoo",
+      "piercing": "Piercing",
+      "coverage": "body coverage",
+      "tattoo_levels": {
+        "none": "No tattoos",
+        "discreet": "Discreet",
+        "visible": "Visible",
+        "significant": "Significant",
+        "full": "Full body"
+      },
+      "piercing_levels": {
+        "none": "No piercings",
+        "ears": "Ears",
+        "multiple": "Multiple",
+        "body": "Body"
+      }
+    },
+    "styl_h": "STYLE & WARDROBE",
+    "styl_sub": "adapts · say style in advance",
+    "styl_note": "{name} adapts to any style — gala, business, swimwear, lingerie. Just say in advance.",
+    "kde_h": "WHERE TO FIND HER",
+    "kde_sub": "incall · 3 apartments Prague",
+    "kde_address_note": "Address shared after booking confirmation.",
+    "jazyky_h": "LANGUAGES",
+    "experience_h": "EXPERIENCE & SERVICES",
+    "experience_col_programy": "Programs",
+    "experience_col_spolecenske": "Social",
+    "experience_col_privatni": "Private",
+    "lang_level_native": "Native",
+    "lang_level_fluent": "Fluent",
+    "lang_level_basic": "Basic"
+  },
+  "blog": {
+    "h1": "Blog",
+    "eyebrow": "Guides & Tips",
+    "sub": "Everything about discreet companions in Prague. Tips, guides and news.",
+    "read_more": "Read more →",
+    "related": "More articles",
+    "by": "Author",
+    "published": "Published",
+    "empty": "No articles yet."
+  },
+  "onas": {
+    "eyebrow": "About us",
+    "h1": "LovelyGirls Prague",
+    "lead": "Premium escort agency in central Prague. Discretion, verified profiles and private apartments.",
+    "s1_h2": "Who we are",
+    "s1_text": "LovelyGirls Prague is a premium escort agency with private apartments in the city centre. We only work with verified companions — no fake photos, no surprises.",
+    "s2_h2": "Our values",
+    "s2_text": "We stand on discretion and transparency. No hidden fees, no client databases, no receipts. What happens in the apartment stays in the apartment.",
+    "s3_h2": "Why choose us",
+    "s3_text": "Private apartments in central Prague. Open daily 10:00–22:30. We reply within 5 minutes on WhatsApp or Telegram. No registration required."
+  },
+  "kontakt": {
+    "eyebrow": "Contact",
+    "h1": "Message or call",
+    "lead": "We reply within 5 minutes. No registration, complete discretion.",
+    "whatsapp_label": "WhatsApp",
+    "telegram_label": "Telegram",
+    "phone_label": "Phone",
+    "whatsapp_value": "+420 XXX XXX XXX",
+    "telegram_value": "@lovelygirls_prague",
+    "phone_value": "+420 XXX XXX XXX",
+    "whatsapp_desc": "Fastest reply",
+    "telegram_desc": "Fully anonymous",
+    "phone_desc": "Daily 10:00–22:30"
+  },
+  "podminky": {
+    "eyebrow": "Legal",
+    "h1": "Terms of Service",
+    "lead": "Terms of use for the LovelyGirls Prague website.",
+    "s1_h2": "1. Introduction",
+    "s1_text": "This website is operated solely for advertising purposes of service providers. The website operator does not mediate sexual services and bears no responsibility for the services of the advertised individuals.",
+    "s2_h2": "2. Age Restriction",
+    "s2_text": "This website is intended exclusively for persons over 18 years of age. By entering the website you confirm that you have reached the age of 18 and are of legal age under the laws of your country.",
+    "s3_h2": "3. Advertising Terms",
+    "s3_text": "A condition for advertising on this website is the rental of a room. The website operator does not provide or mediate sexual services."
+  },
+  "soukromi": {
+    "eyebrow": "Privacy",
+    "h1": "Privacy Policy",
+    "lead": "How we handle your personal data.",
+    "s1_h2": "What Data We Collect",
+    "s1_text": "When visiting the website we collect anonymized analytics data (visit count, viewed pages). We only collect personal data if you contact us directly.",
+    "s2_h2": "Cookies",
+    "s2_text": "The website uses necessary cookies for proper functionality (age gate consent). We use analytics cookies in anonymized form.",
+    "s3_h2": "Your Rights",
+    "s3_text": "You have the right to request deletion of your personal data. Contact us via WhatsApp or Telegram."
+  },
+  "join": {
+    "h1": "Join Our Team",
+    "sub": "Fill in the application and our team will contact you within 24 hours.",
+    "section": {
+      "personal": "Personal info",
+      "appearance": "Appearance",
+      "contact": "Contact",
+      "bio": "About you",
+      "services": "Services & availability"
+    },
+    "field": {
+      "name": "Name",
+      "age": "Age",
+      "height": "Height (cm)",
+      "weight": "Weight (kg)",
+      "bust": "Bust size",
+      "bust_natural": "Bust type",
+      "bust_natural_yes": "Natural",
+      "bust_natural_no": "Implants",
+      "waist": "Waist (cm)",
+      "hips": "Hips (cm)",
+      "hair": "Hair color",
+      "eyes": "Eye color",
+      "tattoo": "Tattoo",
+      "tattoo_desc": "Tattoo description",
+      "piercing": "Piercing",
+      "phone": "Phone",
+      "email": "E-mail",
+      "telegram": "Telegram",
+      "bio_cs": "About yourself (Czech)",
+      "bio_en": "About yourself (English)",
+      "languages": "Languages (comma-separated)",
+      "services": "Services (comma-separated)",
+      "availability": "Availability"
+    },
+    "services_basic_label": "Basic services (always included)",
+    "services_extra_label": "Extra services (which would you offer?)",
+    "services_extra_hint": "Tick everything you provide. What you check will appear on your profile.",
+    "lang_picker_label": "Form language",
+    "submit": "Send application",
+    "success": {
+      "title": "Application sent",
+      "body": "Thank you! Our team will contact you within 24 hours."
+    }
+  }
+}

@@ -1,0 +1,156 @@
+import { setRequestLocale } from 'next-intl/server';
+import type { Metadata } from 'next';
+import { getActivePricingPlans } from '@/lib/queries';
+import { offerListJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
+import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
+import ProgramsGrid from '@/components/cenik/ProgramsGrid';
+import ExtrasGrid from '@/components/cenik/ExtrasGrid';
+import PricingNotes from '@/components/cenik/PricingNotes';
+import FaqTeaser from '@/components/cenik/FaqTeaser';
+import Breadcrumbs from '@/components/ui/Breadcrumbs';
+
+export const revalidate = 3600;
+
+const TITLES: Record<string, string> = {
+  en: 'Pricing — LovelyGirls Prague',
+  cs: 'Ceník — LovelyGirls Praha',
+  de: 'Preise — LovelyGirls Prag',
+  uk: 'Ціни — LovelyGirls Прага',
+};
+
+const DESCRIPTIONS: Record<string, string> = {
+  en: 'Companion programs from 2,500 CZK / 30 min to 4,500 CZK / 2 hours. All prices include the private apartment. Cash payment only.',
+  cs: 'Programy společnic od 2 500 Kč / 30 min do 4 500 Kč / 120 min. Cena zahrnuje soukromý apartmán. Platba hotovostí.',
+  de: 'Begleitprogramme ab 2.500 CZK / 30 Min. bis 4.500 CZK / 120 Min. Preis inkl. Privatwohnung. Barzahlung.',
+  uk: 'Програми супутниць від 2 500 CZK / 30 хв до 4 500 CZK / 120 хв. Ціна включає апартамент. Оплата готівкою.',
+};
+
+const GEO_LEADS: Record<string, string> = {
+  en: 'At LovelyGirls Prague, companion programs start at 2,500 CZK for 30 minutes, 2,500 CZK for 60 minutes, and 4,500 CZK for 2 hours; all prices include the apartment fee.',
+  cs: 'U LovelyGirls Praha začínají programy na 2 500 Kč za 30 minut, 2 500 Kč za 60 minut a 4 500 Kč za 2 hodiny; ceny zahrnují poplatek za apartmán.',
+  de: 'Bei LovelyGirls Prag beginnen die Programme bei 2 500 CZK für 30 Minuten, 2 500 CZK für 60 Minuten und 4 500 CZK für 2 Stunden; Apartmentgebühr inklusive.',
+  uk: 'У LovelyGirls Прага програми починаються від 2 500 CZK за 30 хвилин, 2 500 CZK за годину та 4 500 CZK за 2 години; вартість апартаменту включена.',
+};
+
+const CANONICAL_PATH: Record<string, string> = {
+  cs: '/cenik',
+  en: '/pricing',
+  de: '/preise',
+  uk: '/tsiny',
+};
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const path = CANONICAL_PATH[locale] ?? '/cenik';
+  const canonical = getCanonicalUrl(locale, path);
+  const { getCustomOgImage } = await import('@/lib/seo/og');
+  const _customOg_cenik = await getCustomOgImage('cenik');
+
+  return {
+    title: TITLES[locale] ?? TITLES.en,
+    description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
+    alternates: {
+      canonical,
+      languages: {
+        cs: getCanonicalUrl('cs', '/cenik'),
+        en: getCanonicalUrl('en', '/pricing'),
+        de: getCanonicalUrl('de', '/preise'),
+        uk: getCanonicalUrl('uk', '/tsiny'),
+        'x-default': getCanonicalUrl('en', '/pricing'),
+      },
+    },
+    openGraph: {
+      images: _customOg_cenik ? [{ url: _customOg_cenik, width: 1200, height: 630, alt: '' }] : undefined,
+      title: TITLES[locale] ?? TITLES.en,
+      description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
+      url: canonical,
+      locale: ogLocale(locale),
+    },
+  };
+}
+
+export default async function CenikPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const programs = await getActivePricingPlans();
+  const schema = offerListJsonLd(
+    programs.map((p) => ({
+      title_cs: p.title_cs,
+      price: p.price,
+      duration: p.duration,
+      is_popular: p.is_popular,
+    })),
+    locale
+  );
+
+  const geoLead = GEO_LEADS[locale] ?? GEO_LEADS.cs;
+
+  const cenikLabel = locale === 'en' ? 'Pricing' : locale === 'de' ? 'Preise' : locale === 'uk' ? 'Ціни' : 'Ceník';
+  const cenikPath = CANONICAL_PATH[locale] ?? '/cenik';
+  const breadcrumbSchema = breadcrumbListJsonLd([
+    { name: cenikLabel, url: getCanonicalUrl(locale, cenikPath) },
+  ]);
+
+  return (
+    <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
+      <Breadcrumbs
+        items={[{ label: locale === 'en' ? 'Pricing' : locale === 'de' ? 'Preise' : locale === 'uk' ? 'Ціни' : 'Ceník' }]}
+        locale={locale}
+      />
+
+      <section className="page-header">
+        <div className="container">
+          <h1>
+            {locale === 'en' ? 'Pricing' : locale === 'de' ? 'Preise' : locale === 'uk' ? 'Ціни' : 'Ceník'}
+          </h1>
+          <p>
+            {locale === 'en'
+              ? 'Transparent prices with no hidden fees. Choose the program that suits you.'
+              : locale === 'de'
+                ? 'Transparente Preise ohne versteckte Gebühren. Wählen Sie Ihr Programm.'
+                : locale === 'uk'
+                  ? 'Прозорі ціни без прихованих зборів. Оберіть програму для себе.'
+                  : 'Transparentní ceny bez skrytých poplatků. Vyberte si program, který vám vyhovuje.'}
+          </p>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <p data-geo-lead className="sr-only">{geoLead}</p>
+
+          <ProgramsGrid programs={programs} locale={locale} />
+
+          <h2 className="section-h2" style={{ fontSize: '28px', margin: '48px 0 16px' }}>
+            {locale === 'en' ? 'Extra services' : locale === 'de' ? 'Zusatzleistungen' : locale === 'uk' ? 'Додаткові послуги' : 'Extra služby'}
+          </h2>
+          <ExtrasGrid locale={locale} />
+
+          <PricingNotes locale={locale} />
+
+          <div style={{ marginTop: '64px' }}>
+            <FaqTeaser locale={locale} />
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}

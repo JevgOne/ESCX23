@@ -1,0 +1,822 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { db } from './db';
+import {
+  updateGirlById,
+  deleteGirlById,
+} from './queries';
+
+export async function updateGirl(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  const name = String(formData.get('name') ?? '').trim();
+  const slug = String(formData.get('slug') ?? '').trim();
+  const age = Number(formData.get('age'));
+
+  if (!name) throw new Error('Jméno je povinné');
+  if (!slug) throw new Error('Slug je povinný');
+  if (!age || age < 18) throw new Error('Věk musí být minimálně 18');
+
+  const hashtagSlugs = formData.getAll('hashtag_slugs').map(String).filter(Boolean);
+  const hashtagsJson = hashtagSlugs.length > 0 ? JSON.stringify(hashtagSlugs) : null;
+
+  const langCodes = formData.getAll('lang_codes').map(String).filter(Boolean);
+  const languagesCsv = langCodes.length > 0 ? langCodes.join(',') : null;
+
+  const getStr = (k: string) => (formData.get(k) ? String(formData.get(k)).trim() : null);
+  const getNum = (k: string) => (formData.get(k) ? Number(formData.get(k)) : null);
+
+  await updateGirlById(id, {
+    name,
+    slug,
+    age,
+    height: getNum('height'),
+    weight: getNum('weight'),
+    bust: getStr('bust'),
+    bust_natural: formData.get('bust_natural') !== null ? Number(formData.get('bust_natural')) : 1,
+    waist: getNum('waist'),
+    hips: getNum('hips'),
+    eyes: getStr('eyes'),
+    hair: getStr('hair'),
+    tattoo_percentage: formData.get('tattoo_percentage') ? Number(formData.get('tattoo_percentage')) : 0,
+    tattoo_description: getStr('tattoo_description'),
+    piercing: formData.get('piercing') ? Number(formData.get('piercing')) : 0,
+    piercing_description: getStr('piercing_description'),
+    bio: getStr('bio'),
+    status: String(formData.get('status') ?? 'pending'),
+    online: formData.get('online') === 'on' ? 1 : 0,
+    badge_type: getStr('badge_type'),
+    location: getStr('location'),
+    nationality: getStr('nationality'),
+    telegram: getStr('telegram'),
+    email: getStr('email'),
+    phone: getStr('phone'),
+    languages: languagesCsv,
+    is_new: formData.get('is_new') === 'on' ? 1 : 0,
+    is_top: formData.get('is_top') === 'on' ? 1 : 0,
+    is_featured: formData.get('is_featured') === 'on' ? 1 : 0,
+    verified: formData.get('verified') === 'on' ? 1 : 0,
+    hashtags: hashtagsJson,
+    vip: formData.get('vip') === 'on' ? 1 : 0,
+    description_cs: getStr('description_cs'),
+    description_en: getStr('description_en'),
+    description_de: getStr('description_de'),
+    description_uk: getStr('description_uk'),
+    subtitle_cs: getStr('subtitle_cs'),
+    subtitle_en: getStr('subtitle_en'),
+    subtitle_de: getStr('subtitle_de'),
+    subtitle_uk: getStr('subtitle_uk'),
+    meta_title_cs: getStr('meta_title_cs'),
+    meta_title_en: getStr('meta_title_en'),
+    meta_title_de: getStr('meta_title_de'),
+    meta_title_uk: getStr('meta_title_uk'),
+    meta_description_cs: getStr('meta_description_cs'),
+    meta_description_en: getStr('meta_description_en'),
+    meta_description_de: getStr('meta_description_de'),
+    meta_description_uk: getStr('meta_description_uk'),
+    og_title_cs: getStr('og_title_cs'),
+    og_title_en: getStr('og_title_en'),
+    og_title_de: getStr('og_title_de'),
+    og_title_uk: getStr('og_title_uk'),
+    og_description_cs: getStr('og_description_cs'),
+    og_description_en: getStr('og_description_en'),
+    og_description_de: getStr('og_description_de'),
+    og_description_uk: getStr('og_description_uk'),
+  });
+
+  const serviceIds = formData.getAll('service_ids').map(Number).filter((n) => n > 0);
+  await db.execute({ sql: `DELETE FROM girl_services WHERE girl_id=?`, args: [id] });
+  for (const sid of serviceIds) {
+    await db.execute({
+      sql: `INSERT INTO girl_services (girl_id, service_id, is_included, extra_price) VALUES (?, ?, 1, NULL)`,
+      args: [id, sid],
+    });
+  }
+
+  revalidatePath('/admin/divky');
+  revalidatePath(`/cs/admin/divky`);
+  revalidatePath(`/cs/divky`);
+  redirect(`/cs/admin/divky/${id}`);
+}
+
+export async function createGirl(formData: FormData) {
+  const name = String(formData.get('name') ?? '').trim();
+  const rawSlug = String(formData.get('slug') ?? '').trim();
+  const age = Number(formData.get('age'));
+  const email = formData.get('email') ? String(formData.get('email')).trim() : null;
+  const phone = formData.get('phone') ? String(formData.get('phone')).trim() : null;
+
+  if (!name) throw new Error('Jméno je povinné');
+  if (!rawSlug) throw new Error('Slug je povinný');
+  if (!age || age < 18) throw new Error('Věk musí být minimálně 18');
+
+  const nameCheck = await db.execute({ sql: `SELECT id FROM girls WHERE name=? LIMIT 1`, args: [name] });
+  if (nameCheck.rows.length > 0) throw new Error('Dívka s tímto jménem již existuje');
+
+  const slugCheck = await db.execute({ sql: `SELECT id FROM girls WHERE slug=? LIMIT 1`, args: [rawSlug] });
+  if (slugCheck.rows.length > 0) throw new Error('Slug již existuje');
+
+  const getStr = (k: string) => (formData.get(k) ? String(formData.get(k)).trim() : null);
+  const getNum = (k: string) => (formData.get(k) ? Number(formData.get(k)) : null);
+
+  const hashtagSlugs = formData.getAll('hashtag_slugs').map(String).filter(Boolean);
+  const hashtagsJson = hashtagSlugs.length > 0 ? JSON.stringify(hashtagSlugs) : null;
+
+  const result = await db.execute({
+    sql: `INSERT INTO girls (
+      name, slug, age, email, phone, status,
+      nationality, location,
+      height, weight, bust, bust_natural, hair, eyes,
+      tattoo_percentage, tattoo_description,
+      piercing, piercing_description,
+      description_cs, description_en, description_de, description_uk,
+      vip, is_featured, badge_type,
+      hashtags,
+      subtitle_cs, subtitle_en, subtitle_de, subtitle_uk,
+      meta_title_cs, meta_title_en, meta_title_de, meta_title_uk,
+      meta_description_cs, meta_description_en, meta_description_de, meta_description_uk,
+      og_title_cs, og_title_en, og_title_de, og_title_uk,
+      og_description_cs, og_description_en, og_description_de, og_description_uk,
+      created_at, updated_at
+    ) VALUES (
+      ?, ?, ?, ?, ?, ?,
+      ?, ?,
+      ?, ?, ?, ?, ?, ?,
+      ?, ?,
+      ?, ?,
+      ?, ?, ?, ?,
+      ?, ?, ?,
+      ?,
+      ?, ?, ?, ?,
+      ?, ?, ?, ?,
+      ?, ?, ?, ?,
+      ?, ?, ?, ?,
+      ?, ?, ?, ?,
+      CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+    )`,
+    args: [
+      name, rawSlug, age, email, phone,
+      String(formData.get('status') ?? 'pending'),
+      getStr('nationality'), getStr('location'),
+      getNum('height'), getNum('weight'),
+      getStr('bust'),
+      formData.get('bust_natural') !== null ? Number(formData.get('bust_natural')) : 1,
+      getStr('hair'), getStr('eyes'),
+      formData.get('tattoo_percentage') ? Number(formData.get('tattoo_percentage')) : 0,
+      getStr('tattoo_description'),
+      formData.get('piercing') ? Number(formData.get('piercing')) : 0,
+      getStr('piercing_description'),
+      getStr('description_cs'), getStr('description_en'), getStr('description_de'), getStr('description_uk'),
+      formData.get('vip') === 'on' ? 1 : 0,
+      formData.get('is_featured') === 'on' ? 1 : 0,
+      getStr('badge_type'),
+      hashtagsJson,
+      getStr('subtitle_cs'), getStr('subtitle_en'), getStr('subtitle_de'), getStr('subtitle_uk'),
+      getStr('meta_title_cs'), getStr('meta_title_en'), getStr('meta_title_de'), getStr('meta_title_uk'),
+      getStr('meta_description_cs'), getStr('meta_description_en'), getStr('meta_description_de'), getStr('meta_description_uk'),
+      getStr('og_title_cs'), getStr('og_title_en'), getStr('og_title_de'), getStr('og_title_uk'),
+      getStr('og_description_cs'), getStr('og_description_en'), getStr('og_description_de'), getStr('og_description_uk'),
+    ],
+  });
+
+  const newId = Number(result.lastInsertRowid);
+
+  const serviceIds = formData.getAll('service_ids').map(Number).filter((n) => n > 0);
+  for (const sid of serviceIds) {
+    await db.execute({
+      sql: `INSERT OR IGNORE INTO girl_services (girl_id, service_id, is_included, extra_price) VALUES (?, ?, 1, NULL)`,
+      args: [newId, sid],
+    });
+  }
+
+  const fromApplication = Number(formData.get('from_application_id') ?? 0);
+  if (fromApplication > 0) {
+    await db.execute({
+      sql: `UPDATE girl_applications
+            SET status='approved', reviewed_at=CURRENT_TIMESTAMP, converted_to_girl_id=?
+            WHERE id=?`,
+      args: [newId, fromApplication],
+    });
+
+    const appRes = await db.execute({
+      sql: `SELECT services FROM girl_applications WHERE id=?`,
+      args: [fromApplication],
+    });
+    const rawServices = appRes.rows[0]?.services;
+    if (rawServices) {
+      const slugs = String(rawServices).split(',').map((s) => s.trim()).filter(Boolean);
+      if (slugs.length > 0) {
+        const slugPlaceholders = slugs.map(() => '?').join(',');
+        const svcRes = await db.execute({
+          sql: `SELECT id FROM services WHERE slug IN (${slugPlaceholders})`,
+          args: slugs,
+        });
+        for (const r of svcRes.rows) {
+          await db.execute({
+            sql: `INSERT OR IGNORE INTO girl_services (girl_id, service_id, is_included, extra_price) VALUES (?, ?, 1, NULL)`,
+            args: [newId, Number(r.id)],
+          });
+        }
+      }
+    }
+    revalidatePath('/cs/admin/aplikace');
+  }
+
+  revalidatePath('/admin/divky');
+  revalidatePath('/cs/admin/divky');
+  redirect(`/cs/admin/divky/${newId}/edit`);
+}
+
+export async function rejectApplication(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+  const reason = formData.get('rejection_reason')
+    ? String(formData.get('rejection_reason')).trim()
+    : null;
+
+  await db.execute({
+    sql: `UPDATE girl_applications
+          SET status='rejected', reviewed_at=CURRENT_TIMESTAMP, rejection_reason=?
+          WHERE id=?`,
+    args: [reason, id],
+  });
+
+  revalidatePath('/cs/admin/aplikace');
+  redirect('/cs/admin/aplikace');
+}
+
+export async function reopenApplication(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({
+    sql: `UPDATE girl_applications
+          SET status='pending', reviewed_at=NULL, rejection_reason=NULL, converted_to_girl_id=NULL
+          WHERE id=?`,
+    args: [id],
+  });
+
+  revalidatePath('/cs/admin/aplikace');
+  redirect(`/cs/admin/aplikace/${id}`);
+}
+
+export async function updateApplicationNotes(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+  const notes = formData.get('notes') ? String(formData.get('notes')).trim() : null;
+
+  await db.execute({
+    sql: `UPDATE girl_applications SET notes=? WHERE id=?`,
+    args: [notes, id],
+  });
+
+  revalidatePath('/cs/admin/aplikace');
+  redirect(`/cs/admin/aplikace/${id}`);
+}
+
+export async function deleteGirl(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await deleteGirlById(id);
+
+  revalidatePath('/admin/divky');
+  revalidatePath('/cs/admin/divky');
+  redirect('/cs/admin/divky');
+}
+
+export async function approvePhoto(formData: FormData) {
+  const id = Number(formData.get('id'));
+  await db.execute({
+    sql: `UPDATE girl_photos SET is_primary=1 WHERE id=?`,
+    args: [id],
+  });
+  revalidatePath('/cs/admin/verifikace');
+}
+
+export async function rejectPhoto(formData: FormData) {
+  const id = Number(formData.get('id'));
+  await db.execute({
+    sql: `DELETE FROM girl_photos WHERE id=?`,
+    args: [id],
+  });
+  revalidatePath('/cs/admin/verifikace');
+}
+
+// ─── POBOCKY ────────────────────────────────────────────────────────────────
+
+export async function createPobocka(formData: FormData) {
+  const name = String(formData.get('name') ?? '').trim();
+  const display_name = String(formData.get('display_name') ?? '').trim();
+  const city = String(formData.get('city') ?? '').trim();
+
+  if (!name) throw new Error('Název je povinný');
+  if (!display_name) throw new Error('Zobrazovaný název je povinný');
+  if (!city) throw new Error('Město je povinné');
+
+  const getStr = (k: string) => (formData.get(k) ? String(formData.get(k)) : null);
+  const LANGS = ['', '_en', '_de', '_uk'];
+  const langCols = (base: string) => LANGS.map((s) => `${base}${s === '' ? '' : s}`);
+  const I18N_FIELDS = ['description', 'transport_text', 'payment_text', 'parking_text', 'features_text', 'hours_text'];
+
+  const insertCols = ['name','display_name','city','district','address','postal_code','phone','email','is_active','is_primary',
+    ...I18N_FIELDS.flatMap(langCols)];
+  const insertVals = [
+    name, display_name, city,
+    getStr('district'), getStr('address'), getStr('postal_code'), getStr('phone'), getStr('email'),
+    formData.get('is_active') === 'on' ? 1 : 0,
+    formData.get('is_primary') === 'on' ? 1 : 0,
+    ...I18N_FIELDS.flatMap((f) => [getStr(`${f}_cs`) ?? getStr(f), getStr(`${f}_en`), getStr(`${f}_de`), getStr(`${f}_uk`)]),
+  ];
+  await db.execute({
+    sql: `INSERT INTO locations (${insertCols.join(', ')}) VALUES (${insertCols.map(() => '?').join(', ')})`,
+    args: insertVals as (string | number | null)[],
+  });
+
+  revalidatePath('/cs/admin/pobocky');
+  revalidatePath('/cs');
+  redirect('/cs/admin/pobocky');
+}
+
+export async function updatePobocka(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  const name = String(formData.get('name') ?? '').trim();
+  const display_name = String(formData.get('display_name') ?? '').trim();
+  const city = String(formData.get('city') ?? '').trim();
+
+  if (!name) throw new Error('Název je povinný');
+  if (!display_name) throw new Error('Zobrazovaný název je povinný');
+  if (!city) throw new Error('Město je povinné');
+
+  const getStr = (k: string) => (formData.get(k) ? String(formData.get(k)) : null);
+  const I18N_FIELDS = ['description', 'transport_text', 'payment_text', 'parking_text', 'features_text', 'hours_text'];
+  const baseCols = ['name','display_name','city','district','address','postal_code','phone','email','is_active','is_primary'];
+  const i18nCols = I18N_FIELDS.flatMap((f) => [f, `${f}_en`, `${f}_de`, `${f}_uk`]);
+  const allCols = [...baseCols, ...i18nCols];
+  const baseVals = [
+    name, display_name, city,
+    getStr('district'), getStr('address'), getStr('postal_code'), getStr('phone'), getStr('email'),
+    formData.get('is_active') === 'on' ? 1 : 0,
+    formData.get('is_primary') === 'on' ? 1 : 0,
+  ];
+  const i18nVals = I18N_FIELDS.flatMap((f) => [
+    getStr(`${f}_cs`) ?? getStr(f),
+    getStr(`${f}_en`),
+    getStr(`${f}_de`),
+    getStr(`${f}_uk`),
+  ]);
+  await db.execute({
+    sql: `UPDATE locations SET ${allCols.map((c) => `${c}=?`).join(', ')}, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+    args: [...baseVals, ...i18nVals, id] as (string | number | null)[],
+  });
+
+  revalidatePath('/cs/admin/pobocky');
+  revalidatePath('/cs');
+  revalidatePath(`/cs/pobocka/${name}`);
+  revalidatePath(`/en/pobocka/${name}`);
+  revalidatePath(`/de/pobocka/${name}`);
+  revalidatePath(`/uk/pobocka/${name}`);
+  redirect('/cs/admin/pobocky');
+}
+
+export async function deletePobocka(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({ sql: `DELETE FROM locations WHERE id=?`, args: [id] });
+
+  revalidatePath('/cs/admin/pobocky');
+  revalidatePath('/cs');
+  redirect('/cs/admin/pobocky');
+}
+
+// ─── CENIK — PRICING PLANS ──────────────────────────────────────────────────
+
+export async function updatePricingPlan(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({
+    sql: `UPDATE pricing_plans SET duration=?, price=?, is_popular=?, display_order=?, is_active=?,
+          title_cs=?, title_en=?, title_de=?, title_uk=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+    args: [
+      Number(formData.get('duration')),
+      Number(formData.get('price')),
+      formData.get('is_popular') === 'on' ? 1 : 0,
+      Number(formData.get('display_order') ?? 0),
+      formData.get('is_active') === 'on' ? 1 : 0,
+      String(formData.get('title_cs') ?? ''),
+      String(formData.get('title_en') ?? ''),
+      String(formData.get('title_de') ?? ''),
+      String(formData.get('title_uk') ?? ''),
+      id,
+    ],
+  });
+
+  revalidatePath('/cs/admin/cenik');
+  revalidatePath('/cs/cenik');
+  redirect('/cs/admin/cenik');
+}
+
+export async function createPricingPlan(formData: FormData) {
+  await db.execute({
+    sql: `INSERT INTO pricing_plans (duration, price, is_popular, display_order, is_active, title_cs, title_en, title_de, title_uk)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      Number(formData.get('duration')),
+      Number(formData.get('price')),
+      formData.get('is_popular') === 'on' ? 1 : 0,
+      Number(formData.get('display_order') ?? 0),
+      formData.get('is_active') === 'on' ? 1 : 0,
+      String(formData.get('title_cs') ?? ''),
+      String(formData.get('title_en') ?? ''),
+      String(formData.get('title_de') ?? ''),
+      String(formData.get('title_uk') ?? ''),
+    ],
+  });
+
+  revalidatePath('/cs/admin/cenik');
+  revalidatePath('/cs/cenik');
+  redirect('/cs/admin/cenik');
+}
+
+export async function deletePricingPlan(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({ sql: `DELETE FROM pricing_plans WHERE id=?`, args: [id] });
+
+  revalidatePath('/cs/admin/cenik');
+  revalidatePath('/cs/cenik');
+  redirect('/cs/admin/cenik');
+}
+
+// ─── CENIK — EXTRAS ─────────────────────────────────────────────────────────
+
+export async function createPricingExtra(formData: FormData) {
+  await db.execute({
+    sql: `INSERT INTO pricing_extras (price, display_order, is_active, name_cs, name_en, name_de, name_uk)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      Number(formData.get('price')),
+      Number(formData.get('display_order') ?? 0),
+      formData.get('is_active') === 'on' ? 1 : 0,
+      String(formData.get('name_cs') ?? ''),
+      String(formData.get('name_en') ?? ''),
+      String(formData.get('name_de') ?? ''),
+      String(formData.get('name_uk') ?? ''),
+    ],
+  });
+
+  revalidatePath('/cs/admin/cenik');
+  revalidatePath('/cs/cenik');
+  redirect('/cs/admin/cenik');
+}
+
+export async function updatePricingExtra(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({
+    sql: `UPDATE pricing_extras SET price=?, display_order=?, is_active=?,
+          name_cs=?, name_en=?, name_de=?, name_uk=? WHERE id=?`,
+    args: [
+      Number(formData.get('price')),
+      Number(formData.get('display_order') ?? 0),
+      formData.get('is_active') === 'on' ? 1 : 0,
+      String(formData.get('name_cs') ?? ''),
+      String(formData.get('name_en') ?? ''),
+      String(formData.get('name_de') ?? ''),
+      String(formData.get('name_uk') ?? ''),
+      id,
+    ],
+  });
+
+  revalidatePath('/cs/admin/cenik');
+  revalidatePath('/cs/cenik');
+  redirect('/cs/admin/cenik');
+}
+
+export async function deletePricingExtra(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({ sql: `DELETE FROM pricing_extras WHERE id=?`, args: [id] });
+
+  revalidatePath('/cs/admin/cenik');
+  revalidatePath('/cs/cenik');
+  redirect('/cs/admin/cenik');
+}
+
+// ─── SLEVY ───────────────────────────────────────────────────────────────────
+
+export async function createSleva(formData: FormData) {
+  await db.execute({
+    sql: `INSERT INTO discounts (icon, discount_type, discount_value, display_order, is_active, is_featured,
+          name_cs, name_en, name_de, name_uk, description_cs, description_en, description_de, description_uk)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      formData.get('icon') ? String(formData.get('icon')) : '🎁',
+      String(formData.get('discount_type') ?? 'percentage'),
+      formData.get('discount_value') ? Number(formData.get('discount_value')) : null,
+      Number(formData.get('display_order') ?? 0),
+      formData.get('is_active') === 'on' ? 1 : 0,
+      formData.get('is_featured') === 'on' ? 1 : 0,
+      String(formData.get('name_cs') ?? ''),
+      String(formData.get('name_en') ?? ''),
+      String(formData.get('name_de') ?? ''),
+      String(formData.get('name_uk') ?? ''),
+      String(formData.get('description_cs') ?? ''),
+      String(formData.get('description_en') ?? ''),
+      String(formData.get('description_de') ?? ''),
+      String(formData.get('description_uk') ?? ''),
+    ],
+  });
+
+  revalidatePath('/cs/admin/slevy');
+  revalidatePath('/cs/slevy');
+  redirect('/cs/admin/slevy');
+}
+
+export async function updateSleva(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({
+    sql: `UPDATE discounts SET icon=?, discount_type=?, discount_value=?, display_order=?, is_active=?, is_featured=?,
+          name_cs=?, name_en=?, name_de=?, name_uk=?,
+          description_cs=?, description_en=?, description_de=?, description_uk=?,
+          updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+    args: [
+      formData.get('icon') ? String(formData.get('icon')) : '🎁',
+      String(formData.get('discount_type') ?? 'percentage'),
+      formData.get('discount_value') ? Number(formData.get('discount_value')) : null,
+      Number(formData.get('display_order') ?? 0),
+      formData.get('is_active') === 'on' ? 1 : 0,
+      formData.get('is_featured') === 'on' ? 1 : 0,
+      String(formData.get('name_cs') ?? ''),
+      String(formData.get('name_en') ?? ''),
+      String(formData.get('name_de') ?? ''),
+      String(formData.get('name_uk') ?? ''),
+      String(formData.get('description_cs') ?? ''),
+      String(formData.get('description_en') ?? ''),
+      String(formData.get('description_de') ?? ''),
+      String(formData.get('description_uk') ?? ''),
+      id,
+    ],
+  });
+
+  revalidatePath('/cs/admin/slevy');
+  revalidatePath('/cs/slevy');
+  redirect('/cs/admin/slevy');
+}
+
+export async function deleteSleva(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({ sql: `DELETE FROM discounts WHERE id=?`, args: [id] });
+
+  revalidatePath('/cs/admin/slevy');
+  revalidatePath('/cs/slevy');
+  redirect('/cs/admin/slevy');
+}
+
+// ─── FAQ ─────────────────────────────────────────────────────────────────────
+
+export async function createFaq(formData: FormData) {
+  await db.execute({
+    sql: `INSERT INTO faq_items (category, display_order, is_active,
+          question_cs, question_en, question_de, question_uk,
+          answer_cs, answer_en, answer_de, answer_uk)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      String(formData.get('category') ?? 'general'),
+      Number(formData.get('display_order') ?? 0),
+      formData.get('is_active') === 'on' ? 1 : 0,
+      String(formData.get('question_cs') ?? ''),
+      String(formData.get('question_en') ?? ''),
+      String(formData.get('question_de') ?? ''),
+      String(formData.get('question_uk') ?? ''),
+      String(formData.get('answer_cs') ?? ''),
+      String(formData.get('answer_en') ?? ''),
+      String(formData.get('answer_de') ?? ''),
+      String(formData.get('answer_uk') ?? ''),
+    ],
+  });
+
+  revalidatePath('/cs/admin/faq');
+  revalidatePath('/cs/faq');
+  redirect('/cs/admin/faq');
+}
+
+export async function updateFaq(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({
+    sql: `UPDATE faq_items SET category=?, display_order=?, is_active=?,
+          question_cs=?, question_en=?, question_de=?, question_uk=?,
+          answer_cs=?, answer_en=?, answer_de=?, answer_uk=?,
+          updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+    args: [
+      String(formData.get('category') ?? 'general'),
+      Number(formData.get('display_order') ?? 0),
+      formData.get('is_active') === 'on' ? 1 : 0,
+      String(formData.get('question_cs') ?? ''),
+      String(formData.get('question_en') ?? ''),
+      String(formData.get('question_de') ?? ''),
+      String(formData.get('question_uk') ?? ''),
+      String(formData.get('answer_cs') ?? ''),
+      String(formData.get('answer_en') ?? ''),
+      String(formData.get('answer_de') ?? ''),
+      String(formData.get('answer_uk') ?? ''),
+      id,
+    ],
+  });
+
+  revalidatePath('/cs/admin/faq');
+  revalidatePath('/cs/faq');
+  redirect('/cs/admin/faq');
+}
+
+export async function deleteFaq(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({ sql: `DELETE FROM faq_items WHERE id=?`, args: [id] });
+
+  revalidatePath('/cs/admin/faq');
+  revalidatePath('/cs/faq');
+  redirect('/cs/admin/faq');
+}
+
+// ─── STORIES ─────────────────────────────────────────────────────────────────
+
+export async function approveStory(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+  await db.execute({
+    sql: `UPDATE stories SET status='live', is_active=1 WHERE id=?`,
+    args: [id],
+  });
+  revalidatePath('/cs/admin/stories');
+}
+
+export async function expireStory(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+  await db.execute({
+    sql: `UPDATE stories SET status='expired', is_active=0, expires_at=CURRENT_TIMESTAMP WHERE id=?`,
+    args: [id],
+  });
+  revalidatePath('/cs/admin/stories');
+}
+
+export async function deleteStory(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+  await db.execute({ sql: `DELETE FROM stories WHERE id=?`, args: [id] });
+  revalidatePath('/cs/admin/stories');
+}
+
+export async function createCategoryStory(formData: FormData) {
+  const category = String(formData.get('category') ?? '').trim();
+  const bgType = String(formData.get('bg_type') ?? 'COLOR').trim();
+  const mediaUrl = String(formData.get('media_url') ?? '').trim();
+  const caption = String(formData.get('caption') ?? '').trim().slice(0, 100);
+  const expiresAt = formData.get('expires_at')
+    ? String(formData.get('expires_at'))
+    : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+
+  if (!category) throw new Error('Kategorie je povinná');
+  if (!mediaUrl) throw new Error('URL pozadí je povinné');
+
+  await db.execute({
+    sql: `INSERT INTO stories (girl_id, media_url, media_type, bg_type, caption, category, status, is_active, expires_at)
+          VALUES (0, ?, ?, ?, ?, ?, 'live', 1, ?)`,
+    args: [mediaUrl, bgType === 'VIDEO' ? 'video' : 'image', bgType, caption || null, category, expiresAt],
+  });
+
+  revalidatePath('/cs/admin/stories');
+  redirect('/cs/admin/stories');
+}
+
+// ─── SCHEDULES ───────────────────────────────────────────────────────────────
+
+const PRESET_TIMES: Record<string, [string, string]> = {
+  ranni: ['10:00', '16:00'],
+  odpoledni: ['16:30', '22:30'],
+  celodenni: ['10:00', '22:00'],
+};
+
+export async function addGirlSchedule(formData: FormData) {
+  const girlId = Number(formData.get('girl_id'));
+  if (!girlId) throw new Error('Chybí girl_id');
+
+  const locationId = formData.get('location_id') ? Number(formData.get('location_id')) : null;
+
+  // Global preset + Od/Do (applied to all selected days)
+  const globalPreset = String(formData.get('preset') ?? 'ranni');
+  const globalStart = String(formData.get('start_time') ?? '10:00');
+  const globalEnd = String(formData.get('end_time') ?? '16:00');
+
+  let anyDaySelected = false;
+  for (let i = 0; i <= 6; i++) {
+    if (formData.get(`day_${i}`) !== '1') continue;
+    anyDaySelected = true;
+
+    // Per-day Od/Do inputs are source of truth (preset radios are visual hints only).
+    // Fallback chain: per-day input → preset hardcoded → global input.
+    const perDayStart = formData.get(`start_${i}`);
+    const perDayEnd = formData.get(`end_${i}`);
+    const perDayPreset = formData.get(`preset_${i}`);
+    const preset = perDayPreset ? String(perDayPreset) : globalPreset;
+
+    let startTime: string;
+    let endTime: string;
+
+    if (perDayStart && perDayEnd) {
+      startTime = String(perDayStart);
+      endTime = String(perDayEnd);
+    } else if (PRESET_TIMES[preset]) {
+      [startTime, endTime] = PRESET_TIMES[preset];
+    } else {
+      startTime = globalStart;
+      endTime = globalEnd;
+    }
+
+    // Avoid duplicate (same girl + same day): replace existing
+    await db.execute({
+      sql: `DELETE FROM girl_schedules WHERE girl_id=? AND day_of_week=?`,
+      args: [girlId, i],
+    });
+    await db.execute({
+      sql: `INSERT INTO girl_schedules (girl_id, day_of_week, start_time, end_time, location_id, is_active, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      args: [girlId, i, startTime, endTime, locationId],
+    });
+  }
+
+  if (!anyDaySelected) {
+    throw new Error('Vyberte alespoň jeden den');
+  }
+
+  revalidatePath('/cs/admin/schedules');
+  revalidatePath('/cs/rozvrh');
+  redirect('/cs/admin/schedules');
+}
+
+export async function deleteGirlSchedule(formData: FormData) {
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Chybí id');
+
+  await db.execute({ sql: `DELETE FROM girl_schedules WHERE id=?`, args: [id] });
+
+  revalidatePath('/cs/admin/schedules');
+  revalidatePath('/cs/rozvrh');
+  redirect('/cs/admin/schedules');
+}
+
+export async function deleteAllSchedules(formData: FormData) {
+  const girlId = formData.get('girl_id') ? Number(formData.get('girl_id')) : null;
+
+  if (girlId) {
+    await db.execute({ sql: `DELETE FROM girl_schedules WHERE girl_id=?`, args: [girlId] });
+  } else {
+    await db.execute(`DELETE FROM girl_schedules`);
+  }
+
+  revalidatePath('/cs/admin/schedules');
+  revalidatePath('/cs/rozvrh');
+  redirect('/cs/admin/schedules');
+}
+
+export async function fixScheduleColors(formData: FormData) {
+  void formData;
+  revalidatePath('/cs/admin/schedules');
+  redirect('/cs/admin/schedules');
+}
+
+export async function approveReview(formData: FormData) {
+  const id = Number(formData.get('id'));
+  await db.execute({
+    sql: `UPDATE reviews SET status='approved', approved_at=CURRENT_TIMESTAMP, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+    args: [id],
+  });
+  revalidatePath('/cs/admin/recenze');
+}
+
+export async function rejectReview(formData: FormData) {
+  const id = Number(formData.get('id'));
+  await db.execute({
+    sql: `UPDATE reviews SET status='rejected', updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+    args: [id],
+  });
+  revalidatePath('/cs/admin/recenze');
+}

@@ -1,0 +1,109 @@
+import type { Metadata } from 'next';
+import { Inter, Playfair_Display } from 'next/font/google';
+import { NextIntlClientProvider, hasLocale } from 'next-intl';
+import { setRequestLocale } from 'next-intl/server';
+import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
+import { routing } from '@/i18n/routing';
+import Topbar from '@/components/layout/Topbar';
+import SiteHeader from '@/components/layout/SiteHeader';
+import SiteFooter from '@/components/layout/SiteFooter';
+import AgeGate from '@/components/AgeGate';
+import '../globals.css';
+
+const inter = Inter({
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
+  variable: '--font-sans',
+  display: 'swap',
+  weight: ['400', '500', '600', '700', '800'],
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
+  variable: '--font-display',
+  display: 'swap',
+  weight: ['500', '600', '700'],
+  style: ['normal', 'italic'],
+});
+
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  title: {
+    default: 'LovelyGirls Prague — Premium Companions',
+    template: '%s · LovelyGirls Prague',
+  },
+  description:
+    'LovelyGirls Prague: 13 verified companions, 4 private apartments in Prague 2, 8, 1 and 3, open daily 10:00–22:30. Fast WhatsApp/Telegram contact.',
+  applicationName: 'LovelyGirls Prague',
+  referrer: 'strict-origin-when-cross-origin',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  other: {
+    rating: 'adult',
+    RATING: 'RTA-5042-1996-1400-1577-RTA',
+    'content-rating': 'mature',
+    distribution: 'global',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@lovelygirls',
+    title: 'LovelyGirls Prague — Verified Companions',
+    description:
+      'LovelyGirls Prague: 13 verified companions, 4 private apartments in Prague 2, 8, 1 and 3, open daily 10:00–22:30.',
+    images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'LovelyGirls Prague' }],
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'LovelyGirls Prague',
+    locale: 'en_US',
+    alternateLocale: ['cs_CZ', 'de_DE', 'uk_UA'],
+    images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'LovelyGirls Prague' }],
+  },
+};
+
+export default async function LocaleLayout({
+  children,
+  params,
+}: Readonly<{
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}>) {
+  const { locale } = await params;
+
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+
+  setRequestLocale(locale);
+
+  const hdrs = await headers();
+  const pathname = hdrs.get('x-pathname') ?? '';
+  const isProtectedArea = pathname.includes('/admin') || pathname.includes('/studio');
+
+  return (
+    <html lang={locale} className={`${inter.variable} ${playfair.variable}`}>
+      <body>
+        <NextIntlClientProvider>
+          {!isProtectedArea && <AgeGate />}
+          <Topbar locale={locale} />
+          <SiteHeader locale={locale} />
+          {children}
+          <SiteFooter />
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}

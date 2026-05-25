@@ -1,0 +1,406 @@
+{
+  "common": {
+    "siteName": "LovelyGirls Prag",
+    "tagline": "Premium-Begleitservice Prag",
+    "available_now": "Verfügbar",
+    "by_appointment": "Nach Absprache",
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "view_profile": "Profil öffnen",
+    "book_now": "Reservieren",
+    "verified": "Verifiziert",
+    "vip": "VIP",
+    "new_badge": "Neu",
+    "show_all": "Alle anzeigen",
+    "back_home": "Zur Startseite",
+    "contact_us": "Schreiben"
+  },
+  "nav": {
+    "home": "Startseite",
+    "girls": "Begleiterinnen",
+    "schedule": "Zeitplan",
+    "pricing": "Preise",
+    "discounts": "Rabatte",
+    "faq": "FAQ",
+    "reviews": "Bewertungen",
+    "contact": "Kontakt",
+    "about": "Über uns",
+    "terms": "AGB",
+    "privacy": "Datenschutz",
+    "blog": "Blog",
+    "join": "Bewerben",
+    "membership": "VIP Mitgliedschaft",
+    "membership_apply": "Bewerbung"
+  },
+  "geo": {
+    "home_lead": "LovelyGirls Prag betreibt 4 private Apartments in Prag 1, 2, 3 und 8. Alle 13 verifizierten Begleiterinnen, täglich 10:00–22:30 geöffnet.",
+    "divky_lead": "12 verifizierte Begleiterinnen in Prag, täglich 10:00–22:30. Filterbar nach Verfügbarkeit, Standort und Haarfarbe.",
+    "cenik_lead": "Programme ab 2 000 CZK für 30 Minuten, 2 500 CZK für 60 Minuten. Bargeld und Karte im Apartment.",
+    "faq_lead": "Antworten auf die 30 häufigsten Fragen zu Buchung, Preisen, Diskretion und Apartments.",
+    "slevy_lead": "Treueprogramm: 10 % nach dem 3. Besuch, 12 % nach dem 5., 15 % nach dem 10. Plus zeitlich begrenzte Angebote.",
+    "rozvrh_lead": "Aktueller Zeitplan der Begleiterinnen für heute und 6 Tage im Voraus, gefiltert nach Apartment."
+  },
+  "homepage": {
+    "hero_title": "Diskrete Begleiterinnen in Prager Innenstadt",
+    "hero_subtitle": "Verifizierte Profile, private Apartments und schneller Kontakt via WhatsApp oder Telegram.",
+    "cta_browse": "Begleiterinnen ansehen",
+    "cta_today": "Heute online",
+    "cta_contact": "Schreiben",
+    "topbar": {
+      "open_label": "Geöffnet",
+      "hours": "10:00 — 22:30",
+      "verified": "Verifizierte Profile",
+      "discreet": "Diskrete Apartments",
+      "call_btn": "Anrufen"
+    },
+    "hero": {
+      "eyebrow": "Diskret · Verifiziert · Privat",
+      "h1_main": "Begleitung Prag",
+      "h1_accent": "Luxus-Escort",
+      "subtitle": "Private Apartments im Stadtzentrum, persönlich geprüfte Profile und sofortiger Kontakt. Diskret, ohne Registrierung.",
+      "cta_browse": "Begleiterinnen →",
+      "cta_today": "Heute online",
+      "cta_contact": "So erreichen Sie uns",
+      "stats_girls": "Begleiterinnen",
+      "stats_now": "jetzt online",
+      "stats_reviews": "Bewertungen"
+    },
+    "featuredNew": {
+      "eyebrow": "Neu auf der Seite",
+      "h2": "Frisch dazugekommen",
+      "sub": "Lernen Sie unsere neueste Begleiterin kennen",
+      "badge": "NEU",
+      "link_text": "Profil öffnen"
+    },
+    "girlsGrid": {
+      "eyebrow": "Heute im Apartment",
+      "h2": "Unsere Begleiterinnen",
+      "sub": "Wählen Sie und schreiben Sie uns. Jedes Profil wird persönlich geprüft.",
+      "show_all": "Alle {count} Begleiterinnen anzeigen"
+    },
+    "activity": {
+      "eyebrow": "Updates",
+      "h2": "Was ist neu",
+      "sub": "Aktuelle Aktivität unserer Begleiterinnen",
+      "added_photos": "hat {count} neue Fotos hinzugefügt",
+      "added_photo": "hat ein neues Foto hinzugefügt",
+      "received_review": "hat eine {rating}★ Bewertung erhalten",
+      "no_recent": "Noch keine Updates."
+    },
+    "trust": {
+      "verified": {
+        "title": "Verifizierte Profile",
+        "text": "Aktuelle Fotos bei jeder Begleiterin"
+      },
+      "fast": {
+        "title": "Schnelle Antwort",
+        "text": "Wir antworten innerhalb von 5 Minuten via WhatsApp"
+      },
+      "discreet": {
+        "title": "Volle Diskretion",
+        "text": "Privates Apartment, ohne Registrierung"
+      },
+      "loyalty": {
+        "title": "Treueprogramm",
+        "text": "Rabatte und Vorteile für Stammkunden"
+      }
+    },
+    "reviews": {
+      "eyebrow": "Was Kunden sagen",
+      "h2": "Verifizierte Bewertungen",
+      "sub": "Echte Erfahrungen echter Kunden",
+      "show_all": "Alle Bewertungen"
+    },
+    "hashtags": {
+      "eyebrow": "Häufig gesucht",
+      "h2": "Beliebte Kategorien",
+      "sub": "Finden Sie die Begleiterin nach Ihren Vorlieben"
+    },
+    "locations": {
+      "eyebrow": "Unsere Apartments",
+      "h2": "Diskrete Apartments in Prag",
+      "sub": "Private Wohnungen im Zentrum, gut erreichbar mit Metro, Tram und Auto",
+      "note": "Privater Eingang",
+      "address_after_booking": "Die genaue Adresse erhalten Sie nach Terminbestätigung per WhatsApp oder Telegram.",
+      "main_apartment": "Hauptapartment",
+      "detail_cta": "Apartment ansehen →"
+    },
+    "contact": {
+      "eyebrow": "Kontakt",
+      "h2": "3 Schritte zum diskreten Treffen",
+      "sub": "Ohne Registrierung. Ohne Wartezeit. Ohne Komplikationen.",
+      "step1": {
+        "title": "Begleiterin wählen",
+        "text": "Profile, Fotos und Live-Verfügbarkeit ansehen"
+      },
+      "step2": {
+        "title": "Nachricht senden",
+        "text": "Schreiben Sie via WhatsApp oder Telegram — Antwort innerhalb 5 Minuten"
+      },
+      "step3": {
+        "title": "Treffen genießen",
+        "text": "Sie erhalten die Adresse und kommen zum vereinbarten Termin"
+      }
+    },
+    "finalCta": {
+      "eyebrow": "Schreiben",
+      "h2": "Heute Zeit?",
+      "sub": "Wir antworten in 5 Minuten. Immer diskret.",
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram",
+      "call": "Anrufen"
+    }
+  },
+  "card": {
+    "today_hours": "Heute {hours}",
+    "by_appointment_short": "Nach Vereinbarung",
+    "age": "{age} J.",
+    "height_cm": "cm",
+    "weight_kg": "kg",
+    "bust_label": "Brust",
+    "location_format": "Prag · {district}",
+    "away_label": "Nach Vereinbarung"
+  },
+  "schedule": {
+    "page_title": "Heutiger Zeitplan",
+    "page_description": "Wer heute und morgen arbeitet.",
+    "all_locations": "Alle Standorte",
+    "no_one_today": "Heute arbeitet niemand.",
+    "working_now": "Arbeitet jetzt",
+    "starting_at": "Beginnt um {time}"
+  },
+  "footer": {
+    "about": "Über uns",
+    "terms": "AGB",
+    "privacy": "Datenschutz",
+    "cookies": "Cookies",
+    "age_disclaimer": "Nur für Erwachsene 18+",
+    "rights": "Alle Rechte vorbehalten.",
+    "brand_desc": "Diskreter Begleitservice in Prag. Verifizierte Begleiterinnen in privaten Apartments im Zentrum.",
+    "pages_heading": "Seiten",
+    "contact_heading": "Kontakt",
+    "legal_heading": "Rechtliches",
+    "compliance": "Betrieb nach tschechischem Recht",
+    "disclaimer": "Sämtliche Angaben auf dieser Website dienen Werbezwecken der Dienstleistungsanbieter. Der Betreiber haftet weder für die Richtigkeit und Aktualität der veröffentlichten Informationen noch für die erbrachten Leistungen. Voraussetzung der Anzeige ist die Anmietung eines Zimmers.",
+    "call_btn": "Anrufen",
+    "brand_copy": "LovelyGirls Prag © {year}"
+  },
+  "ageGate": {
+    "title": "Nur für Erwachsene",
+    "subtitle": "Diese Seite enthält Inhalte ausschließlich für Erwachsene. Mit dem Eintritt bestätigen Sie, dass Sie 18 Jahre oder älter und nach den Gesetzen Ihres Landes volljährig sind.",
+    "enter": "Eintreten",
+    "leave": "Verlassen"
+  },
+  "languageSwitcher": {
+    "label": "Sprache",
+    "cs": "Čeština",
+    "en": "English",
+    "de": "Deutsch",
+    "uk": "Українська"
+  },
+  "girls": {
+    "h1": "Begleiterinnen Prag",
+    "sub": "Verifizierte Profile in diskreten Apartments im Prager Zentrum",
+    "results_count": "{count} Begleiterinnen",
+    "search_placeholder": "Nach Name suchen…",
+    "filter": {
+      "all": "Alle",
+      "available": "Jetzt online"
+    },
+    "sort": {
+      "newest": "Neueste",
+      "name": "Name A–Z",
+      "available_first": "Online zuerst"
+    },
+    "no_results": "Keine Begleiterinnen entsprechen den Filtern. Versuchen Sie andere Einstellungen."
+  },
+  "profil": {
+    "verified": "Fotos verifiziert",
+    "tabs": {
+      "miry": "Maße",
+      "vzhled": "Aussehen",
+      "sluzby": "Leistungen"
+    },
+    "acc": {
+      "section_miry": "Maße",
+      "section_vzhled": "Aussehen & Details",
+      "section_sluzby": "Leistungen",
+      "height": "Größe",
+      "weight": "Gewicht",
+      "bust": "Brust",
+      "waist": "Taille",
+      "hips": "Hüften",
+      "bust_natural": "natürlich",
+      "bust_implant": "Implantate",
+      "eyes": "Augen",
+      "hair": "Haare",
+      "tattoo": "Tattoo",
+      "piercing": "Piercing",
+      "yes": "Ja",
+      "no": "Nein"
+    },
+    "bio_label": "Über mich",
+    "height_label": "Größe",
+    "weight_label": "Gewicht",
+    "bust_label": "Brust",
+    "eyes_label": "Augen",
+    "hair_label": "Haare",
+    "cta": {
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram",
+      "call": "Anrufen"
+    },
+    "gallery": {
+      "h2": "Galerie"
+    },
+    "pricing": {
+      "h2": "Preise"
+    },
+    "reviews": {
+      "h2": "Bewertungen",
+      "show_all": "Alle Bewertungen ansehen ({count}) →"
+    },
+    "services": {
+      "h2": "Services & Erfahrungen",
+      "included": "Inklusive",
+      "extra": "Aufpreis",
+      "on_request": "Auf Anfrage",
+      "tag_negotiable": "Verhandelbar"
+    },
+    "body_art": {
+      "h2": "Tattoo & Piercing",
+      "tattoo": "Tattoo",
+      "piercing": "Piercing",
+      "coverage": "Körperabdeckung",
+      "tattoo_levels": {
+        "none": "Keine Tattoos",
+        "discreet": "Dezent",
+        "visible": "Sichtbar",
+        "significant": "Ausgeprägt",
+        "full": "Ganzkörper"
+      },
+      "piercing_levels": {
+        "none": "Keine Piercings",
+        "ears": "Ohren",
+        "multiple": "Mehrere Stellen",
+        "body": "Körper"
+      }
+    },
+    "styl_h": "STIL & GARDEROBE",
+    "styl_sub": "passt sich an · Stil im Voraus sagen",
+    "styl_note": "{name} passt sich jedem Stil an — Gala, Business, Badeanzug, Lingerie. Einfach vorher sagen.",
+    "kde_h": "WO SIE ZU FINDEN IST",
+    "kde_sub": "incall · 3 Apartments Prag",
+    "kde_address_note": "Adresse nach Buchungsbestätigung.",
+    "jazyky_h": "SPRACHEN",
+    "experience_h": "ERFAHRUNG & SERVICES",
+    "experience_col_programy": "Programme",
+    "experience_col_spolecenske": "Gesellschaftlich",
+    "experience_col_privatni": "Privat",
+    "lang_level_native": "Muttersprache",
+    "lang_level_fluent": "Fließend",
+    "lang_level_basic": "Grundkenntnisse"
+  },
+  "blog": {
+    "h1": "Blog",
+    "eyebrow": "Ratgeber & Tipps",
+    "sub": "Alles über diskrete Begleitung in Prag. Tipps, Ratgeber und Neuigkeiten.",
+    "read_more": "Weiterlesen →",
+    "related": "Weitere Artikel",
+    "by": "Autor",
+    "published": "Veröffentlicht",
+    "empty": "Noch keine Artikel."
+  },
+  "onas": {
+    "eyebrow": "Über uns",
+    "h1": "LovelyGirls Prag",
+    "lead": "Premium-Begleitservice im Zentrum Prags. Diskretion, verifizierte Profile und private Apartments.",
+    "s1_h2": "Wer wir sind",
+    "s1_text": "LovelyGirls Prag ist ein Premium-Begleitservice mit privaten Apartments im Stadtzentrum. Wir arbeiten ausschließlich mit verifizierten Begleiterinnen — keine gefälschten Fotos, keine Überraschungen.",
+    "s2_h2": "Unsere Werte",
+    "s2_text": "Diskretion und Transparenz stehen an erster Stelle. Keine versteckten Gebühren, keine Kundendatenbanken, keine Quittungen. Was im Apartment passiert, bleibt im Apartment.",
+    "s3_h2": "Warum wir",
+    "s3_text": "Private Apartments im Zentrum von Prag. Geöffnet täglich 10:00–22:30. Antwort innerhalb 5 Minuten via WhatsApp oder Telegram. Keine Registrierung nötig."
+  },
+  "kontakt": {
+    "eyebrow": "Kontakt",
+    "h1": "Schreiben oder anrufen",
+    "lead": "Antwort innerhalb 5 Minuten. Ohne Registrierung, volle Diskretion.",
+    "whatsapp_label": "WhatsApp",
+    "telegram_label": "Telegram",
+    "phone_label": "Telefon",
+    "whatsapp_value": "+420 XXX XXX XXX",
+    "telegram_value": "@lovelygirls_prague",
+    "phone_value": "+420 XXX XXX XXX",
+    "whatsapp_desc": "Schnellste Antwort",
+    "telegram_desc": "Voll anonym",
+    "phone_desc": "Täglich 10:00–22:30"
+  },
+  "podminky": {
+    "eyebrow": "Rechtliches",
+    "h1": "Nutzungsbedingungen",
+    "lead": "Nutzungsbedingungen der LovelyGirls Prag Website.",
+    "s1_h2": "1. Einleitung",
+    "s1_text": "Diese Website wird ausschließlich zu Werbezwecken der Dienstleister betrieben.",
+    "s2_h2": "2. Altersbeschränkung",
+    "s2_text": "Diese Website ist ausschließlich für Personen über 18 Jahre bestimmt.",
+    "s3_h2": "3. Werbebedingungen",
+    "s3_text": "Voraussetzung für die Werbung auf dieser Website ist die Anmietung eines Zimmers."
+  },
+  "soukromi": {
+    "eyebrow": "Datenschutz",
+    "h1": "Datenschutzerklärung",
+    "lead": "Wie wir mit Ihren persönlichen Daten umgehen.",
+    "s1_h2": "Welche Daten wir erheben",
+    "s1_text": "Beim Besuch der Website erheben wir anonymisierte Analysedaten.",
+    "s2_h2": "Cookies",
+    "s2_text": "Die Website verwendet notwendige Cookies für die ordnungsgemäße Funktion.",
+    "s3_h2": "Ihre Rechte",
+    "s3_text": "Sie haben das Recht, die Löschung Ihrer personenbezogenen Daten zu beantragen."
+  },
+  "join": {
+    "h1": "Werden Sie Teil unseres Teams",
+    "sub": "Füllen Sie das Formular aus, unser Team meldet sich innerhalb von 24 Stunden bei Ihnen.",
+    "section": {
+      "personal": "Persönliche Angaben",
+      "appearance": "Erscheinungsbild",
+      "contact": "Kontakt",
+      "bio": "Über Sie",
+      "services": "Leistungen & Verfügbarkeit"
+    },
+    "field": {
+      "name": "Name",
+      "age": "Alter",
+      "height": "Größe (cm)",
+      "weight": "Gewicht (kg)",
+      "bust": "Brustgröße",
+      "bust_natural": "Brusttyp",
+      "bust_natural_yes": "Natürlich",
+      "bust_natural_no": "Implantate",
+      "waist": "Taille (cm)",
+      "hips": "Hüfte (cm)",
+      "hair": "Haarfarbe",
+      "eyes": "Augenfarbe",
+      "tattoo": "Tätowierung",
+      "tattoo_desc": "Beschreibung der Tätowierung",
+      "piercing": "Piercing",
+      "phone": "Telefon",
+      "email": "E-Mail",
+      "telegram": "Telegram",
+      "bio_cs": "Über sich (Tschechisch)",
+      "bio_en": "Über sich (Englisch)",
+      "languages": "Sprachen (kommagetrennt)",
+      "services": "Leistungen (kommagetrennt)",
+      "availability": "Verfügbarkeit"
+    },
+    "services_basic_label": "Grundleistungen (immer inklusive)",
+    "services_extra_label": "Zusatzleistungen (die du anbieten möchtest?)",
+    "services_extra_hint": "Markiere alles, was du anbietest. Was du wählst, erscheint in deinem Profil.",
+    "lang_picker_label": "Sprache des Formulars",
+    "submit": "Bewerbung senden",
+    "success": {
+      "title": "Bewerbung gesendet",
+      "body": "Vielen Dank! Unser Team meldet sich innerhalb von 24 Stunden bei Ihnen."
+    }
+  }
+}

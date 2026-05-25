@@ -1,0 +1,119 @@
+{
+  "exportedAt": "2026-05-09T12:09:30.205Z",
+  "source": "lovelygirls-design Vercel project / Secretstory Turso DB",
+  "skippedTables": [
+    "analytics_events",
+    "blog_posts",
+    "blog_tags",
+    "blog_post_tags",
+    "copywriters",
+    "oauth_states",
+    "activity_log"
+  ],
+  "tables": [
+    {
+      "table": "girls",
+      "count": 12
+    },
+    {
+      "table": "girl_photos",
+      "count": 67
+    },
+    {
+      "table": "girl_videos",
+      "count": 0
+    },
+    {
+      "table": "girl_services",
+      "count": 0
+    },
+    {
+      "table": "girl_schedules",
+      "count": 23
+    },
+    {
+      "table": "schedule_exceptions",
+      "count": 0
+    },
+    {
+      "table": "girl_applications",
+      "count": 13
+    },
+    {
+      "table": "girl_seo_metadata",
+      "count": 0
+    },
+    {
+      "table": "photo_alt_texts",
+      "count": 0
+    },
+    {
+      "table": "locations",
+      "count": 1
+    },
+    {
+      "table": "services",
+      "count": 29
+    },
+    {
+      "table": "pricing_plans",
+      "count": 10
+    },
+    {
+      "table": "pricing_plan_features",
+      "count": 5
+    },
+    {
+      "table": "pricing_extras",
+      "count": 8
+    },
+    {
+      "table": "discounts",
+      "count": 6
+    },
+    {
+      "table": "discount_codes",
+      "count": 3
+    },
+    {
+      "table": "faq_items",
+      "count": 32
+    },
+    {
+      "table": "reviews",
+      "count": 82
+    },
+    {
+      "table": "review_helpful_votes",
+      "count": 125
+    },
+    {
+      "table": "stories",
+      "count": 3
+    },
+    {
+      "table": "loyalty_tiers",
+      "count": 0
+    },
+    {
+      "table": "notifications",
+      "count": 0
+    },
+    {
+      "table": "bookings",
+      "count": 0
+    },
+    {
+      "table": "users",
+      "count": 3
+    },
+    {
+      "table": "site_settings",
+      "count": 1
+    },
+    {
+      "table": "seo_metadata",
+      "count": 288
+    }
+  ]
+}
