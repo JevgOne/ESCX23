@@ -202,6 +202,8 @@ nav.main-nav {
   display: flex;
   align-items: center;
   gap: 32px;
+  flex: 1;
+  justify-content: center;
 }
 nav.main-nav a {
   font-size: 14px;
@@ -580,60 +582,68 @@ nav.main-nav a:hover {
 .girl-loc-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: 12px;
   color: var(--color-text-muted);
   margin-bottom: 10px;
 }
+.girl-loc-row svg {
+  flex-shrink: 0;
+  color: var(--color-coral);
+}
 
 .girl-statline {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-line);
-  border-radius: 8px;
-  overflow: hidden;
+  grid-template-columns: 1fr 1fr;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  column-gap: 16px;
+  row-gap: 4px;
 }
 .girl-stat-cell {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 4px;
-  text-align: center;
-  border-right: 1px solid var(--color-line);
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: flex-start;
+  padding: 0;
+  text-align: left;
+  border: 0;
+  gap: 4px;
 }
 .girl-stat-cell:last-child {
   border-right: none;
 }
 .girl-stat-cell .num {
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-coral);
-  line-height: 1;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.2;
 }
 .girl-stat-cell .label {
-  font-size: 10px;
-  color: var(--color-text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-top: 3px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-top: 0;
+  font-weight: 400;
 }
 
 /* Mobile card adjustments */
 @media (max-width: 768px) {
-  .girl-info { padding: 12px 12px 14px; }
-  .girl-name { font-size: 18px; }
-  .girl-age { font-size: 14px; padding: 3px 9px; }
-  .girl-loc-row { font-size: 11px; margin-bottom: 8px; }
-  .girl-stat-cell .num { font-size: 14px; }
-  .girl-stat-cell .label { font-size: 9px; }
+  .girl-info { padding: 10px 12px 14px; }
+  .girl-name { font-size: 20px; font-weight: 700; }
+  .girl-loc-row { font-size: 12px; margin-bottom: 8px; color: var(--color-text-muted); padding-left: 0; }
+  .girl-stat-cell .num { font-size: 13px; }
+  .girl-stat-cell .label { font-size: 12px; }
+  .girl-statline { column-gap: 10px; row-gap: 3px; }
   .girl-tag-pill { padding: 4px 9px; font-size: 9.5px; top: 8px; left: 8px; }
   .girl-photo-time { padding: 5px 11px; font-size: 11px; }
   .girl-media-pill { font-size: 9.5px; padding: 3px 7px; }
   .girl-media-pills { top: 8px; right: 8px; gap: 4px; }
-  .girl-langs { font-size: 16px; gap: 6px; }
+  .girl-bottom-row { display: none; }
 }
 
 .girl-bottom-row {
@@ -728,20 +738,91 @@ footer::before {
     rgba(242,125,141,0.4) 70%,
     transparent 100%);
 }
+/* Trust strip — počty + hours + discreet */
+.footer-trust {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px 28px;
+  margin-bottom: 44px;
+  background: linear-gradient(135deg, rgba(242, 125, 141, 0.04) 0%, rgba(200, 75, 139, 0.03) 50%, rgba(110, 42, 110, 0.02) 100%);
+  border: 1px solid rgba(242, 125, 141, 0.12);
+  border-radius: 16px;
+}
+.footer-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.footer-trust-item > svg {
+  color: var(--color-coral);
+  flex-shrink: 0;
+}
+.footer-trust-item > div { min-width: 0; }
+.ftrust-num {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ftrust-lbl {
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+@media (max-width: 860px) {
+  .footer-trust {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 18px;
+    margin-bottom: 32px;
+  }
+  .ftrust-num { font-size: 17px; }
+  .ftrust-lbl { font-size: 9.5px; letter-spacing: 0.08em; }
+}
+@media (max-width: 480px) {
+  .footer-trust {
+    gap: 10px 12px;
+    padding: 14px 12px;
+    margin-bottom: 28px;
+  }
+  .footer-trust-item { gap: 8px; }
+  .footer-trust-item > svg { width: 16px; height: 16px; }
+  .ftrust-num { font-size: 14px; margin-bottom: 2px; }
+  .ftrust-lbl { font-size: 9px; }
+}
+
+/* Bottom-bar inline link (Privacy) */
+.footer-bottom-link {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.15s;
+}
+.footer-bottom-link:hover { color: var(--color-coral); }
+
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.6fr 1fr 1.2fr;
+  grid-template-columns: 1.6fr 1fr 1fr;
   gap: 56px;
-  margin-bottom: 48px;
-  padding-bottom: 40px;
+  margin-bottom: 40px;
+  padding-bottom: 36px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 @media (max-width: 860px) {
-  .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px 40px; }
   .footer-brand { grid-column: 1 / -1; }
 }
 @media (max-width: 520px) {
-  .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 28px; }
 }
 .footer-brand .logo {
   margin-bottom: 18px;
@@ -2688,6 +2769,350 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 .profile-hero-photo img {
   width: 100%; height: 100%;
   object-fit: cover;
+}
+
+/* ============================================================
+   PROFILE INSTAGRAM-STYLE HEADER (mobile only)
+============================================================ */
+.profile-ig-header { display: none !important; }
+.ig-stat-hero { display: none !important; }
+.profile-ig-cta { display: none !important; }
+.ig-stat-details { display: none !important; }
+.profile-ig-services { display: none !important; }
+.profile-ig-hashtags { display: none !important; }
+
+@media (max-width: 900px) {
+  .profile-photo-col {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .profile-photo-col > * {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .profile-ig-header {
+    display: flex !important;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 0 16px;
+  }
+  .ig-avatar {
+    position: relative;
+    width: 124px;
+    height: 124px;
+    border-radius: 22px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--color-bg-elev);
+    box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.7);
+  }
+  .ig-avatar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: linear-gradient(135deg, #f27d8d 0%, #c84b8b 50%, #6e2a6e 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .ig-avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
+  }
+  .ig-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-top: 4px;
+  }
+  .ig-name-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .ig-name {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+    line-height: 1;
+  }
+  .ig-age {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--color-coral);
+    font-weight: 500;
+    line-height: 1;
+  }
+  .ig-loc {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    color: var(--color-text-muted);
+    line-height: 1.2;
+  }
+  .ig-loc svg { color: var(--color-coral); flex-shrink: 0; }
+  .ig-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--color-green);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 4px 10px 4px 8px;
+    background: rgba(74, 222, 128, 0.08);
+    border: 1px solid rgba(74, 222, 128, 0.22);
+    border-radius: 999px;
+    width: fit-content;
+    line-height: 1;
+  }
+  .ig-status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--color-green);
+    box-shadow: 0 0 6px var(--color-green);
+    flex-shrink: 0;
+    animation: pulse-green 2s infinite;
+  }
+  .ig-meters {
+    display: flex;
+    gap: 14px;
+    font-size: 11.5px;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .ig-meters strong {
+    color: var(--color-text);
+    font-weight: 700;
+  }
+  .ig-meters span:first-child strong {
+    color: var(--color-text);
+  }
+  .ig-meters span:last-child strong {
+    color: var(--color-coral);
+  }
+
+  .ig-stat-hero {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    margin: 8px 0 16px;
+    width: 100%;
+  }
+  .ig-stat-hero .profile-stat-hero-cell {
+    padding: 14px 6px 12px;
+  }
+  .ig-stat-hero .psh-num {
+    font-size: 24px;
+  }
+  .ig-stat-hero .psh-unit {
+    font-size: 10px;
+  }
+  .ig-stat-hero .psh-label {
+    margin-top: 8px;
+    padding-top: 6px;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+  }
+  .ig-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    position: relative;
+  }
+  .ig-stat + .ig-stat::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 1px;
+    background: var(--color-line);
+  }
+  .ig-stat-num {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .ig-stat-lbl {
+    font-size: 10px;
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 600;
+  }
+
+  .profile-ig-cta {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+  .ig-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px 6px;
+    border-radius: 10px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-decoration: none;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    transition: transform 0.15s, box-shadow 0.15s;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .ig-cta:active { transform: scale(0.97); }
+  .ig-cta-call {
+    background: linear-gradient(135deg, #f27d8d, #c84b8b);
+    color: #fff;
+    box-shadow: 0 8px 20px -8px rgba(200, 75, 139, 0.6);
+  }
+  .ig-cta-wa {
+    background: rgba(37, 211, 102, 0.1);
+    color: #4ade80;
+    border: 1px solid rgba(37, 211, 102, 0.3);
+  }
+  .ig-cta-tg {
+    background: rgba(34, 158, 217, 0.1);
+    color: #5fb8e0;
+    border: 1px solid rgba(34, 158, 217, 0.3);
+  }
+
+  /* Reuse desktop .psd-pill chip row on mobile for bust/eyes/hair/langs */
+  .ig-stat-details {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  /* Visual separator before language pills (first .lang in row) */
+  .ig-stat-details .psd-pill.lang:first-of-type {
+    margin-left: 10px;
+    position: relative;
+  }
+  .ig-stat-details .psd-pill.lang:first-of-type::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 18%;
+    bottom: 18%;
+    width: 1px;
+    background: var(--color-line);
+  }
+
+  /* Hide ProfilDetails duplicates that are now shown in IG header */
+  .profile-stat-details:not(.ig-stat-details) {
+    display: none !important;
+  }
+
+  /* TOP services row — matches desktop style */
+  .profile-ig-services {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .ig-services-lbl {
+    font-size: 11px;
+    color: var(--color-coral);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .ig-services-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ig-service-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-line);
+    color: var(--color-text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .ig-service-chip-top {
+    background: rgba(74, 222, 128, 0.08);
+    border-color: rgba(74, 222, 128, 0.28);
+    color: var(--color-green);
+  }
+
+  /* Hashtags — compact, horizontally scrollable */
+  .profile-ig-hashtags {
+    display: flex !important;
+    gap: 6px;
+    margin-bottom: 18px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 0;
+    /* fade edges to hint scroll */
+    mask-image: linear-gradient(90deg, transparent 0, #000 8px, #000 calc(100% - 8px), transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8px, #000 calc(100% - 8px), transparent 100%);
+  }
+  .profile-ig-hashtags::-webkit-scrollbar { display: none; }
+  .ig-hashtag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-dim);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .ig-hashtag::before {
+    content: '#';
+    margin-right: 1px;
+    color: var(--color-coral);
+  }
+
+  /* Hide the duplicate name/loc/stats block in ProfilDetails on mobile */
+  .profile-status-line,
+  .profile-name-block,
+  .profile-meta-line,
+  .profile-stat-hero:not(.ig-stat-hero) {
+    display: none !important;
+  }
+
+  /* Shrink hero photo on mobile — info dominates above */
+  .profile-hero-photo {
+    aspect-ratio: 4/5;
+    border-radius: 14px;
+  }
 }
 .profile-thumbs {
   display: grid;
@@ -5731,18 +6156,39 @@ body {
   color: var(--color-text);
 }
 
+.header-langs {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 @media (max-width: 900px) {
   .header-inner {
-    flex-wrap: wrap;
-    height: auto;
-    padding-top: 14px;
-    padding-bottom: 14px;
-    gap: 0;
+    flex-wrap: nowrap;
+    height: 64px;
+    padding-top: 0;
+    padding-bottom: 0;
+    gap: 10px;
     position: relative;
+    align-items: center;
+  }
+  .logo { gap: 8px; flex-shrink: 1; min-width: 0; }
+  .logo-mark { width: 36px; height: 36px; }
+  .logo-mark svg { width: 36px; height: 36px; }
+  .logo-name { font-size: 19px; line-height: 1; }
+  .logo-sub { display: none; }
+  .header-langs {
+    margin-left: auto;
+    margin-right: 4px;
+    flex-shrink: 0;
   }
   .nav-toggle {
     display: flex;
+    margin-left: 0;
+    flex-shrink: 0;
+    padding: 8px;
   }
+  .nav-toggle svg { width: 24px; height: 24px; }
   nav.main-nav {
     order: 3;
     width: 100%;
@@ -5772,31 +6218,16 @@ body {
     max-height: 400px;
     border-bottom-width: 1px;
   }
-  .header-cta {
-    gap: 6px;
-    margin-left: 8px;
-  }
-  .header-cta .btn {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
 }
 
-@media (max-width: 480px) {
-  .header-cta {
+/* ===== TOPBAR — hide on mobile (info bar not useful on small screens) ===== */
+@media (max-width: 768px) {
+  .topbar {
     display: none;
   }
 }
-
-/* ===== TOPBAR — mobile ===== */
 @media (max-width: 720px) {
   .topbar-info span:not(:first-child) {
-    display: none;
-  }
-  .topbar-actions a:not(:last-child) {
-    display: none;
-  }
-  .topbar-divider {
     display: none;
   }
 }
@@ -5876,7 +6307,8 @@ body {
 /* ===== GIRLS GRID — very small screens ===== */
 @media (max-width: 360px) {
   .girls-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 }
 
@@ -11304,16 +11736,10 @@ body {
 }
 
 /* ----- Girl cards grid ----- */
-@media (max-width: 480px) {
-  .girls-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-}
-@media (min-width: 481px) and (max-width: 768px) {
+@media (max-width: 768px) {
   .girls-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 10px;
   }
 }
 
@@ -11723,5 +12149,148 @@ body {
 @media (max-width: 380px) {
   .dashboard-stats-row {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   LANGUAGE SWITCHER — single flag dropdown (massagehall style)
+============================================================ */
+.lang-switcher {
+  position: relative;
+  display: inline-block;
+}
+.lang-switcher > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+.lang-switcher > summary::-webkit-details-marker { display: none; }
+.lang-switcher > summary::marker { content: ''; }
+.lang-switcher-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-line);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  transition: color 0.15s, border-color 0.15s;
+}
+.lang-switcher-summary:hover {
+  color: var(--color-text);
+  border-color: var(--color-line-mid);
+}
+.lang-switcher-chev {
+  transition: transform 0.18s;
+  opacity: 0.7;
+}
+.lang-switcher[open] .lang-switcher-chev {
+  transform: rotate(180deg);
+}
+.lang-switcher-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px;
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.6);
+  z-index: 60;
+  min-width: 120px;
+}
+.lang-switcher[open] .lang-switcher-menu {
+  display: flex;
+}
+.lang-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: transparent;
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1;
+  justify-content: flex-start;
+  width: 100%;
+}
+.lang-chip:hover {
+  color: var(--color-text);
+  background: var(--color-bg-elev);
+}
+.lang-chip-active {
+  color: var(--color-coral);
+  background: var(--color-bg-elev);
+}
+.lang-chip-flag {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ============================================================
+   MOBILE BOTTOM BAR — sticky 4-action bar
+============================================================ */
+.mobile-bottom-bar {
+  display: none;
+}
+@media (max-width: 768px) {
+  .mobile-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 70;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: rgba(18, 14, 22, 0.96);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--color-line);
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 24px -12px rgba(0, 0, 0, 0.6);
+  }
+  .mbb-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 4px;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: color 0.15s, background 0.15s;
+    min-height: 48px;
+  }
+  .mbb-item:hover,
+  .mbb-item:active {
+    color: var(--color-coral);
+    background: rgba(242, 125, 141, 0.08);
+  }
+  .mbb-icon {
+    flex-shrink: 0;
+  }
+  .mbb-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+  /* Push body content above the bar */
+  body {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+  /* Profile sticky CTA shouldn't overlap with bottom bar */
+  .profile-sticky-bar-desktop {
+    bottom: calc(72px + env(safe-area-inset-bottom)) !important;
   }
 }

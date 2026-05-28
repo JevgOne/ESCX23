@@ -260,6 +260,9 @@ export default async function ProfilPage({ params }: Props) {
               photos={photoTyped}
               verifiedLabel={labels.verified}
               locale={locale}
+              shiftFrom={todaySchedule.shiftFrom}
+              shiftTo={todaySchedule.shiftTo}
+              topServices={servicesTyped.slice(0, 6).map((s) => ({ name: String((s as { name?: unknown }).name ?? '') })).filter((s) => s.name)}
             />
             <ProfilDetails
               girl={girlTyped}

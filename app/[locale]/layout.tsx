@@ -5,10 +5,11 @@ import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { routing } from '@/i18n/routing';
-import Topbar from '@/components/layout/Topbar';
 import SiteHeader from '@/components/layout/SiteHeader';
 import SiteFooter from '@/components/layout/SiteFooter';
+import MobileBottomBar from '@/components/layout/MobileBottomBar';
 import AgeGate from '@/components/AgeGate';
+import { getHreflangsForPath, getCanonicalForPath } from '@/lib/seo/hreflang';
 import '../globals.css';
 
 const inter = Inter({
@@ -93,15 +94,25 @@ export default async function LocaleLayout({
   const pathname = hdrs.get('x-pathname') ?? '';
   const isProtectedArea = pathname.includes('/admin') || pathname.includes('/studio');
 
+  const hreflangs = !isProtectedArea && pathname ? getHreflangsForPath(pathname) : null;
+  const canonical = !isProtectedArea && pathname ? getCanonicalForPath(pathname, locale) : null;
+
   return (
     <html lang={locale} className={`${inter.variable} ${playfair.variable}`}>
+      <head>
+        {canonical && <link rel="canonical" href={canonical} />}
+        {hreflangs &&
+          Object.entries(hreflangs).map(([lang, href]) => (
+            <link key={lang} rel="alternate" hrefLang={lang} href={href} />
+          ))}
+      </head>
       <body>
         <NextIntlClientProvider>
           {!isProtectedArea && <AgeGate />}
-          <Topbar locale={locale} />
           <SiteHeader locale={locale} />
           {children}
           <SiteFooter />
+          {!isProtectedArea && <MobileBottomBar locale={locale} />}
         </NextIntlClientProvider>
       </body>
     </html>

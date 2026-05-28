@@ -28,10 +28,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t('h1'),
     description: t('sub'),
-    alternates: {
-      canonical,
-      languages,
-    },
     openGraph: {
       images: _customOg_divky ? [{ url: _customOg_divky, width: 1200, height: 630, alt: '' }] : undefined,
       title: t('h1'),

@@ -47,31 +47,47 @@ async function submitReview(formData: FormData) {
     redirect(`/recenze/nova/${slug}?error=invalid`);
   }
 
-  const girlRes = await db.execute({
-    sql: `SELECT id FROM girls WHERE slug = ? LIMIT 1`,
-    args: [slug],
-  });
-  if (girlRes.rows.length === 0) {
-    redirect(`/recenze/nova/${slug}?error=girl_not_found`);
+  try {
+    const girlRes = await db.execute({
+      sql: `SELECT id FROM girls WHERE slug = ? LIMIT 1`,
+      args: [slug],
+    });
+    if (girlRes.rows.length === 0) {
+      redirect(`/recenze/nova/${slug}?error=girl_not_found`);
+    }
+    const girlId = Number(girlRes.rows[0].id);
+
+    // Try full insert; fall back to minimal columns if extra columns don't exist
+    try {
+      await db.execute({
+        sql: `INSERT INTO reviews (girl_id, rating, content, author_name, status, mood, vibe_tags, recommends)
+              VALUES (?, ?, ?, ?, 'approved', ?, ?, ?)`,
+        args: [girlId, ratingOverall, text, nickname, mood, vibesJson, recommends],
+      });
+    } catch (e) {
+      console.error('[review] full insert failed, retry minimal', e);
+      await db.execute({
+        sql: `INSERT INTO reviews (girl_id, rating, content, author_name, status)
+              VALUES (?, ?, ?, ?, 'approved')`,
+        args: [girlId, ratingOverall, text, nickname],
+      });
+    }
+
+    const aggRes = await db.execute({
+      sql: `SELECT AVG(rating) as avg_rating, COUNT(*) as cnt FROM reviews WHERE girl_id = ? AND status = 'approved'`,
+      args: [girlId],
+    });
+    const newAvg = Number(aggRes.rows[0]?.avg_rating ?? 0);
+    const newCount = Number(aggRes.rows[0]?.cnt ?? 0);
+    await db.execute({
+      sql: `UPDATE girls SET rating = ?, reviews_count = ? WHERE id = ?`,
+      args: [Math.round(newAvg * 10) / 10, newCount, girlId],
+    });
+  } catch (err) {
+    if ((err as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) throw err;
+    console.error('[review] submit failed', err);
+    redirect(`/recenze/nova/${slug}?error=server`);
   }
-  const girlId = Number(girlRes.rows[0].id);
-
-  await db.execute({
-    sql: `INSERT INTO reviews (girl_id, rating, content, author_name, status, mood, vibe_tags, recommends)
-          VALUES (?, ?, ?, ?, 'approved', ?, ?, ?)`,
-    args: [girlId, ratingOverall, text, nickname, mood, vibesJson, recommends],
-  });
-
-  const aggRes = await db.execute({
-    sql: `SELECT AVG(rating) as avg_rating, COUNT(*) as cnt FROM reviews WHERE girl_id = ? AND status = 'approved'`,
-    args: [girlId],
-  });
-  const newAvg = Number(aggRes.rows[0]?.avg_rating ?? 0);
-  const newCount = Number(aggRes.rows[0]?.cnt ?? 0);
-  await db.execute({
-    sql: `UPDATE girls SET rating = ?, reviews_count = ? WHERE id = ?`,
-    args: [Math.round(newAvg * 10) / 10, newCount, girlId],
-  });
 
   redirect(`/recenze/nova/${slug}?sent=1`);
 }

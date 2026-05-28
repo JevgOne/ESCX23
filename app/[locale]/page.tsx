@@ -51,10 +51,6 @@ export async function generateMetadata({
   return {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
-    alternates: {
-      canonical,
-      languages,
-    },
     openGraph: {
       title: TITLES[locale] ?? TITLES.en,
       description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,

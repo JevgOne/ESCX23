@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile C — Info nahoře, galerie dole</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --magenta: #c84b8b;
+    --green: #4ade80;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; padding-bottom: 80px; }
+  .title-bar { padding: 14px 16px; font-size: 11px; color: var(--coral); letter-spacing: 0.2em; text-transform: uppercase; border-bottom: 1px solid var(--line); }
+  .info-card {
+    margin: 16px;
+    background: linear-gradient(180deg, var(--bg-elev), var(--bg-soft));
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .name-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); flex-shrink: 0; align-self: center; }
+  .name { font-family: Georgia, serif; font-size: 32px; font-weight: 700; line-height: 1; }
+  .age { font-size: 18px; color: var(--coral); }
+  .meta { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+  .status { font-size: 13px; color: var(--green); font-weight: 600; margin-bottom: 16px; }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 14px;
+  }
+  .stat-cell { text-align: center; }
+  .stat-cell .num { font-family: Georgia, serif; font-size: 22px; font-weight: 700; color: var(--coral); line-height: 1; }
+  .stat-cell .lbl { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; display: block; }
+  .verify-row { display: flex; align-items: center; gap: 12px; font-size: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .verify-row .verified { color: var(--green); }
+  .verify-row .rating { color: var(--coral); }
+  .ctas { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .cta { padding: 12px 8px; border-radius: 999px; font-size: 13px; font-weight: 700; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .cta-call { background: linear-gradient(135deg, var(--coral), var(--magenta)); color: white; }
+  .cta-wa { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+  .cta-tg { background: rgba(34,158,217,0.12); color: #5fb8e0; border: 1px solid rgba(34,158,217,0.3); }
+  .section { padding: 24px 16px; }
+  .tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+  .tab { padding: 10px 0; font-size: 13px; font-weight: 600; color: var(--muted); position: relative; }
+  .tab.active { color: var(--coral); }
+  .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--coral); }
+  .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .gallery-item { aspect-ratio: 3/4; background: linear-gradient(135deg, #1f1726, #15101a); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: rgba(255,255,255,0.1); }
+  .label { padding: 10px 16px; background: var(--bg-elev); border-radius: 10px; font-size: 12px; color: var(--muted); margin: 16px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="title-bar">Varianta C — Info card, žádné hero</div>
+
+<div class="info-card">
+  <div class="name-row">
+    <span class="dot"></span>
+    <span class="name">Anetta</span>
+    <span class="age">· 19</span>
+  </div>
+  <div class="meta">📍 Vinohrady · Praha 2</div>
+  <div class="status">● Dnes 11:00–22:00</div>
+
+  <div class="stats-grid">
+    <div class="stat-cell"><div class="num">165</div><span class="lbl">cm</span></div>
+    <div class="stat-cell"><div class="num">50</div><span class="lbl">kg</span></div>
+    <div class="stat-cell"><div class="num">1</div><span class="lbl">prsa</span></div>
+  </div>
+
+  <div class="verify-row">
+    <span class="verified">✓ Fotky ověřené 2.4.2026</span>
+    <span class="rating">★ 3.5 · 2 recenze</span>
+  </div>
+
+  <div class="ctas">
+    <div class="cta cta-call">📞 Zavolat</div>
+    <div class="cta cta-wa">WhatsApp</div>
+    <div class="cta cta-tg">Telegram</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="tabs">
+    <div class="tab active">FOTO (7)</div>
+    <div class="tab">VIDEO (0)</div>
+  </div>
+  <div class="gallery">
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+  </div>
+</div>
+
+<div class="label">↓ pod tím: recenze · služby · cenik · podobné dívky</div>
+</body>
+</html>

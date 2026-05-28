@@ -52,3 +52,6 @@ pull-lovelygirls.mjs
 # Allow committed mockups (those live in mockups/ folder)
 !mockups/**/*.png
 !public/**/*.png
+.env.production
+.env.prod-real
+profile_ig_shots.mjs

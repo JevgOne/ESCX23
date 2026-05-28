@@ -84,38 +84,36 @@ export default async function LanguageSwitcher({ currentLocale }: Props) {
   const pathname = hdrs.get('x-pathname') ?? hdrs.get('next-url') ?? '/';
   const stripped = stripLocale(pathname);
   const { key: canonicalKey, params } = findCanonicalKey(stripped);
+  const activeLoc = currentLocale as Locale;
 
   return (
-    <nav aria-label="Language" style={{ display: 'flex', gap: 4 }}>
-      {routing.locales.map((loc) => {
-        const isActive = loc === currentLocale;
-        const href = buildLocalizedHref(canonicalKey, params, loc);
-        return (
-          <a
-            key={loc}
-            href={href}
-            aria-current={isActive ? 'true' : undefined}
-            hrefLang={loc}
-            style={{
-              padding: '6px 10px',
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 600,
-              border: '1px solid var(--color-line)',
-              background: isActive ? 'var(--color-bg-elev)' : 'transparent',
-              color: isActive ? 'var(--color-coral)' : 'var(--color-text-muted)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
-            <span aria-hidden style={{ fontSize: 14 }}>
-              {FLAGS[loc]}
-            </span>
-            {LABELS[loc]}
-          </a>
-        );
-      })}
-    </nav>
+    <details className="lang-switcher" aria-label="Language">
+      <summary className="lang-switcher-summary">
+        <span aria-hidden className="lang-chip-flag">{FLAGS[activeLoc]}</span>
+        <span className="lang-chip-label">{LABELS[activeLoc]}</span>
+        <svg className="lang-switcher-chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </summary>
+      <div className="lang-switcher-menu" role="menu">
+        {routing.locales.map((loc) => {
+          const isActive = loc === currentLocale;
+          const href = buildLocalizedHref(canonicalKey, params, loc);
+          return (
+            <a
+              key={loc}
+              href={href}
+              hrefLang={loc}
+              aria-current={isActive ? 'true' : undefined}
+              role="menuitem"
+              className={`lang-chip${isActive ? ' lang-chip-active' : ''}`}
+            >
+              <span aria-hidden className="lang-chip-flag">{FLAGS[loc]}</span>
+              <span className="lang-chip-label">{LABELS[loc]}</span>
+            </a>
+          );
+        })}
+      </div>
+    </details>
   );
 }

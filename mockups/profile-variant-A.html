@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile A — Hero overlay (massagehall style)</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --magenta: #c84b8b;
+    --green: #4ade80;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; padding-bottom: 80px; }
+  .title-bar { padding: 14px 16px; font-size: 11px; color: var(--coral); letter-spacing: 0.2em; text-transform: uppercase; border-bottom: 1px solid var(--line); }
+  .hero {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/5;
+    background: linear-gradient(180deg, #2a2230 0%, #181321 100%) center/cover;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 0%, transparent 40%, rgba(12,10,14,0.95) 100%);
+  }
+  .hero-img-placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 80px; color: rgba(255,255,255,0.05);
+  }
+  .hero-info {
+    position: absolute; bottom: 16px; left: 16px; right: 16px;
+    background: rgba(20,15,25,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .hero-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .hero-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); flex-shrink: 0; }
+  .hero-name { font-family: Georgia, serif; font-size: 26px; font-weight: 700; }
+  .hero-age { font-size: 16px; color: var(--coral); }
+  .hero-meta { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .hero-status { font-size: 12px; color: var(--green); font-weight: 600; margin-bottom: 12px; }
+  .hero-stats { display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+  .hero-stat { flex: 1; text-align: center; }
+  .hero-stat .num { font-family: Georgia, serif; font-size: 18px; font-weight: 700; color: var(--coral); }
+  .hero-stat .lbl { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; }
+  .hero-verify { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--green); margin-bottom: 10px; }
+  .hero-rating { font-size: 12px; color: var(--coral); }
+  .section { padding: 24px 16px; }
+  .tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+  .tab { padding: 10px 0; font-size: 13px; font-weight: 600; color: var(--muted); position: relative; }
+  .tab.active { color: var(--coral); }
+  .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--coral); }
+  .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .gallery-item { aspect-ratio: 3/4; background: linear-gradient(135deg, #1f1726, #15101a); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: rgba(255,255,255,0.1); }
+  .label { padding: 10px 16px; background: var(--bg-elev); border-radius: 10px; font-size: 12px; color: var(--muted); margin: 16px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="title-bar">Varianta A — Hero overlay</div>
+
+<div class="hero">
+  <div class="hero-img-placeholder">📸</div>
+  <div class="hero-info">
+    <div class="hero-name-row">
+      <span class="hero-dot"></span>
+      <span class="hero-name">Anetta</span>
+      <span class="hero-age">· 19</span>
+    </div>
+    <div class="hero-meta">📍 Vinohrady · Praha 2</div>
+    <div class="hero-status">● Pracuje dnes 11:00–22:00</div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num">165</div><div class="lbl">cm</div></div>
+      <div class="hero-stat"><div class="num">50</div><div class="lbl">kg</div></div>
+      <div class="hero-stat"><div class="num">1</div><div class="lbl">prsa</div></div>
+    </div>
+    <div class="hero-verify">✓ Fotky ověřené 2.4.2026</div>
+    <div class="hero-rating">★★★★☆ 3.5 · 2 recenze</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="tabs">
+    <div class="tab active">FOTO (7)</div>
+    <div class="tab">VIDEO (0)</div>
+  </div>
+  <div class="gallery">
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+  </div>
+</div>
+
+<div class="label">↓ pod tím: recenze · služby · cenik · podobné dívky</div>
+</body>
+</html>

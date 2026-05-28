@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile B — Info + side photo</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --magenta: #c84b8b;
+    --green: #4ade80;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; padding-bottom: 80px; }
+  .title-bar { padding: 14px 16px; font-size: 11px; color: var(--coral); letter-spacing: 0.2em; text-transform: uppercase; border-bottom: 1px solid var(--line); }
+  .top-card { padding: 16px; display: grid; grid-template-columns: 1fr 140px; gap: 14px; align-items: stretch; }
+  .top-info { display: flex; flex-direction: column; }
+  .name-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); flex-shrink: 0; align-self: center; }
+  .name { font-family: Georgia, serif; font-size: 28px; font-weight: 700; line-height: 1; }
+  .age { font-size: 16px; color: var(--coral); }
+  .meta { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .status { font-size: 12px; color: var(--green); font-weight: 600; margin-bottom: 12px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin-bottom: 12px; }
+  .stat-row { font-size: 13px; }
+  .stat-row .lbl { color: var(--muted); }
+  .stat-row .num { color: var(--text); font-weight: 600; }
+  .verify { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--green); margin-bottom: 4px; }
+  .rating { font-size: 11px; color: var(--coral); margin-bottom: 12px; }
+  .ctas { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
+  .cta { padding: 9px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; text-align: center; }
+  .cta-call { background: linear-gradient(135deg, var(--coral), var(--magenta)); color: white; }
+  .cta-wa { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+  .cta-tg { background: rgba(34,158,217,0.12); color: #5fb8e0; border: 1px solid rgba(34,158,217,0.3); }
+  .side-photo {
+    aspect-ratio: 3/4;
+    background: linear-gradient(135deg, #2a2230, #15101a);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; color: rgba(255,255,255,0.1);
+  }
+  .section { padding: 24px 16px; }
+  .tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+  .tab { padding: 10px 0; font-size: 13px; font-weight: 600; color: var(--muted); position: relative; }
+  .tab.active { color: var(--coral); }
+  .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--coral); }
+  .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .gallery-item { aspect-ratio: 3/4; background: linear-gradient(135deg, #1f1726, #15101a); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: rgba(255,255,255,0.1); }
+  .label { padding: 10px 16px; background: var(--bg-elev); border-radius: 10px; font-size: 12px; color: var(--muted); margin: 16px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="title-bar">Varianta B — Info + boční foto</div>
+
+<div class="top-card">
+  <div class="top-info">
+    <div class="name-row">
+      <span class="dot"></span>
+      <span class="name">Anetta</span>
+      <span class="age">· 19</span>
+    </div>
+    <div class="meta">📍 Vinohrady · Praha 2</div>
+    <div class="status">● Dnes 11:00–22:00</div>
+    <div class="stats">
+      <div class="stat-row"><span class="lbl">Výška:</span> <span class="num">165</span></div>
+      <div class="stat-row"><span class="lbl">Prsa:</span> <span class="num">1</span></div>
+      <div class="stat-row"><span class="lbl">Váha:</span> <span class="num">50</span></div>
+      <div class="stat-row"><span class="lbl">Věk:</span> <span class="num">19</span></div>
+    </div>
+    <div class="verify">✓ Fotky ověřené 2.4.2026</div>
+    <div class="rating">★★★★☆ 3.5 · 2 recenze</div>
+    <div class="ctas">
+      <div class="cta cta-call">📞 Zavolat</div>
+      <div class="cta cta-wa">WhatsApp</div>
+      <div class="cta cta-tg">Telegram</div>
+    </div>
+  </div>
+  <div class="side-photo">📸</div>
+</div>
+
+<div class="section">
+  <div class="tabs">
+    <div class="tab active">FOTO (7)</div>
+    <div class="tab">VIDEO (0)</div>
+  </div>
+  <div class="gallery">
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+    <div class="gallery-item">📷</div>
+  </div>
+</div>
+
+<div class="label">↓ pod tím: recenze · služby · cenik · podobné dívky</div>
+</body>
+</html>

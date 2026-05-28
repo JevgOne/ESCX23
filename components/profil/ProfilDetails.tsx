@@ -167,7 +167,7 @@ const CITY_MAP: Record<string, string> = { en: 'Prague', de: 'Prag', uk: 'Пра
 function cityName(locale: string): string { return CITY_MAP[locale] ?? 'Prague'; }
 
 const TODAY_LABEL: Record<string, string> = { en: 'Today', de: 'Heute', uk: 'Сьогодні', cs: 'Dnes' };
-const APPT_LABEL: Record<string, string> = { en: 'By appointment', de: 'Nach Absprache', uk: 'За домовленістю', cs: 'Domluva' };
+const APPT_LABEL: Record<string, string> = { en: 'By appointment', de: 'Nach Vereinbarung', uk: 'За домовленістю', cs: 'Po domluvě' };
 
 const TATTOO_LEVEL: Record<string, Record<string, string>> = {
   discreet:    { cs: 'Diskrétní',  en: 'Discreet',    de: 'Dezent',       uk: 'Дискретне' },
@@ -262,10 +262,14 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
 
       <div className="profile-meta-line">
         <span>📍 {cityName(locale)}{district !== 'Praha' ? ` · ${district}` : ''}</span>
-        <span className="profile-meta-sep">·</span>
-        <span className="profile-meta-live">
-          {shiftFrom && shiftTo ? `${TODAY_LABEL[locale] ?? 'Today'} ${shiftFrom}–${shiftTo}` : (APPT_LABEL[locale] ?? 'By appointment')}
-        </span>
+        {shiftFrom && shiftTo && (
+          <>
+            <span className="profile-meta-sep">·</span>
+            <span className="profile-meta-live">
+              {`${TODAY_LABEL[locale] ?? 'Today'} ${shiftFrom}–${shiftTo}`}
+            </span>
+          </>
+        )}
       </div>
 
       {/* Premium stat hero strip — věk/výška/váha */}

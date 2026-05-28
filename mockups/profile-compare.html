@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile variants — porovnání</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #050307; color: #fff; font-family: -apple-system, system-ui, sans-serif; padding: 20px; }
+  h1 { font-size: 18px; margin-bottom: 16px; text-align: center; color: #f27d8d; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 16px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .frame {
+    background: #0c0a0e;
+    border: 2px solid #2a2230;
+    border-radius: 28px;
+    overflow: hidden;
+    height: 80vh;
+    max-height: 800px;
+    min-height: 600px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .caption {
+    text-align: center;
+    padding: 12px;
+    background: #1a1420;
+    font-size: 13px;
+    color: #f27d8d;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .desc {
+    text-align: center;
+    color: #a89cb0;
+    font-size: 11px;
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+  .col { display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+<h1>Porovnání 3 variant profilu dívky</h1>
+<div class="grid">
+  <div class="col">
+    <div class="frame">
+      <iframe src="profile-variant-A.html"></iframe>
+    </div>
+    <div class="caption">VARIANTA A · Hero overlay</div>
+    <div class="desc">Velká hero foto na celou šířku.<br>Info překryté přes spodek fotky.</div>
+  </div>
+  <div class="col">
+    <div class="frame">
+      <iframe src="profile-variant-B.html"></iframe>
+    </div>
+    <div class="caption">VARIANTA B · Info + boční foto</div>
+    <div class="desc">Info nalevo, jedna foto napravo (50/50).<br>Klasický profil layout.</div>
+  </div>
+  <div class="col">
+    <div class="frame">
+      <iframe src="profile-variant-C.html"></iframe>
+    </div>
+    <div class="caption">VARIANTA C · Jen info card</div>
+    <div class="desc">Žádná hero foto — rovnou info card.<br>Galerie hned pod ním.</div>
+  </div>
+</div>
+</body>
+</html>

@@ -11,7 +11,12 @@ const FLAG_MAP: Record<string, string> = {
 
 const CITY: Record<string, string> = { en: 'Prague', de: 'Prag', uk: 'Прага', cs: 'Praha' };
 const LATER_LABEL: Record<string, string> = { cs: 'Později', en: 'Later', de: 'Später', uk: 'Пізніше' };
-const BUST_LABEL: Record<string, string> = { cs: 'prsa', en: 'bust', de: 'Brust', uk: 'груди' };
+const STAT_LABELS: Record<string, { height: string; breasts: string; weight: string; age: string }> = {
+  cs: { height: 'Výška', breasts: 'Prsa', weight: 'Váha', age: 'Věk' },
+  en: { height: 'Height', breasts: 'Breasts', weight: 'Weight', age: 'Age' },
+  de: { height: 'Größe', breasts: 'Brust', weight: 'Gewicht', age: 'Alter' },
+  uk: { height: 'Зріст', breasts: 'Груди', weight: 'Вага', age: 'Вік' },
+};
 const ALT_NOUN: Record<string, string> = {
   en: 'escort companion',
   cs: 'společnice',
@@ -27,10 +32,12 @@ export default async function GirlCard({ girl }: GirlCardProps) {
   const locale = await getLocale();
   const city = CITY[locale] ?? 'Prague';
   const laterLabel = LATER_LABEL[locale] ?? LATER_LABEL.en;
-  const bustLabel = BUST_LABEL[locale] ?? BUST_LABEL.en;
+  const labels = STAT_LABELS[locale] ?? STAT_LABELS.en;
   const altNoun = ALT_NOUN[locale] ?? ALT_NOUN.en;
   const altText = `${girl.name}, ${girl.age}, ${city} ${altNoun}`;
   const isAway = girl.status === 'later';
+  const district = prettyDistrict(girl.location);
+  const address = district ? `${district}, ${girl.location}` : girl.location;
 
   return (
     <Link
@@ -96,26 +103,32 @@ export default async function GirlCard({ girl }: GirlCardProps) {
             />
             <span className="girl-name">{girl.name}</span>
           </div>
-          <span className="girl-age">{girl.age}</span>
         </div>
 
         <div className="girl-loc-row">
-          <span aria-hidden>📍</span>
-          <span>{city}{prettyDistrict(girl.location) ? ` · ${prettyDistrict(girl.location)}` : ''}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          <span>{address}</span>
         </div>
 
         <div className="girl-statline">
           <div className="girl-stat-cell">
+            <span className="label">{labels.height}:</span>
             <span className="num">{girl.height ?? '—'}</span>
-            <span className="label">cm</span>
           </div>
           <div className="girl-stat-cell">
-            <span className="num">{girl.weight ?? '—'}</span>
-            <span className="label">kg</span>
-          </div>
-          <div className="girl-stat-cell">
+            <span className="label">{labels.breasts}:</span>
             <span className="num">{girl.bust ?? '—'}</span>
-            <span className="label">{bustLabel}</span>
+          </div>
+          <div className="girl-stat-cell">
+            <span className="label">{labels.weight}:</span>
+            <span className="num">{girl.weight ?? '—'}</span>
+          </div>
+          <div className="girl-stat-cell">
+            <span className="label">{labels.age}:</span>
+            <span className="num">{girl.age}</span>
           </div>
         </div>
 

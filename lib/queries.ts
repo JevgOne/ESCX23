@@ -132,7 +132,10 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
 /** Profil podle slug (pro /profil/{slug}). Vrací aktivní i pauzované i vip. */
 export async function getGirlBySlug(slug: string) {
   const result = await db.execute({
-    sql: `SELECT * FROM girls WHERE slug = ? AND status IN ('active','inactive') LIMIT 1`,
+    sql: `SELECT g.*,
+            (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count,
+            (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count
+          FROM girls g WHERE slug = ? AND status IN ('active','inactive') LIMIT 1`,
     args: [slug],
   });
   return result.rows[0] ?? null;
@@ -345,6 +348,27 @@ export interface Location {
   name: string;
   displayName: string;
   district: string | null;
+  city?: string | null;
+}
+
+export interface FooterStats {
+  companionsCount: number;
+  locationsCount: number;
+}
+
+export async function getFooterStats(): Promise<FooterStats> {
+  try {
+    const [g, l] = await Promise.all([
+      db.execute(`SELECT COUNT(*) AS c FROM girls WHERE status IN ('active','inactive')`),
+      db.execute(`SELECT COUNT(*) AS c FROM locations WHERE is_active = 1`),
+    ]);
+    return {
+      companionsCount: Number(g.rows[0]?.c ?? 0),
+      locationsCount: Number(l.rows[0]?.c ?? 0),
+    };
+  } catch {
+    return { companionsCount: 0, locationsCount: 0 };
+  }
 }
 
 export async function getLocationBySlug(slug: string, locale = 'cs') {
@@ -381,13 +405,14 @@ export async function getLocationBySlug(slug: string, locale = 'cs') {
 
 export async function getActiveLocations(): Promise<Location[]> {
   const result = await db.execute(
-    `SELECT id, name, display_name, district FROM locations WHERE is_active = 1 ORDER BY is_primary DESC, id ASC`
+    `SELECT id, name, display_name, district, city FROM locations WHERE is_active = 1 ORDER BY is_primary DESC, id ASC`
   );
   return result.rows.map((r) => ({
     id: Number(r.id),
     name: String(r.name),
     displayName: String(r.display_name ?? r.name),
     district: r.district ? String(r.district) : null,
+    city: (r as Record<string, unknown>).city ? String((r as Record<string, unknown>).city) : null,
   }));
 }
 
@@ -1142,42 +1167,52 @@ export interface BlogPost {
 }
 
 export async function getBlogPosts(limit = 20, offset = 0): Promise<BlogPost[]> {
-  const result = await db.execute({
-    sql: `SELECT id, slug, title, excerpt, content, cover_url, author, created_at
-          FROM blog_posts WHERE status = 'published'
-          ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-    args: [limit, offset],
-  });
-  return result.rows.map((r) => ({
-    id: Number(r.id),
-    slug: String(r.slug),
-    title: String(r.title),
-    excerpt: r.excerpt ? String(r.excerpt) : null,
-    content: r.content ? String(r.content) : null,
-    coverUrl: r.cover_url ? String(r.cover_url) : null,
-    author: String(r.author ?? 'LovelyGirls Praha'),
-    createdAt: String(r.created_at),
-  }));
+  try {
+    const result = await db.execute({
+      sql: `SELECT id, slug, title, excerpt, content, cover_url, author, created_at
+            FROM blog_posts WHERE status = 'published'
+            ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      args: [limit, offset],
+    });
+    return result.rows.map((r) => ({
+      id: Number(r.id),
+      slug: String(r.slug),
+      title: String(r.title),
+      excerpt: r.excerpt ? String(r.excerpt) : null,
+      content: r.content ? String(r.content) : null,
+      coverUrl: r.cover_url ? String(r.cover_url) : null,
+      author: String(r.author ?? 'LovelyGirls Praha'),
+      createdAt: String(r.created_at),
+    }));
+  } catch (err) {
+    console.error('[blog] getBlogPosts failed', err);
+    return [];
+  }
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  const result = await db.execute({
-    sql: `SELECT id, slug, title, excerpt, content, cover_url, author, created_at
-          FROM blog_posts WHERE slug = ? AND status = 'published' LIMIT 1`,
-    args: [slug],
-  });
-  if (!result.rows[0]) return null;
-  const r = result.rows[0];
-  return {
-    id: Number(r.id),
-    slug: String(r.slug),
-    title: String(r.title),
-    excerpt: r.excerpt ? String(r.excerpt) : null,
-    content: r.content ? String(r.content) : null,
-    coverUrl: r.cover_url ? String(r.cover_url) : null,
-    author: String(r.author ?? 'LovelyGirls Praha'),
-    createdAt: String(r.created_at),
-  };
+  try {
+    const result = await db.execute({
+      sql: `SELECT id, slug, title, excerpt, content, cover_url, author, created_at
+            FROM blog_posts WHERE slug = ? AND status = 'published' LIMIT 1`,
+      args: [slug],
+    });
+    if (!result.rows[0]) return null;
+    const r = result.rows[0];
+    return {
+      id: Number(r.id),
+      slug: String(r.slug),
+      title: String(r.title),
+      excerpt: r.excerpt ? String(r.excerpt) : null,
+      content: r.content ? String(r.content) : null,
+      coverUrl: r.cover_url ? String(r.cover_url) : null,
+      author: String(r.author ?? 'LovelyGirls Praha'),
+      createdAt: String(r.created_at),
+    };
+  } catch (err) {
+    console.error('[blog] getBlogPostBySlug failed', err);
+    return null;
+  }
 }
 
 export async function getTopServicesForFilter(limit = 12) {

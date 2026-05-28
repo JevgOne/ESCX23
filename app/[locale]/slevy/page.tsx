@@ -52,16 +52,6 @@ export async function generateMetadata({
   return {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
-    alternates: {
-      canonical,
-      languages: {
-        cs: getCanonicalUrl('cs', '/slevy'),
-        en: getCanonicalUrl('en', '/discounts'),
-        de: getCanonicalUrl('de', '/rabatte'),
-        uk: getCanonicalUrl('uk', '/znyzhky'),
-        'x-default': getCanonicalUrl('en', '/discounts'),
-      },
-    },
     openGraph: {
       images: _customOg_slevy ? [{ url: _customOg_slevy, width: 1200, height: 630, alt: '' }] : undefined,
       title: TITLES[locale] ?? TITLES.en,
