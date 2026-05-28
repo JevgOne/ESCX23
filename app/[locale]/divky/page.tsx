@@ -22,14 +22,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: 'girls' });
   const canonical = getCanonicalUrl(locale, '/divky');
   const languages = getAlternates('/divky');
-  const { getCustomOgImage } = await import('@/lib/seo/og');
-  const _customOg_divky = await getCustomOgImage('divky');
+  const { buildOgImages } = await import('@/lib/seo/og');
+  const ogImages = await buildOgImages('divky', locale, '/divky', t('h1'));
 
   return {
     title: t('h1'),
     description: t('sub'),
     openGraph: {
-      ...(_customOg_divky ? { images: [{ url: _customOg_divky, width: 1200, height: 630, alt: '' }] } : {}),
+      images: ogImages,
       title: t('h1'),
       description: t('sub'),
       url: canonical,

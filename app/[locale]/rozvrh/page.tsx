@@ -84,8 +84,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const path = CANONICAL_PATH[locale] ?? '/rozvrh';
   const canonical = getCanonicalUrl(locale, path);
-  const { getCustomOgImage } = await import('@/lib/seo/og');
-  const _customOg_rozvrh = await getCustomOgImage('rozvrh');
+  const { buildOgImages } = await import('@/lib/seo/og');
+  const ogImages = await buildOgImages('rozvrh', locale, '/rozvrh', TITLES[locale] ?? TITLES.en);
 
   return {
     title: TITLES[locale] ?? TITLES.en,
@@ -102,7 +102,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       },
     },
     openGraph: {
-      ...(_customOg_rozvrh ? { images: [{ url: _customOg_rozvrh, width: 1200, height: 630, alt: '' }] } : {}),
+      images: ogImages,
       title: TITLES[locale] ?? TITLES.en,
       description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
       url: canonical,

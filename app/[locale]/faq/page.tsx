@@ -45,8 +45,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const canonical = getCanonicalUrl(locale, '/faq');
-  const { getCustomOgImage } = await import('@/lib/seo/og');
-  const _customOg_faq = await getCustomOgImage('faq');
+  const { buildOgImages } = await import('@/lib/seo/og');
+  const ogImages = await buildOgImages('faq', locale, '/faq', TITLES[locale] ?? TITLES.en);
 
   return {
     title: TITLES[locale] ?? TITLES.en,
@@ -62,7 +62,7 @@ export async function generateMetadata({
       },
     },
     openGraph: {
-      ...(_customOg_faq ? { images: [{ url: _customOg_faq, width: 1200, height: 630, alt: '' }] } : {}),
+      images: ogImages,
       title: TITLES[locale] ?? TITLES.en,
       description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
       url: canonical,

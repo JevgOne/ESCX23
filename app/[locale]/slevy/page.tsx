@@ -46,14 +46,14 @@ export async function generateMetadata({
   const { locale } = await params;
   const path = CANONICAL_PATH[locale] ?? '/slevy';
   const canonical = getCanonicalUrl(locale, path);
-  const { getCustomOgImage } = await import('@/lib/seo/og');
-  const _customOg_slevy = await getCustomOgImage('slevy');
+  const { buildOgImages } = await import('@/lib/seo/og');
+  const ogImages = await buildOgImages('slevy', locale, '/slevy', TITLES[locale] ?? TITLES.en);
 
   return {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
     openGraph: {
-      ...(_customOg_slevy ? { images: [{ url: _customOg_slevy, width: 1200, height: 630, alt: '' }] } : {}),
+      images: ogImages,
       title: TITLES[locale] ?? TITLES.en,
       description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
       url: canonical,
