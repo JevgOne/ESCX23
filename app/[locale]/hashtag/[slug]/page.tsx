@@ -1,12 +1,18 @@
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { Link } from '@/i18n/navigation';
 import { getGirlsForHashtag } from '@/lib/queries';
+import { photoUrl } from '@/lib/photoUrl';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
+import { getHashtagContent, HASHTAG_CONTENT } from '@/lib/seo/landing-content';
+import { breadcrumbListJsonLd, faqPageJsonLd, itemListPeopleJsonLd, collectionPageJsonLd } from '@/lib/seo/jsonld';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lovelygirls.cz';
 
 interface Props {
   params: Promise<{ locale: string; slug: string }>;
@@ -53,24 +59,39 @@ function getTitle(slug: string, locale: string): string | null {
   return meta[locale as keyof typeof meta] ?? meta.cs;
 }
 
+function localePrefix(locale: string): string {
+  return locale === 'en' ? '' : `/${locale}`;
+}
+
+function hashtagUrl(locale: string, slug: string): string {
+  return `${BASE}${localePrefix(locale)}/hashtag/${slug}`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, locale } = await params;
   const title = getTitle(slug, locale);
   if (!title) return {};
+  const content = getHashtagContent(slug);
   const lowered = title.toLowerCase();
-  const description =
-    locale === 'cs' ? `Společnice se zaměřením na ${lowered} v Praze.`
-    : locale === 'de' ? `Begleiterinnen mit Schwerpunkt ${lowered} in Prag.`
-    : locale === 'uk' ? `Супутниці зі спеціалізацією ${lowered} у Празі.`
-    : `Companions specialising in ${lowered} in Prague.`;
-  const brand =
-    locale === 'cs' ? 'LovelyGirls Praha'
-    : locale === 'de' ? 'LovelyGirls Prag'
-    : locale === 'uk' ? 'LovelyGirls Прага'
-    : 'LovelyGirls Prague';
+  const fallbackDesc =
+    locale === 'cs' ? `Společnice se zaměřením na ${lowered} v Praze. Ověřené profily, transparentní ceny, diskrétní apartmány.`
+    : locale === 'de' ? `Begleiterinnen mit Schwerpunkt ${lowered} in Prag. Verifizierte Profile, transparente Preise.`
+    : locale === 'uk' ? `Супутниці зі спеціалізацією ${lowered} у Празі. Перевірені профілі.`
+    : `Companions specialising in ${lowered} in Prague. Verified profiles, transparent pricing.`;
+  const description = content?.metaDesc[locale as 'cs' | 'en' | 'de' | 'uk'] ?? fallbackDesc;
   return {
-    title: `${title} — ${brand}`,
+    title,
     description,
+    alternates: {
+      canonical: hashtagUrl(locale, slug),
+    },
+    openGraph: {
+      title,
+      description,
+      url: hashtagUrl(locale, slug),
+      type: 'website',
+      locale: locale === 'cs' ? 'cs_CZ' : locale === 'de' ? 'de_DE' : locale === 'uk' ? 'uk_UA' : 'en_US',
+    },
     robots: { index: true, follow: true },
   };
 }
@@ -83,6 +104,7 @@ export default async function HashtagPage({ params }: Props) {
   if (!title) notFound();
 
   const girls = await getGirlsForHashtag(slug);
+  const content = getHashtagContent(slug);
 
   const countLabel =
     locale === 'cs' ? 'společnic v Praze'
@@ -91,15 +113,71 @@ export default async function HashtagPage({ params }: Props) {
     : 'companions in Prague';
 
   const noResultsLabel =
-    locale === 'cs' ? 'Žádné výsledky pro tento tag.'
-    : locale === 'de' ? 'Keine Ergebnisse für diesen Tag.'
-    : locale === 'uk' ? 'Немає результатів для цього тегу.'
-    : 'No results for this tag.';
+    locale === 'cs' ? 'Aktuálně žádné výsledky pro tento tag. Podívejte se na související kategorie níže.'
+    : locale === 'de' ? 'Aktuell keine Ergebnisse. Schauen Sie sich verwandte Kategorien an.'
+    : locale === 'uk' ? 'Наразі немає результатів. Перегляньте суміжні категорії.'
+    : 'No results right now. See related categories below.';
 
   const girlsLabel = locale === 'cs' ? 'Dívky' : locale === 'de' ? 'Mädchen' : locale === 'uk' ? 'Дівчата' : 'Girls';
+  const homeLabel = locale === 'cs' ? 'Domů' : locale === 'de' ? 'Start' : locale === 'uk' ? 'Головна' : 'Home';
+  const relatedLabel = locale === 'cs' ? 'Související kategorie' : locale === 'de' ? 'Ähnliche Kategorien' : locale === 'uk' ? 'Суміжні категорії' : 'Related categories';
+  const faqLabel = locale === 'cs' ? 'Časté dotazy' : locale === 'de' ? 'Häufige Fragen' : locale === 'uk' ? 'Часті питання' : 'FAQ';
+  const ctaLabel = locale === 'cs' ? 'Zobrazit všechny společnice' : locale === 'de' ? 'Alle Begleiterinnen' : locale === 'uk' ? 'Усі супутниці' : 'View all companions';
+  const scheduleLabel = locale === 'cs' ? 'Kdo dnes pracuje' : locale === 'de' ? 'Wer heute arbeitet' : locale === 'uk' ? 'Хто сьогодні працює' : 'Who works today';
+
+  /* Build JSON-LD blocks */
+  const url = hashtagUrl(locale, slug);
+  const breadcrumbs = breadcrumbListJsonLd([
+    { name: homeLabel, url: `${BASE}${localePrefix(locale)}/` },
+    { name: girlsLabel, url: `${BASE}${localePrefix(locale)}/${locale === 'en' ? 'girls' : locale === 'de' ? 'maedchen' : locale === 'uk' ? 'divchata' : 'divky'}` },
+    { name: title, url },
+  ]);
+  const collection = collectionPageJsonLd(
+    title,
+    url,
+    girls.map((g) => g.slug),
+  );
+  const itemList = itemListPeopleJsonLd(
+    girls.map((g) => ({
+      slug: g.slug,
+      name: g.name,
+      url: `${BASE}${localePrefix(locale)}/${locale === 'en' ? 'profile' : 'profil'}/${g.slug}`,
+      image: g.primaryPhoto ? photoUrl(g.primaryPhoto) : null,
+    })),
+    title,
+  );
+  const faqJsonLd = content && content.faq.length > 0
+    ? faqPageJsonLd(content.faq.map((f) => ({
+        q: f.q[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.q.cs,
+        a: f.a[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.a.cs,
+      })))
+    : null;
+
+  const introText = content?.intro[locale as 'cs' | 'en' | 'de' | 'uk'];
 
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collection) }}
+      />
+      {girls.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }}
+        />
+      )}
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
+
       <Breadcrumbs
         items={[
           { label: girlsLabel, href: `/${locale}/divky` },
@@ -107,6 +185,7 @@ export default async function HashtagPage({ params }: Props) {
         ]}
         locale={locale}
       />
+
       <div className="hashtag-page-header">
         <div className="container">
           <span className="hashtag-badge">#{slug}</span>
@@ -114,15 +193,70 @@ export default async function HashtagPage({ params }: Props) {
           <p className="hashtag-subtitle">{girls.length} {countLabel}</p>
         </div>
       </div>
-      <div className="container" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+
+      <div className="container">
+        {introText && (
+          <section className="lp-intro">
+            <p>{introText}</p>
+          </section>
+        )}
+
         {girls.length > 0 ? (
-          <GirlCardGrid girls={girls} />
+          <section className="lp-grid-section">
+            <GirlCardGrid girls={girls} />
+            <div className="lp-cta-row">
+              <Link href="/divky" className="lp-btn lp-btn-ghost">{ctaLabel} →</Link>
+              <Link href="/rozvrh" className="lp-btn lp-btn-primary">{scheduleLabel} →</Link>
+            </div>
+          </section>
         ) : (
           <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', padding: '48px 0' }}>
             {noResultsLabel}
           </p>
         )}
+
+        {/* Related hashtags */}
+        {content && content.related.length > 0 && (
+          <section className="lp-related">
+            <h2 className="lp-h2">{relatedLabel}</h2>
+            <div className="lp-related-chips">
+              {content.related.map((relSlug) => {
+                const relName = TAG_NAMES[relSlug];
+                if (!relName) return null;
+                const label = relName[locale as 'cs' | 'en' | 'de' | 'uk'] ?? relName.cs;
+                return (
+                  <a
+                    key={relSlug}
+                    href={`${localePrefix(locale)}/hashtag/${relSlug}`}
+                    className="lp-related-chip"
+                  >
+                    {label}
+                  </a>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* FAQ */}
+        {content && content.faq.length > 0 && (
+          <section className="lp-faq-section">
+            <h2 className="lp-h2">{faqLabel}</h2>
+            <div className="lp-faq-list">
+              {content.faq.map((item, i) => (
+                <details key={i} className="lp-faq-item">
+                  <summary>{item.q[locale as 'cs' | 'en' | 'de' | 'uk'] ?? item.q.cs}</summary>
+                  <p>{item.a[locale as 'cs' | 'en' | 'de' | 'uk'] ?? item.a.cs}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );
+}
+
+export function generateStaticParams() {
+  return Object.keys(HASHTAG_CONTENT).map((slug) => ({ slug }));
 }

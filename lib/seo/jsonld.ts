@@ -288,3 +288,117 @@ export function collectionPageJsonLd(
     })),
   };
 }
+
+export interface ItemListPerson {
+  slug: string;
+  name: string;
+  url: string;
+  image?: string | null;
+}
+
+export function itemListPeopleJsonLd(items: ItemListPerson[], listName: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: listName,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Person',
+        name: item.name,
+        url: item.url,
+        ...(item.image ? { image: item.image } : {}),
+      },
+    })),
+  };
+}
+
+export interface LocalBusinessJsonLdInput {
+  name: string;
+  url: string;
+  description?: string;
+  streetAddress?: string;
+  addressLocality?: string;
+  postalCode?: string;
+  addressRegion?: string;
+  addressCountry?: string;
+  latitude?: number;
+  longitude?: number;
+  telephone?: string;
+  email?: string;
+  openingHours?: string[]; // ["Mo-Su 10:00-22:30"]
+  priceRange?: string;
+  image?: string;
+  ratingValue?: number;
+  ratingCount?: number;
+}
+
+export function localBusinessJsonLd(b: LocalBusinessJsonLdInput) {
+  const out: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'AdultEntertainment',
+    name: b.name,
+    url: b.url,
+  };
+  if (b.description) out.description = b.description;
+  if (b.image) out.image = b.image;
+  if (b.telephone) out.telephone = b.telephone;
+  if (b.email) out.email = b.email;
+  if (b.priceRange) out.priceRange = b.priceRange;
+  if (b.streetAddress || b.addressLocality) {
+    out.address = {
+      '@type': 'PostalAddress',
+      ...(b.streetAddress ? { streetAddress: b.streetAddress } : {}),
+      ...(b.addressLocality ? { addressLocality: b.addressLocality } : {}),
+      ...(b.postalCode ? { postalCode: b.postalCode } : {}),
+      ...(b.addressRegion ? { addressRegion: b.addressRegion } : {}),
+      ...(b.addressCountry ? { addressCountry: b.addressCountry } : { addressCountry: 'CZ' }),
+    };
+  }
+  if (b.latitude != null && b.longitude != null) {
+    out.geo = {
+      '@type': 'GeoCoordinates',
+      latitude: b.latitude,
+      longitude: b.longitude,
+    };
+  }
+  if (b.openingHours && b.openingHours.length > 0) {
+    out.openingHoursSpecification = b.openingHours.map((h) => {
+      // Format: "Mo-Su 10:00-22:30"
+      const m = h.match(/^([A-Z][a-z](?:-[A-Z][a-z])?)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/);
+      if (!m) return null;
+      const dayCode = m[1];
+      const dayMap: Record<string, string> = { Mo: 'Monday', Tu: 'Tuesday', We: 'Wednesday', Th: 'Thursday', Fr: 'Friday', Sa: 'Saturday', Su: 'Sunday' };
+      const days = dayCode.includes('-')
+        ? expandDayRange(dayCode, dayMap)
+        : [dayMap[dayCode]].filter(Boolean);
+      return {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: days,
+        opens: m[2],
+        closes: m[3],
+      };
+    }).filter(Boolean);
+  }
+  if (b.ratingValue != null && b.ratingCount != null && b.ratingCount > 0) {
+    out.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: b.ratingValue,
+      reviewCount: b.ratingCount,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+  return out;
+}
+
+function expandDayRange(range: string, dayMap: Record<string, string>): string[] {
+  const order = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  const [a, b] = range.split('-');
+  const ai = order.indexOf(a);
+  const bi = order.indexOf(b);
+  if (ai < 0 || bi < 0) return [];
+  return order.slice(ai, bi + 1).map((d) => dayMap[d]).filter(Boolean);
+}
