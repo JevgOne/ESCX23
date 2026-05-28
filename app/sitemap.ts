@@ -3,7 +3,11 @@ import {
   getAllGirlsForAdmin,
   getActiveLocations,
   getAllServices,
+  getPhotosBySlug,
 } from '@/lib/queries';
+import { photoUrl } from '@/lib/photoUrl';
+
+export const dynamic = 'force-dynamic';
 
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lovelygirls.cz';
 const LOCALES = ['en', 'cs', 'de', 'uk'] as const;
@@ -107,11 +111,22 @@ const STATIC_KEYS: Array<{ key: string; freq: 'daily' | 'hourly' | 'weekly' | 'm
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [girls, locations, services] = await Promise.all([
+  const [girls, locations, services, photosBySlug] = await Promise.all([
     getAllGirlsForAdmin(undefined, 'active').catch(() => []),
     getActiveLocations().catch(() => []),
     getAllServices().catch(() => []),
+    getPhotosBySlug(5).catch(() => ({} as Record<string, string[]>)),
   ]);
+
+  // Resolve relative photo URLs to absolute (required by sitemap spec)
+  const resolveImages = (slug: string): string[] => {
+    const urls = photosBySlug[slug] ?? [];
+    return urls.map((u) => {
+      const resolved = photoUrl(u);
+      if (resolved.startsWith('http')) return resolved;
+      return `${BASE}${resolved.startsWith('/') ? '' : '/'}${resolved}`;
+    });
+  };
 
   const now = new Date();
   const pages: MetadataRoute.Sitemap = [];
@@ -151,10 +166,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // Profile pages (per girl × per locale)
+  // Profile pages (per girl × per locale) — with image sitemap entries
   for (const girl of girls) {
     const lastmod = girl.updatedAt ? new Date(girl.updatedAt) : now;
     const alternates = buildAlternates('/profil/[slug]', girl.slug);
+    const images = resolveImages(girl.slug);
     for (const l of LOCALES) {
       pages.push({
         url: url(l, resolvePath('/profil/[slug]', l, girl.slug)),
@@ -162,6 +178,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'daily',
         priority: 0.9,
         alternates: { languages: alternates },
+        ...(images.length > 0 ? { images } : {}),
       });
     }
   }

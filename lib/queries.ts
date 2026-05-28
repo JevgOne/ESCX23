@@ -189,6 +189,31 @@ export async function getPhotosForGirl(girlId: number) {
   return result.rows;
 }
 
+/** Mapa slug → seznam photo URL (až 5 fotek) pro image sitemap. Pouze aktivní dívky. */
+export async function getPhotosBySlug(maxPerGirl = 5): Promise<Record<string, string[]>> {
+  try {
+    const result = await db.execute(`
+      SELECT g.slug, p.url, p.is_primary, p.display_order
+      FROM girls g
+      INNER JOIN girl_photos p ON p.girl_id = g.id
+      WHERE g.status = 'active'
+      ORDER BY g.slug, p.is_primary DESC, p.display_order ASC, p.id ASC
+    `);
+    const map: Record<string, string[]> = {};
+    for (const r of result.rows) {
+      const slug = String(r.slug ?? '');
+      const url = r.url ? String(r.url) : null;
+      if (!slug || !url) continue;
+      if (!map[slug]) map[slug] = [];
+      if (map[slug].length < maxPerGirl) map[slug].push(url);
+    }
+    return map;
+  } catch (err) {
+    console.error('[sitemap] getPhotosBySlug failed', err);
+    return {};
+  }
+}
+
 /** Týdenní rozvrh dívky (pro studio editor). */
 export async function getSchedulesForGirl(girlId: number) {
   const result = await db.execute({
