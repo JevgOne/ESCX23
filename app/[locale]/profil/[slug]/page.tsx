@@ -32,38 +32,78 @@ interface Props {
   params: Promise<{ locale: string; slug: string }>;
 }
 
+/** Localized title suffix per locale. */
+const PROFILE_TITLE_SUFFIX: Record<string, (name: string, age: number) => string> = {
+  cs: (n, a) => `${n}, ${a} — Společnice Praha`,
+  en: (n, a) => `${n}, ${a} — Companion Prague`,
+  de: (n, a) => `${n}, ${a} — Begleiterin Prag`,
+  uk: (n, a) => `${n}, ${a} — Супутниця Прага`,
+};
+
+/** Fallback description when no localized text is available. */
+const PROFILE_FALLBACK_DESC: Record<string, (name: string, age: number) => string> = {
+  cs: (n, a) => `${n}, ${a} let — ověřená společnice v Praze. Diskrétní apartmán, transparentní ceny. LovelyGirls Praha.`,
+  en: (n, a) => `${n}, ${a} years old, verified companion in Prague. Discreet apartment, transparent pricing. LovelyGirls Prague.`,
+  de: (n, a) => `${n}, ${a} Jahre alt, verifizierte Begleiterin in Prag. Diskretes Apartment, transparente Preise.`,
+  uk: (n, a) => `${n}, ${a} років, перевірена супутниця у Празі. Дискретні апартаменти, прозорі ціни.`,
+};
+
+/** Pick first non-empty localized field with priority chain: meta_desc → og_desc → description → fallback locale → bio. */
+function pickLocalizedText(
+  girl: Record<string, unknown>,
+  locale: string,
+  fields: ('meta_description' | 'og_description' | 'description')[],
+  fallbackLocales: string[] = ['en'],
+): string {
+  const allLocales = [locale, ...fallbackLocales];
+  for (const loc of allLocales) {
+    for (const field of fields) {
+      const val = girl[`${field}_${loc}`];
+      if (typeof val === 'string' && val.trim().length > 0) return val.trim();
+    }
+  }
+  const bio = girl.bio;
+  if (typeof bio === 'string' && bio.trim().length > 0) return bio.trim();
+  return '';
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, locale } = await params;
   const girl = await getGirlBySlug(slug);
   if (!girl) return {};
   const name = String(girl.name ?? '');
   const age = Number(girl.age ?? 0);
+  const girlRec = girl as unknown as Record<string, unknown>;
 
-  const bioByLocale: Record<string, string> = {
-    en: String(girl.description_en ?? girl.bio ?? ''),
-    cs: String(girl.description_cs ?? girl.bio ?? ''),
-    de: String(girl.description_de ?? girl.bio ?? ''),
-    uk: String(girl.description_uk ?? girl.bio ?? ''),
-  };
-  const bio = bioByLocale[locale] ?? bioByLocale.en;
+  // Title — localized, e.g. "Anetta, 19 — Společnice Praha"
+  const titleFn = PROFILE_TITLE_SUFFIX[locale] ?? PROFILE_TITLE_SUFFIX.en;
+  const localizedTitle = titleFn(name, age);
+
+  // Meta description — chain: meta_description_{loc} → og_description_{loc} → description_{loc} → EN fallback → bio → generic
+  const metaDescRaw = pickLocalizedText(girlRec, locale, ['meta_description', 'og_description', 'description']);
+  const fallbackFn = PROFILE_FALLBACK_DESC[locale] ?? PROFILE_FALLBACK_DESC.en;
+  const metaDesc = metaDescRaw
+    ? metaDescRaw.substring(0, 160)
+    : fallbackFn(name, age);
+
+  // OG description — priority: og_description_{loc} → meta_description_{loc} → description_{loc} → EN fallback → bio → generic
+  const ogDescRaw = pickLocalizedText(girlRec, locale, ['og_description', 'meta_description', 'description']);
+  const ogDesc = ogDescRaw ? ogDescRaw.substring(0, 200) : metaDesc;
 
   const canonical = getProfileCanonical(locale, slug);
   const languages = getProfileAlternates(slug);
-
   const status = String(girl.status ?? 'active');
 
   return {
-    title: `${name}, ${age} — Companion Prague`,
-    description: bio
-      ? bio.substring(0, 160)
-      : `${name}, ${age} years old, verified companion in Prague. LovelyGirls Prague.`,
+    title: localizedTitle,
+    description: metaDesc,
     alternates: {
       canonical,
       languages,
     },
     openGraph: {
-      title: `${name}, ${age} — Companion in Prague`,
-      description: bio ? bio.substring(0, 160) : `${name}, ${age}, Prague companion.`,
+      title: localizedTitle,
+      description: ogDesc,
       url: canonical,
       type: 'profile',
       locale: ogLocale(locale),
@@ -71,8 +111,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${name}, ${age} — Companion in Prague`,
-      description: bio ? bio.substring(0, 160) : `${name}, ${age}, Prague companion.`,
+      title: localizedTitle,
+      description: ogDesc,
     },
     robots:
       status === 'active'
