@@ -10,6 +10,8 @@ export const OG_PAGE_KEYS = [
   { key: 'o-nas', label: 'O nás' },
   { key: 'kontakt', label: 'Kontakt' },
   { key: 'pobocka', label: 'Pobočka (default)' },
+  { key: 'hashtag', label: 'Hashtag landing (default)' },
+  { key: 'sluzba', label: 'Služba (default)' },
   { key: 'profil', label: 'Profil dívky (default fallback)' },
   { key: 'default', label: 'Default OG (fallback)' },
 ] as const;
