@@ -1,10 +1,28 @@
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { requireAdmin } from '@/lib/auth';
 import type { AuthUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+
+// Routes a manager can access. Anything else under /admin/ is admin-only.
+const MANAGER_ALLOWED_PATHS = [
+  '/admin',
+  '/admin/divky',
+  '/admin/aplikace',
+  '/admin/schedules',
+  '/admin/verifikace',
+  '/admin/recenze',
+  '/admin/stories',
+];
+
+function isManagerAllowed(pathname: string): boolean {
+  // Strip locale prefix if present (e.g. /cs/admin/divky → /admin/divky)
+  const stripped = pathname.replace(/^\/(cs|en|de|uk)/, '');
+  return MANAGER_ALLOWED_PATHS.some((p) => stripped === p || stripped.startsWith(p + '/'));
+}
 
 export default async function AdminLayout({
   children,
@@ -23,6 +41,9 @@ export default async function AdminLayout({
   let user: AuthUser | null = null;
   if (!isLogin) {
     user = await requireAdmin();
+    if (user?.role === 'manager' && !isManagerAllowed(pathname)) {
+      redirect(`/${locale}/admin`);
+    }
   }
 
   if (isLogin) {

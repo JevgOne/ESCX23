@@ -2,7 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import { getApplicationById, type ApplicationRow } from '@/lib/queries';
-import { rejectApplication, reopenApplication, updateApplicationNotes } from '@/lib/admin-actions';
+import { rejectApplication, reopenApplication, updateApplicationNotes, createGirlFromApplication } from '@/lib/admin-actions';
 import { getExtraServices } from '@/lib/services';
 import { relativeTime } from '@/lib/utils';
 
@@ -248,8 +248,6 @@ function FieldsCard({ app }: { app: ApplicationRow }) {
         {field('Váha', app.weight, (v) => `${v} kg`)}
         {field('Prsa', app.bust)}
         {field('Typ prsou', bustNaturalLabel)}
-        {field('Pas', app.waist, (v) => `${v} cm`)}
-        {field('Boky', app.hips, (v) => `${v} cm`)}
         {field('Vlasy', app.hair)}
         {field('Oči', app.eyes)}
         {field('Tetování', app.tattoo === 1 ? `Ano${app.tattoo_description ? ` — ${app.tattoo_description}` : ''}` : 'Ne')}
@@ -356,12 +354,12 @@ function ActionsCard({ app }: { app: ApplicationRow }) {
   return (
     <div className="apd-actions" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <a
-          href={`/cs/admin/divky/nova?from_application=${app.id}`}
-          className="apd-btn apd-btn-approve"
-        >
-          ✓ Přidat jako dívku
-        </a>
+        <form action={createGirlFromApplication} style={{ display: 'inline-flex' }}>
+          <input type="hidden" name="application_id" value={app.id} />
+          <button type="submit" className="apd-btn apd-btn-approve">
+            ✓ Přidat jako dívku
+          </button>
+        </form>
         <details style={{ flex: 1, minWidth: 0 }}>
           <summary className="apd-btn apd-btn-reject" style={{ listStyle: 'none' }}>
             ✕ Zamítnout

@@ -222,12 +222,127 @@ export async function createGirl(formData: FormData) {
         }
       }
     }
-    revalidatePath('/cs/admin/aplikace');
   }
 
-  revalidatePath('/admin/divky');
-  revalidatePath('/cs/admin/divky');
+  // revalidatePath/redirect failures shouldn't surface as 500 once data is committed.
+  try { revalidatePath('/cs/admin/divky'); } catch {}
+  try { revalidatePath('/cs/admin/aplikace'); } catch {}
+
   redirect(`/cs/admin/divky/${newId}/edit`);
+}
+
+/**
+ * One-shot: takes a girl_application by id, creates a girl with all the data
+ * straight from the application (jméno, věk, míry, prsa+typ, vlasy, oči, tetování,
+ * piercing, email, telefon, bio, vybrané extras), marks the application approved
+ * and redirects to /cs/admin/divky/{newId}/edit so admin can polish the profile.
+ */
+export async function createGirlFromApplication(formData: FormData) {
+  const appId = Number(formData.get('application_id'));
+  if (!appId) throw new Error('Missing application_id');
+
+  const res = await db.execute({
+    sql: `SELECT * FROM girl_applications WHERE id = ? LIMIT 1`,
+    args: [appId],
+  });
+  const app = res.rows[0];
+  if (!app) throw new Error('Aplikace nenalezena');
+
+  const name = String(app.name ?? '').trim();
+  if (!name) throw new Error('Aplikace nemá jméno');
+  const age = Number(app.age ?? 0);
+  if (age < 18) throw new Error('Aplikace má věk pod 18');
+
+  // Generate a unique slug. If `slugify(name)` is taken, append -2, -3, …
+  const baseSlug = slugify(name);
+  let slug = baseSlug;
+  let suffix = 2;
+  while (true) {
+    const check = await db.execute({ sql: `SELECT id FROM girls WHERE slug = ? LIMIT 1`, args: [slug] });
+    if (check.rows.length === 0) break;
+    slug = `${baseSlug}-${suffix++}`;
+  }
+
+  const email = app.email != null ? String(app.email).trim() || null : null;
+  const phone = app.phone != null ? String(app.phone).trim() || null : null;
+  const height = app.height != null ? Number(app.height) : null;
+  const weight = app.weight != null ? Number(app.weight) : null;
+  const bust = app.bust != null ? String(app.bust) : null;
+  const bustNatural = app.bust_natural != null ? Number(app.bust_natural) : 1;
+  const hair = app.hair != null ? String(app.hair) : null;
+  const eyes = app.eyes != null ? String(app.eyes) : null;
+  const tattoo = Number(app.tattoo ?? 0);
+  const tattooDesc = app.tattoo_description != null ? String(app.tattoo_description) : null;
+  const piercing = Number(app.piercing ?? 0);
+  const bioCs = app.bio_cs != null ? String(app.bio_cs) : null;
+  const bioEn = app.bio_en != null ? String(app.bio_en) : null;
+
+  const insertRes = await db.execute({
+    sql: `INSERT INTO girls (
+      name, slug, age, email, phone, status,
+      height, weight, bust, bust_natural, hair, eyes,
+      tattoo_percentage, tattoo_description,
+      piercing,
+      description_cs, description_en,
+      created_at, updated_at
+    ) VALUES (
+      ?, ?, ?, ?, ?, 'pending',
+      ?, ?, ?, ?, ?, ?,
+      ?, ?,
+      ?,
+      ?, ?,
+      CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+    )`,
+    args: [
+      name, slug, age, email, phone,
+      height, weight, bust, bustNatural, hair, eyes,
+      tattoo > 0 ? 10 : 0, tattooDesc,
+      piercing,
+      bioCs, bioEn,
+    ],
+  });
+  const newId = Number(insertRes.lastInsertRowid);
+
+  // Import extras (services CSV → girl_services)
+  const rawServices = app.services != null ? String(app.services) : '';
+  if (rawServices) {
+    const slugs = rawServices.split(',').map((s) => s.trim()).filter(Boolean);
+    if (slugs.length > 0) {
+      const placeholders = slugs.map(() => '?').join(',');
+      const svcRes = await db.execute({
+        sql: `SELECT id FROM services WHERE slug IN (${placeholders})`,
+        args: slugs,
+      });
+      for (const r of svcRes.rows) {
+        await db.execute({
+          sql: `INSERT OR IGNORE INTO girl_services (girl_id, service_id, is_included, extra_price) VALUES (?, ?, 1, NULL)`,
+          args: [newId, Number(r.id)],
+        });
+      }
+    }
+  }
+
+  // Mark application approved + link to created girl
+  await db.execute({
+    sql: `UPDATE girl_applications
+          SET status='approved', reviewed_at=CURRENT_TIMESTAMP, converted_to_girl_id=?
+          WHERE id=?`,
+    args: [newId, appId],
+  });
+
+  try { revalidatePath('/cs/admin/divky'); } catch {}
+  try { revalidatePath('/cs/admin/aplikace'); } catch {}
+
+  redirect(`/cs/admin/divky/${newId}/edit`);
+}
+
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 export async function rejectApplication(formData: FormData) {

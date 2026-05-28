@@ -1804,62 +1804,197 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 }
 
 .login-page {
-  min-height: calc(100vh - 0px);
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   background:
-    radial-gradient(ellipse at top, rgba(154, 29, 81, 0.15), transparent 50%),
-    radial-gradient(ellipse at bottom, rgba(242, 125, 141, 0.08), transparent 50%);
+    radial-gradient(circle at 20% 10%, rgba(154, 29, 81, 0.35), transparent 55%),
+    radial-gradient(circle at 80% 90%, rgba(242, 125, 141, 0.25), transparent 55%),
+    linear-gradient(180deg, #0a0509 0%, #050103 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
+  background-size: 32px 32px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 70%);
 }
 
 .login-card {
   width: 100%;
-  max-width: 420px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-line);
+  max-width: 440px;
+  background: linear-gradient(180deg, rgba(28,15,22,0.85) 0%, rgba(15,8,12,0.85) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 44px 40px 36px;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(242, 125, 141, 0.05) inset,
+    0 -1px 0 rgba(255, 255, 255, 0.04) inset;
+  position: relative;
+  z-index: 1;
+}
+
+.login-card-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.login-card-logo {
+  width: 56px;
+  height: 56px;
   border-radius: 16px;
-  padding: 40px 32px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, #f27d8d 0%, #c84b8b 50%, #9a1d51 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  box-shadow:
+    0 12px 32px rgba(200, 75, 139, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.login-card-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .login-card h1 {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: #fff;
   margin: 0;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.login-card-sub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  margin: 8px 0 28px;
 }
 
 .login-card form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+}
+
+.login-card-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login-card-field label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .login-card input {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 13px 16px;
   font-size: 14px;
-  color: var(--color-text);
+  color: #fff;
   font-family: inherit;
-  transition: border-color 0.15s;
+  transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+}
+
+.login-card input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.login-card input:hover {
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .login-card input:focus {
   outline: none;
-  border-color: var(--color-coral);
+  border-color: rgba(242, 125, 141, 0.6);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 4px rgba(242, 125, 141, 0.08);
+}
+
+.login-card-submit {
+  margin-top: 8px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f27d8d 0%, #c84b8b 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(200, 75, 139, 0.35);
+  transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.login-card-submit:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(200, 75, 139, 0.45);
+}
+
+.login-card-submit:active {
+  transform: translateY(0);
+}
+
+.login-card-foot {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.3);
 }
 
 .login-error {
-  color: var(--color-red, #ef4444);
+  color: #fca5a5;
   font-size: 13px;
-  margin: 0;
-  padding: 10px 14px;
-  background: rgba(239, 68, 68, 0.08);
-  border-radius: 6px;
+  margin: 0 0 4px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-error::before {
+  content: '⚠';
+  flex-shrink: 0;
+  color: #ef4444;
+  font-size: 14px;
 }
 
 .stat-cards-grid {

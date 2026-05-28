@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import Hero from '@/components/home/Hero';
+import StoriesRow from '@/components/home/StoriesRow';
 import FeaturedNew from '@/components/home/FeaturedNew';
 import GirlsGridSection from '@/components/home/GirlsGridSection';
 import ActivityFeed from '@/components/home/ActivityFeed';
@@ -112,6 +113,7 @@ export default async function HomePage({
       )}
       <p data-geo-lead className="sr-only">{t('home_lead')}</p>
       <Hero locale={locale} />
+      <StoriesRow locale={locale} />
       <FeaturedNew locale={locale} />
       <GirlsGridSection locale={locale} />
       <ActivityFeed locale={locale} />

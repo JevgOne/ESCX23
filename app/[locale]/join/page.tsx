@@ -199,14 +199,6 @@ export default async function JoinPage({ params, searchParams }: Props) {
                 <label htmlFor="bust">{t('field.bust')}</label>
                 <input id="bust" name="bust" type="number" min="1" max="6" placeholder="2" />
               </div>
-              <div className="form-group">
-                <label htmlFor="waist">{t('field.waist')}</label>
-                <input id="waist" name="waist" type="number" min="50" max="100" placeholder="60" />
-              </div>
-              <div className="form-group">
-                <label htmlFor="hips">{t('field.hips')}</label>
-                <input id="hips" name="hips" type="number" min="70" max="130" placeholder="90" />
-              </div>
             </div>
             <div className="form-row">
               <div className="form-group">

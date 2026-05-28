@@ -850,6 +850,53 @@ export async function getStoriesForAdmin(statusFilter?: string): Promise<AdminSt
   }));
 }
 
+export interface PublicStory {
+  id: number;
+  girlId: number;
+  girlName: string;
+  girlSlug: string;
+  girlPhoto: string | null;
+  mediaUrl: string;
+  mediaType: 'image' | 'video';
+  caption: string | null;
+  createdAt: string;
+}
+
+/**
+ * Returns active (live, not expired) stories grouped by girl — one preview per girl,
+ * showing the most recent live story. Used on the homepage stories row.
+ */
+export async function getPublicStories(): Promise<PublicStory[]> {
+  const res = await db.execute(`
+    SELECT
+      s.id, s.girl_id, s.media_url, s.media_type, s.caption, s.created_at,
+      g.name AS girl_name, g.slug AS girl_slug,
+      (SELECT url FROM girl_photos WHERE girl_id=g.id ORDER BY is_primary DESC, id ASC LIMIT 1) AS girl_photo
+    FROM stories s
+    INNER JOIN girls g ON g.id = s.girl_id
+    WHERE s.status = 'live'
+      AND s.is_active = 1
+      AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)
+      AND s.girl_id > 0
+      AND g.status = 'active'
+    GROUP BY s.girl_id
+    HAVING s.created_at = MAX(s.created_at)
+    ORDER BY s.created_at DESC
+    LIMIT 20
+  `);
+  return res.rows.map((r) => ({
+    id: Number(r.id),
+    girlId: Number(r.girl_id),
+    girlName: String(r.girl_name ?? ''),
+    girlSlug: String(r.girl_slug ?? ''),
+    girlPhoto: r.girl_photo ? String(r.girl_photo) : null,
+    mediaUrl: String(r.media_url),
+    mediaType: (String(r.media_type) === 'video' ? 'video' : 'image') as 'image' | 'video',
+    caption: r.caption ? String(r.caption) : null,
+    createdAt: String(r.created_at),
+  }));
+}
+
 // ─── BOOKINGS ────────────────────────────────────────────────────────────────
 
 export interface AdminBookingRow {
@@ -1441,6 +1488,34 @@ export async function getAllSchedulesGrouped(): Promise<GirlScheduleGroup[]> {
     girlPhoto: photoMap.get(Number(r.id)) ?? null,
     schedules: schedMap.get(Number(r.id)) ?? [],
   }));
+}
+
+export interface FeaturedGirlForHero {
+  id: number;
+  name: string;
+  age: number;
+  location: string;
+  photo: string;
+}
+
+export async function getFeaturedGirlForHero(): Promise<FeaturedGirlForHero | null> {
+  const res = await db.execute(
+    `SELECT g.id, g.name, g.age, g.location,
+            (SELECT url FROM girl_photos WHERE girl_id=g.id ORDER BY is_primary DESC, id ASC LIMIT 1) AS photo
+     FROM girls g
+     WHERE g.status='active' AND g.vip IS NOT 1
+     ORDER BY g.is_featured DESC, g.rating DESC, g.id DESC
+     LIMIT 1`
+  );
+  const r = res.rows[0];
+  if (!r || !r.photo) return null;
+  return {
+    id: Number(r.id),
+    name: String(r.name ?? ''),
+    age: Number(r.age ?? 0),
+    location: r.location ? String(r.location) : 'Praha',
+    photo: String(r.photo),
+  };
 }
 
 export async function getGirlServices(girlId: number): Promise<number[]> {

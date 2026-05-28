@@ -187,8 +187,8 @@ export default async function AdminNovaDivkaPage({
               placeholder="nika"
               defaultValue={defaults.slug}
               style={{ fontFamily: 'monospace' }}
-              pattern="[a-z0-9-]+"
-              title="Pouze malá písmena, číslice a pomlčky"
+              pattern="[a-z0-9]+(-[a-z0-9]+)*"
+              title="Pouze malá písmena, číslice a pomlčky (např. petra-nova)"
             />
             <div className="gf2-new-hint">URL-friendly, bez diakritiky, malá písmena (např. petra-nova)</div>
           </div>

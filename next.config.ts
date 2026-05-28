@@ -12,7 +12,7 @@ const config: NextConfig = {
       { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' },
     ],
   },
-  serverExternalPackages: ['@libsql/client', '@vercel/blob'],
+  serverExternalPackages: ['@libsql/client', '@vercel/blob', 'sharp'],
   async headers() {
     return [
       {

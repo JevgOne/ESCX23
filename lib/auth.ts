@@ -121,6 +121,21 @@ export async function requireAdmin(): Promise<AuthUser> {
   return user;
 }
 
+/**
+ * Use on admin pages that managers must NOT access (e.g. CMS, pricing, settings).
+ * Redirects manager to dashboard so they don't see admin-only data.
+ */
+export async function requireFullAdmin(): Promise<AuthUser> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== 'admin') {
+    if (user?.role === 'manager') {
+      redirect('/cs/admin');
+    }
+    redirect('/admin/login');
+  }
+  return user;
+}
+
 export async function requireGirl(): Promise<AuthUser> {
   const user = await getCurrentUser();
   if (!user || user.role !== 'girl') {

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from './db';
 import { getCurrentUser, requireAdmin, requireGirl } from './auth';
+import { watermarkImage } from './watermark';
 
 const ALLOWED_EXT = new Set(['jpg', 'jpeg', 'png', 'webp', 'avif', 'heic']);
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -13,6 +14,7 @@ export async function uploadPhotoForm(formData: FormData) {
   const file = formData.get('photo') as File | null;
   const girlId = Number(formData.get('girl_id'));
   const source = String(formData.get('source') ?? 'admin') as 'admin' | 'studio';
+  const skipWatermark = formData.get('skip_watermark') === '1';
 
   if (!file || file.size === 0) return { error: 'No file' };
   if (file.size > MAX_BYTES) return { error: 'File too large (max 10MB)' };
@@ -27,10 +29,25 @@ export async function uploadPhotoForm(formData: FormData) {
     await requireAdmin();
   }
 
-  const filename = `girls/${girlId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-  const blob = await put(filename, file, {
+  // Apply watermark by default. Admin can opt out via skip_watermark=1.
+  let uploadPayload: File | Buffer = file;
+  let finalExt = ext;
+  let finalContentType = file.type || `image/${ext}`;
+  if (!skipWatermark) {
+    try {
+      const raw = Buffer.from(await file.arrayBuffer());
+      uploadPayload = await watermarkImage(raw);
+      finalExt = 'jpg';
+      finalContentType = 'image/jpeg';
+    } catch (err) {
+      console.error('Watermark failed, uploading original:', err);
+    }
+  }
+
+  const filename = `girls/${girlId}/${Date.now()}-${crypto.randomUUID()}.${finalExt}`;
+  const blob = await put(filename, uploadPayload, {
     access: 'public',
-    contentType: file.type || `image/${ext}`,
+    contentType: finalContentType,
     addRandomSuffix: false,
   });
 
