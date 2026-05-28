@@ -10508,7 +10508,15 @@ body {
   flex-direction: row-reverse;
   gap: 2px;
 }
-.qr-star input { display: none; }
+.qr-star input {
+  /* Visually hidden but focusable — so browser HTML5 required validation
+     can scroll/focus the invalid star input. display:none breaks validation. */
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
 .qr-star span {
   cursor: pointer;
   font-size: 26px;

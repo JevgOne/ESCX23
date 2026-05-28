@@ -25,10 +25,11 @@ export default async function KontaktPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'kontakt' });
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
-  const waPhone = '+420XXX';
-  const waUrl = `https://wa.me/${waPhone.replace(/\s+/g, '').replace(/^\+/, '')}`;
-  const tgUrl = 'https://t.me/lovelygirls_prague';
-  const telUrl = `tel:${t('phone_value').replace(/\s/g, '')}`;
+  const PHONE = '+420734332131';
+  const PHONE_DISPLAY = '+420 734 332 131';
+  const waUrl = `https://wa.me/${PHONE.replace(/\s+/g, '').replace(/^\+/, '')}`;
+  const tgUrl = `https://t.me/${PHONE.replace(/\s+/g, '')}`;
+  const telUrl = `tel:${PHONE}`;
 
   return (
     <main>
