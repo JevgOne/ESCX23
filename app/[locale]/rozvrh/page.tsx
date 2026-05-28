@@ -102,7 +102,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       },
     },
     openGraph: {
-      images: _customOg_rozvrh ? [{ url: _customOg_rozvrh, width: 1200, height: 630, alt: '' }] : undefined,
+      ...(_customOg_rozvrh ? { images: [{ url: _customOg_rozvrh, width: 1200, height: 630, alt: '' }] } : {}),
       title: TITLES[locale] ?? TITLES.en,
       description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
       url: canonical,

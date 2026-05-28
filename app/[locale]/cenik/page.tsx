@@ -54,7 +54,7 @@ export async function generateMetadata({
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
     openGraph: {
-      images: _customOg_cenik ? [{ url: _customOg_cenik, width: 1200, height: 630, alt: '' }] : undefined,
+      ...(_customOg_cenik ? { images: [{ url: _customOg_cenik, width: 1200, height: 630, alt: '' }] } : {}),
       title: TITLES[locale] ?? TITLES.en,
       description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
       url: canonical,

@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: t('h1'),
     description: t('sub'),
     openGraph: {
-      images: _customOg_divky ? [{ url: _customOg_divky, width: 1200, height: 630, alt: '' }] : undefined,
+      ...(_customOg_divky ? { images: [{ url: _customOg_divky, width: 1200, height: 630, alt: '' }] } : {}),
       title: t('h1'),
       description: t('sub'),
       url: canonical,

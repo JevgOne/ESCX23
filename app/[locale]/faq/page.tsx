@@ -62,7 +62,7 @@ export async function generateMetadata({
       },
     },
     openGraph: {
-      images: _customOg_faq ? [{ url: _customOg_faq, width: 1200, height: 630, alt: '' }] : undefined,
+      ...(_customOg_faq ? { images: [{ url: _customOg_faq, width: 1200, height: 630, alt: '' }] } : {}),
       title: TITLES[locale] ?? TITLES.en,
       description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
       url: canonical,

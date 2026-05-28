@@ -53,7 +53,7 @@ export async function generateMetadata({
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
     openGraph: {
-      images: _customOg_slevy ? [{ url: _customOg_slevy, width: 1200, height: 630, alt: '' }] : undefined,
+      ...(_customOg_slevy ? { images: [{ url: _customOg_slevy, width: 1200, height: 630, alt: '' }] } : {}),
       title: TITLES[locale] ?? TITLES.en,
       description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
       url: canonical,
