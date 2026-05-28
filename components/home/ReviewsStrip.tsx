@@ -97,7 +97,7 @@ export default async function ReviewsStrip({ locale }: ReviewsStripProps) {
         </div>
 
         <div className="reviews-premium-foot">
-          <Link href="/recenze" className="reviews-show-all">
+          <Link href="/divky" className="reviews-show-all">
             {t('show_all')} →
           </Link>
         </div>

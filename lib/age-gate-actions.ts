@@ -4,12 +4,13 @@ import { cookies, headers } from 'next/headers';
 
 export async function setAgeVerified() {
   const cookieStore = await cookies();
+  // Session-only cookie: NO maxAge → browser deletes on close.
+  // Same user returning after closing the browser sees the age gate again.
   cookieStore.set('age_verified', '1', {
     httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 365,
   });
 
   const hdrs = await headers();

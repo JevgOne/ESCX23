@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { getGirlsWithToday } from '@/lib/queries';
+import { getGirlsWithToday, getAllGirlsForAdmin } from '@/lib/queries';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
 
 interface GirlsGridSectionProps {
@@ -9,8 +9,13 @@ interface GirlsGridSectionProps {
 
 export default async function GirlsGridSection({ locale }: GirlsGridSectionProps) {
   const t = await getTranslations({ locale, namespace: 'homepage.girlsGrid' });
-  const girls = await getGirlsWithToday();
+  const [girls, allActive] = await Promise.all([
+    getGirlsWithToday(),
+    getAllGirlsForAdmin(undefined, 'active').catch(() => []),
+  ]);
   const shown = girls.slice(0, 8);
+  // "Show all N companions" — use total active count, not just today's working count
+  const totalCount = allActive.length || girls.length;
 
   return (
     <section className="section" id="girls">
@@ -25,7 +30,7 @@ export default async function GirlsGridSection({ locale }: GirlsGridSectionProps
 
         <div className="show-all-row">
           <Link href="/divky" className="show-all-btn">
-            {t('show_all', { count: girls.length })} →
+            {t('show_all', { count: totalCount })} →
           </Link>
         </div>
       </div>
