@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
   title: {
     default: 'LovelyGirls Prague — Premium Companions',
-    template: '%s · LovelyGirls Prague',
+    template: '%s · LovelyGirls',
   },
   description:
     'LovelyGirls Prague: 13 verified companions, 4 private apartments in Prague 2, 8, 1 and 3, open daily 10:00–22:30. Fast WhatsApp/Telegram contact.',

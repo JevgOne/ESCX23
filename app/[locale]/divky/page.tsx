@@ -87,6 +87,37 @@ export default async function DivkyPage({ params, searchParams }: Props) {
       <p data-geo-lead className="sr-only">{tGeo('divky_lead')}</p>
       <Breadcrumbs items={[{ label: tNav('girls') }]} locale={locale} />
       <PageHeader title={t('h1')} subtitle={t('sub')} />
+
+      {/* Quick category chips → SEO landing pages */}
+      <div className="container">
+        <nav className="divky-quick-tags" aria-label={locale === 'cs' ? 'Kategorie' : 'Categories'}>
+          {(() => {
+            const items = [
+              { slug: 'spolecnice-praha', cs: 'Společnice Praha', en: 'Companions', de: 'Begleiterinnen', uk: 'Супутниці' },
+              { slug: 'blondynky-praha', cs: 'Blondýnky', en: 'Blondes', de: 'Blondinen', uk: 'Блондинки' },
+              { slug: 'brunetky-praha', cs: 'Brunetky', en: 'Brunettes', de: 'Brünette', uk: 'Брюнетки' },
+              { slug: 'gfe-praha', cs: 'GFE', en: 'GFE', de: 'GFE', uk: 'GFE' },
+              { slug: 'studentky-praha', cs: 'Studentky', en: 'Students', de: 'Studentinnen', uk: 'Студентки' },
+              { slug: 'cernovlasky-praha', cs: 'Černovlásky', en: 'Dark hair', de: 'Schwarzhaarig', uk: 'Темне волосся' },
+              { slug: 'prirodni-poprsi', cs: 'Přírodní poprsí', en: 'Natural', de: 'Natürlich', uk: 'Натуральні' },
+              { slug: 'fit-holky', cs: 'Fit', en: 'Fit', de: 'Fit', uk: 'Підтягнуті' },
+              { slug: 'elegantni-holky', cs: 'Elegantní', en: 'Elegant', de: 'Elegant', uk: 'Елегантні' },
+              { slug: 'luxusni-sluzby', cs: 'Luxus', en: 'Luxury', de: 'Luxus', uk: 'Люкс' },
+            ];
+            const prefix = locale === 'en' ? '' : `/${locale}`;
+            return items.map((tag) => (
+              <a
+                key={tag.slug}
+                href={`${prefix}/hashtag/${tag.slug}`}
+                className="divky-quick-tag"
+              >
+                #{tag[locale as 'cs' | 'en' | 'de' | 'uk'] ?? tag.cs}
+              </a>
+            ));
+          })()}
+        </nav>
+      </div>
+
       <FiltersBar
         searchParams={sp}
         searchPlaceholder={t('search_placeholder')}

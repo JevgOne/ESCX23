@@ -1,9 +1,14 @@
 import { headers } from 'next/headers';
 import { setRequestLocale } from 'next-intl/server';
+import type { Metadata } from 'next';
 import StudioSidebar from '@/components/studio/StudioSidebar';
 import { requireGirl } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, nocache: true },
+};
 
 export default async function StudioLayout({
   children,

@@ -1,5 +1,4 @@
-// Services config — 1:1 copy from Secretstory.
-// Single source of truth for /join form, admin edit, public profile.
+// Service configuration with multi-language support
 
 export interface Service {
   id: string;
@@ -13,9 +12,9 @@ export interface Service {
 }
 
 export const SERVICES: Service[] = [
-  // BASIC SERVICES — every girl offers these (auto-included)
+  // BASIC SERVICES - Every girl offers these (mandatory)
   { id: 'classic', category: 'basic', translations: { cs: 'Klasika', en: 'Classic', de: 'Klassisch', uk: 'Класичний' } },
-  { id: 'blowjob_condom', category: 'basic', translations: { cs: 'Blowjob s kondomem', en: 'Blowjob with condom', de: 'Blowjob mit Kondom', uk: 'Мінет з презервативом' } },
+  { id: 'blowjob_condom', category: 'basic', translations: { cs: 'Blowjob s kondomen', en: 'Blowjob with condom', de: 'Blowjob mit Kondom', uk: 'Мінет з презервативом' } },
   { id: 'massage', category: 'basic', translations: { cs: 'Masáž', en: 'Massage', de: 'Massage', uk: 'Масаж' } },
   { id: 'cuddling', category: 'basic', translations: { cs: 'Mazlení', en: 'Cuddling', de: 'Kuscheln', uk: 'Обійми' } },
   { id: 'licking', category: 'basic', translations: { cs: 'Lízání', en: 'Licking', de: 'Lecken', uk: 'Лизання' } },
@@ -23,7 +22,7 @@ export const SERVICES: Service[] = [
   { id: 'cum_on_body', category: 'basic', translations: { cs: 'Výstřik na tělo', en: 'Cum on body', de: 'Sperma auf Körper', uk: 'Кінчання на тіло' } },
   { id: 'shared_shower', category: 'basic', translations: { cs: 'Společná sprcha', en: 'Shared shower', de: 'Gemeinsame Dusche', uk: 'Спільний душ' } },
 
-  // EXTRA SERVICES — optional, girl checks in /join
+  // EXTRA SERVICES - Optional
   { id: 'erotic_massage', category: 'extra', translations: { cs: 'Erotická masáž', en: 'Erotic massage', de: 'Erotische Massage', uk: 'Еротичний масаж' } },
   { id: 'prostate_massage', category: 'extra', translations: { cs: 'Masáž prostaty', en: 'Prostate massage', de: 'Prostatamassage', uk: 'Масаж простати' } },
   { id: 'hard_sex', category: 'extra', translations: { cs: 'Tvrdý sex', en: 'Hard sex', de: 'Harter Sex', uk: 'Жорсткий секс' } },
@@ -53,20 +52,21 @@ export const SERVICES: Service[] = [
 ];
 
 export function getBasicServices(): Service[] {
-  return SERVICES.filter((s) => s.category === 'basic');
+  return SERVICES.filter(s => s.category === 'basic');
 }
 
 export function getExtraServices(): Service[] {
-  return SERVICES.filter((s) => s.category === 'extra');
+  return SERVICES.filter(s => s.category === 'extra');
 }
 
 export function getServiceById(id: string): Service | undefined {
-  return SERVICES.find((s) => s.id === id);
+  return SERVICES.find(s => s.id === id);
 }
 
 export function getServiceName(id: string, locale: string = 'cs'): string {
   const service = getServiceById(id);
   if (!service) return id;
-  const lang = (locale as 'cs' | 'en' | 'de' | 'uk');
+
+  const lang = locale as 'cs' | 'en' | 'de' | 'uk';
   return service.translations[lang] || service.translations.cs;
 }

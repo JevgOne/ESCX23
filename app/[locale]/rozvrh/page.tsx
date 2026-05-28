@@ -15,10 +15,10 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const TITLES: Record<string, string> = {
-  en: 'Schedule — LovelyGirls Prague',
-  cs: 'Rozvrh — LovelyGirls Praha',
-  de: 'Zeitplan — LovelyGirls Prag',
-  uk: 'Розклад — LovelyGirls Прага',
+  en: 'Schedule',
+  cs: 'Rozvrh',
+  de: 'Zeitplan',
+  uk: 'Розклад',
 };
 
 const DESCRIPTIONS: Record<string, string> = {

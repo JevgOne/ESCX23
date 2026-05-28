@@ -1,11 +1,16 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
+import type { Metadata } from 'next';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { requireAdmin } from '@/lib/auth';
 import type { AuthUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, nocache: true },
+};
 
 // Routes a manager can access. Anything else under /admin/ is admin-only.
 const MANAGER_ALLOWED_PATHS = [

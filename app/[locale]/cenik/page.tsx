@@ -12,10 +12,10 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 export const revalidate = 3600;
 
 const TITLES: Record<string, string> = {
-  en: 'Pricing — LovelyGirls Prague',
-  cs: 'Ceník — LovelyGirls Praha',
-  de: 'Preise — LovelyGirls Prag',
-  uk: 'Ціни — LovelyGirls Прага',
+  en: 'Pricing',
+  cs: 'Ceník',
+  de: 'Preise',
+  uk: 'Ціни',
 };
 
 const DESCRIPTIONS: Record<string, string> = {

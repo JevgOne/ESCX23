@@ -10,10 +10,10 @@ import type { Row } from '@libsql/client';
 export const revalidate = 3600;
 
 const TITLES: Record<string, string> = {
-  en: 'FAQ — LovelyGirls Prague',
-  cs: 'Časté dotazy — LovelyGirls Praha',
-  de: 'FAQ — LovelyGirls Prag',
-  uk: 'Питання — LovelyGirls Прага',
+  en: 'FAQ',
+  cs: 'Časté dotazy',
+  de: 'FAQ',
+  uk: 'Часті питання',
 };
 
 const DESCRIPTIONS: Record<string, string> = {

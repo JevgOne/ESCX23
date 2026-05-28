@@ -1,11 +1,13 @@
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getLocationBySlug, getActiveLocations } from '@/lib/queries';
+import { getLocationBySlug, getActiveLocations, getGirlsWithToday } from '@/lib/queries';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import Link from 'next/link';
-import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
+import { breadcrumbListJsonLd, localBusinessJsonLd, faqPageJsonLd, itemListPeopleJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl } from '@/lib/seo/meta';
+import { getLocationContent } from '@/lib/seo/landing-content';
+import { photoUrl } from '@/lib/photoUrl';
 
 export const revalidate = 3600;
 
@@ -192,9 +194,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const loc = await getLocationBySlug(slug);
   if (!loc) return {};
   const M = META[locale] ?? META.en;
+  const lc = getLocationContent(slug);
+  const desc = lc?.metaDesc[locale as 'cs' | 'en' | 'de' | 'uk'] ?? M.description(loc.displayName);
+  const canonical = getCanonicalUrl(locale, `/pobocka/${slug}`);
   return {
     title: M.title(loc.displayName),
-    description: loc.description ?? M.description(loc.displayName),
+    description: desc,
+    alternates: { canonical },
+    openGraph: {
+      title: M.title(loc.displayName),
+      description: desc,
+      url: canonical,
+      type: 'website',
+      locale: locale === 'cs' ? 'cs_CZ' : locale === 'de' ? 'de_DE' : locale === 'uk' ? 'uk_UA' : 'en_US',
+    },
+    robots: { index: true, follow: true },
   };
 }
 
@@ -208,11 +222,73 @@ export default async function PobockaDetailPage({ params }: Props) {
   const L = T[locale] ?? T.en;
   const others = (await getActiveLocations()).filter((l) => l.name !== slug);
   const district = loc.district ?? L.cityFallback;
+  const lc = getLocationContent(slug);
+  const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lovelygirls.cz';
+  const localePrefix = locale === 'en' ? '' : `/${locale}`;
+  const canonical = getCanonicalUrl(locale, `/pobocka/${slug}`);
 
+  /* JSON-LD blocks */
   const breadcrumbSchema = breadcrumbListJsonLd([
-    { name: L.bcApartments, url: getCanonicalUrl(locale, '/') + '#pobocky' },
-    { name: loc.displayName, url: getCanonicalUrl(locale, `/pobocka/${slug}`) },
+    { name: L.bcApartments, url: `${BASE}${localePrefix}/#pobocky` },
+    { name: loc.displayName, url: canonical },
   ]);
+
+  const localBusiness = localBusinessJsonLd({
+    name: `LovelyGirls ${loc.displayName}`,
+    url: canonical,
+    description: loc.description ?? L.defaultDesc(district),
+    streetAddress: loc.address ?? undefined,
+    addressLocality: loc.city ?? 'Praha',
+    postalCode: loc.postalCode ?? undefined,
+    addressRegion: district,
+    addressCountry: 'CZ',
+    telephone: '+420734332131',
+    priceRange: '$$$',
+    openingHours: ['Mo-Su 10:00-22:30'],
+    image: `${BASE}/og/default.jpg`,
+  });
+
+  const faqJsonLd = lc && lc.faq.length > 0
+    ? faqPageJsonLd(lc.faq.map((f) => ({
+        q: f.q[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.q.cs,
+        a: f.a[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.a.cs,
+      })))
+    : null;
+
+  /* Show today's companions at this location */
+  const allGirls = await getGirlsWithToday().catch(() => []);
+  // Filter by district match
+  const districtGirls = allGirls.filter((g) => {
+    const gLoc = (g.location ?? '').toLowerCase();
+    const districtLc = district.toLowerCase();
+    const cityLc = (loc.city ?? 'praha').toLowerCase();
+    return gLoc.includes(districtLc) || gLoc.includes(cityLc);
+  });
+
+  const girlsAtLocationLbl = locale === 'cs' ? 'Společnice v tomto apartmánu'
+    : locale === 'de' ? 'Begleiterinnen in diesem Apartment'
+    : locale === 'uk' ? 'Супутниці у цьому апартаменті'
+    : 'Companions at this apartment';
+  const faqLbl = locale === 'cs' ? 'Časté dotazy o apartmánu'
+    : locale === 'de' ? 'Häufige Fragen zum Apartment'
+    : locale === 'uk' ? 'Часті питання про апартамент'
+    : 'Apartment FAQ';
+  const relatedHashtagsLbl = locale === 'cs' ? 'Populární kategorie zde'
+    : locale === 'de' ? 'Beliebte Kategorien hier'
+    : locale === 'uk' ? 'Популярні категорії тут'
+    : 'Popular categories here';
+
+  const itemList = districtGirls.length > 0
+    ? itemListPeopleJsonLd(
+        districtGirls.map((g) => ({
+          slug: g.slug,
+          name: g.name,
+          url: `${BASE}${localePrefix}/${locale === 'en' ? 'profile' : 'profil'}/${g.slug}`,
+          image: g.primaryPhoto ? photoUrl(g.primaryPhoto) : null,
+        })),
+        `${L.apartmentWord} ${loc.displayName} — ${girlsAtLocationLbl}`,
+      )
+    : null;
 
   return (
     <main>
@@ -220,6 +296,22 @@ export default async function PobockaDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusiness) }}
+      />
+      {itemList && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }}
+        />
+      )}
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <Breadcrumbs
         items={[
           { label: L.bcApartments, href: `/${locale}/#pobocky` },
@@ -337,6 +429,39 @@ export default async function PobockaDetailPage({ params }: Props) {
           </div>
         </div>
       </section>
+
+      {/* Related hashtag categories at this apartment */}
+      {lc && lc.relatedHashtags.length > 0 && (
+        <section className="pobocka-section">
+          <div className="container">
+            <h2 className="lp-h2" style={{ marginBottom: '16px' }}>{relatedHashtagsLbl}</h2>
+            <div className="lp-related-chips" style={{ maxWidth: 720, margin: '0 auto' }}>
+              {lc.relatedHashtags.map((h) => (
+                <a key={h} href={`${localePrefix}/hashtag/${h}`} className="lp-related-chip">
+                  #{h}
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* FAQ */}
+      {lc && lc.faq.length > 0 && (
+        <section className="pobocka-section">
+          <div className="container">
+            <h2 className="lp-h2">{faqLbl}</h2>
+            <div className="lp-faq-list">
+              {lc.faq.map((item, i) => (
+                <details key={i} className="lp-faq-item">
+                  <summary>{item.q[locale as 'cs' | 'en' | 'de' | 'uk'] ?? item.q.cs}</summary>
+                  <p>{item.a[locale as 'cs' | 'en' | 'de' | 'uk'] ?? item.a.cs}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {others.length > 0 && (
         <section className="pobocka-others">

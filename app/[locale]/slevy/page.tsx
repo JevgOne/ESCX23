@@ -11,10 +11,10 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 export const dynamic = 'force-dynamic';
 
 const TITLES: Record<string, string> = {
-  en: 'Discounts — LovelyGirls Prague',
-  cs: 'Slevy — LovelyGirls Praha',
-  de: 'Rabatte — LovelyGirls Prag',
-  uk: 'Знижки — LovelyGirls Прага',
+  en: 'Discounts',
+  cs: 'Slevy',
+  de: 'Rabatte',
+  uk: 'Знижки',
 };
 
 const DESCRIPTIONS: Record<string, string> = {

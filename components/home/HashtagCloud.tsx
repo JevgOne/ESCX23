@@ -8,39 +8,39 @@ interface HashtagCloudProps {
 type LabelMap = Record<string, string>;
 const TAG_LABELS: Record<string, LabelMap> = {
   cs: {
-    'blondynky-praha': 'Blondýnky', 'brunetky-praha': 'Brunetky', 'gfe-praha': 'GFE',
-    'mlade-do-22-praha': 'Mladé do 22', 'natural-praha': 'Přírodní prsa',
-    'bisexualni-praha': 'Bisexuální', 'velka-prsa-praha': 'Velká prsa', 'studentky-praha': 'Studentky',
-    'milf-praha': 'MILF', 'tetovane-praha': 'Tetované', 'duo-praha': 'Duo',
-    'masaze-praha': 'Masáže', 'zrzky-praha': 'Zrzky',
+    'spolecnice-praha': 'Společnice Praha', 'blondynky-praha': 'Blondýnky', 'brunetky-praha': 'Brunetky',
+    'gfe-praha': 'GFE', 'studentky-praha': 'Studentky', 'cernovlasky-praha': 'Černovlásky',
+    'prirodni-poprsi': 'Přírodní poprsí', 'tetovani': 'Tetované', 'piercing-holky': 'Piercing',
+    'fit-holky': 'Fit', 'elegantni-holky': 'Elegantní', 'luxusni-sluzby': 'Luxus',
+    'ceske-holky': 'České',
   },
   en: {
-    'blondynky-praha': 'Blondes', 'brunetky-praha': 'Brunettes', 'gfe-praha': 'GFE',
-    'mlade-do-22-praha': 'Under 22', 'natural-praha': 'Natural breasts',
-    'bisexualni-praha': 'Bisexual', 'velka-prsa-praha': 'Big breasts', 'studentky-praha': 'Students',
-    'milf-praha': 'MILF', 'tetovane-praha': 'Tattooed', 'duo-praha': 'Duo',
-    'masaze-praha': 'Massage', 'zrzky-praha': 'Redheads',
+    'spolecnice-praha': 'Prague companions', 'blondynky-praha': 'Blondes', 'brunetky-praha': 'Brunettes',
+    'gfe-praha': 'GFE', 'studentky-praha': 'Students', 'cernovlasky-praha': 'Dark hair',
+    'prirodni-poprsi': 'Natural', 'tetovani': 'Tattooed', 'piercing-holky': 'Piercing',
+    'fit-holky': 'Fit', 'elegantni-holky': 'Elegant', 'luxusni-sluzby': 'Luxury',
+    'ceske-holky': 'Czech',
   },
   de: {
-    'blondynky-praha': 'Blondinen', 'brunetky-praha': 'Brünette', 'gfe-praha': 'GFE',
-    'mlade-do-22-praha': 'Unter 22', 'natural-praha': 'Natürlicher Busen',
-    'bisexualni-praha': 'Bisexuell', 'velka-prsa-praha': 'Großer Busen', 'studentky-praha': 'Studentinnen',
-    'milf-praha': 'MILF', 'tetovane-praha': 'Tätowiert', 'duo-praha': 'Duo',
-    'masaze-praha': 'Massagen', 'zrzky-praha': 'Rothaarige',
+    'spolecnice-praha': 'Begleiterinnen Prag', 'blondynky-praha': 'Blondinen', 'brunetky-praha': 'Brünette',
+    'gfe-praha': 'GFE', 'studentky-praha': 'Studentinnen', 'cernovlasky-praha': 'Schwarzhaarig',
+    'prirodni-poprsi': 'Natürlich', 'tetovani': 'Tätowiert', 'piercing-holky': 'Piercing',
+    'fit-holky': 'Fit', 'elegantni-holky': 'Elegant', 'luxusni-sluzby': 'Luxus',
+    'ceske-holky': 'Tschechisch',
   },
   uk: {
-    'blondynky-praha': 'Блондинки', 'brunetky-praha': 'Брюнетки', 'gfe-praha': 'GFE',
-    'mlade-do-22-praha': 'До 22 років', 'natural-praha': 'Натуральний бюст',
-    'bisexualni-praha': 'Бісексуальні', 'velka-prsa-praha': 'Великий бюст', 'studentky-praha': 'Студентки',
-    'milf-praha': 'MILF', 'tetovane-praha': 'Татуйовані', 'duo-praha': 'Duo',
-    'masaze-praha': 'Масаж', 'zrzky-praha': 'Руді',
+    'spolecnice-praha': 'Супутниці Прага', 'blondynky-praha': 'Блондинки', 'brunetky-praha': 'Брюнетки',
+    'gfe-praha': 'GFE', 'studentky-praha': 'Студентки', 'cernovlasky-praha': 'Темне волосся',
+    'prirodni-poprsi': 'Натуральний', 'tetovani': 'Татуйовані', 'piercing-holky': 'Пірсинг',
+    'fit-holky': 'Підтягнуті', 'elegantni-holky': 'Елегантні', 'luxusni-sluzby': 'Люкс',
+    'ceske-holky': 'Чеські',
   },
 };
 
 const TAG_GROUPS = [
-  { tier: 'top', slugs: ['blondynky-praha', 'brunetky-praha', 'gfe-praha'] },
-  { tier: 'mid', slugs: ['mlade-do-22-praha', 'natural-praha', 'bisexualni-praha', 'velka-prsa-praha', 'studentky-praha'] },
-  { tier: 'small', slugs: ['milf-praha', 'tetovane-praha', 'duo-praha', 'masaze-praha', 'zrzky-praha'] },
+  { tier: 'top', slugs: ['spolecnice-praha', 'blondynky-praha', 'brunetky-praha', 'gfe-praha'] },
+  { tier: 'mid', slugs: ['studentky-praha', 'cernovlasky-praha', 'prirodni-poprsi', 'fit-holky', 'elegantni-holky'] },
+  { tier: 'small', slugs: ['tetovani', 'piercing-holky', 'luxusni-sluzby', 'ceske-holky'] },
 ];
 
 export default async function HashtagCloud({ locale }: HashtagCloudProps) {
@@ -59,13 +59,13 @@ export default async function HashtagCloud({ locale }: HashtagCloudProps) {
           {TAG_GROUPS.map((group) => (
             <div key={group.tier} className="hashtag-row">
               {group.slugs.map((slug) => (
-                <Link
+                <a
                   key={slug}
-                  href={{ pathname: '/divky', query: { tag: slug } }}
+                  href={`${locale === 'en' ? '' : '/' + locale}/hashtag/${slug}`}
                   className={`hashtag-pill-${group.tier}`}
                 >
                   #{labels[slug] ?? slug}
-                </Link>
+                </a>
               ))}
             </div>
           ))}
