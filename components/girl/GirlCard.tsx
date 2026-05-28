@@ -46,7 +46,10 @@ export default async function GirlCard({ girl }: GirlCardProps) {
       data-status={isAway ? 'away' : 'available'}
     >
       <div className="girl-photo-wrap">
-        <img src={photoUrl(girl.primaryPhoto)} alt={altText} loading="lazy" />
+        <img className="girl-photo girl-photo-front" src={photoUrl(girl.primaryPhoto)} alt={altText} loading="lazy" />
+        {girl.secondaryPhoto && (
+          <img className="girl-photo girl-photo-back" src={photoUrl(girl.secondaryPhoto)} alt="" loading="lazy" aria-hidden="true" />
+        )}
 
         {girl.isVip && (
           <span className="girl-tag-pill vip">★ VIP</span>

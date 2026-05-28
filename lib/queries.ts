@@ -30,6 +30,7 @@ export interface GirlCard {
   bust: number | null;
   location: string;
   primaryPhoto: string | null;
+  secondaryPhoto: string | null;
   photoCount: number;
   videoCount: number;
   status: GirlStatus;
@@ -58,6 +59,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
@@ -107,6 +109,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         bust: r.bust != null ? Number(r.bust) : null,
         location: String(r.location ?? 'Praha'),
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
+        secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
         videoCount: Number(r.video_count),
         status: isPaused ? 'off' : status,
@@ -438,6 +441,7 @@ export async function getGirlsForDay(
         gs.start_time AS shift_from, gs.end_time AS shift_to, gs.is_active AS gs_active,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
@@ -492,6 +496,7 @@ export async function getGirlsForDay(
         bust: r.bust != null ? Number(r.bust) : null,
         location: loc,
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
+        secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
         videoCount: Number(r.video_count),
         status,
@@ -1355,6 +1360,7 @@ export async function getGirlsForListing(
         bust: r.bust != null ? Number(r.bust) : null,
         location: String(r.location ?? 'Praha'),
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
+        secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
         videoCount: Number(r.video_count),
         status: isPaused ? 'off' : status,
@@ -1385,6 +1391,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
@@ -1435,6 +1442,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         bust: r.bust != null ? Number(r.bust) : null,
         location: String(r.location ?? 'Praha'),
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
+        secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
         videoCount: Number(r.video_count),
         status,

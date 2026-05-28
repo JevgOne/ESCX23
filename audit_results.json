@@ -1,0 +1,302 @@
+{
+  "log": [
+    {
+      "level": "INFO",
+      "feature": "Homepage EN",
+      "url": "https://escx23.vercel.app/",
+      "note": "status=200, TTFB=3042ms, title=\"LovelyGirls Prague — Verified Companions\", H1=\"Prague CompanionsLuxury escort\", agegate=true, consoleErrors=0, net4xx=0, net5xx=0"
+    },
+    {
+      "level": "OK",
+      "feature": "Homepage hero CTA visible",
+      "url": "https://escx23.vercel.app/",
+      "note": "visible"
+    },
+    {
+      "level": "INFO",
+      "feature": "Homepage CS",
+      "url": "https://escx23.vercel.app/cs",
+      "note": "status=200, TTFB=1783ms, H1=\"Společnice PrahaLuxusní escort\", consoleErrors=0, net5xx=0"
+    },
+    {
+      "level": "INFO",
+      "feature": "Girls listing CS",
+      "url": "https://escx23.vercel.app/cs/divky",
+      "note": "status=200, TTFB=1194ms, cards=242, consoleErrors=0"
+    },
+    {
+      "level": "INFO",
+      "feature": "Girls listing EN",
+      "url": "https://escx23.vercel.app/girls",
+      "note": "status=200"
+    },
+    {
+      "level": "INFO",
+      "feature": "Profile anetta CS",
+      "url": "https://escx23.vercel.app/cs/profil/anetta",
+      "note": "status=200, TTFB=1691ms, H1=\"Anetta\", consoleErrors=0"
+    },
+    {
+      "level": "WARN",
+      "feature": "Profile tel: link",
+      "url": "https://escx23.vercel.app/cs/profil/anetta",
+      "note": "NOT FOUND"
+    },
+    {
+      "level": "WARN",
+      "feature": "Profile wa.me link",
+      "url": "https://escx23.vercel.app/cs/profil/anetta",
+      "note": "NOT FOUND"
+    },
+    {
+      "level": "INFO",
+      "feature": "Profile anetta EN",
+      "url": "https://escx23.vercel.app/profile/anetta",
+      "note": "status=200"
+    },
+    {
+      "level": "OK",
+      "feature": "Hashtag FAQ accordion",
+      "url": "https://escx23.vercel.app/cs/hashtag/blondynky-praha",
+      "note": "opens OK"
+    },
+    {
+      "level": "INFO",
+      "feature": "Hashtag landing",
+      "url": "https://escx23.vercel.app/cs/hashtag/blondynky-praha",
+      "note": "status=200, H1=\"Blondýnky Praha\", accordion=true, consoleErrors=0"
+    },
+    {
+      "level": "INFO",
+      "feature": "Pobocka vinohrady",
+      "url": "https://escx23.vercel.app/cs/pobocka/vinohrady",
+      "note": "status=404, H1=\"404\""
+    },
+    {
+      "level": "CRITICAL",
+      "feature": "Pobocka 404",
+      "url": "https://escx23.vercel.app/cs/pobocka/vinohrady",
+      "note": "Returns 404"
+    },
+    {
+      "level": "INFO",
+      "feature": "Schedule CS",
+      "url": "https://escx23.vercel.app/cs/rozvrh",
+      "note": "status=200, TTFB=1176ms, dayTabs=25, consoleErrors=0"
+    },
+    {
+      "level": "INFO",
+      "feature": "Schedule EN",
+      "url": "https://escx23.vercel.app/schedule",
+      "note": "status=200"
+    },
+    {
+      "level": "INFO",
+      "feature": "Pricing CS",
+      "url": "https://escx23.vercel.app/cs/cenik",
+      "note": "status=200, H1=\"Ceník\""
+    },
+    {
+      "level": "INFO",
+      "feature": "Pricing EN",
+      "url": "https://escx23.vercel.app/pricing",
+      "note": "status=200"
+    },
+    {
+      "level": "INFO",
+      "feature": "Discounts CS",
+      "url": "https://escx23.vercel.app/cs/slevy",
+      "note": "status=200, H1=\"Slevy a balíčky\""
+    },
+    {
+      "level": "OK",
+      "feature": "FAQ accordion opens",
+      "url": "https://escx23.vercel.app/cs/faq",
+      "note": "native <details> works"
+    },
+    {
+      "level": "INFO",
+      "feature": "FAQ CS",
+      "url": "https://escx23.vercel.app/cs/faq",
+      "note": "status=200, H1=\"Časté dotazy\", hasAccordion=true"
+    },
+    {
+      "level": "INFO",
+      "feature": "Blog CS",
+      "url": "https://escx23.vercel.app/cs/blog",
+      "note": "status=200, H1=\"Blog\", firstPostHref=null, postStatus=null, consoleErrors=0"
+    },
+    {
+      "level": "INFO",
+      "feature": "About",
+      "url": "https://escx23.vercel.app/cs/o-nas",
+      "note": "status=200, H1=\"LovelyGirls Praha\""
+    },
+    {
+      "level": "INFO",
+      "feature": "Contact",
+      "url": "https://escx23.vercel.app/cs/kontakt",
+      "note": "status=200, H1=\"Napište nebo zavolejte\""
+    },
+    {
+      "level": "INFO",
+      "feature": "Membership form",
+      "url": "https://escx23.vercel.app/cs/clenstvi/zadost",
+      "note": "status=200, formFields=6, submitBtn=true"
+    },
+    {
+      "level": "INFO",
+      "feature": "Join form",
+      "url": "https://escx23.vercel.app/cs/pridat-se",
+      "note": "status=200, formFields=47"
+    },
+    {
+      "level": "INFO",
+      "feature": "Review form",
+      "url": "https://escx23.vercel.app/cs/recenze/nova/anetta",
+      "note": "status=200, formFields=26, stars=19, consoleErrors=5"
+    },
+    {
+      "level": "INFO",
+      "feature": "Admin route",
+      "url": "https://escx23.vercel.app/admin",
+      "note": "status=200, finalUrl=https://escx23.vercel.app/admin/login"
+    },
+    {
+      "level": "OK",
+      "feature": "Admin auth redirect",
+      "url": "https://escx23.vercel.app/admin",
+      "note": "redirected to https://escx23.vercel.app/admin/login"
+    },
+    {
+      "level": "OK",
+      "feature": "CS Admin divky auth",
+      "url": "https://escx23.vercel.app/cs/admin/divky",
+      "note": "redirected to https://escx23.vercel.app/admin/login"
+    },
+    {
+      "level": "OK",
+      "feature": "Studio auth redirect",
+      "url": "https://escx23.vercel.app/studio",
+      "note": "redirected to https://escx23.vercel.app/studio/login"
+    },
+    {
+      "level": "INFO",
+      "feature": "Studio login",
+      "url": "https://escx23.vercel.app/studio/login",
+      "note": "status=200, H1=\"Studio přihlášení\""
+    },
+    {
+      "level": "OK",
+      "feature": "Profile 404",
+      "url": "https://escx23.vercel.app/cs/profil/neexistujici-slug",
+      "note": "HTTP 404, has404content=true"
+    },
+    {
+      "level": "OK",
+      "feature": "Hashtag 404",
+      "url": "https://escx23.vercel.app/cs/hashtag/neexistujici-tag",
+      "note": "HTTP 404, has404content=true"
+    },
+    {
+      "level": "OK",
+      "feature": "Blog 404",
+      "url": "https://escx23.vercel.app/cs/blog/neexistujici-post",
+      "note": "HTTP 404, has404content=true"
+    },
+    {
+      "level": "OK",
+      "feature": "Pobocka 404",
+      "url": "https://escx23.vercel.app/cs/pobocka/neexistujici",
+      "note": "HTTP 404, has404content=true"
+    },
+    {
+      "level": "INFO",
+      "feature": "Lang switch button found",
+      "url": "https://escx23.vercel.app/",
+      "note": "need to click dropdown"
+    },
+    {
+      "level": "OK",
+      "feature": "Hreflang tags",
+      "url": "https://escx23.vercel.app/cs",
+      "note": "count=5, tags=[\"en=https://escx23.vercel.app/\",\"cs=https://escx23.vercel.app/cs/\",\"de=https://escx23.vercel.app/de/\",\"uk=https://escx23.vercel.app/uk/\",\"x-default=https://escx23.vercel.app/\"]"
+    },
+    {
+      "level": "INFO",
+      "feature": "Mobile Homepage CS",
+      "url": "https://escx23.vercel.app/cs",
+      "note": "consoleErrors=0"
+    },
+    {
+      "level": "WARN",
+      "feature": "Mobile hamburger",
+      "url": "https://escx23.vercel.app/cs",
+      "note": "No hamburger button found"
+    },
+    {
+      "level": "INFO",
+      "feature": "Mobile Profile",
+      "url": "https://escx23.vercel.app/cs/profil/anetta",
+      "note": "bottomBar=true, tel=true, wa=true"
+    },
+    {
+      "level": "OK",
+      "feature": "Mobile IG profile header",
+      "url": "https://escx23.vercel.app/cs/profil/anetta",
+      "note": "visible"
+    },
+    {
+      "level": "INFO",
+      "feature": "Mobile Girls",
+      "url": "https://escx23.vercel.app/cs/divky",
+      "note": "cards=12"
+    },
+    {
+      "level": "INFO",
+      "feature": "Mobile Review form",
+      "url": "https://escx23.vercel.app/cs/recenze/nova/anetta",
+      "note": "formFields=26"
+    },
+    {
+      "level": "PERF",
+      "feature": "Homepage EN",
+      "url": "https://escx23.vercel.app/",
+      "note": "TTFB=1743ms"
+    },
+    {
+      "level": "PERF",
+      "feature": "Girls CS",
+      "url": "https://escx23.vercel.app/cs/divky",
+      "note": "TTFB=1475ms"
+    },
+    {
+      "level": "PERF",
+      "feature": "Profile anetta CS",
+      "url": "https://escx23.vercel.app/cs/profil/anetta",
+      "note": "TTFB=1681ms"
+    }
+  ],
+  "errors": [
+    {
+      "feature": "Review form console",
+      "url": "https://escx23.vercel.app/cs/recenze/nova/anetta",
+      "errs": [
+        "An invalid form control with name='rating' is not focusable.",
+        "An invalid form control with name='rating' is not focusable.",
+        "An invalid form control with name='rating' is not focusable.",
+        "An invalid form control with name='rating' is not focusable.",
+        "An invalid form control with name='rating' is not focusable.",
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ]
+    }
+  ],
+  "summary": {
+    "criticalCount": 1,
+    "warnCount": 3,
+    "okCount": 12
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "pobocka": {
+    "status": 404,
+    "title": "404: This page could not be found.",
+    "h1": "404",
+    "consoleErrs": [
+      "Failed to load resource: the server responded with a status of 404 ()"
+    ],
+    "netErrs": [
+      "404 https://escx23.vercel.app/cs/pobocka/vinohrady"
+    ]
+  },
+  "profileLinks": {
+    "telLinks": [
+      {
+        "href": "tel:+420734332131",
+        "text": "Zavolat"
+      },
+      {
+        "href": "tel:+420734332131",
+        "text": "Zavolat"
+      },
+      {
+        "href": "tel:+420734332131",
+        "text": "📞 Zavolat"
+      },
+      {
+        "href": "tel:+420734332131",
+        "text": "Zavolat"
+      }
+    ],
+    "waLinks": [
+      {
+        "href": "https://wa.me/420734332131",
+        "text": "WhatsApp"
+      },
+      {
+        "href": "https://wa.me/420734332131?text=Dobr%C3%BD%20den%2C%20zaj%C3%ADm%C3%A1%20m%C4%9B%20Anetta",
+        "text": "WhatsApp"
+      },
+      {
+        "href": "https://wa.me/420734332131?text=Dobr%C3%BD%20den%2C%20zaj%C3%ADm%C3%A1%20m%C4%9B%20Anetta",
+        "text": "WhatsApp"
+      },
+      {
+        "href": "https://wa.me/420734332131",
+        "text": "WhatsApp"
+      }
+    ],
+    "tgLinks": [
+      {
+        "href": "https://t.me/+420734332131",
+        "text": "Telegram"
+      },
+      {
+        "href": "https://t.me/+420734332131",
+        "text": "Telegram"
+      },
+      {
+        "href": "https://t.me/+420734332131",
+        "text": "Telegram"
+      },
+      {
+        "href": "https://t.me/+420734332131",
+        "text": "Telegram"
+      }
+    ],
+    "stickyVisible": true
+  },
+  "blog": {
+    "blogPostLinks": []
+  },
+  "reviewForm": {
+    "ratingInputs": [
+      {
+        "type": "radio",
+        "value": "5",
+        "id": "",
+        "required": true,
+        "hidden": false,
+        "display": "none"
+      },
+      {
+        "type": "radio",
+        "value": "4",
+        "id": "",
+        "required": true,
+        "hidden": false,
+        "display": "none"
+      },
+      {
+        "type": "radio",
+        "value": "3",
+        "id": "",
+        "required": true,
+        "hidden": false,
+        "display": "none"
+      },
+      {
+        "type": "radio",
+        "value": "2",
+        "id": "",
+        "required": true,
+        "hidden": false,
+        "display": "none"
+      },
+      {
+        "type": "radio",
+        "value": "1",
+        "id": "",
+        "required": true,
+        "hidden": false,
+        "display": "none"
+      }
+    ],
+    "consoleErrs": []
+  },
+  "mobileHamburger": {
+    "allButtons": [
+      {
+        "text": "Je mi 18+ — Vstoupit",
+        "cls": "btn btn-pink age-gate-confirm",
+        "ariaLabel": null,
+        "visible": true,
+        "rect": {
+          "w": 199.671875,
+          "h": 44
+        }
+      }
+    ]
+  },
+  "langSwitch": {
+    "langEls": [
+      {
+        "tag": "DIV",
+        "text": "🇬🇧EN🇬🇧EN🇨🇿CS🇩🇪DE🇺🇦UK",
+        "cls": "header-langs",
+        "href": null
+      },
+      {
+        "tag": "DETAILS",
+        "text": "🇬🇧EN🇬🇧EN🇨🇿CS🇩🇪DE🇺🇦UK",
+        "cls": "lang-switcher",
+        "href": null
+      },
+      {
+        "tag": "SUMMARY",
+        "text": "🇬🇧EN",
+        "cls": "lang-switcher-summary",
+        "href": null
+      },
+      {
+        "tag": "SPAN",
+        "text": "🇬🇧",
+        "cls": "lang-chip-flag",
+        "href": null
+      },
+      {
+        "tag": "SPAN",
+        "text": "EN",
+        "cls": "lang-chip-label",
+        "href": null
+      },
+      {
+        "tag": "DIV",
+        "text": "🇬🇧EN🇨🇿CS🇩🇪DE🇺🇦UK",
+        "cls": "lang-switcher-menu",
+        "href": null
+      },
+      {
+        "tag": "A",
+        "text": "🇬🇧EN",
+        "cls": "lang-chip lang-chip-active",
+        "href": "/"
+      },
+      {
+        "tag": "SPAN",
+        "text": "🇬🇧",
+        "cls": "lang-chip-flag",
+        "href": null
+      },
+      {
+        "tag": "SPAN",
+        "text": "EN",
+        "cls": "lang-chip-label",
+        "href": null
+      },
+      {
+        "tag": "A",
+        "text": "🇨🇿CS",
+        "cls": "lang-chip",
+        "href": "/cs/"
+      }
+    ]
+  },
+  "schedule": {
+    "dayLinks": [
+      {
+        "href": "https://escx23.vercel.app/cs/rozvrh?day=2026-05-28",
+        "text": "Všechny pobočky"
+      },
+      {
+        "href": "https://escx23.vercel.app/cs/rozvrh?day=2026-05-28&location=praha-2",
+        "text": "Praha 2"
+      },
+      {
+        "href": "https://escx23.vercel.app/cs/rozvrh?day=2026-05-28",
+        "text": "Dnes28..5.●"
+      },
+      {
+        "href": "https://escx23.vercel.app/cs/rozvrh?day=2026-05-29",
+        "text": "Pá29..5."
+      },
+      {
+        "href": "https://escx23.vercel.app/cs/rozvrh?day=2026-05-30",
+        "text": "So30..5."
+      },
+      {
+        "href": "https://escx23.vercel.app/cs/rozvrh?day=2026-05-31",
+        "text": "Ne31..5."
+      },
+      {
+        "href": "https://escx23.vercel.app/cs/rozvrh?day=2026-06-01",
+        "text": "Po1..6."
+      },
+      {
+        "href": "https://escx23.vercel.app/cs/rozvrh?day=2026-06-02",
+        "text": "Út2..6."
+      },
+      {
+        "href": "https://escx23.vercel.app/cs/rozvrh?day=2026-06-03",
+        "text": "St3..6."
+      }
+    ]
+  }
+}
