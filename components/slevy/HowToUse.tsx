@@ -48,11 +48,9 @@ const T: Record<string, { heading: string; body: React.ReactNode }> = {
 export default function HowToUse({ locale = 'cs' }: Props) {
   const L = T[locale] ?? T.en;
   return (
-    <div className="how-to-use" style={{ marginTop: '48px', maxWidth: '640px' }}>
-      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', marginBottom: '10px' }}>
-        {L.heading}
-      </h3>
-      <p style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>{L.body}</p>
+    <div className="how-to-use">
+      <h3 className="how-to-use-h">{L.heading}</h3>
+      <p className="how-to-use-body">{L.body}</p>
     </div>
   );
 }

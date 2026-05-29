@@ -42,13 +42,11 @@ export default function LoyaltyExplainer({ locale = 'cs' }: Props) {
     { visits: 10, pct: 15, icon: '🥇' },
   ];
   return (
-    <div style={{ marginTop: '64px' }}>
-      <h2 className="section-h2" style={{ fontSize: '28px', marginBottom: '8px' }}>
-        {L.heading}
-      </h2>
-      <p style={{ color: 'var(--color-text-muted)', marginBottom: '28px', maxWidth: '560px' }}>
-        {L.body}
-      </p>
+    <div className="loyalty-section">
+      <div className="loyalty-section-head">
+        <h2>{L.heading}</h2>
+        <p>{L.body}</p>
+      </div>
       <div className="loyalty-tiers">
         {tiers.map((tier) => (
           <div key={tier.visits} className="loyalty-tier">
