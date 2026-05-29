@@ -75,6 +75,22 @@ const T: Record<string, {
   },
 };
 
+const VIBE_EMOJI: Record<string, string> = {
+  great: '😊',
+  magical: '✨',
+  unforgettable: '🔥',
+  meh: '😐',
+  nice: '💕',
+};
+
+const VIBE_LABELS: Record<string, Record<string, string>> = {
+  great: { cs: 'Skvělý', en: 'Great', de: 'Großartig', uk: 'Чудовий' },
+  magical: { cs: 'Magický', en: 'Magical', de: 'Magisch', uk: 'Магічний' },
+  unforgettable: { cs: 'Nezapomenutelný', en: 'Unforgettable', de: 'Unvergesslich', uk: 'Незабутній' },
+  meh: { cs: 'Průměrný', en: 'Average', de: 'Durchschnittlich', uk: 'Середній' },
+  nice: { cs: 'Příjemný', en: 'Nice', de: 'Nett', uk: 'Приємний' },
+};
+
 const TAG_LABELS: Record<string, Record<string, string>> = {
   friendly: { cs: 'Přátelská', en: 'Friendly', de: 'Freundlich', uk: 'Дружня' },
   playful: { cs: 'Hravá', en: 'Playful', de: 'Verspielt', uk: 'Грайлива' },
@@ -232,6 +248,12 @@ export default async function RecenzePage({
                         </span>
                       </div>
                     </div>
+                    {review.vibe && VIBE_EMOJI[review.vibe] && (
+                      <div className="rev-item-vibe">
+                        <span className="rev-vibe-emoji">{VIBE_EMOJI[review.vibe]}</span>
+                        <span className="rev-vibe-label">{VIBE_LABELS[review.vibe]?.[locale] ?? VIBE_LABELS[review.vibe]?.en ?? review.vibe}</span>
+                      </div>
+                    )}
                     <p className="rev-item-text">{review.text}</p>
                     {review.tags.length > 0 && (
                       <div className="rev-item-tags">
