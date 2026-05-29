@@ -1,7 +1,6 @@
 import { Link } from '@/i18n/navigation';
 import { getLocale } from 'next-intl/server';
 import { photoUrl } from '@/lib/photoUrl';
-import { prettyDistrict } from '@/lib/utils';
 import type { GirlCard as GirlCardType } from '@/lib/queries';
 
 const FLAG_MAP: Record<string, string> = {
@@ -37,8 +36,7 @@ export default async function GirlCard({ girl }: GirlCardProps) {
   const altNoun = ALT_NOUN[locale] ?? ALT_NOUN.en;
   const altText = `${girl.name}, ${girl.age}, ${city} ${altNoun}`;
   const isAway = girl.status === 'later';
-  const district = prettyDistrict(girl.location);
-  const address = district ? `${district}, ${girl.location}` : girl.location;
+  const address = girl.location ?? 'Praha';
 
   return (
     <Link
