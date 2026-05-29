@@ -3,8 +3,16 @@ import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
-// GET /api/seo - Get all SEO metadata (with optional filters)
+// GET /api/seo - Get all SEO metadata (with optional filters) (ADMIN ONLY)
 export async function GET(request: NextRequest) {
+  const isAuth = await requireAdmin().catch(() => null);
+  if (!isAuth) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const locale = searchParams.get('locale');

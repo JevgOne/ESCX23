@@ -27,10 +27,10 @@ export default async function JoinPage({ params, searchParams }: Props) {
   // CS is the default — only show EN when explicitly opted in via ?lang=en.
   // Any other locale (de, uk) falls back to CS.
   if (locale === 'en' && sp.lang !== 'en') {
-    redirect('/cs/pridat-se');
+    redirect('/cs/join');
   }
   if (locale !== 'cs' && locale !== 'en') {
-    redirect('/cs/pridat-se');
+    redirect('/cs/join');
   }
 
   setRequestLocale(locale);
@@ -149,7 +149,7 @@ export default async function JoinPage({ params, searchParams }: Props) {
           <div className="join-lang-picker-buttons">
             {LANGS.map((l) => {
               const isActive = l.code === locale && (l.code !== 'en' || sp.lang === 'en');
-              const href = l.code === 'en' ? '/join?lang=en' : '/cs/pridat-se';
+              const href = l.code === 'en' ? '/join?lang=en' : '/cs/join';
               return (
                 <a
                   key={l.code}

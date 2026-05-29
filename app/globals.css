@@ -4244,27 +4244,32 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 }
 
 /* Extras table */
-.extras-table {
+.extras-note-card {
   background: var(--color-bg-card);
   border: 1px solid var(--color-line);
   border-radius: 14px;
-  overflow: hidden;
+  padding: 28px 24px;
 }
-.extras-row {
+.extras-note-text {
+  color: var(--color-text-muted);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+.extras-note-price {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px 22px;
-  border-bottom: 1px solid var(--color-line);
+  gap: 8px;
 }
-.extras-row:last-child { border-bottom: none; }
-.extras-row-name { font-weight: 500; color: var(--color-text); }
-.extras-row-name small { color: var(--color-text-muted); margin-left: 6px; font-weight: 400; }
-.extras-row-price {
+.extras-note-label {
+  font-weight: 500;
+  color: var(--color-text);
+}
+.extras-note-value {
   font-family: var(--font-display);
   font-weight: 700;
   color: var(--color-coral);
-  font-size: 16px;
+  font-size: 18px;
 }
 
 /* Payment info */

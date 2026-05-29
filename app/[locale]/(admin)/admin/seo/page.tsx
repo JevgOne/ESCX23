@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 
 import type { SEOMetadata } from '@/lib/seo-types';
@@ -18,6 +18,8 @@ interface PageWithSEO {
 
 export default function AdminSEOPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'cs';
   const [pages, setPages] = useState<PageWithSEO[]>([]);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
@@ -417,7 +419,7 @@ export default function AdminSEOPage() {
                     </td>
                     <td>
                       <Link
-                        href={`/admin/seo/edit?path=${encodeURIComponent(page.path)}`}
+                        href={`/${locale}/admin/seo/edit?path=${encodeURIComponent(page.path)}`}
                         style={{
                           display: 'inline-block',
                           padding: '8px 16px',

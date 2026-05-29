@@ -126,9 +126,11 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
     })
     .filter((g): g is GirlCard => g !== null)
     .sort((a, b) => {
-      if (a.status === 'working' && b.status !== 'working') return -1;
-      if (a.status !== 'working' && b.status === 'working') return 1;
-      return 0;
+      const rank = { working: 0, later: 1, off: 2 } as const;
+      const ra = rank[a.status] ?? 2;
+      const rb = rank[b.status] ?? 2;
+      if (ra !== rb) return ra - rb;
+      return a.name.localeCompare(b.name);
     });
 }
 
@@ -536,7 +538,14 @@ export async function getGirlsForDay(
         hashtags: parseLangs(r.hashtags),
       };
     })
-    .filter((g): g is GirlCard => g !== null);
+    .filter((g): g is GirlCard => g !== null)
+    .sort((a, b) => {
+      const rank = { working: 0, later: 1, off: 2 } as const;
+      const ra = rank[a.status] ?? 2;
+      const rb = rank[b.status] ?? 2;
+      if (ra !== rb) return ra - rb;
+      return a.name.localeCompare(b.name);
+    });
 }
 
 /* =========================================================

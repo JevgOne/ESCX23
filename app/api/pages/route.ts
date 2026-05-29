@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getAllPages } from '@/lib/pages';
 import { HASHTAGS } from '@/lib/hashtags';
+import { requireAdmin } from '@/lib/auth';
 
 export async function GET() {
+  const isAuth = await requireAdmin().catch(() => null);
+  if (!isAuth) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
   try {
     const locales = ['cs', 'en', 'de', 'uk'];
     const allPages = [];

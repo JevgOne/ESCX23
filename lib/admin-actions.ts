@@ -3,12 +3,14 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from './db';
+import { requireAdmin, requireFullAdmin } from './auth';
 import {
   updateGirlById,
   deleteGirlById,
 } from './queries';
 
 export async function updateGirl(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -103,6 +105,7 @@ export async function updateGirl(formData: FormData) {
 }
 
 export async function createGirl(formData: FormData) {
+  await requireAdmin();
   const name = String(formData.get('name') ?? '').trim();
   const rawSlug = String(formData.get('slug') ?? '').trim();
   const age = Number(formData.get('age'));
@@ -238,6 +241,7 @@ export async function createGirl(formData: FormData) {
  * and redirects to /cs/admin/divky/{newId}/edit so admin can polish the profile.
  */
 export async function createGirlFromApplication(formData: FormData) {
+  await requireAdmin();
   const appId = Number(formData.get('application_id'));
   if (!appId) throw new Error('Missing application_id');
 
@@ -346,6 +350,7 @@ function slugify(name: string): string {
 }
 
 export async function rejectApplication(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
   const reason = formData.get('rejection_reason')
@@ -364,6 +369,7 @@ export async function rejectApplication(formData: FormData) {
 }
 
 export async function reopenApplication(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -379,6 +385,7 @@ export async function reopenApplication(formData: FormData) {
 }
 
 export async function updateApplicationNotes(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
   const notes = formData.get('notes') ? String(formData.get('notes')).trim() : null;
@@ -393,6 +400,7 @@ export async function updateApplicationNotes(formData: FormData) {
 }
 
 export async function deleteGirl(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -404,6 +412,7 @@ export async function deleteGirl(formData: FormData) {
 }
 
 export async function approvePhoto(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   await db.execute({
     sql: `UPDATE girl_photos SET is_primary=1 WHERE id=?`,
@@ -413,6 +422,7 @@ export async function approvePhoto(formData: FormData) {
 }
 
 export async function rejectPhoto(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   await db.execute({
     sql: `DELETE FROM girl_photos WHERE id=?`,
@@ -424,6 +434,7 @@ export async function rejectPhoto(formData: FormData) {
 // ─── POBOCKY ────────────────────────────────────────────────────────────────
 
 export async function createPobocka(formData: FormData) {
+  await requireFullAdmin();
   const name = String(formData.get('name') ?? '').trim();
   const display_name = String(formData.get('display_name') ?? '').trim();
   const city = String(formData.get('city') ?? '').trim();
@@ -457,6 +468,7 @@ export async function createPobocka(formData: FormData) {
 }
 
 export async function updatePobocka(formData: FormData) {
+  await requireFullAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -500,6 +512,7 @@ export async function updatePobocka(formData: FormData) {
 }
 
 export async function deletePobocka(formData: FormData) {
+  await requireFullAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -513,6 +526,7 @@ export async function deletePobocka(formData: FormData) {
 // ─── CENIK — PRICING PLANS ──────────────────────────────────────────────────
 
 export async function updatePricingPlan(formData: FormData) {
+  await requireFullAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -539,6 +553,7 @@ export async function updatePricingPlan(formData: FormData) {
 }
 
 export async function createPricingPlan(formData: FormData) {
+  await requireFullAdmin();
   await db.execute({
     sql: `INSERT INTO pricing_plans (duration, price, is_popular, display_order, is_active, title_cs, title_en, title_de, title_uk)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -561,6 +576,7 @@ export async function createPricingPlan(formData: FormData) {
 }
 
 export async function deletePricingPlan(formData: FormData) {
+  await requireFullAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -574,6 +590,7 @@ export async function deletePricingPlan(formData: FormData) {
 // ─── CENIK — EXTRAS ─────────────────────────────────────────────────────────
 
 export async function createPricingExtra(formData: FormData) {
+  await requireFullAdmin();
   await db.execute({
     sql: `INSERT INTO pricing_extras (price, display_order, is_active, name_cs, name_en, name_de, name_uk)
           VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -594,6 +611,7 @@ export async function createPricingExtra(formData: FormData) {
 }
 
 export async function updatePricingExtra(formData: FormData) {
+  await requireFullAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -618,6 +636,7 @@ export async function updatePricingExtra(formData: FormData) {
 }
 
 export async function deletePricingExtra(formData: FormData) {
+  await requireFullAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -631,6 +650,7 @@ export async function deletePricingExtra(formData: FormData) {
 // ─── SLEVY ───────────────────────────────────────────────────────────────────
 
 export async function createSleva(formData: FormData) {
+  await requireFullAdmin();
   await db.execute({
     sql: `INSERT INTO discounts (icon, discount_type, discount_value, display_order, is_active, is_featured,
           name_cs, name_en, name_de, name_uk, description_cs, description_en, description_de, description_uk)
@@ -659,6 +679,7 @@ export async function createSleva(formData: FormData) {
 }
 
 export async function updateSleva(formData: FormData) {
+  await requireFullAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -692,6 +713,7 @@ export async function updateSleva(formData: FormData) {
 }
 
 export async function deleteSleva(formData: FormData) {
+  await requireFullAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -705,6 +727,7 @@ export async function deleteSleva(formData: FormData) {
 // ─── FAQ ─────────────────────────────────────────────────────────────────────
 
 export async function createFaq(formData: FormData) {
+  await requireFullAdmin();
   await db.execute({
     sql: `INSERT INTO faq_items (category, display_order, is_active,
           question_cs, question_en, question_de, question_uk,
@@ -731,6 +754,7 @@ export async function createFaq(formData: FormData) {
 }
 
 export async function updateFaq(formData: FormData) {
+  await requireFullAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -761,6 +785,7 @@ export async function updateFaq(formData: FormData) {
 }
 
 export async function deleteFaq(formData: FormData) {
+  await requireFullAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
@@ -774,6 +799,7 @@ export async function deleteFaq(formData: FormData) {
 // ─── STORIES ─────────────────────────────────────────────────────────────────
 
 export async function approveStory(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
   await db.execute({
@@ -784,6 +810,7 @@ export async function approveStory(formData: FormData) {
 }
 
 export async function expireStory(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
   await db.execute({
@@ -794,6 +821,7 @@ export async function expireStory(formData: FormData) {
 }
 
 export async function deleteStory(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
   await db.execute({ sql: `DELETE FROM stories WHERE id=?`, args: [id] });
@@ -801,6 +829,7 @@ export async function deleteStory(formData: FormData) {
 }
 
 export async function createCategoryStory(formData: FormData) {
+  await requireAdmin();
   const category = String(formData.get('category') ?? '').trim();
   const bgType = String(formData.get('bg_type') ?? 'COLOR').trim();
   const mediaUrl = String(formData.get('media_url') ?? '').trim();
@@ -831,6 +860,7 @@ const PRESET_TIMES: Record<string, [string, string]> = {
 };
 
 export async function addGirlSchedule(formData: FormData) {
+  await requireAdmin();
   const girlId = Number(formData.get('girl_id'));
   if (!girlId) throw new Error('Chybí girl_id');
 
@@ -888,6 +918,7 @@ export async function addGirlSchedule(formData: FormData) {
 }
 
 export async function deleteGirlSchedule(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Chybí id');
 
@@ -899,6 +930,7 @@ export async function deleteGirlSchedule(formData: FormData) {
 }
 
 export async function deleteAllSchedules(formData: FormData) {
+  await requireAdmin();
   const girlId = formData.get('girl_id') ? Number(formData.get('girl_id')) : null;
 
   if (girlId) {
@@ -913,12 +945,14 @@ export async function deleteAllSchedules(formData: FormData) {
 }
 
 export async function fixScheduleColors(formData: FormData) {
+  await requireAdmin();
   void formData;
   revalidatePath('/cs/admin/schedules');
   redirect('/cs/admin/schedules');
 }
 
 export async function approveReview(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   await db.execute({
     sql: `UPDATE reviews SET status='approved', approved_at=CURRENT_TIMESTAMP, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
@@ -928,6 +962,7 @@ export async function approveReview(formData: FormData) {
 }
 
 export async function rejectReview(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get('id'));
   await db.execute({
     sql: `UPDATE reviews SET status='rejected', updated_at=CURRENT_TIMESTAMP WHERE id=?`,

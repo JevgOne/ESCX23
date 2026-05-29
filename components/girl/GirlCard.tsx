@@ -23,6 +23,7 @@ const ALT_NOUN: Record<string, string> = {
   de: 'Escort-Begleiterin',
   uk: 'супутниця',
 };
+const NEW_LABEL: Record<string, string> = { cs: 'NOVÁ', en: 'NEW', de: 'NEU', uk: 'НОВА' };
 
 interface GirlCardProps {
   girl: GirlCardType;
@@ -55,7 +56,7 @@ export default async function GirlCard({ girl }: GirlCardProps) {
           <span className="girl-tag-pill vip">★ VIP</span>
         )}
         {!girl.isVip && girl.isNew && (
-          <span className="girl-tag-pill new">NEW</span>
+          <span className="girl-tag-pill new">{NEW_LABEL[locale] ?? NEW_LABEL.en}</span>
         )}
 
         <div className="girl-media-pills">

@@ -61,28 +61,19 @@ async function submitReview(formData: FormData) {
     try {
       await db.execute({
         sql: `INSERT INTO reviews (girl_id, rating, content, author_name, status, mood, vibe_tags, recommends)
-              VALUES (?, ?, ?, ?, 'approved', ?, ?, ?)`,
+              VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)`,
         args: [girlId, ratingOverall, text, nickname, mood, vibesJson, recommends],
       });
     } catch (e) {
       console.error('[review] full insert failed, retry minimal', e);
       await db.execute({
         sql: `INSERT INTO reviews (girl_id, rating, content, author_name, status)
-              VALUES (?, ?, ?, ?, 'approved')`,
+              VALUES (?, ?, ?, ?, 'pending')`,
         args: [girlId, ratingOverall, text, nickname],
       });
     }
 
-    const aggRes = await db.execute({
-      sql: `SELECT AVG(rating) as avg_rating, COUNT(*) as cnt FROM reviews WHERE girl_id = ? AND status = 'approved'`,
-      args: [girlId],
-    });
-    const newAvg = Number(aggRes.rows[0]?.avg_rating ?? 0);
-    const newCount = Number(aggRes.rows[0]?.cnt ?? 0);
-    await db.execute({
-      sql: `UPDATE girls SET rating = ?, reviews_count = ? WHERE id = ?`,
-      args: [Math.round(newAvg * 10) / 10, newCount, girlId],
-    });
+    // Rating recalc happens when admin approves the review (admin-actions.ts)
   } catch (err) {
     if ((err as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) throw err;
     console.error('[review] submit failed', err);
@@ -125,7 +116,7 @@ export default async function RecenzeNovaPage({ params, searchParams }: Props) {
       nicknamePh: 'Jak se podepíšeš',
       submit: '✓ Odeslat',
       thanks: 'Děkujeme',
-      sentMsg: 'Recenze je zveřejněná.',
+      sentMsg: 'Recenze čeká na schválení.',
       back: '← Zpět na profil',
       error: 'Doplň hodnocení, krátký text a podpis.',
       recommend: 'Doporučíš?',
@@ -144,7 +135,7 @@ export default async function RecenzeNovaPage({ params, searchParams }: Props) {
       nicknamePh: 'Wie unterschreibst du',
       submit: '✓ Senden',
       thanks: 'Danke',
-      sentMsg: 'Bewertung ist veröffentlicht.',
+      sentMsg: 'Bewertung wartet auf Freigabe.',
       back: '← Zurück',
       error: 'Bewertung, Text und Signatur ausfüllen.',
       recommend: 'Empfehlen?',
@@ -163,7 +154,7 @@ export default async function RecenzeNovaPage({ params, searchParams }: Props) {
       nicknamePh: 'Як підпишеш',
       submit: '✓ Надіслати',
       thanks: 'Дякуємо',
-      sentMsg: 'Відгук опубліковано.',
+      sentMsg: 'Відгук очікує на схвалення.',
       back: '← Назад',
       error: 'Заповни оцінку, текст і підпис.',
       recommend: 'Рекомендуєш?',
@@ -182,7 +173,7 @@ export default async function RecenzeNovaPage({ params, searchParams }: Props) {
       nicknamePh: 'How you sign',
       submit: '✓ Submit',
       thanks: 'Thanks',
-      sentMsg: 'Review is published.',
+      sentMsg: 'Review is awaiting approval.',
       back: '← Back to profile',
       error: 'Fill rating, text and signature.',
       recommend: 'Recommend?',

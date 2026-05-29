@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useParams } from 'next/navigation';
 import Link from 'next/link';
 
 
 function EditSEOForm() {
   const searchParams = useSearchParams();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'cs';
   const pagePath = searchParams?.get('path') || '';
 
   const [loading, setLoading] = useState(true);
@@ -183,7 +185,7 @@ function EditSEOForm() {
           <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
             Chyba: Chybí parametr 'path' v URL
           </div>
-          <Link href="/admin/seo" style={{ color: '#d4af37', textDecoration: 'none' }}>
+          <Link href={`/${locale}/admin/seo`} style={{ color: '#d4af37', textDecoration: 'none' }}>
             ← Zpět na SEO Manager
           </Link>
         </div>
@@ -839,7 +841,7 @@ function EditSEOForm() {
 
           <div style={{ display: 'flex', gap: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <Link
-              href="/admin/seo"
+              href={`/${locale}/admin/seo`}
               style={{ padding: '10px 20px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.2)', textDecoration: 'none', fontWeight: '500' }}
             >
               Zrušit

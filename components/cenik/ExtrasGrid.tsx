@@ -2,60 +2,38 @@ interface Props {
   locale?: string;
 }
 
-interface Extra { name: string; desc: string | null; price: string }
-
-const T: Record<string, Extra[]> = {
-  cs: [
-    { name: 'OB', desc: 'oral bez ochrany', price: '+ 500 Kč' },
-    { name: 'CIM', desc: 'completion in mouth', price: '+ 1 000 Kč' },
-    { name: 'Anální', desc: null, price: '+ 2 000 Kč' },
-    { name: '2 dívky', desc: 'v jednom programu', price: '2× cena' },
-    { name: 'GFE režim', desc: 'polibky, něha, čas', price: '+ 500 Kč' },
-    { name: 'Lesbická show', desc: null, price: 'na dotaz' },
-    { name: 'Dominace / submise', desc: null, price: 'na dotaz' },
-  ],
-  en: [
-    { name: 'OWO', desc: 'oral without condom', price: '+ 500 CZK' },
-    { name: 'CIM', desc: 'completion in mouth', price: '+ 1 000 CZK' },
-    { name: 'Anal', desc: null, price: '+ 2 000 CZK' },
-    { name: 'Duo', desc: 'two companions in one program', price: '2× price' },
-    { name: 'GFE mode', desc: 'kissing, tenderness, time', price: '+ 500 CZK' },
-    { name: 'Lesbian show', desc: null, price: 'on request' },
-    { name: 'Domination / submission', desc: null, price: 'on request' },
-  ],
-  de: [
-    { name: 'OWO', desc: 'Oralverkehr ohne Kondom', price: '+ 500 CZK' },
-    { name: 'CIM', desc: 'Beendigung im Mund', price: '+ 1 000 CZK' },
-    { name: 'Anal', desc: null, price: '+ 2 000 CZK' },
-    { name: 'Duo', desc: 'zwei Begleiterinnen im Programm', price: '2× Preis' },
-    { name: 'GFE-Modus', desc: 'Küsse, Zärtlichkeit, Zeit', price: '+ 500 CZK' },
-    { name: 'Lesbenshow', desc: null, price: 'auf Anfrage' },
-    { name: 'Dominanz / Unterwerfung', desc: null, price: 'auf Anfrage' },
-  ],
-  uk: [
-    { name: 'OWO', desc: 'оральний без захисту', price: '+ 500 CZK' },
-    { name: 'CIM', desc: 'фінал у рот', price: '+ 1 000 CZK' },
-    { name: 'Анальний', desc: null, price: '+ 2 000 CZK' },
-    { name: 'Дует', desc: 'дві супутниці в одній програмі', price: '2× ціна' },
-    { name: 'Режим GFE', desc: 'поцілунки, ніжність, час', price: '+ 500 CZK' },
-    { name: 'Лесбі-шоу', desc: null, price: 'за запитом' },
-    { name: 'Домінація / підкорення', desc: null, price: 'за запитом' },
-  ],
+const TEXTS: Record<string, { title: string; note: string; price: string }> = {
+  cs: {
+    title: 'Extra služby',
+    note: 'Zájmy a preference mají slečny uvedeny ve svých profilech, které si samy vyplnily. Ceny za extra služby si stanovily v rozmezí 500–1 000 Kč. Vše ostatní je na osobní domluvě.',
+    price: '500–1 000 Kč',
+  },
+  en: {
+    title: 'Extra services',
+    note: 'The ladies have their interests and preferences listed in their profiles, which they filled in themselves. Extra service prices are set between 500–1,000 CZK. Everything else is a matter of personal agreement.',
+    price: '500–1,000 CZK',
+  },
+  de: {
+    title: 'Zusatzleistungen',
+    note: 'Die Damen haben ihre Interessen und Vorlieben in ihren Profilen angegeben, die sie selbst ausgefüllt haben. Die Preise für Zusatzleistungen liegen zwischen 500–1.000 CZK. Alles Weitere ist Sache der persönlichen Vereinbarung.',
+    price: '500–1.000 CZK',
+  },
+  uk: {
+    title: 'Додаткові послуги',
+    note: 'Інтереси та вподобання дівчата вказали у своїх профілях, які вони заповнили самостійно. Ціни на додаткові послуги встановлені в межах 500–1 000 CZK. Решта — за особистою домовленістю.',
+    price: '500–1 000 CZK',
+  },
 };
 
 export default function ExtrasGrid({ locale = 'cs' }: Props) {
-  const list = T[locale] ?? T.en;
+  const t = TEXTS[locale] ?? TEXTS.cs;
   return (
-    <div className="extras-table">
-      {list.map((e) => (
-        <div key={e.name} className="extras-row">
-          <div className="extras-row-name">
-            {e.name}
-            {e.desc && <small> {e.desc}</small>}
-          </div>
-          <div className="extras-row-price">{e.price}</div>
-        </div>
-      ))}
+    <div className="extras-note-card">
+      <p className="extras-note-text">{t.note}</p>
+      <div className="extras-note-price">
+        <span className="extras-note-label">Extra:</span>
+        <span className="extras-note-value">{t.price}</span>
+      </div>
     </div>
   );
 }

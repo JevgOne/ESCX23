@@ -1,6 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
+import { requireAdmin } from '@/lib/auth';
 import { pragueDateISO } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
 
@@ -11,6 +12,7 @@ const PRESETS: Record<string, { from: string; to: string }> = {
 };
 
 export async function saveWeeklySchedule(formData: FormData) {
+  await requireAdmin();
   const girlId = Number(formData.get('girl_id'));
   if (!girlId) return;
 
@@ -59,6 +61,7 @@ export async function saveWeeklySchedule(formData: FormData) {
 }
 
 export async function setTodayOff(formData: FormData) {
+  await requireAdmin();
   const girlId = Number(formData.get('girl_id'));
   if (!girlId) return;
 
@@ -80,6 +83,7 @@ export async function setTodayOff(formData: FormData) {
 }
 
 export async function applyMonthBulk(formData: FormData) {
+  await requireAdmin();
   const girlId = Number(formData.get('girl_id'));
   const action = formData.get('month_action') as string;
   const month  = formData.get('month') as string;
