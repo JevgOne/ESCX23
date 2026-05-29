@@ -337,15 +337,23 @@
     "phone_desc": "Daily 10:00–22:30"
   },
   "podminky": {
-    "eyebrow": "Legal",
-    "h1": "Terms of Service",
-    "lead": "Terms of use for the LovelyGirls Prague website.",
-    "s1_h2": "1. Introduction",
-    "s1_text": "This website is operated solely for advertising purposes of service providers. The website operator does not mediate sexual services and bears no responsibility for the services of the advertised individuals.",
-    "s2_h2": "2. Age Restriction",
-    "s2_text": "This website is intended exclusively for persons over 18 years of age. By entering the website you confirm that you have reached the age of 18 and are of legal age under the laws of your country.",
-    "s3_h2": "3. Advertising Terms",
-    "s3_text": "A condition for advertising on this website is the rental of a room. The website operator does not provide or mediate sexual services."
+    "eyebrow": "Legal information",
+    "h1": "Terms of use",
+    "lead": "This site is an advertising platform — not a service provider.",
+    "s1_h2": "1. Nature of the website",
+    "s1_text": "This website serves exclusively as an advertising platform for companion ads and the rental of private rooms for meetings. The operator does not provide, organize or intermediate any paid services — only operates the technical platform and rents space to advertisers.",
+    "s2_h2": "2. Age restriction",
+    "s2_text": "The site is for adults aged 18 and over only. By entering you confirm that you are 18+ and an adult according to the laws of the country in which you reside. Visitors under 18 are not permitted to enter.",
+    "s3_h2": "3. Private use of content",
+    "s3_text": "All content on the site (photos, texts, profiles) is for private viewing only. You acknowledge that your interest in the content is purely personal and for your own private use. Sharing, downloading or transmitting the content to third parties is prohibited.",
+    "s4_h2": "4. Copyright and prohibition of photo misuse",
+    "s4_text": "All photographs, videos, text and other materials on the site are copyright-protected; the copyright holders are the advertisers and/or the operator. Copying, downloading, redistribution, modification, use for AI training or any other use outside private viewing is expressly prohibited. Misuse of photos (e.g. publication on other sites, social networks, dating apps) may be prosecuted under criminal and civil law.",
+    "s5_h2": "5. Cookies and personal data",
+    "s5_text": "The site uses only essential cookies (storing consent to the terms, language preference, technical session). No third-party marketing or analytics data is collected. Details on personal data processing are in the Privacy Policy.",
+    "s6_h2": "6. Operator liability",
+    "s6_text": "The operator only provides a technical platform and room rental. It is not responsible for the truthfulness, currency or completeness of information in ads, for advertiser conduct, for any meetings or their course. All communication and any meetings take place exclusively between visitor and advertiser; the operator is not a party to them.",
+    "s7_h2": "7. Final provisions",
+    "s7_text": "The operator reserves the right to change these terms at any time. The current version is always available on the site. Matters not regulated by these terms are governed by Czech law. If you do not agree to these terms, please leave the site."
   },
   "soukromi": {
     "eyebrow": "Privacy",

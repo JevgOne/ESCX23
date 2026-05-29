@@ -337,15 +337,23 @@
     "phone_desc": "Täglich 10:00–22:30"
   },
   "podminky": {
-    "eyebrow": "Rechtliches",
-    "h1": "Nutzungsbedingungen",
-    "lead": "Nutzungsbedingungen der LovelyGirls Prag Website.",
-    "s1_h2": "1. Einleitung",
-    "s1_text": "Diese Website wird ausschließlich zu Werbezwecken der Dienstleister betrieben.",
+    "eyebrow": "Rechtliche Hinweise",
+    "h1": "Nutzungsbedingungen der Website",
+    "lead": "Diese Website ist eine Werbeplattform — kein Dienstleister.",
+    "s1_h2": "1. Charakter der Website",
+    "s1_text": "Diese Website dient ausschließlich als Werbeplattform für Begleiterinnen-Anzeigen und die Vermietung privater Zimmer für Treffen. Der Betreiber erbringt, organisiert oder vermittelt keine bezahlten Dienstleistungen — er betreibt nur die technische Plattform und vermietet Räume an Inserenten.",
     "s2_h2": "2. Altersbeschränkung",
-    "s2_text": "Diese Website ist ausschließlich für Personen über 18 Jahre bestimmt.",
-    "s3_h2": "3. Werbebedingungen",
-    "s3_text": "Voraussetzung für die Werbung auf dieser Website ist die Anmietung eines Zimmers."
+    "s2_text": "Die Website ist ausschließlich für Personen ab 18 Jahren bestimmt. Mit dem Eintritt bestätigen Sie, dass Sie 18+ und nach den Gesetzen des Landes, in dem Sie sich befinden, volljährig sind. Besuchern unter 18 Jahren ist der Zugang untersagt.",
+    "s3_h2": "3. Private Nutzung des Inhalts",
+    "s3_text": "Der gesamte Inhalt der Website (Fotos, Texte, Profile) dient ausschließlich der privaten Betrachtung. Sie nehmen zur Kenntnis, dass Ihr Interesse rein privat ist und ausschließlich Ihrem persönlichen Gebrauch dient. Das Teilen, Herunterladen oder Übertragen des Inhalts an Dritte ist untersagt.",
+    "s4_h2": "4. Urheberrecht und Verbot der Foto-Missbrauchs",
+    "s4_text": "Alle Fotografien, Videos, Texte und sonstigen Materialien auf der Website sind urheberrechtlich geschützt; Urheberrechtsinhaber sind die Inserenten und/oder der Betreiber. Kopieren, Herunterladen, Weiterverbreitung, Bearbeitung, Verwendung für KI-Training oder jede andere Nutzung außerhalb der privaten Betrachtung ist ausdrücklich untersagt. Missbrauch von Fotos (z. B. Veröffentlichung auf anderen Seiten, sozialen Netzwerken, Dating-Apps) kann strafrechtlich und zivilrechtlich verfolgt werden.",
+    "s5_h2": "5. Cookies und personenbezogene Daten",
+    "s5_text": "Die Website verwendet nur notwendige Cookies (Speicherung der Einwilligung, Sprache, technische Session). Keine Drittanbieter-Marketing- oder Analyse-Daten werden erfasst. Details zur Verarbeitung personenbezogener Daten finden Sie in der Datenschutzerklärung.",
+    "s6_h2": "6. Haftung des Betreibers",
+    "s6_text": "Der Betreiber stellt lediglich eine technische Plattform und Raumvermietung zur Verfügung. Er haftet weder für die Richtigkeit, Aktualität oder Vollständigkeit der in Anzeigen veröffentlichten Informationen, noch für das Verhalten der Inserenten, noch für etwaige Treffen oder deren Verlauf. Sämtliche Kommunikation und etwaige Treffen finden ausschließlich zwischen Besucher und Inserent statt; der Betreiber ist nicht beteiligt.",
+    "s7_h2": "7. Schlussbestimmungen",
+    "s7_text": "Der Betreiber behält sich das Recht vor, diese Bedingungen jederzeit zu ändern. Die aktuelle Version ist stets auf der Website verfügbar. Nicht geregelte Angelegenheiten unterliegen tschechischem Recht. Wenn Sie diesen Bedingungen nicht zustimmen, verlassen Sie bitte die Website."
   },
   "soukromi": {
     "eyebrow": "Datenschutz",

@@ -49,6 +49,26 @@ export default async function PodminkyPage({ params }: Props) {
             <h2 className="static-section-h2">{t('s3_h2')}</h2>
             <p className="static-section-text">{t('s3_text')}</p>
           </div>
+
+          <div className="static-section">
+            <h2 className="static-section-h2">{t('s4_h2')}</h2>
+            <p className="static-section-text">{t('s4_text')}</p>
+          </div>
+
+          <div className="static-section">
+            <h2 className="static-section-h2">{t('s5_h2')}</h2>
+            <p className="static-section-text">{t('s5_text')}</p>
+          </div>
+
+          <div className="static-section">
+            <h2 className="static-section-h2">{t('s6_h2')}</h2>
+            <p className="static-section-text">{t('s6_text')}</p>
+          </div>
+
+          <div className="static-section">
+            <h2 className="static-section-h2">{t('s7_h2')}</h2>
+            <p className="static-section-text">{t('s7_text')}</p>
+          </div>
         </div>
       </div>
     </main>
