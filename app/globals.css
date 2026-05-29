@@ -12426,6 +12426,25 @@ body {
   font-size: 14px;
   line-height: 1.65;
 }
+.rev-translate-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 12px;
+  padding: 2px 0;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s, color 0.15s;
+}
+.rev-translate-btn:hover { opacity: 1; color: var(--color-coral); }
+.rev-translate-btn:disabled { opacity: 0.4; cursor: default; }
+.rev-item-translated {
+  color: var(--color-text);
+  font-style: italic;
+  border-left: 2px solid var(--color-coral);
+  padding-left: 10px;
+  margin-bottom: 0;
+}
 .rev-item-tags {
   display: flex;
   gap: 6px;

@@ -6,6 +6,7 @@ import { photoUrl } from '@/lib/photoUrl';
 import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
 import { relativeTime } from '@/lib/utils';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
+import TranslateButton from '@/components/ui/TranslateButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -258,6 +259,7 @@ export default async function RecenzePage({
                       </div>
                     )}
                     <p className="rev-item-text">{review.text}</p>
+                    <TranslateButton text={review.text} targetLocale={locale} />
                     {review.tags.length > 0 && (
                       <div className="rev-item-tags">
                         {review.tags.slice(0, 4).map((tag) => (
