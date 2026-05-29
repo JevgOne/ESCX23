@@ -1406,12 +1406,69 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   padding: 22px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   transition: border-color 0.15s;
 }
 .review-card:hover {
   border-color: rgba(217, 69, 112, 0.25);
 }
+.review-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.review-card-avatar {
+  flex-shrink: 0;
+}
+.review-card-avatar img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-coral);
+}
+.review-card-meta {
+  flex: 1;
+  min-width: 0;
+}
+.review-card-name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 2px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+.review-card-name:hover { color: var(--color-coral); }
+.review-card-write {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-coral);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.review-card:hover .review-card-write { opacity: 1; }
+.review-stars {
+  color: var(--color-coral);
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+.review-star { color: var(--color-line-mid); }
+.review-star.filled { color: var(--color-coral); }
+.review-card-text {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.review-card-author {
+  font-size: 12px;
+  color: var(--color-text-dim);
+  font-style: italic;
+}
+/* Legacy class names (profile page reviews) */
 .review-girl-link {
   display: flex;
   align-items: center;
@@ -1447,11 +1504,6 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 .review-author {
   font-weight: 600;
   color: var(--color-text);
-}
-.review-stars {
-  color: var(--color-coral);
-  font-size: 14px;
-  letter-spacing: 1px;
 }
 .review-text {
   color: var(--color-text-muted);
