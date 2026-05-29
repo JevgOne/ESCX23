@@ -2825,7 +2825,7 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   gap: 0;
   min-width: 0;
 }
-@media (max-width: 680px) {
+@media (max-width: 520px) {
   .profile-grid { grid-template-columns: 1fr; gap: 24px; }
   .profile-photo-col { position: static; }
 }
@@ -2852,7 +2852,7 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 .profile-ig-services { display: none !important; }
 .profile-ig-hashtags { display: none !important; }
 
-@media (max-width: 680px) {
+@media (max-width: 520px) {
   .profile-photo-col {
     min-width: 0;
     max-width: 100%;
