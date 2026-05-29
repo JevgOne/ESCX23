@@ -9,20 +9,6 @@ const LANG_MAP: Record<string, string> = {
   uk: 'uk',
 };
 
-const LABEL: Record<string, string> = {
-  cs: 'Přeložit',
-  en: 'Translate',
-  de: 'Übersetzen',
-  uk: 'Перекласти',
-};
-
-const ORIGINAL_LABEL: Record<string, string> = {
-  cs: 'Originál',
-  en: 'Original',
-  de: 'Original',
-  uk: 'Оригінал',
-};
-
 interface Props {
   text: string;
   targetLocale: string;
@@ -51,7 +37,6 @@ export default function TranslateButton({ text, targetLocale }: Props) {
       const data = await res.json();
       setTranslated(data.translation ?? text);
     } catch {
-      // Fallback: open Google Translate in new tab
       const url = `https://translate.google.com/?sl=auto&tl=${target}&text=${encodeURIComponent(text)}`;
       window.open(url, '_blank', 'noopener');
     } finally {
@@ -59,25 +44,24 @@ export default function TranslateButton({ text, targetLocale }: Props) {
     }
   }
 
+  const isActive = translated && !showOriginal;
+
   return (
-    <>
-      {translated && !showOriginal && (
-        <p className="rev-item-text rev-item-translated">{translated}</p>
-      )}
+    <div className="rev-translate-wrap">
       <button
         type="button"
-        className="rev-translate-btn"
+        className={`rev-translate-btn${isActive ? ' active' : ''}`}
         onClick={handleTranslate}
         disabled={loading}
+        title={translated ? (showOriginal ? 'Translate' : 'Original') : 'Translate'}
       >
-        {loading
-          ? '...'
-          : translated
-            ? showOriginal
-              ? LABEL[targetLocale] ?? 'Translate'
-              : ORIGINAL_LABEL[targetLocale] ?? 'Original'
-            : `🌐 ${LABEL[targetLocale] ?? 'Translate'}`}
+        {loading ? '⏳' : '🌐'}
       </button>
-    </>
+      {translated && !showOriginal && (
+        <div className="rev-item-translated-bubble">
+          {translated}
+        </div>
+      )}
+    </div>
   );
 }

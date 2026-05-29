@@ -228,6 +228,7 @@ export default async function RecenzePage({
                 const full = Math.round(Math.max(0, Math.min(5, review.rating)));
                 return (
                   <article key={review.id} className="rev-item">
+                    <TranslateButton text={review.text} targetLocale={locale} />
                     <div className="rev-item-head">
                       <Link href={`/${locale}/profil/${review.girlSlug}`} className="rev-item-avatar">
                         {review.girlPhoto ? (
@@ -259,7 +260,6 @@ export default async function RecenzePage({
                       </div>
                     )}
                     <p className="rev-item-text">{review.text}</p>
-                    <TranslateButton text={review.text} targetLocale={locale} />
                     {review.tags.length > 0 && (
                       <div className="rev-item-tags">
                         {review.tags.slice(0, 4).map((tag) => (
