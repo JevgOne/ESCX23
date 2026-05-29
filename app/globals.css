@@ -5995,6 +5995,36 @@ a.calendar-day:hover {
   box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
 }
 
+.age-gate-cookies-note {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  text-align: left;
+}
+
+.age-gate-legal-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  color: var(--color-text-dim);
+}
+.age-gate-legal-links a {
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  transition: color 0.15s;
+}
+.age-gate-legal-links a:hover {
+  color: var(--color-coral);
+}
+
 .age-gate-buttons {
   display: flex;
   flex-direction: column;
