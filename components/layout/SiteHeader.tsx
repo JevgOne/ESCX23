@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import LogoMark from '@/components/ui/LogoMark';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import NavCloseOnRoute from '@/components/layout/NavCloseOnRoute';
 
 interface SiteHeaderProps {
   locale: string;
@@ -28,6 +29,7 @@ export default async function SiteHeader({ locale }: SiteHeaderProps) {
 
   return (
     <header className="header">
+      <NavCloseOnRoute />
       <div className="container header-inner">
         <Link href="/" className="logo">
           <div className="logo-mark">

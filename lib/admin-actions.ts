@@ -886,9 +886,11 @@ export async function addGirlSchedule(formData: FormData) {
     let startTime: string;
     let endTime: string;
 
-    if (perDayStart && perDayEnd) {
-      startTime = String(perDayStart);
-      endTime = String(perDayEnd);
+    const pds = perDayStart ? String(perDayStart).trim() : '';
+    const pde = perDayEnd ? String(perDayEnd).trim() : '';
+    if (pds && pde) {
+      startTime = pds;
+      endTime = pde;
     } else if (PRESET_TIMES[preset]) {
       [startTime, endTime] = PRESET_TIMES[preset];
     } else {

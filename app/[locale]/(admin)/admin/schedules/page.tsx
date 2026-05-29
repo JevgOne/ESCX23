@@ -334,7 +334,7 @@ export default async function AdminSchedulesPage({
         <div className="sch2-filter-label">FILTR PODLE DÍVKY</div>
         <div className="sch2-filter-grid">
           <a
-            href="/cs/admin/schedules"
+            href="/${locale}/admin/schedules"
             className={`sch2-fchip${!girlFilter ? ' sch2-fchip--all' : ''}`}
           >
             Všechny ({withSchedule.length})
@@ -342,7 +342,7 @@ export default async function AdminSchedulesPage({
           {withSchedule.map((d) => (
             <a
               key={d.girlId}
-              href={`/cs/admin/schedules?girl=${d.girlSlug}`}
+              href={`/${locale}/admin/schedules?girl=${d.girlSlug}`}
               className={`sch2-fchip${girlFilter === d.girlSlug ? ' sch2-fchip--active' : ''}`}
             >
               <span className="sch2-fchip-dot" style={{ background: d.girlColor || '#d94570' }} />
@@ -372,7 +372,7 @@ export default async function AdminSchedulesPage({
                 <div className="sch2-card-count">{girl.schedules.length} rozvrhů</div>
               </div>
               <div style={{ marginLeft: 'auto' }}>
-                <a href={`/cs/admin/schedules?modal=add&prefill_girl=${girl.girlId}`} className="sch2-add-btn">+ Přidat</a>
+                <a href={`/${locale}/admin/schedules?modal=add&prefill_girl=${girl.girlId}`} className="sch2-add-btn">+ Přidat</a>
               </div>
             </div>
 
@@ -468,7 +468,7 @@ export default async function AdminSchedulesPage({
               <div className="sx-modal">
                 <div className="sx-header">
                   <span className="sx-title">Přidat rozvrh</span>
-                  <a href="/cs/admin/schedules" className="sx-close">×</a>
+                  <a href="/${locale}/admin/schedules" className="sx-close">×</a>
                 </div>
 
                 <div className="sx-body">
@@ -561,7 +561,7 @@ export default async function AdminSchedulesPage({
                 </div>
 
                 <div className="sx-footer">
-                  <a href="/cs/admin/schedules" className="sx-btn sx-btn-secondary">Zrušit</a>
+                  <a href="/${locale}/admin/schedules" className="sx-btn sx-btn-secondary">Zrušit</a>
                   <button type="submit" className="sx-btn sx-btn-primary">Přidat</button>
                 </div>
               </div>
