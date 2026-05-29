@@ -498,6 +498,7 @@ export async function getGirlsForDay(
         g.created_at, g.languages, g.rating, g.reviews_count,
         gs.start_time AS shift_from, gs.end_time AS shift_to, gs.is_active AS gs_active,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
+        l.display_name AS schedule_location, l.district AS schedule_district,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
@@ -505,6 +506,7 @@ export async function getGirlsForDay(
       FROM girls g
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
+      LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
       ORDER BY g.name
@@ -526,7 +528,9 @@ export async function getGirlsForDay(
 
       if (!from || !to) return null;
 
-      const loc = String(r.location ?? 'Praha');
+      // Prefer schedule's location (from girl_schedules.location_id → locations table)
+      const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+      const loc = scheduleLoc ?? String(r.location ?? 'Praha');
       if (locationFilter && locationFilter !== 'all') {
         const locSlug = loc.toLowerCase().replace(/\s/g, '-').replace(/\./g, '');
         if (!locSlug.includes(locationFilter.toLowerCase())) return null;
