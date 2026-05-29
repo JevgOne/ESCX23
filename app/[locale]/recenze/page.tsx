@@ -1,9 +1,10 @@
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getRecentApprovedReviews } from '@/lib/queries';
+import { getRecentApprovedReviews, getReviewPageData } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
 import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
+import { relativeTime } from '@/lib/utils';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
 export const dynamic = 'force-dynamic';
@@ -25,48 +26,64 @@ const DESCRIPTIONS: Record<string, string> = {
 const T: Record<string, {
   h1: string;
   sub: string;
-  writeReview: string;
   noReviews: string;
   breadcrumb: string;
-  stars: string;
-  viewProfile: string;
+  totalReviews: string;
+  avgRating: string;
+  filterAll: string;
+  writeReview: string;
 }> = {
   cs: {
     h1: 'Recenze',
-    sub: 'Anonymní hodnocení od skutečných klientů',
-    writeReview: '+ Napsat recenzi',
+    sub: 'Co o nás říkají klienti',
     noReviews: 'Zatím žádné recenze.',
     breadcrumb: 'Recenze',
-    stars: 'hvězd',
-    viewProfile: 'Profil',
+    totalReviews: 'recenzí',
+    avgRating: 'hodnocení',
+    filterAll: 'Všechny',
+    writeReview: 'Napsat recenzi',
   },
   en: {
     h1: 'Reviews',
-    sub: 'Anonymous ratings from real clients',
-    writeReview: '+ Write a review',
+    sub: 'What our clients say',
     noReviews: 'No reviews yet.',
     breadcrumb: 'Reviews',
-    stars: 'stars',
-    viewProfile: 'Profile',
+    totalReviews: 'reviews',
+    avgRating: 'rating',
+    filterAll: 'All',
+    writeReview: 'Write a review',
   },
   de: {
     h1: 'Bewertungen',
-    sub: 'Anonyme Bewertungen von echten Kunden',
-    writeReview: '+ Bewertung schreiben',
+    sub: 'Was unsere Kunden sagen',
     noReviews: 'Noch keine Bewertungen.',
     breadcrumb: 'Bewertungen',
-    stars: 'Sterne',
-    viewProfile: 'Profil',
+    totalReviews: 'Bewertungen',
+    avgRating: 'Bewertung',
+    filterAll: 'Alle',
+    writeReview: 'Bewertung schreiben',
   },
   uk: {
     h1: 'Відгуки',
-    sub: 'Анонімні оцінки від справжніх клієнтів',
-    writeReview: '+ Написати відгук',
+    sub: 'Що кажуть наші клієнти',
     noReviews: 'Відгуків поки що немає.',
     breadcrumb: 'Відгуки',
-    stars: 'зірок',
-    viewProfile: 'Профіль',
+    totalReviews: 'відгуків',
+    avgRating: 'оцінка',
+    filterAll: 'Всі',
+    writeReview: 'Написати відгук',
   },
+};
+
+const TAG_LABELS: Record<string, Record<string, string>> = {
+  friendly: { cs: 'Přátelská', en: 'Friendly', de: 'Freundlich', uk: 'Дружня' },
+  playful: { cs: 'Hravá', en: 'Playful', de: 'Verspielt', uk: 'Грайлива' },
+  passionate: { cs: 'Vášnivá', en: 'Passionate', de: 'Leidenschaftlich', uk: 'Пристрасна' },
+  relaxed: { cs: 'Uvolněná', en: 'Relaxed', de: 'Entspannt', uk: 'Розслаблена' },
+  communicative: { cs: 'Komunikativní', en: 'Communicative', de: 'Kommunikativ', uk: 'Комунікативна' },
+  intimate: { cs: 'Intimní', en: 'Intimate', de: 'Intim', uk: 'Інтимна' },
+  gentle: { cs: 'Něžná', en: 'Gentle', de: 'Sanft', uk: 'Ніжна' },
+  fun: { cs: 'Zábavná', en: 'Fun', de: 'Lustig', uk: 'Весела' },
 };
 
 export async function generateMetadata({
@@ -102,27 +119,27 @@ export async function generateMetadata({
   };
 }
 
-function StarRating({ rating }: { rating: number }) {
-  const full = Math.round(Math.max(0, Math.min(5, rating)));
-  return (
-    <span className="review-stars" aria-label={`${rating} / 5`}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i} className={i <= full ? 'review-star filled' : 'review-star'}>★</span>
-      ))}
-    </span>
-  );
-}
-
 export default async function RecenzePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ girl?: string }>;
 }) {
   const { locale } = await params;
+  const sp = await searchParams;
   setRequestLocale(locale);
 
   const t = T[locale] ?? T.cs;
-  const reviews = await getRecentApprovedReviews(50);
+  const [reviews, pageData] = await Promise.all([
+    getRecentApprovedReviews(200),
+    getReviewPageData(),
+  ]);
+
+  const activeGirl = sp.girl ?? null;
+  const filtered = activeGirl
+    ? reviews.filter((r) => r.girlSlug === activeGirl)
+    : reviews;
 
   return (
     <main>
@@ -137,45 +154,97 @@ export default async function RecenzePage({
 
       <section className="section">
         <div className="container">
-          {reviews.length === 0 ? (
+          {/* Stats bar */}
+          <div className="rev-stats">
+            <div className="rev-stat">
+              <span className="rev-stat-value">{pageData.totalReviews}</span>
+              <span className="rev-stat-label">{t.totalReviews}</span>
+            </div>
+            <div className="rev-stat">
+              <span className="rev-stat-value">
+                <span className="rev-stat-star">★</span> {pageData.avgRating}
+              </span>
+              <span className="rev-stat-label">{t.avgRating}</span>
+            </div>
+            <div className="rev-stat">
+              <span className="rev-stat-value">{pageData.girlsWithReviews.length}</span>
+              <span className="rev-stat-label">
+                {locale === 'cs' ? 'hodnocených' : locale === 'de' ? 'bewertet' : locale === 'uk' ? 'оцінених' : 'rated'}
+              </span>
+            </div>
+          </div>
+
+          {/* Girl filter chips */}
+          <div className="rev-filters">
+            <Link
+              href={`/${locale}/recenze`}
+              className={`rev-chip ${!activeGirl ? 'active' : ''}`}
+            >
+              {t.filterAll}
+            </Link>
+            {pageData.girlsWithReviews.map((g) => (
+              <Link
+                key={g.slug}
+                href={`/${locale}/recenze?girl=${g.slug}`}
+                className={`rev-chip ${activeGirl === g.slug ? 'active' : ''}`}
+              >
+                {g.photo && (
+                  <img src={photoUrl(g.photo)} alt="" className="rev-chip-img" />
+                )}
+                {g.name}
+                <span className="rev-chip-count">{g.reviewCount}</span>
+              </Link>
+            ))}
+          </div>
+
+          {/* Reviews grid */}
+          {filtered.length === 0 ? (
             <div className="empty-state">
               <p>{t.noReviews}</p>
             </div>
           ) : (
-            <div className="reviews-grid">
-              {reviews.map((review) => (
-                <article key={review.id} className="review-card">
-                  <div className="review-card-head">
-                    {review.girlPhoto && (
-                      <Link href={`/${locale}/profil/${review.girlSlug}`} className="review-card-avatar">
-                        <img
-                          src={photoUrl(review.girlPhoto)}
-                          alt={review.girlName}
-                          width={48}
-                          height={48}
-                          loading="lazy"
-                        />
+            <div className="rev-grid">
+              {filtered.map((review) => {
+                const full = Math.round(Math.max(0, Math.min(5, review.rating)));
+                return (
+                  <article key={review.id} className="rev-item">
+                    <div className="rev-item-head">
+                      <Link href={`/${locale}/profil/${review.girlSlug}`} className="rev-item-avatar">
+                        {review.girlPhoto ? (
+                          <img src={photoUrl(review.girlPhoto)} alt={review.girlName} />
+                        ) : (
+                          <span className="rev-item-avatar-letter">{review.girlName.charAt(0)}</span>
+                        )}
                       </Link>
-                    )}
-                    <div className="review-card-meta">
-                      <Link href={`/${locale}/profil/${review.girlSlug}`} className="review-card-name">
-                        {review.girlName}
-                      </Link>
-                      <StarRating rating={review.rating} />
+                      <div className="rev-item-info">
+                        <Link href={`/${locale}/profil/${review.girlSlug}`} className="rev-item-girl">
+                          {review.girlName}
+                        </Link>
+                        <div className="rev-item-meta">
+                          {review.clientNickname && <span className="rev-item-author">{review.clientNickname}</span>}
+                          <span className="rev-item-date">{relativeTime(review.createdAt)}</span>
+                        </div>
+                      </div>
+                      <div className="rev-item-rating">
+                        <span className="rev-item-stars">
+                          {'★'.repeat(full)}
+                          <span className="rev-item-stars-empty">{'★'.repeat(5 - full)}</span>
+                        </span>
+                      </div>
                     </div>
-                    <Link
-                      href={`/${locale}/recenze/nova/${review.girlSlug}`}
-                      className="review-card-write"
-                    >
-                      {t.writeReview}
-                    </Link>
-                  </div>
-                  <p className="review-card-text">{review.text}</p>
-                  {review.clientNickname && (
-                    <div className="review-card-author">— {review.clientNickname}</div>
-                  )}
-                </article>
-              ))}
+                    <p className="rev-item-text">{review.text}</p>
+                    {review.tags.length > 0 && (
+                      <div className="rev-item-tags">
+                        {review.tags.slice(0, 4).map((tag) => (
+                          <span key={tag} className="rev-tag">
+                            {TAG_LABELS[tag]?.[locale] ?? TAG_LABELS[tag]?.en ?? tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
             </div>
           )}
         </div>

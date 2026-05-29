@@ -344,6 +344,8 @@ export interface ReviewWithGirl {
   girlName: string;
   girlPhoto: string | null;
   createdAt: string;
+  vibe: string | null;
+  tags: string[];
 }
 
 export async function getRecentApprovedReviews(limit = 4): Promise<ReviewWithGirl[]> {
@@ -352,7 +354,7 @@ export async function getRecentApprovedReviews(limit = 4): Promise<ReviewWithGir
             r.id, r.rating, r.content AS text, r.author_name AS client_nickname,
             g.slug, g.name,
             (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo,
-            r.created_at
+            r.created_at, r.vibe, r.tags
           FROM reviews r
           JOIN girls g ON g.id = r.girl_id
           WHERE r.status = 'approved'
@@ -361,16 +363,45 @@ export async function getRecentApprovedReviews(limit = 4): Promise<ReviewWithGir
     args: [limit],
   });
 
-  return result.rows.map((r) => ({
-    id: Number(r.id),
-    rating: Number(r.rating),
-    text: String(r.text),
-    clientNickname: r.client_nickname ? String(r.client_nickname) : null,
-    girlSlug: String(r.slug),
-    girlName: String(r.name),
-    girlPhoto: r.photo ? String(r.photo) : null,
-    createdAt: String(r.created_at),
-  }));
+  return result.rows.map((r) => {
+    let tags: string[] = [];
+    try { tags = r.tags ? JSON.parse(String(r.tags)) : []; } catch { /* */ }
+    return {
+      id: Number(r.id),
+      rating: Number(r.rating),
+      text: String(r.text),
+      clientNickname: r.client_nickname ? String(r.client_nickname) : null,
+      girlSlug: String(r.slug),
+      girlName: String(r.name),
+      girlPhoto: r.photo ? String(r.photo) : null,
+      createdAt: String(r.created_at),
+      vibe: r.vibe ? String(r.vibe) : null,
+      tags,
+    };
+  });
+}
+
+/** Review page stats + girls with review counts. */
+export async function getReviewPageData() {
+  const [statsRes, girlsRes] = await Promise.all([
+    db.execute(`SELECT COUNT(*) as cnt, ROUND(AVG(rating),1) as avg FROM reviews WHERE status = 'approved'`),
+    db.execute(`SELECT g.name, g.slug,
+                  (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo,
+                  COUNT(r.id) as cnt
+                FROM reviews r JOIN girls g ON g.id = r.girl_id
+                WHERE r.status = 'approved'
+                GROUP BY g.id ORDER BY cnt DESC`),
+  ]);
+  return {
+    totalReviews: Number(statsRes.rows[0].cnt),
+    avgRating: Number(statsRes.rows[0].avg),
+    girlsWithReviews: girlsRes.rows.map((r) => ({
+      name: String(r.name),
+      slug: String(r.slug),
+      photo: r.photo ? String(r.photo) : null,
+      reviewCount: Number(r.cnt),
+    })),
+  };
 }
 
 export interface Location {
