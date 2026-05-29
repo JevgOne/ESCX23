@@ -100,6 +100,9 @@ const TAG_LABELS: Record<string, Record<string, string>> = {
   intimate: { cs: 'Intimní', en: 'Intimate', de: 'Intim', uk: 'Інтимна' },
   gentle: { cs: 'Něžná', en: 'Gentle', de: 'Sanft', uk: 'Ніжна' },
   fun: { cs: 'Zábavná', en: 'Fun', de: 'Lustig', uk: 'Весела' },
+  mysterious: { cs: 'Tajemná', en: 'Mysterious', de: 'Geheimnisvoll', uk: 'Загадкова' },
+  professional: { cs: 'Profesionální', en: 'Professional', de: 'Professionell', uk: 'Професійна' },
+  gfe: { cs: 'GFE', en: 'GFE', de: 'GFE', uk: 'GFE' },
 };
 
 export async function generateMetadata({

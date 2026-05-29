@@ -12,24 +12,24 @@ interface Props {
 }
 
 const MOODS = [
-  { value: 'wow', emoji: '🤩' },
-  { value: 'hot', emoji: '🔥' },
-  { value: 'magic', emoji: '✨' },
-  { value: 'sweet', emoji: '🌹' },
-  { value: 'fun', emoji: '💫' },
-  { value: 'classy', emoji: '👑' },
+  { value: 'great', emoji: '😊' },
+  { value: 'magical', emoji: '✨' },
+  { value: 'unforgettable', emoji: '🔥' },
+  { value: 'nice', emoji: '💕' },
+  { value: 'meh', emoji: '😐' },
 ];
 
 interface Vibe { value: string; cs: string; en: string; de: string; uk: string }
 const VIBES: Vibe[] = [
-  { value: 'sexy', cs: 'Sexy', en: 'Sexy', de: 'Sexy', uk: 'Сексі' },
+  { value: 'friendly', cs: 'Přátelská', en: 'Friendly', de: 'Freundlich', uk: 'Дружня' },
+  { value: 'playful', cs: 'Hravá', en: 'Playful', de: 'Verspielt', uk: 'Грайлива' },
   { value: 'passionate', cs: 'Vášnivá', en: 'Passionate', de: 'Leidenschaftlich', uk: 'Пристрасна' },
+  { value: 'relaxed', cs: 'Uvolněná', en: 'Relaxed', de: 'Entspannt', uk: 'Розслаблена' },
+  { value: 'communicative', cs: 'Komunikativní', en: 'Communicative', de: 'Kommunikativ', uk: 'Комунікативна' },
+  { value: 'intimate', cs: 'Intimní', en: 'Intimate', de: 'Intim', uk: 'Інтимна' },
   { value: 'gentle', cs: 'Něžná', en: 'Gentle', de: 'Sanft', uk: 'Ніжна' },
-  { value: 'pro', cs: 'Profi', en: 'Pro', de: 'Profi', uk: 'Профі' },
-  { value: 'funny', cs: 'Vtipná', en: 'Funny', de: 'Witzig', uk: 'Дотепна' },
-  { value: 'discreet', cs: 'Diskrétní', en: 'Discreet', de: 'Diskret', uk: 'Дискретна' },
-  { value: 'natural', cs: 'Přirozená', en: 'Natural', de: 'Natürlich', uk: 'Природна' },
-  { value: 'open', cs: 'Otevřená', en: 'Open', de: 'Offen', uk: 'Відкрита' },
+  { value: 'mysterious', cs: 'Tajemná', en: 'Mysterious', de: 'Geheimnisvoll', uk: 'Загадкова' },
+  { value: 'professional', cs: 'Profesionální', en: 'Professional', de: 'Professionell', uk: 'Професійна' },
 ];
 
 async function submitReview(formData: FormData) {
@@ -38,10 +38,9 @@ async function submitReview(formData: FormData) {
   const ratingOverall = Math.min(5, Math.max(1, Number(formData.get('rating') ?? 0)));
   const text = String(formData.get('text') ?? '').trim();
   const nickname = String(formData.get('nickname') ?? '').trim();
-  const mood = String(formData.get('mood') ?? '').trim() || null;
-  const recommends = formData.get('recommends') === 'no' ? 0 : 1;
-  const vibesArr = formData.getAll('vibes').map(String).filter(Boolean).slice(0, 5);
-  const vibesJson = vibesArr.length > 0 ? JSON.stringify(vibesArr) : null;
+  const vibe = String(formData.get('mood') ?? '').trim() || null;
+  const tagsArr = formData.getAll('vibes').map(String).filter(Boolean).slice(0, 5);
+  const tagsJson = tagsArr.length > 0 ? JSON.stringify(tagsArr) : null;
 
   if (!slug || !text || !nickname || ratingOverall < 1 || text.length < 10) {
     redirect(`/recenze/nova/${slug}?error=invalid`);
@@ -57,21 +56,11 @@ async function submitReview(formData: FormData) {
     }
     const girlId = Number(girlRes.rows[0].id);
 
-    // Try full insert; fall back to minimal columns if extra columns don't exist
-    try {
-      await db.execute({
-        sql: `INSERT INTO reviews (girl_id, rating, content, author_name, status, mood, vibe_tags, recommends)
-              VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)`,
-        args: [girlId, ratingOverall, text, nickname, mood, vibesJson, recommends],
-      });
-    } catch (e) {
-      console.error('[review] full insert failed, retry minimal', e);
-      await db.execute({
-        sql: `INSERT INTO reviews (girl_id, rating, content, author_name, status)
-              VALUES (?, ?, ?, ?, 'pending')`,
-        args: [girlId, ratingOverall, text, nickname],
-      });
-    }
+    await db.execute({
+      sql: `INSERT INTO reviews (girl_id, rating, content, author_name, status, vibe, tags)
+            VALUES (?, ?, ?, ?, 'pending', ?, ?)`,
+      args: [girlId, ratingOverall, text, nickname, vibe, tagsJson],
+    });
 
     // Rating recalc happens when admin approves the review (admin-actions.ts)
   } catch (err) {
