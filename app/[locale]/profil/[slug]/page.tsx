@@ -303,6 +303,13 @@ export default async function ProfilPage({ params }: Props) {
               shiftFrom={todaySchedule.shiftFrom}
               shiftTo={todaySchedule.shiftTo}
               topServices={servicesTyped.slice(0, 6).map((s) => ({ name: String((s as { name?: unknown }).name ?? '') })).filter((s) => s.name)}
+              bio={(() => {
+                const g = girl as unknown as Record<string, unknown>;
+                if (locale === 'cs') return String(g.description_cs ?? g.bio ?? '');
+                if (locale === 'de') return String(g.description_de ?? g.description_en ?? g.bio ?? '');
+                if (locale === 'uk') return String(g.description_uk ?? g.description_en ?? g.bio ?? '');
+                return String(g.description_en ?? g.bio ?? '');
+              })()}
             />
             <ProfilDetails
               girl={girlTyped}

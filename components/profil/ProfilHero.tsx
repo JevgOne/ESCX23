@@ -95,9 +95,10 @@ interface ProfilHeroProps {
   shiftFrom?: string | null;
   shiftTo?: string | null;
   topServices?: TopService[];
+  bio?: string;
 }
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [] }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '' }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -309,6 +310,13 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           </a>
         )}
       </div>
+
+      {/* Mobile-only bio snippet */}
+      {bio && (
+        <div className="profile-ig-bio">
+          <p>{bio.length > 200 ? bio.slice(0, 200) + '…' : bio}</p>
+        </div>
+      )}
 
       {/* Desktop hero photo (and same on mobile, just below IG header) */}
       <div className="profile-hero-photo">

@@ -2851,6 +2851,7 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 .ig-stat-details { display: none !important; }
 .profile-ig-services { display: none !important; }
 .profile-ig-hashtags { display: none !important; }
+.profile-ig-bio { display: none; }
 
 @media (max-width: 520px) {
   .profile-photo-col {
@@ -3181,8 +3182,31 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 
   /* Shrink hero photo on mobile — info dominates above */
   .profile-hero-photo {
-    aspect-ratio: 4/5;
+    aspect-ratio: 3/4;
     border-radius: 14px;
+  }
+
+  /* Bio snippet on mobile */
+  .profile-ig-bio {
+    display: block;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+  }
+  .profile-ig-bio p {
+    color: var(--color-text-muted);
+    font-size: 13.5px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  /* Gallery thumbnails — 3 cols on mobile, tighter */
+  .profile-thumbs-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 3px !important;
+    margin-top: 8px;
   }
 }
 .profile-thumbs {
