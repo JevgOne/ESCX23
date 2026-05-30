@@ -13,6 +13,13 @@ const PREPARING_LABEL: Record<string, string> = {
   uk: 'Готується',
 };
 
+const PRIMARY_LABEL: Record<string, string> = {
+  cs: 'Hlavní apartmán',
+  en: 'Main apartment',
+  de: 'Hauptwohnung',
+  uk: 'Головна квартира',
+};
+
 export default async function LocationsRow({ locale }: LocationsRowProps) {
   const t = await getTranslations({ locale, namespace: 'homepage.locations' });
   const dbLocations = await getActiveLocations();
@@ -20,7 +27,7 @@ export default async function LocationsRow({ locale }: LocationsRowProps) {
   if (dbLocations.length === 0) return null;
 
   const preparingLabel = PREPARING_LABEL[locale] ?? PREPARING_LABEL.en;
-  // Praha 3 and Praha 5 are preparing — no girls scheduled there yet
+  const primaryLabel = PRIMARY_LABEL[locale] ?? PRIMARY_LABEL.en;
   const preparingSlugs = new Set(['praha-3', 'praha-5']);
 
   return (
@@ -31,59 +38,47 @@ export default async function LocationsRow({ locale }: LocationsRowProps) {
           <h2 className="section-h2">{t('h2')}</h2>
           <p className="section-sub">{t('sub')}</p>
         </div>
-        <div className="locations-grid">
+        <div className="loc-list">
           {dbLocations.map((loc) => {
             const isPreparing = preparingSlugs.has(loc.name);
             const displayParts = (loc.displayName ?? loc.name).split(', ');
             const districtName = displayParts[0] ?? loc.name;
             const prahaNum = displayParts[1] ?? loc.district ?? 'Praha';
-            const href = `/${locale}/pobocka/${loc.name}`;
 
             return (
-              <Link key={loc.id} href={href} className={`location-card-mini location-card-link${isPreparing ? ' location-card-preparing' : ''}`}>
-                <div className="location-photo">
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      background: isPreparing
-                        ? 'linear-gradient(135deg, #555, #888)'
-                        : 'linear-gradient(135deg, var(--color-coral), var(--color-magenta))',
-                      opacity: isPreparing ? 0.4 : 0.6,
-                    }}
-                  />
+              <Link
+                key={loc.id}
+                href={`/${locale}/pobocka/${loc.name}`}
+                className={`loc-row-card${loc.isPrimary ? ' loc-row-primary' : ''}${isPreparing ? ' loc-row-preparing' : ''}`}
+              >
+                <div className="loc-row-pin">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </div>
+                <div className="loc-row-info">
+                  <div className="loc-row-name">
+                    <span className="loc-row-district">{districtName}</span>
+                    <span className="loc-row-praha">{prahaNum}</span>
+                  </div>
                   {loc.isPrimary && (
-                    <span className="location-photo-badge">{t('main_apartment')}</span>
+                    <span className="loc-row-badge-primary">{primaryLabel}</span>
                   )}
                   {isPreparing && (
-                    <span className="location-photo-badge location-badge-preparing">{preparingLabel}</span>
+                    <span className="loc-row-badge-soon">{preparingLabel}</span>
                   )}
                 </div>
-                <div className="location-card-mini-body">
-                  <div className="location-icon-row">
-                    <div className="location-icon">📍</div>
-                    <div>
-                      <h3>{districtName}</h3>
-                      <div className="place">{prahaNum}</div>
-                    </div>
+                {!isPreparing && (
+                  <div className="loc-row-hours">
+                    <span className="loc-row-dot" />
+                    10:00 — 22:30
                   </div>
-                  {!isPreparing && (
-                    <>
-                      <div className="location-features">
-                        <span>✓ {t('note')}</span>
-                      </div>
-                      <div className="location-hours-mini">
-                        <span className="open-dot" />
-                        10:00 — 22:30
-                      </div>
-                    </>
-                  )}
-                  {isPreparing && (
-                    <div className="location-features" style={{ opacity: 0.5 }}>
-                      <span>{preparingLabel}…</span>
-                    </div>
-                  )}
-                  <span className="location-card-cta">{isPreparing ? preparingLabel : t('detail_cta')}</span>
+                )}
+                <div className="loc-row-arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
                 </div>
               </Link>
             );
