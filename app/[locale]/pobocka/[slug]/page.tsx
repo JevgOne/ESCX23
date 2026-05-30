@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { getLocationBySlug, getActiveLocations, getGirlsWithToday } from '@/lib/queries';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import Link from 'next/link';
+import { Link as I18nLink } from '@/i18n/navigation';
 import { breadcrumbListJsonLd, localBusinessJsonLd, faqPageJsonLd, itemListPeopleJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl } from '@/lib/seo/meta';
 import { getLocationContent } from '@/lib/seo/landing-content';
@@ -269,6 +270,10 @@ export default async function PobockaDetailPage({ params }: Props) {
     : locale === 'de' ? 'Begleiterinnen in diesem Apartment'
     : locale === 'uk' ? 'Супутниці у цьому апартаменті'
     : 'Companions at this apartment';
+  const chooseCompanionLbl = locale === 'cs' ? 'Vyber si společnici'
+    : locale === 'de' ? 'Wähle deine Begleiterin'
+    : locale === 'uk' ? 'Обери супутницю'
+    : 'Choose your companion';
   const faqLbl = locale === 'cs' ? 'Časté dotazy o apartmánu'
     : locale === 'de' ? 'Häufige Fragen zum Apartment'
     : locale === 'uk' ? 'Часті питання про апартамент'
@@ -355,14 +360,31 @@ export default async function PobockaDetailPage({ params }: Props) {
                   </div>
                 </div>
               </div>
-              <div className="pobocka-cta-row">
-                <a href="https://wa.me/420734332131" target="_blank" rel="noopener noreferrer" className="pobocka-cta pobocka-cta-wa">
-                  {L.ctaWa}
-                </a>
-                <a href="tel:+420734332131" className="pobocka-cta pobocka-cta-call">
-                  {L.ctaCall}
-                </a>
-              </div>
+              {districtGirls.length > 0 && (
+                <div className="pobocka-companions">
+                  <div className="pobocka-companions-label">{chooseCompanionLbl}</div>
+                  <div className="pobocka-companions-row">
+                    {districtGirls.slice(0, 8).map((g) => (
+                      <I18nLink
+                        key={g.id}
+                        href={{ pathname: '/profil/[slug]', params: { slug: g.slug } }}
+                        className="pobocka-companion-circle"
+                        title={g.name}
+                      >
+                        {g.primaryPhoto ? (
+                          <img src={photoUrl(g.primaryPhoto)} alt={g.name} />
+                        ) : (
+                          <span className="pobocka-companion-initial">{g.name.charAt(0)}</span>
+                        )}
+                        <span className={`pobocka-companion-dot${g.status === 'working' ? ' dot-on' : g.status === 'later' ? ' dot-later' : ''}`} />
+                      </I18nLink>
+                    ))}
+                  </div>
+                  <Link href={`/${locale}/divky`} className="pobocka-companions-all">
+                    {L.inclCta}
+                  </Link>
+                </div>
+              )}
             </div>
             <div className="pobocka-hero-photo">
               <div className="pobocka-photo-placeholder">

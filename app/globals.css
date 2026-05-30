@@ -11381,31 +11381,81 @@ body {
   font-weight: 600;
   margin-top: 2px;
 }
-.pobocka-cta-row {
+.pobocka-companions {
+  margin-top: 4px;
+}
+.pobocka-companions-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+.pobocka-companions-row {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
 }
-.pobocka-cta {
-  padding: 12px 22px;
-  border-radius: 999px;
-  font-size: 13.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+.pobocka-companion-circle {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--color-line-mid);
+  transition: border-color 0.2s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elev);
   text-decoration: none;
-  transition: transform 0.15s, box-shadow 0.15s;
 }
-.pobocka-cta-wa {
-  background: linear-gradient(135deg, #25d366, #128c7e);
-  color: #fff;
-  box-shadow: 0 8px 22px -8px rgba(37,211,102,0.55);
+.pobocka-companion-circle:hover {
+  border-color: var(--color-coral);
+  transform: scale(1.1);
 }
-.pobocka-cta-call {
-  background: linear-gradient(135deg, #f27d8d, #c84b8b);
-  color: #fff;
-  box-shadow: 0 8px 22px -8px rgba(242,125,141,0.55);
+.pobocka-companion-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
-.pobocka-cta:hover { transform: translateY(-2px); }
+.pobocka-companion-initial {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+}
+.pobocka-companion-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  border: 2px solid var(--color-bg-card);
+}
+.pobocka-companion-dot.dot-on {
+  background: var(--color-green);
+  box-shadow: 0 0 4px var(--color-green);
+}
+.pobocka-companion-dot.dot-later {
+  background: #f59e0b;
+}
+.pobocka-companions-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-coral);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.pobocka-companions-all:hover {
+  color: #f27d8d;
+}
 
 .pobocka-hero-photo {
   position: relative;
