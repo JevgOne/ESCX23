@@ -13,7 +13,15 @@ const NAV: NavItem[] = [
   { href: '/cs/studio/telo',        label: 'Tělo',          emoji: '📐' },
   { href: '/cs/studio/zivotni-styl',label: 'Životní styl',  emoji: '☕' },
   { href: '/cs/studio/dostupnost',  label: 'Dostupnost',    emoji: '📅' },
-  { href: '/cs/studio/profil-status', label: 'Status profilu', emoji: '🟢' },
+  { href: '/cs/studio/zprava',        label: 'Osobní zpráva',     emoji: '💬' },
+  { href: '/cs/studio/hlas',          label: 'Hlasová zpráva',   emoji: '🎙️' },
+  { href: '/cs/studio/program',       label: 'Doporučený program', emoji: '💎' },
+  { href: '/cs/studio/sluzby',        label: 'Služby',           emoji: '💋' },
+  { href: '/cs/studio/jazyky',       label: 'Jazyky',           emoji: '🌐' },
+  { href: '/cs/studio/stories',      label: 'Stories',           emoji: '📸' },
+  { href: '/cs/studio/recenze',      label: 'Recenze',          emoji: '⭐' },
+  { href: '/cs/studio/statistiky',   label: 'Statistiky',       emoji: '📈' },
+  { href: '/cs/studio/profil-status', label: 'Status profilu',  emoji: '🟢' },
 ];
 
 export default async function StudioSidebar() {

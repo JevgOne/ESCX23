@@ -269,6 +269,20 @@ export default async function RecenzePage({
                         ))}
                       </div>
                     )}
+                    {review.reply && (
+                      <div className="rev-reply">
+                        <div className="rev-reply-head">
+                          {review.girlPhoto && (
+                            <img src={photoUrl(review.girlPhoto)} alt={review.girlName} className="rev-reply-avatar" />
+                          )}
+                          <span className="rev-reply-name">{review.girlName}</span>
+                          {review.replyAt && (
+                            <span className="rev-reply-date">{relativeTime(review.replyAt)}</span>
+                          )}
+                        </div>
+                        <p className="rev-reply-text">{review.reply}</p>
+                      </div>
+                    )}
                   </article>
                 );
               })}

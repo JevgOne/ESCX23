@@ -1,9 +1,11 @@
 'use server';
 
+import { put } from '@vercel/blob';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireGirl } from './auth';
 import { db } from './db';
+import { saveReviewReply } from './queries';
 
 export async function updateGirlBasic(formData: FormData) {
   const user = await requireGirl();
@@ -83,4 +85,171 @@ export async function updateGirlStatus(formData: FormData) {
   revalidatePath('/cs/studio/profil-status');
   revalidatePath('/cs/studio');
   redirect('/cs/studio/profil-status?saved=1');
+}
+
+export async function replyToReview(formData: FormData) {
+  const user = await requireGirl();
+  const girlId = user.girl_id!;
+
+  const reviewId = Number(formData.get('reviewId') ?? 0);
+  const replyText = String(formData.get('reply') ?? '').trim();
+
+  if (!reviewId || !replyText) {
+    redirect('/cs/studio/recenze?error=empty');
+  }
+
+  await saveReviewReply(reviewId, girlId, replyText);
+
+  revalidatePath('/cs/studio/recenze');
+  revalidatePath('/cs/recenze');
+  redirect('/cs/studio/recenze?replied=1');
+}
+
+export async function updateGirlServices(formData: FormData) {
+  const user = await requireGirl();
+  const girlId = user.girl_id!;
+
+  const serviceIds = formData.getAll('services').map(Number).filter(Boolean);
+
+  // Delete all existing, then insert selected
+  await db.execute({ sql: `DELETE FROM girl_services WHERE girl_id = ?`, args: [girlId] });
+
+  for (const sid of serviceIds) {
+    await db.execute({
+      sql: `INSERT INTO girl_services (girl_id, service_id) VALUES (?, ?)`,
+      args: [girlId, sid],
+    });
+  }
+
+  revalidatePath('/cs/studio/sluzby');
+  redirect('/cs/studio/sluzby?saved=1');
+}
+
+export async function updateGirlLanguages(formData: FormData) {
+  const user = await requireGirl();
+  const girlId = user.girl_id!;
+
+  const langs = formData.getAll('languages').map(String).filter(Boolean);
+  const langsJson = JSON.stringify(langs);
+
+  await db.execute({
+    sql: `UPDATE girls SET languages = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    args: [langsJson, girlId],
+  });
+
+  revalidatePath('/cs/studio/jazyky');
+  redirect('/cs/studio/jazyky?saved=1');
+}
+
+export async function updatePersonalMessage(formData: FormData) {
+  const user = await requireGirl();
+  const girlId = user.girl_id!;
+
+  const clear = formData.get('clear') === '1';
+  const message = clear ? null : (String(formData.get('message') ?? '').trim().slice(0, 160) || null);
+
+  await db.execute({
+    sql: `UPDATE girls SET personal_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    args: [message, girlId],
+  });
+
+  revalidatePath('/cs/studio/zprava');
+  redirect('/cs/studio/zprava?saved=1');
+}
+
+export async function updatePreferredProgram(formData: FormData) {
+  const user = await requireGirl();
+  const girlId = user.girl_id!;
+
+  const raw = String(formData.get('program_id') ?? '').trim();
+  const programId = raw ? Number(raw) : null;
+
+  await db.execute({
+    sql: `UPDATE girls SET preferred_program_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    args: [programId, girlId],
+  });
+
+  revalidatePath('/cs/studio/program');
+  redirect('/cs/studio/program?saved=1');
+}
+
+export async function uploadVoiceMessage(formData: FormData) {
+  const user = await requireGirl();
+  const girlId = user.girl_id!;
+
+  const file = formData.get('voice') as File | null;
+  const deleteOnly = formData.get('delete') === '1';
+
+  if (deleteOnly) {
+    await db.execute({
+      sql: `UPDATE girls SET voice_url = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      args: [girlId],
+    });
+    revalidatePath('/cs/studio/hlas');
+    redirect('/cs/studio/hlas?saved=1');
+  }
+
+  if (!file || file.size === 0) {
+    redirect('/cs/studio/hlas?error=nofile');
+  }
+
+  const ext = (file.name.split('.').pop() ?? '').toLowerCase();
+  const allowed = new Set(['mp3', 'wav', 'ogg', 'webm', 'm4a', 'aac']);
+  if (!allowed.has(ext)) {
+    redirect('/cs/studio/hlas?error=format');
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    redirect('/cs/studio/hlas?error=size');
+  }
+
+  const filename = `voices/${girlId}/${Date.now()}.${ext}`;
+  const blob = await put(filename, file, {
+    access: 'public',
+    contentType: file.type || `audio/${ext}`,
+    addRandomSuffix: false,
+  });
+
+  await db.execute({
+    sql: `UPDATE girls SET voice_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    args: [blob.url, girlId],
+  });
+
+  revalidatePath('/cs/studio/hlas');
+  redirect('/cs/studio/hlas?saved=1');
+}
+
+export async function addStory(formData: FormData) {
+  const user = await requireGirl();
+  const girlId = user.girl_id!;
+
+  const mediaUrl = String(formData.get('media_url') ?? '').trim();
+  const mediaType = String(formData.get('media_type') ?? 'image');
+
+  if (!mediaUrl) redirect('/cs/studio/stories');
+
+  await db.execute({
+    sql: `INSERT INTO stories (girl_id, media_url, media_type, expires_at)
+          VALUES (?, ?, ?, datetime('now', '+24 hours'))`,
+    args: [girlId, mediaUrl, mediaType],
+  });
+
+  revalidatePath('/cs/studio/stories');
+  redirect('/cs/studio/stories?saved=1');
+}
+
+export async function deleteStory(formData: FormData) {
+  const user = await requireGirl();
+  const girlId = user.girl_id!;
+
+  const storyId = Number(formData.get('storyId') ?? 0);
+  if (!storyId) redirect('/cs/studio/stories');
+
+  await db.execute({
+    sql: `DELETE FROM stories WHERE id = ? AND girl_id = ?`,
+    args: [storyId, girlId],
+  });
+
+  revalidatePath('/cs/studio/stories');
+  redirect('/cs/studio/stories?deleted=1');
 }

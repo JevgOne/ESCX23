@@ -179,7 +179,9 @@ export async function getFaqItems() {
 /** Recenze pro konkrétní dívku. */
 export async function getReviewsForGirl(girlId: number, limit = 10) {
   const result = await db.execute({
-    sql: `SELECT * FROM reviews WHERE girl_id = ? AND status = 'approved'
+    sql: `SELECT id, girl_id, author_name, rating, content, created_at,
+            vibe, tags, reply, reply_at, reply_by
+          FROM reviews WHERE girl_id = ? AND status = 'approved'
           ORDER BY created_at DESC LIMIT ?`,
     args: [girlId, limit],
   });
@@ -350,6 +352,8 @@ export interface ReviewWithGirl {
   createdAt: string;
   vibe: string | null;
   tags: string[];
+  reply: string | null;
+  replyAt: string | null;
 }
 
 export async function getRecentApprovedReviews(limit = 4): Promise<ReviewWithGirl[]> {
@@ -358,7 +362,7 @@ export async function getRecentApprovedReviews(limit = 4): Promise<ReviewWithGir
             r.id, r.rating, r.content AS text, r.author_name AS client_nickname,
             g.slug, g.name,
             (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo,
-            r.created_at, r.vibe, r.tags
+            r.created_at, r.vibe, r.tags, r.reply, r.reply_at
           FROM reviews r
           JOIN girls g ON g.id = r.girl_id
           WHERE r.status = 'approved'
@@ -381,6 +385,8 @@ export async function getRecentApprovedReviews(limit = 4): Promise<ReviewWithGir
       createdAt: String(r.created_at),
       vibe: r.vibe ? String(r.vibe) : null,
       tags,
+      reply: r.reply ? String(r.reply) : null,
+      replyAt: r.reply_at ? String(r.reply_at) : null,
     };
   });
 }
@@ -852,6 +858,50 @@ export async function getPendingPhotos(): Promise<PendingPhoto[]> {
   }));
 }
 
+export interface StudioReview {
+  id: number;
+  authorName: string;
+  rating: number;
+  content: string;
+  createdAt: string;
+  vibe: string | null;
+  reply: string | null;
+  replyAt: string | null;
+}
+
+export async function getReviewsForStudio(girlId: number): Promise<StudioReview[]> {
+  const result = await db.execute({
+    sql: `SELECT id, author_name, rating, content, created_at, vibe, reply, reply_at
+          FROM reviews WHERE girl_id = ? AND status = 'approved'
+          ORDER BY created_at DESC`,
+    args: [girlId],
+  });
+  return result.rows.map((r) => ({
+    id: Number(r.id),
+    authorName: String(r.author_name ?? ''),
+    rating: Number(r.rating ?? 5),
+    content: String(r.content ?? ''),
+    createdAt: String(r.created_at),
+    vibe: r.vibe ? String(r.vibe) : null,
+    reply: r.reply ? String(r.reply) : null,
+    replyAt: r.reply_at ? String(r.reply_at) : null,
+  }));
+}
+
+export async function saveReviewReply(reviewId: number, girlId: number, replyText: string): Promise<boolean> {
+  try {
+    await db.execute({
+      sql: `UPDATE reviews SET reply = ?, reply_at = CURRENT_TIMESTAMP, reply_by = 'girl'
+            WHERE id = ? AND girl_id = ?`,
+      args: [replyText, reviewId, girlId],
+    });
+    return true;
+  } catch (err) {
+    console.error('[studio] saveReviewReply failed', err);
+    return false;
+  }
+}
+
 export interface PendingReview {
   id: number;
   girlId: number;
@@ -1240,63 +1290,194 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
  *  Blog queries
  * ========================================================= */
 
+export interface BlogTag {
+  id: number;
+  slug: string;
+  name: string;
+}
+
 export interface BlogPost {
   id: number;
   slug: string;
   title: string;
   excerpt: string | null;
   content: string | null;
+  metaDescription: string | null;
   coverUrl: string | null;
   author: string;
+  readingTime: number;
   createdAt: string;
+  publishedAt: string | null;
+  tags: BlogTag[];
 }
 
-export async function getBlogPosts(limit = 20, offset = 0): Promise<BlogPost[]> {
+type BlogLocale = 'cs' | 'en';
+function blogLang(locale: string): BlogLocale {
+  return locale === 'cs' ? 'cs' : 'en';
+}
+
+export async function getBlogPosts(locale: string, limit = 20, offset = 0): Promise<BlogPost[]> {
+  const lang = blogLang(locale);
   try {
     const result = await db.execute({
-      sql: `SELECT id, slug, title, excerpt, content, cover_url, author, created_at
+      sql: `SELECT id, slug,
+              title_cs, title_en, excerpt_cs, excerpt_en,
+              meta_description_cs, meta_description_en,
+              cover_url, author, reading_time_min,
+              created_at, published_at
             FROM blog_posts WHERE status = 'published'
-            ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+            ORDER BY published_at DESC, created_at DESC LIMIT ? OFFSET ?`,
       args: [limit, offset],
     });
-    return result.rows.map((r) => ({
+    const posts = result.rows.map((r) => ({
       id: Number(r.id),
       slug: String(r.slug),
-      title: String(r.title),
-      excerpt: r.excerpt ? String(r.excerpt) : null,
-      content: r.content ? String(r.content) : null,
+      title: String(r[`title_${lang}`] || r.title_cs || ''),
+      excerpt: r[`excerpt_${lang}`] ? String(r[`excerpt_${lang}`]) : (r.excerpt_cs ? String(r.excerpt_cs) : null),
+      content: null as string | null,
+      metaDescription: r[`meta_description_${lang}`] ? String(r[`meta_description_${lang}`]) : null,
       coverUrl: r.cover_url ? String(r.cover_url) : null,
       author: String(r.author ?? 'LovelyGirls Praha'),
+      readingTime: Number(r.reading_time_min ?? 3),
       createdAt: String(r.created_at),
+      publishedAt: r.published_at ? String(r.published_at) : null,
+      tags: [] as BlogTag[],
     }));
+
+    // Fetch tags for all posts in one query
+    if (posts.length > 0) {
+      const ids = posts.map((p) => p.id);
+      const placeholders = ids.map(() => '?').join(',');
+      const tagResult = await db.execute({
+        sql: `SELECT bpt.post_id, bt.id, bt.slug, bt.name_cs, bt.name_en
+              FROM blog_post_tags bpt
+              JOIN blog_tags bt ON bt.id = bpt.tag_id
+              WHERE bpt.post_id IN (${placeholders})`,
+        args: ids,
+      });
+      const tagMap = new Map<number, BlogTag[]>();
+      for (const tr of tagResult.rows) {
+        const postId = Number(tr.post_id);
+        if (!tagMap.has(postId)) tagMap.set(postId, []);
+        tagMap.get(postId)!.push({
+          id: Number(tr.id),
+          slug: String(tr.slug),
+          name: String(tr[`name_${lang}`] || tr.name_cs || ''),
+        });
+      }
+      for (const p of posts) {
+        p.tags = tagMap.get(p.id) ?? [];
+      }
+    }
+
+    return posts;
   } catch (err) {
     console.error('[blog] getBlogPosts failed', err);
     return [];
   }
 }
 
-export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+export async function getBlogPostBySlug(slug: string, locale: string): Promise<BlogPost | null> {
+  const lang = blogLang(locale);
   try {
     const result = await db.execute({
-      sql: `SELECT id, slug, title, excerpt, content, cover_url, author, created_at
+      sql: `SELECT id, slug,
+              title_cs, title_en, excerpt_cs, excerpt_en,
+              content_cs, content_en,
+              meta_description_cs, meta_description_en,
+              cover_url, author, reading_time_min,
+              created_at, published_at
             FROM blog_posts WHERE slug = ? AND status = 'published' LIMIT 1`,
       args: [slug],
     });
     if (!result.rows[0]) return null;
     const r = result.rows[0];
+
+    // Fetch tags
+    const tagResult = await db.execute({
+      sql: `SELECT bt.id, bt.slug, bt.name_cs, bt.name_en
+            FROM blog_post_tags bpt
+            JOIN blog_tags bt ON bt.id = bpt.tag_id
+            WHERE bpt.post_id = ?`,
+      args: [Number(r.id)],
+    });
+    const tags: BlogTag[] = tagResult.rows.map((tr) => ({
+      id: Number(tr.id),
+      slug: String(tr.slug),
+      name: String(tr[`name_${lang}`] || tr.name_cs || ''),
+    }));
+
     return {
       id: Number(r.id),
       slug: String(r.slug),
-      title: String(r.title),
-      excerpt: r.excerpt ? String(r.excerpt) : null,
-      content: r.content ? String(r.content) : null,
+      title: String(r[`title_${lang}`] || r.title_cs || ''),
+      excerpt: r[`excerpt_${lang}`] ? String(r[`excerpt_${lang}`]) : (r.excerpt_cs ? String(r.excerpt_cs) : null),
+      content: r[`content_${lang}`] ? String(r[`content_${lang}`]) : (r.content_cs ? String(r.content_cs) : null),
+      metaDescription: r[`meta_description_${lang}`] ? String(r[`meta_description_${lang}`]) : null,
       coverUrl: r.cover_url ? String(r.cover_url) : null,
       author: String(r.author ?? 'LovelyGirls Praha'),
+      readingTime: Number(r.reading_time_min ?? 3),
       createdAt: String(r.created_at),
+      publishedAt: r.published_at ? String(r.published_at) : null,
+      tags,
     };
   } catch (err) {
     console.error('[blog] getBlogPostBySlug failed', err);
     return null;
+  }
+}
+
+/** All published blog slugs (for sitemap). */
+export async function getBlogPostSlugs(): Promise<{ slug: string; updatedAt: string | null }[]> {
+  try {
+    const result = await db.execute({
+      sql: `SELECT slug, updated_at FROM blog_posts WHERE status = 'published' ORDER BY published_at DESC`,
+      args: [],
+    });
+    return result.rows.map((r) => ({
+      slug: String(r.slug),
+      updatedAt: r.updated_at ? String(r.updated_at) : null,
+    }));
+  } catch (err) {
+    console.error('[blog] getBlogPostSlugs failed', err);
+    return [];
+  }
+}
+
+/** Posts sharing any tag with the given post. */
+export async function getRelatedBlogPosts(postId: number, locale: string, limit = 3): Promise<BlogPost[]> {
+  const lang = blogLang(locale);
+  try {
+    const result = await db.execute({
+      sql: `SELECT DISTINCT bp.id, bp.slug,
+              bp.title_cs, bp.title_en, bp.excerpt_cs, bp.excerpt_en,
+              bp.meta_description_cs, bp.meta_description_en,
+              bp.cover_url, bp.author, bp.reading_time_min,
+              bp.created_at, bp.published_at
+            FROM blog_posts bp
+            JOIN blog_post_tags bpt ON bpt.post_id = bp.id
+            WHERE bpt.tag_id IN (SELECT tag_id FROM blog_post_tags WHERE post_id = ?)
+              AND bp.id != ? AND bp.status = 'published'
+            ORDER BY bp.published_at DESC LIMIT ?`,
+      args: [postId, postId, limit],
+    });
+    return result.rows.map((r) => ({
+      id: Number(r.id),
+      slug: String(r.slug),
+      title: String(r[`title_${lang}`] || r.title_cs || ''),
+      excerpt: r[`excerpt_${lang}`] ? String(r[`excerpt_${lang}`]) : (r.excerpt_cs ? String(r.excerpt_cs) : null),
+      content: null,
+      metaDescription: null,
+      coverUrl: r.cover_url ? String(r.cover_url) : null,
+      author: String(r.author ?? 'LovelyGirls Praha'),
+      readingTime: Number(r.reading_time_min ?? 3),
+      createdAt: String(r.created_at),
+      publishedAt: r.published_at ? String(r.published_at) : null,
+      tags: [],
+    }));
+  } catch (err) {
+    console.error('[blog] getRelatedBlogPosts failed', err);
+    return [];
   }
 }
 

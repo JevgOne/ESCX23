@@ -4,6 +4,7 @@ import {
   getActiveLocations,
   getAllServices,
   getPhotosBySlug,
+  getBlogPostSlugs,
 } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
 
@@ -111,11 +112,12 @@ const STATIC_KEYS: Array<{ key: string; freq: 'daily' | 'hourly' | 'weekly' | 'm
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [girls, locations, services, photosBySlug] = await Promise.all([
+  const [girls, locations, services, photosBySlug, blogSlugs] = await Promise.all([
     getAllGirlsForAdmin(undefined, 'active').catch(() => []),
     getActiveLocations().catch(() => []),
     getAllServices().catch(() => []),
     getPhotosBySlug(5).catch(() => ({} as Record<string, string[]>)),
+    getBlogPostSlugs().catch(() => []),
   ]);
 
   // Resolve relative photo URLs to absolute (required by sitemap spec)
@@ -207,6 +209,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: now,
         changeFrequency: 'weekly',
         priority: 0.6,
+        alternates: { languages: alternates },
+      });
+    }
+  }
+
+  // Blog posts (per post × cs + en only)
+  for (const bp of blogSlugs) {
+    const lastmod = bp.updatedAt ? new Date(bp.updatedAt) : now;
+    const alternates: Record<string, string> = {
+      cs: `${BASE}/cs/blog/${bp.slug}`,
+      en: `${BASE}/blog/${bp.slug}`,
+      'x-default': `${BASE}/blog/${bp.slug}`,
+    };
+    for (const l of ['cs', 'en'] as const) {
+      pages.push({
+        url: l === 'en' ? `${BASE}/blog/${bp.slug}` : `${BASE}/${l}/blog/${bp.slug}`,
+        lastModified: lastmod,
+        changeFrequency: 'weekly',
+        priority: 0.7,
         alternates: { languages: alternates },
       });
     }

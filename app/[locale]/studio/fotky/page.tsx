@@ -1,7 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { db } from '@/lib/db';
 import { requireGirl } from '@/lib/auth';
-import { uploadPhotoForm } from '@/lib/photo-actions';
+import StudioTopbar from '@/components/studio/StudioTopbar';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -36,33 +36,13 @@ export default async function StudioFotkyPage({
   const girlId = user.girl_id!;
   const photos = await getPhotos(girlId);
 
-  async function handleUpload(formData: FormData) {
-    'use server';
-    formData.set('girl_id', String(girlId));
-    formData.set('source', 'studio');
-    await uploadPhotoForm(formData);
-  }
-
   return (
-    <main>
-      <div className="container" style={{ padding: '32px 24px' }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', marginBottom: '24px' }}>
-          Moje fotky
-        </h1>
+    <>
+      <StudioTopbar title="Moje fotky" />
 
-        <div className="upload-form" style={{ marginBottom: '32px' }}>
-          <form action={handleUpload} className="upload-dropzone">
-            <p style={{ color: 'var(--color-text-muted)', marginBottom: '12px' }}>
-              Nahrát novou fotku (max 10 MB · JPG, PNG, WebP, AVIF)
-            </p>
-            <input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp,.avif" required />
-            <button type="submit" className="btn btn-pink" style={{ marginTop: '12px' }}>
-              Nahrát fotku
-            </button>
-          </form>
-          <p style={{ fontSize: '11px', color: 'var(--color-text-dim)', marginTop: '8px' }}>
-            Fotky jsou schvalovány administrátorem před zveřejněním.
-          </p>
+      <div className="studio-content">
+        <div className="studio-readonly-note">
+          Fotky spravuje agentura. Nové fotky posílej managementu ke schválení.
         </div>
 
         <div style={{ fontSize: '13px', color: 'var(--color-text-dim)', marginBottom: '16px' }}>
@@ -85,6 +65,6 @@ export default async function StudioFotkyPage({
           )}
         </div>
       </div>
-    </main>
+    </>
   );
 }

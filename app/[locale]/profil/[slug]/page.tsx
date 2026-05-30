@@ -311,6 +311,14 @@ export default async function ProfilPage({ params }: Props) {
                 if (locale === 'uk') return String(g.description_uk ?? g.description_en ?? g.bio ?? '');
                 return String(g.description_en ?? g.bio ?? '');
               })()}
+              personalMessage={(() => {
+                const g = girl as unknown as Record<string, unknown>;
+                return g.personal_message ? String(g.personal_message) : null;
+              })()}
+              voiceUrl={(() => {
+                const g = girl as unknown as Record<string, unknown>;
+                return g.voice_url ? String(g.voice_url) : null;
+              })()}
             />
             <ProfilDetails
               girl={girlTyped}

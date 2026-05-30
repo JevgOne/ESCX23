@@ -6,6 +6,8 @@ interface Review {
   content: unknown;
   author_name: unknown;
   created_at: unknown;
+  reply?: unknown;
+  reply_at?: unknown;
 }
 
 interface ProfilReviewsProps {
@@ -198,6 +200,20 @@ export default function ProfilReviews({
                     </div>
                   </div>
                   <p className="rev-card-text">{String(review.content ?? '')}</p>
+                  {String(review.reply ?? '') !== '' && (
+                    <div className="rev-reply">
+                      <div className="rev-reply-head">
+                        {girlPhoto && (
+                          <img src={girlPhoto} alt={girlName} className="rev-reply-avatar" />
+                        )}
+                        <span className="rev-reply-name">{girlName}</span>
+                        {String(review.reply_at ?? '') !== '' && (
+                          <span className="rev-reply-date">{relativeTime(String(review.reply_at))}</span>
+                        )}
+                      </div>
+                      <p className="rev-reply-text">{String(review.reply)}</p>
+                    </div>
+                  )}
                 </article>
               );
             })}

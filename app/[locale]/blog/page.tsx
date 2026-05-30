@@ -6,6 +6,8 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
 export const revalidate = 3600;
 
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lovelygirls.cz';
+
 interface Props {
   params: Promise<{ locale: string }>;
 }
@@ -13,10 +15,17 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'blog' });
-  const tCommon = await getTranslations({ locale, namespace: 'common' });
+  const canonical = locale === 'en' ? `${BASE}/blog` : `${BASE}/${locale}/blog`;
   return {
-    title: t('h1'),
+    title: `${t('h1')} — LovelyGirls Praha`,
     description: t('sub'),
+    alternates: {
+      canonical,
+      languages: {
+        cs: `${BASE}/cs/blog`,
+        en: `${BASE}/blog`,
+      },
+    },
   };
 }
 
@@ -26,11 +35,11 @@ export default async function BlogPage({ params }: Props) {
 
   const t = await getTranslations({ locale, namespace: 'blog' });
   const tNav = await getTranslations({ locale, namespace: 'nav' });
-  const posts = await getBlogPosts(20, 0);
+  const posts = await getBlogPosts(locale, 20, 0);
 
   function formatDate(iso: string) {
     try {
-      return new Date(iso).toLocaleDateString(locale === 'cs' ? 'cs-CZ' : locale, {
+      return new Date(iso).toLocaleDateString(locale === 'cs' ? 'cs-CZ' : 'en-GB', {
         year: 'numeric', month: 'long', day: 'numeric',
       });
     } catch {
@@ -38,8 +47,34 @@ export default async function BlogPage({ params }: Props) {
     }
   }
 
+  const blogListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: `${t('h1')} — LovelyGirls Praha`,
+    description: t('sub'),
+    url: locale === 'en' ? `${BASE}/blog` : `${BASE}/${locale}/blog`,
+    publisher: {
+      '@type': 'Organization',
+      name: 'LovelyGirls Praha',
+      url: BASE,
+    },
+    blogPost: posts.map((post) => ({
+      '@type': 'BlogPosting',
+      headline: post.title,
+      description: post.excerpt ?? undefined,
+      url: locale === 'en' ? `${BASE}/blog/${post.slug}` : `${BASE}/${locale}/blog/${post.slug}`,
+      datePublished: post.publishedAt ?? post.createdAt,
+      author: { '@type': 'Organization', name: post.author },
+      ...(post.coverUrl ? { image: post.coverUrl } : {}),
+    })),
+  };
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogListSchema) }}
+      />
       <Breadcrumbs items={[{ label: tNav('blog') }]} locale={locale} />
       <div className="container">
         <div className="blog-hero">
@@ -70,9 +105,17 @@ export default async function BlogPage({ params }: Props) {
                   {post.excerpt && (
                     <div className="blog-card-excerpt">{post.excerpt}</div>
                   )}
+                  {post.tags.length > 0 && (
+                    <div className="blog-card-tags">
+                      {post.tags.map((tag) => (
+                        <span key={tag.slug} className="blog-tag">{tag.name}</span>
+                      ))}
+                    </div>
+                  )}
                   <div className="blog-card-meta">
                     <span className="blog-card-author">{post.author}</span>
-                    <span>{formatDate(post.createdAt)}</span>
+                    <span>{post.readingTime} min</span>
+                    <span>{formatDate(post.publishedAt ?? post.createdAt)}</span>
                   </div>
                   <div className="blog-read-more" style={{ marginTop: 12 }}>{t('read_more')}</div>
                 </div>
