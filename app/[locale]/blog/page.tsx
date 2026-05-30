@@ -95,22 +95,24 @@ export default async function BlogPage({ params }: Props) {
                 href={{ pathname: '/blog/[slug]', params: { slug: post.slug } }}
                 className="blog-card"
               >
-                <div className="blog-card-accent" />
-                {post.coverUrl && (
-                  <div className="blog-card-cover">
-                    <img src={post.coverUrl} alt={post.title} loading="lazy" />
+                <div className={`blog-card-visual blog-card-visual-${(i % 5) + 1}`}>
+                  {post.coverUrl ? (
+                    <img src={post.coverUrl} alt={post.title} loading="lazy" className="blog-card-visual-img" />
+                  ) : null}
+                  <div className="blog-card-visual-overlay" />
+                  <div className="blog-card-visual-content">
+                    {post.tags.length > 0 && (
+                      <div className="blog-card-vtags">
+                        {post.tags.slice(0, 2).map((tag) => (
+                          <span key={tag.slug} className="blog-card-vtag">{tag.name}</span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="blog-card-vtitle">{post.title}</div>
                   </div>
-                )}
+                  <div className="blog-card-vnum">{String(i + 1).padStart(2, '0')}</div>
+                </div>
                 <div className="blog-card-body">
-                  <div className="blog-card-number">{String(i + 1).padStart(2, '0')}</div>
-                  {post.tags.length > 0 && (
-                    <div className="blog-card-tags">
-                      {post.tags.map((tag) => (
-                        <span key={tag.slug} className="blog-tag">{tag.name}</span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="blog-card-title">{post.title}</div>
                   {post.excerpt && (
                     <div className="blog-card-excerpt">{post.excerpt}</div>
                   )}

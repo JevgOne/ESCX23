@@ -204,20 +204,20 @@ export default async function BlogDetailPage({ params }: Props) {
         ]}
         locale={locale}
       />
-      {/* Full-width gradient hero */}
+      {/* Full-width cinematic hero */}
       <div className="blog-detail-hero">
+        {post.coverUrl && <img src={post.coverUrl} alt="" className="blog-detail-hero-bg" />}
+        <div className="blog-detail-hero-overlay" />
         <div className="blog-detail-hero-inner">
           {post.tags.length > 0 && (
             <div className="blog-detail-tags">
               {post.tags.map((tag) => (
-                <span key={tag.slug} className="blog-tag">{tag.name}</span>
+                <span key={tag.slug} className="blog-tag blog-tag-hero">{tag.name}</span>
               ))}
             </div>
           )}
           <h1 className="blog-detail-h1">{post.title}</h1>
           <div className="blog-detail-meta">
-            <span className="blog-detail-meta-item">{post.author}</span>
-            <span className="blog-detail-meta-dot" />
             <span className="blog-detail-meta-item">{post.readingTime} min {locale === 'cs' ? 'čtení' : 'read'}</span>
             <span className="blog-detail-meta-dot" />
             <span className="blog-detail-meta-item">{formatDate(publishDate)}</span>
