@@ -204,36 +204,34 @@ export default async function BlogDetailPage({ params }: Props) {
         ]}
         locale={locale}
       />
+      {/* Full-width gradient hero */}
+      <div className="blog-detail-hero">
+        <div className="blog-detail-hero-inner">
+          {post.tags.length > 0 && (
+            <div className="blog-detail-tags">
+              {post.tags.map((tag) => (
+                <span key={tag.slug} className="blog-tag">{tag.name}</span>
+              ))}
+            </div>
+          )}
+          <h1 className="blog-detail-h1">{post.title}</h1>
+          <div className="blog-detail-meta">
+            <span className="blog-detail-meta-item">{post.author}</span>
+            <span className="blog-detail-meta-dot" />
+            <span className="blog-detail-meta-item">{post.readingTime} min {locale === 'cs' ? 'čtení' : 'read'}</span>
+            <span className="blog-detail-meta-dot" />
+            <span className="blog-detail-meta-item">{formatDate(publishDate)}</span>
+          </div>
+        </div>
+      </div>
+
       <div className="container">
         <article className="blog-detail">
-          {/* Header section */}
-          <div className="blog-detail-header">
-            {post.coverUrl && (
-              <div className="blog-detail-cover">
-                <img src={post.coverUrl} alt={post.title} />
-              </div>
-            )}
-
-            {post.tags.length > 0 && (
-              <div className="blog-detail-tags">
-                {post.tags.map((tag) => (
-                  <span key={tag.slug} className="blog-tag">{tag.name}</span>
-                ))}
-              </div>
-            )}
-
-            <h1 className="blog-detail-h1">{post.title}</h1>
-
-            <div className="blog-detail-meta">
-              <span className="blog-detail-meta-item">{post.author}</span>
-              <span className="blog-detail-meta-dot" />
-              <span className="blog-detail-meta-item">{post.readingTime} min {locale === 'cs' ? 'čtení' : 'read'}</span>
-              <span className="blog-detail-meta-dot" />
-              <span className="blog-detail-meta-item">{formatDate(publishDate)}</span>
+          {post.coverUrl && (
+            <div className="blog-detail-cover">
+              <img src={post.coverUrl} alt={post.title} />
             </div>
-
-            <div className="blog-detail-divider" />
-          </div>
+          )}
 
           {/* TOC */}
           {headings.length >= 3 && (

@@ -95,12 +95,14 @@ export default async function BlogPage({ params }: Props) {
                 href={{ pathname: '/blog/[slug]', params: { slug: post.slug } }}
                 className="blog-card"
               >
+                <div className="blog-card-accent" />
                 {post.coverUrl && (
                   <div className="blog-card-cover">
                     <img src={post.coverUrl} alt={post.title} loading="lazy" />
                   </div>
                 )}
                 <div className="blog-card-body">
+                  <div className="blog-card-number">{String(i + 1).padStart(2, '0')}</div>
                   {post.tags.length > 0 && (
                     <div className="blog-card-tags">
                       {post.tags.map((tag) => (
