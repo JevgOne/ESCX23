@@ -1,5 +1,4 @@
 import { photoUrl } from '@/lib/photoUrl';
-import { prettyDistrict } from '@/lib/utils';
 
 interface Photo {
   url: unknown;
@@ -96,9 +95,10 @@ interface ProfilHeroProps {
   shiftTo?: string | null;
   topServices?: TopService[];
   bio?: string;
+  scheduleLocation?: string | null;
 }
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '' }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', scheduleLocation }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -108,8 +108,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
   const altBase = age != null
     ? `${name}, ${age}, ${city} ${altNoun}`
     : `${name}, ${city} ${altNoun}`;
-  const district = prettyDistrict(girl.location ? String(girl.location) : null);
-  const locText = district ? `${district}, ${String(girl.location ?? '')}` : String(girl.location ?? city);
+  const locText = scheduleLocation ?? String(girl.location ?? city);
   const todayLbl = TODAY_LBL[locale] ?? TODAY_LBL.en;
   const statusText = shiftFrom && shiftTo ? `${todayLbl} ${shiftFrom}–${shiftTo}` : null;
   const rating = girl.rating != null ? Number(girl.rating) : 0;

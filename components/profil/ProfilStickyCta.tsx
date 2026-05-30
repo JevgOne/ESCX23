@@ -1,5 +1,3 @@
-import { prettyDistrict } from '@/lib/utils';
-
 interface Girl {
   name: unknown;
   age: unknown;
@@ -17,6 +15,7 @@ interface ProfilStickyCtaProps {
   shiftFrom?: string | null;
   shiftTo?: string | null;
   locale?: string;
+  scheduleLocation?: string | null;
 }
 
 const STICKY_LABELS: Record<string, { today: string; appt: string }> = {
@@ -26,12 +25,11 @@ const STICKY_LABELS: Record<string, { today: string; appt: string }> = {
   uk: { today: 'Сьогодні', appt: 'Сьогодні — за домовленістю' },
 };
 
-export default function ProfilStickyCta({ girl, labels, shiftFrom, shiftTo, locale = 'cs' }: ProfilStickyCtaProps) {
+export default function ProfilStickyCta({ girl, labels, shiftFrom, shiftTo, locale = 'cs', scheduleLocation }: ProfilStickyCtaProps) {
   const name = String(girl.name ?? '');
   const age = String(girl.age ?? '');
   const phone = girl.phone ? String(girl.phone) : null;
-  const location = girl.location ? String(girl.location) : 'Praha';
-  const district = prettyDistrict(location) ?? 'Praha';
+  const district = scheduleLocation ?? String(girl.location ?? 'Praha');
 
   const waPhone = phone ? phone.replace(/\s+/g, '').replace(/^\+/, '') : null;
   const WA_GREETING: Record<string, (n: string) => string> = {

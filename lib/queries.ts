@@ -58,6 +58,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         g.created_at, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
+        l.display_name AS schedule_location,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
@@ -65,6 +66,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       FROM girls g
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
+      LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status IN ('active', 'inactive') AND (g.vip = 0 OR g.vip IS NULL)
       ORDER BY g.name
@@ -99,6 +101,8 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       const createdAt = r.created_at ? new Date(String(r.created_at)) : null;
       const isNew = createdAt ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 : false;
 
+      const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+
       return {
         id: Number(r.id),
         slug: String(r.slug),
@@ -107,7 +111,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         height: r.height != null ? Number(r.height) : null,
         weight: r.weight != null ? Number(r.weight) : null,
         bust: r.bust != null ? Number(r.bust) : null,
-        location: String(r.location ?? 'Praha'),
+        location: scheduleLoc ?? String(r.location ?? 'Praha'),
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
         secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
@@ -410,6 +414,7 @@ export interface Location {
   displayName: string;
   district: string | null;
   city?: string | null;
+  isPrimary: boolean;
 }
 
 export interface FooterStats {
@@ -466,7 +471,7 @@ export async function getLocationBySlug(slug: string, locale = 'cs') {
 
 export async function getActiveLocations(): Promise<Location[]> {
   const result = await db.execute(
-    `SELECT id, name, display_name, district, city FROM locations WHERE is_active = 1 ORDER BY is_primary DESC, id ASC`
+    `SELECT id, name, display_name, district, city, is_primary FROM locations WHERE is_active = 1 ORDER BY is_primary DESC, id ASC`
   );
   return result.rows.map((r) => ({
     id: Number(r.id),
@@ -474,6 +479,7 @@ export async function getActiveLocations(): Promise<Location[]> {
     displayName: String(r.display_name ?? r.name),
     district: r.district ? String(r.district) : null,
     city: (r as Record<string, unknown>).city ? String((r as Record<string, unknown>).city) : null,
+    isPrimary: Number((r as Record<string, unknown>).is_primary ?? 0) === 1,
   }));
 }
 
@@ -1189,6 +1195,7 @@ export async function getRelatedServices(currentSlug: string, category: string, 
 export interface GirlTodaySchedule {
   shiftFrom: string | null;
   shiftTo: string | null;
+  scheduleLocation: string | null;
 }
 
 export async function getGirlScheduleForToday(girlId: number): Promise<GirlTodaySchedule> {
@@ -1199,10 +1206,12 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
     sql: `
       SELECT
         gs.start_time AS shift_from, gs.end_time AS shift_to,
-        se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to
+        se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
+        l.display_name AS schedule_location
       FROM girls g
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
+      LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.id = ?
       LIMIT 1
@@ -1211,8 +1220,8 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
   });
 
   const r = result.rows[0];
-  if (!r) return { shiftFrom: null, shiftTo: null };
-  if (r.exception_type === 'unavailable') return { shiftFrom: null, shiftTo: null };
+  if (!r) return { shiftFrom: null, shiftTo: null, scheduleLocation: null };
+  if (r.exception_type === 'unavailable') return { shiftFrom: null, shiftTo: null, scheduleLocation: null };
 
   let from: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
   let to: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
@@ -1222,7 +1231,9 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
     to = r.ex_to ? String(r.ex_to).substring(0, 5) : to;
   }
 
-  return { shiftFrom: from, shiftTo: to };
+  const scheduleLocation = r.schedule_location ? String(r.schedule_location) : null;
+
+  return { shiftFrom: from, shiftTo: to, scheduleLocation };
 }
 
 /* =========================================================
@@ -1350,6 +1361,7 @@ export async function getGirlsForListing(
       g.created_at, g.languages, g.rating, g.reviews_count, g.status,
       gs.start_time AS shift_from, gs.end_time AS shift_to,
       se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
+      l.display_name AS schedule_location,
       (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
       (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
       (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count,
@@ -1376,6 +1388,7 @@ export async function getGirlsForListing(
     FROM girls g
     LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
       AND gs.day_of_week = ? AND gs.is_active = 1
+    LEFT JOIN locations l ON l.id = gs.location_id
     LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
     WHERE ${whereSQL}
   `;
@@ -1419,6 +1432,7 @@ export async function getGirlsForListing(
       const isNew = createdAt
         ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000
         : false;
+      const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
       return {
         id: Number(r.id),
         slug: String(r.slug),
@@ -1427,7 +1441,7 @@ export async function getGirlsForListing(
         height: r.height != null ? Number(r.height) : null,
         weight: r.weight != null ? Number(r.weight) : null,
         bust: r.bust != null ? Number(r.bust) : null,
-        location: String(r.location ?? 'Praha'),
+        location: scheduleLoc ?? String(r.location ?? 'Praha'),
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
         secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
@@ -1459,6 +1473,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         g.created_at, g.languages, g.hashtags, g.rating, g.reviews_count,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
+        l.display_name AS schedule_location,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
@@ -1466,6 +1481,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
       FROM girls g
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
+      LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
         AND g.hashtags IS NOT NULL
@@ -1500,6 +1516,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
 
       const createdAt = r.created_at ? new Date(String(r.created_at)) : null;
       const isNew = createdAt ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 : false;
+      const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
 
       return {
         id: Number(r.id),
@@ -1509,7 +1526,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         height: r.height != null ? Number(r.height) : null,
         weight: r.weight != null ? Number(r.weight) : null,
         bust: r.bust != null ? Number(r.bust) : null,
-        location: String(r.location ?? 'Praha'),
+        location: scheduleLoc ?? String(r.location ?? 'Praha'),
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
         secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),

@@ -139,7 +139,7 @@ export default async function ProfilPage({ params }: Props) {
     getActivePricingPlans(),
     getAllServices(),
     girlRaw ? getGirlServices(Number(girlRaw.id)) : Promise.resolve([]),
-    girlRaw ? getGirlScheduleForToday(Number(girlRaw.id)) : Promise.resolve({ shiftFrom: null, shiftTo: null }),
+    girlRaw ? getGirlScheduleForToday(Number(girlRaw.id)) : Promise.resolve({ shiftFrom: null, shiftTo: null, scheduleLocation: null }),
   ]);
   // Only show services the girl actually offers (basic auto-included + extras she checked)
   const services = allServices.filter((s) => girlServiceIds.includes(Number(s.id)));
@@ -302,6 +302,7 @@ export default async function ProfilPage({ params }: Props) {
               locale={locale}
               shiftFrom={todaySchedule.shiftFrom}
               shiftTo={todaySchedule.shiftTo}
+              scheduleLocation={todaySchedule.scheduleLocation}
               topServices={servicesTyped.slice(0, 6).map((s) => ({ name: String((s as { name?: unknown }).name ?? '') })).filter((s) => s.name)}
               bio={(() => {
                 const g = girl as unknown as Record<string, unknown>;
@@ -320,6 +321,7 @@ export default async function ProfilPage({ params }: Props) {
               services={servicesTyped}
               plans={planTyped as { id: unknown; duration: unknown; price: unknown }[]}
               altDistricts={[]}
+              scheduleLocation={todaySchedule.scheduleLocation}
             />
           </div>
         </div>
@@ -345,7 +347,7 @@ export default async function ProfilPage({ params }: Props) {
         <SimilarGirls currentSlug={slug} locale={locale} />
       </div>
 
-      <ProfilStickyCta girl={girlTyped} labels={labels} shiftFrom={todaySchedule.shiftFrom} shiftTo={todaySchedule.shiftTo} locale={locale} />
+      <ProfilStickyCta girl={girlTyped} labels={labels} shiftFrom={todaySchedule.shiftFrom} shiftTo={todaySchedule.shiftTo} locale={locale} scheduleLocation={todaySchedule.scheduleLocation} />
     </main>
   );
 }

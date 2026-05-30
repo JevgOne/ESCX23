@@ -42,16 +42,10 @@ export function dayNameCs(dayOfWeek: number, short = false): string {
   return short ? DAY_NAMES_CS_SHORT[dayOfWeek] : DAY_NAMES_CS[dayOfWeek];
 }
 
-const DISTRICT_MAP: Record<string, string> = {
-  'Praha 1': 'Nové Město',
-  'Praha 2': 'Vinohrady',
-  'Praha 3': 'Žižkov',
-  'Praha 8': 'Karlín',
-};
-
+/** @deprecated Use locations.display_name from DB via schedule JOIN instead */
 export function prettyDistrict(location: string | null | undefined): string | null {
   if (!location || location.trim() === '' || location.trim() === 'Praha') return null;
-  return DISTRICT_MAP[location] ?? location;
+  return location;
 }
 
 export function relativeTime(date: Date | string): string {

@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { prettyDistrict } from '@/lib/utils';
 import type { ServiceRow } from '@/lib/queries';
 
 interface Girl {
@@ -94,6 +93,7 @@ interface ProfilDetailsProps {
   services?: ServiceRow[];
   plans?: { id: unknown; duration: unknown; price: unknown }[];
   altDistricts?: string[];
+  scheduleLocation?: string | null;
 }
 
 const FLAG_MAP: Record<string, string> = {
@@ -186,14 +186,13 @@ function parseList(raw: unknown): string[] {
   return s.split(',').map((l) => l.trim()).filter(Boolean);
 }
 
-export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, services = [], plans = [], altDistricts = [] }: ProfilDetailsProps) {
+export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, services = [], plans = [], altDistricts = [], scheduleLocation }: ProfilDetailsProps) {
   const name = String(girl.name ?? '');
   const age = Number(girl.age ?? 0);
   const rating = Number(girl.rating ?? 0);
   const reviewCount = Number(girl.reviews_count ?? 0);
   const phone = girl.phone ? String(girl.phone) : null;
-  const location = String(girl.location ?? 'Praha');
-  const district = prettyDistrict(location) ?? 'Praha';
+  const district = scheduleLocation ?? String(girl.location ?? 'Praha');
 
   const bio =
     locale === 'cs'
