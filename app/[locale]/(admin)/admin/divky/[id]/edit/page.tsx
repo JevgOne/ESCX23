@@ -416,6 +416,7 @@ export default async function AdminGirlEditPage({
     is_new: Boolean(gr.is_new),
     verified: Boolean(gr.verified),
     online: Boolean(gr.online),
+    calendar_embed_url: gr.calendar_embed_url ? String(gr.calendar_embed_url) : '',
   };
 
   return (
@@ -509,6 +510,12 @@ export default async function AdminGirlEditPage({
           <div className="gf2-field">
             <label className="gf2-label" htmlFor="telegram">Telegram</label>
             <input id="telegram" name="telegram" type="text" defaultValue={g.telegram} placeholder="@username nebo číslo" />
+          </div>
+
+          <div className="gf2-field">
+            <label className="gf2-label" htmlFor="calendar_embed_url">Google Calendar Embed URL</label>
+            <input id="calendar_embed_url" name="calendar_embed_url" type="text" defaultValue={g.calendar_embed_url} placeholder="https://calendar.google.com/calendar/embed?src=..." className="gf2-mono" />
+            <div className="gf2-hint">Veřejný embed odkaz na kalendář dívky (zobrazí se jí ve Studiu)</div>
           </div>
         </div>
 

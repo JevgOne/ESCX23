@@ -89,7 +89,7 @@ export default async function BlogPage({ params }: Props) {
           </p>
         ) : (
           <div className="blog-grid">
-            {posts.map((post) => (
+            {posts.map((post, i) => (
               <Link
                 key={post.id}
                 href={{ pathname: '/blog/[slug]', params: { slug: post.slug } }}
@@ -101,10 +101,6 @@ export default async function BlogPage({ params }: Props) {
                   </div>
                 )}
                 <div className="blog-card-body">
-                  <div className="blog-card-title">{post.title}</div>
-                  {post.excerpt && (
-                    <div className="blog-card-excerpt">{post.excerpt}</div>
-                  )}
                   {post.tags.length > 0 && (
                     <div className="blog-card-tags">
                       {post.tags.map((tag) => (
@@ -112,12 +108,18 @@ export default async function BlogPage({ params }: Props) {
                       ))}
                     </div>
                   )}
-                  <div className="blog-card-meta">
-                    <span className="blog-card-author">{post.author}</span>
-                    <span>{post.readingTime} min</span>
-                    <span>{formatDate(post.publishedAt ?? post.createdAt)}</span>
+                  <div className="blog-card-title">{post.title}</div>
+                  {post.excerpt && (
+                    <div className="blog-card-excerpt">{post.excerpt}</div>
+                  )}
+                  <div className="blog-card-footer">
+                    <div className="blog-card-meta">
+                      <span>{post.readingTime} min {locale === 'cs' ? 'čtení' : 'read'}</span>
+                      <span className="blog-card-meta-sep">·</span>
+                      <span>{formatDate(post.publishedAt ?? post.createdAt)}</span>
+                    </div>
+                    <div className="blog-read-more">{t('read_more')} →</div>
                   </div>
-                  <div className="blog-read-more" style={{ marginTop: 12 }}>{t('read_more')}</div>
                 </div>
               </Link>
             ))}

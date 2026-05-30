@@ -13,6 +13,7 @@ const NAV: NavItem[] = [
   { href: '/cs/studio/telo',        label: 'Tělo',          emoji: '📐' },
   { href: '/cs/studio/zivotni-styl',label: 'Životní styl',  emoji: '☕' },
   { href: '/cs/studio/dostupnost',  label: 'Dostupnost',    emoji: '📅' },
+  { href: '/cs/studio/kalendar',   label: 'Kalendář',      emoji: '🗓️' },
   { href: '/cs/studio/zprava',        label: 'Osobní zpráva',     emoji: '💬' },
   { href: '/cs/studio/hlas',          label: 'Hlasová zpráva',   emoji: '🎙️' },
   { href: '/cs/studio/program',       label: 'Doporučený program', emoji: '💎' },

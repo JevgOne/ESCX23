@@ -762,6 +762,7 @@ export interface GirlUpdateData {
   og_description_en?: string | null;
   og_description_de?: string | null;
   og_description_uk?: string | null;
+  calendar_embed_url?: string | null;
 }
 
 export async function updateGirlById(id: number, data: GirlUpdateData): Promise<void> {
@@ -778,6 +779,7 @@ export async function updateGirlById(id: number, data: GirlUpdateData): Promise<
       meta_description_cs=?, meta_description_en=?, meta_description_de=?, meta_description_uk=?,
       og_title_cs=?, og_title_en=?, og_title_de=?, og_title_uk=?,
       og_description_cs=?, og_description_en=?, og_description_de=?, og_description_uk=?,
+      calendar_embed_url=?,
       updated_at=CURRENT_TIMESTAMP
     WHERE id=?`,
     args: [
@@ -792,6 +794,7 @@ export async function updateGirlById(id: number, data: GirlUpdateData): Promise<
       data.meta_description_cs ?? null, data.meta_description_en ?? null, data.meta_description_de ?? null, data.meta_description_uk ?? null,
       data.og_title_cs ?? null, data.og_title_en ?? null, data.og_title_de ?? null, data.og_title_uk ?? null,
       data.og_description_cs ?? null, data.og_description_en ?? null, data.og_description_de ?? null, data.og_description_uk ?? null,
+      data.calendar_embed_url ?? null,
       id,
     ],
   });

@@ -57,7 +57,6 @@ function extractHeadings(html: string): { id: string; text: string }[] {
   while ((match = regex.exec(html)) !== null) {
     headings.push({ id: match[1], text: match[2].replace(/<[^>]+>/g, '') });
   }
-  // Also match h2 without id — generate slug from text
   const regexNoId = /<h2[^>]*>(.*?)<\/h2>/gi;
   let matchNoId;
   while ((matchNoId = regexNoId.exec(html)) !== null) {
@@ -125,7 +124,6 @@ export default async function BlogDetailPage({ params }: Props) {
     ? `${BASE}/blog/${slug}`
     : `${BASE}/${locale}/blog/${slug}`;
 
-  // Article structured data
   const articleSchema = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -145,7 +143,6 @@ export default async function BlogDetailPage({ params }: Props) {
     ...(post.tags.length > 0 ? { keywords: post.tags.map((t) => t.name).join(', ') } : {}),
   };
 
-  // FAQ structured data (if FAQs detected)
   const faqSchema = faqs.length > 0 ? {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -159,7 +156,6 @@ export default async function BlogDetailPage({ params }: Props) {
     })),
   } : null;
 
-  // BreadcrumbList structured data
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -210,27 +206,36 @@ export default async function BlogDetailPage({ params }: Props) {
       />
       <div className="container">
         <article className="blog-detail">
-          {post.coverUrl && (
-            <div className="blog-detail-cover">
-              <img src={post.coverUrl} alt={post.title} />
-            </div>
-          )}
+          {/* Header section */}
+          <div className="blog-detail-header">
+            {post.coverUrl && (
+              <div className="blog-detail-cover">
+                <img src={post.coverUrl} alt={post.title} />
+              </div>
+            )}
 
-          <h1 className="blog-detail-h1">{post.title}</h1>
-          <div className="blog-detail-meta">
-            <span>{t('by')}: <strong>{post.author}</strong></span>
-            <span>{post.readingTime} min {locale === 'cs' ? 'čtení' : 'read'}</span>
-            <span>{t('published')}: {formatDate(publishDate)}</span>
+            {post.tags.length > 0 && (
+              <div className="blog-detail-tags">
+                {post.tags.map((tag) => (
+                  <span key={tag.slug} className="blog-tag">{tag.name}</span>
+                ))}
+              </div>
+            )}
+
+            <h1 className="blog-detail-h1">{post.title}</h1>
+
+            <div className="blog-detail-meta">
+              <span className="blog-detail-meta-item">{post.author}</span>
+              <span className="blog-detail-meta-dot" />
+              <span className="blog-detail-meta-item">{post.readingTime} min {locale === 'cs' ? 'čtení' : 'read'}</span>
+              <span className="blog-detail-meta-dot" />
+              <span className="blog-detail-meta-item">{formatDate(publishDate)}</span>
+            </div>
+
+            <div className="blog-detail-divider" />
           </div>
 
-          {post.tags.length > 0 && (
-            <div className="blog-detail-tags">
-              {post.tags.map((tag) => (
-                <span key={tag.slug} className="blog-tag">{tag.name}</span>
-              ))}
-            </div>
-          )}
-
+          {/* TOC */}
           {headings.length >= 3 && (
             <nav className="blog-toc" aria-label="Table of contents">
               <div className="blog-toc-title">{locale === 'cs' ? 'Obsah článku' : 'Table of contents'}</div>
@@ -242,6 +247,7 @@ export default async function BlogDetailPage({ params }: Props) {
             </nav>
           )}
 
+          {/* Content */}
           {processedContent && (
             <div
               className="blog-detail-content"
@@ -249,6 +255,12 @@ export default async function BlogDetailPage({ params }: Props) {
             />
           )}
 
+          {/* Back link */}
+          <Link href="/blog" className="blog-back-link">
+            ← {locale === 'cs' ? 'Zpět na blog' : 'Back to blog'}
+          </Link>
+
+          {/* Related */}
           {related.length > 0 && (
             <div className="blog-related">
               <div className="blog-related-h2">{t('related')}</div>
@@ -267,10 +279,12 @@ export default async function BlogDetailPage({ params }: Props) {
                     <div className="blog-card-body">
                       <div className="blog-card-title">{p.title}</div>
                       {p.excerpt && <div className="blog-card-excerpt">{p.excerpt}</div>}
-                      <div className="blog-card-meta">
-                        <span>{p.readingTime} min</span>
+                      <div className="blog-card-footer">
+                        <div className="blog-card-meta">
+                          <span>{p.readingTime} min</span>
+                        </div>
+                        <div className="blog-read-more">{t('read_more')} →</div>
                       </div>
-                      <div className="blog-read-more" style={{ marginTop: 12 }}>{t('read_more')}</div>
                     </div>
                   </Link>
                 ))}

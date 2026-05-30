@@ -87,6 +87,7 @@ export async function updateGirl(formData: FormData) {
     og_description_en: getStr('og_description_en'),
     og_description_de: getStr('og_description_de'),
     og_description_uk: getStr('og_description_uk'),
+    calendar_embed_url: getStr('calendar_embed_url'),
   });
 
   const serviceIds = formData.getAll('service_ids').map(Number).filter((n) => n > 0);
@@ -143,6 +144,7 @@ export async function createGirl(formData: FormData) {
       meta_description_cs, meta_description_en, meta_description_de, meta_description_uk,
       og_title_cs, og_title_en, og_title_de, og_title_uk,
       og_description_cs, og_description_en, og_description_de, og_description_uk,
+      calendar_embed_url,
       created_at, updated_at
     ) VALUES (
       ?, ?, ?, ?, ?, ?,
@@ -158,6 +160,7 @@ export async function createGirl(formData: FormData) {
       ?, ?, ?, ?,
       ?, ?, ?, ?,
       ?, ?, ?, ?,
+      ?,
       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
     )`,
     args: [
@@ -182,6 +185,7 @@ export async function createGirl(formData: FormData) {
       getStr('meta_description_cs'), getStr('meta_description_en'), getStr('meta_description_de'), getStr('meta_description_uk'),
       getStr('og_title_cs'), getStr('og_title_en'), getStr('og_title_de'), getStr('og_title_uk'),
       getStr('og_description_cs'), getStr('og_description_en'), getStr('og_description_de'), getStr('og_description_uk'),
+      getStr('calendar_embed_url'),
     ],
   });
 
