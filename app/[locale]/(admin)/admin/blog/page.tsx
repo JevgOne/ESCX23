@@ -114,7 +114,8 @@ export default async function AdminBlogPage({
     <>
       <AdminTopbar title="Blog" />
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginBottom: '20px' }}>
+        <a href="/cs/admin/blog/tagy" className="admin-btn-secondary">Tagy</a>
         <a href="/cs/admin/blog/novy" className="admin-btn-primary">+ Nový článek</a>
       </div>
 

@@ -1122,3 +1122,57 @@ export async function uploadBlogCover(formData: FormData) {
   revalidatePath('/en/blog');
   redirect(`/cs/admin/blog/${id}`);
 }
+
+/* =========================================================
+ *  Blog tag actions
+ * ========================================================= */
+
+export async function createBlogTag(formData: FormData) {
+  await requireAdmin();
+  const slug = String(formData.get('slug') ?? '').trim();
+  const nameCs = String(formData.get('name_cs') ?? '').trim();
+  const nameEn = String(formData.get('name_en') ?? '').trim();
+  if (!slug || !nameCs || !nameEn) throw new Error('Slug a názvy jsou povinné');
+
+  await db.execute({
+    sql: 'INSERT INTO blog_tags (slug, name_cs, name_en) VALUES (?, ?, ?)',
+    args: [slug, nameCs, nameEn],
+  });
+
+  revalidatePath('/cs/admin/blog/tagy');
+  redirect('/cs/admin/blog/tagy');
+}
+
+export async function updateBlogTag(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  const slug = String(formData.get('slug') ?? '').trim();
+  const nameCs = String(formData.get('name_cs') ?? '').trim();
+  const nameEn = String(formData.get('name_en') ?? '').trim();
+  if (!slug || !nameCs || !nameEn) throw new Error('Slug a názvy jsou povinné');
+
+  await db.execute({
+    sql: 'UPDATE blog_tags SET slug=?, name_cs=?, name_en=? WHERE id=?',
+    args: [slug, nameCs, nameEn, id],
+  });
+
+  revalidatePath('/cs/admin/blog/tagy');
+  revalidatePath('/cs/admin/blog');
+  revalidatePath('/cs/blog');
+  revalidatePath('/en/blog');
+  redirect('/cs/admin/blog/tagy');
+}
+
+export async function deleteBlogTag(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get('id'));
+  await db.execute({ sql: 'DELETE FROM blog_post_tags WHERE tag_id = ?', args: [id] });
+  await db.execute({ sql: 'DELETE FROM blog_tags WHERE id = ?', args: [id] });
+  revalidatePath('/cs/admin/blog/tagy');
+  revalidatePath('/cs/admin/blog');
+  revalidatePath('/cs/blog');
+  revalidatePath('/en/blog');
+  redirect('/cs/admin/blog/tagy');
+}
