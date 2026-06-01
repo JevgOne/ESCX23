@@ -16,15 +16,38 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'blog' });
   const canonical = locale === 'en' ? `${BASE}/blog` : `${BASE}/${locale}/blog`;
+  const title = `${t('h1')} — LovelyGirls Praha`;
+  const description = t('sub');
   return {
-    title: `${t('h1')} — LovelyGirls Praha`,
-    description: t('sub'),
+    title,
+    description,
     alternates: {
       canonical,
       languages: {
         cs: `${BASE}/cs/blog`,
         en: `${BASE}/blog`,
+        'x-default': `${BASE}/blog`,
       },
+    },
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: canonical,
+      siteName: 'LovelyGirls Praha',
+      locale: locale === 'cs' ? 'cs_CZ' : 'en_US',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large' as const,
+      'max-video-preview': -1,
     },
   };
 }
@@ -47,16 +70,20 @@ export default async function BlogPage({ params }: Props) {
     }
   }
 
+  const blogUrl = locale === 'en' ? `${BASE}/blog` : `${BASE}/${locale}/blog`;
   const blogListSchema = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
+    '@id': `${blogUrl}#blog`,
     name: `${t('h1')} — LovelyGirls Praha`,
     description: t('sub'),
-    url: locale === 'en' ? `${BASE}/blog` : `${BASE}/${locale}/blog`,
+    url: blogUrl,
+    inLanguage: locale === 'cs' ? 'cs-CZ' : 'en-US',
     publisher: {
       '@type': 'Organization',
       name: 'LovelyGirls Praha',
       url: BASE,
+      logo: { '@type': 'ImageObject', url: `${BASE}/logo.png` },
     },
     blogPost: posts.map((post) => ({
       '@type': 'BlogPosting',
@@ -65,8 +92,32 @@ export default async function BlogPage({ params }: Props) {
       url: locale === 'en' ? `${BASE}/blog/${post.slug}` : `${BASE}/${locale}/blog/${post.slug}`,
       datePublished: post.publishedAt ?? post.createdAt,
       author: { '@type': 'Organization', name: post.author },
-      ...(post.coverUrl ? { image: post.coverUrl } : {}),
+      timeRequired: `PT${post.readingTime}M`,
+      ...(post.coverUrl ? {
+        image: { '@type': 'ImageObject', url: post.coverUrl, width: 1200, height: 630 },
+      } : {}),
+      ...(post.tags.length > 0 ? {
+        keywords: post.tags.map((tg) => tg.name).join(', '),
+        articleSection: post.tags[0].name,
+      } : {}),
     })),
+  };
+
+  const collectionSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': blogUrl,
+    name: `${t('h1')} — LovelyGirls Praha`,
+    description: t('sub'),
+    url: blogUrl,
+    isPartOf: { '@type': 'WebSite', name: 'LovelyGirls Praha', url: BASE },
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'LovelyGirls Praha', item: BASE },
+        { '@type': 'ListItem', position: 2, name: 'Blog', item: blogUrl },
+      ],
+    },
   };
 
   return (
@@ -74,6 +125,10 @@ export default async function BlogPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogListSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
       />
       <Breadcrumbs items={[{ label: tNav('blog') }]} locale={locale} />
       <div className="container">

@@ -108,7 +108,7 @@ const STATIC_KEYS: Array<{ key: string; freq: 'daily' | 'hourly' | 'weekly' | 'm
   { key: '/kontakt', freq: 'monthly', priority: 0.5 },
   { key: '/podminky', freq: 'yearly' as 'monthly', priority: 0.3 },
   { key: '/soukromi', freq: 'yearly' as 'monthly', priority: 0.3 },
-  { key: '/blog', freq: 'weekly', priority: 0.4 },
+  { key: '/blog', freq: 'daily', priority: 0.8 },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -214,20 +214,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // Blog posts (per post × cs + en only)
+  // Blog posts (per post × all locales)
   for (const bp of blogSlugs) {
     const lastmod = bp.updatedAt ? new Date(bp.updatedAt) : now;
-    const alternates: Record<string, string> = {
-      cs: `${BASE}/cs/blog/${bp.slug}`,
-      en: `${BASE}/blog/${bp.slug}`,
-      'x-default': `${BASE}/blog/${bp.slug}`,
-    };
-    for (const l of ['cs', 'en'] as const) {
+    const alternates: Record<string, string> = {};
+    for (const l of LOCALES) {
+      alternates[l] = l === 'en' ? `${BASE}/blog/${bp.slug}` : `${BASE}/${l}/blog/${bp.slug}`;
+    }
+    alternates['x-default'] = `${BASE}/blog/${bp.slug}`;
+    for (const l of LOCALES) {
       pages.push({
         url: l === 'en' ? `${BASE}/blog/${bp.slug}` : `${BASE}/${l}/blog/${bp.slug}`,
         lastModified: lastmod,
         changeFrequency: 'weekly',
-        priority: 0.7,
+        priority: 0.8,
         alternates: { languages: alternates },
       });
     }

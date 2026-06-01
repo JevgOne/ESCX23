@@ -28,23 +28,51 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonical = locale === 'en'
     ? `${BASE}/blog/${slug}`
     : `${BASE}/${locale}/blog/${slug}`;
+  const description = post.metaDescription ?? post.excerpt ?? undefined;
+  const publishDate = post.publishedAt ?? post.createdAt;
+  const ogImages = post.coverUrl
+    ? [{ url: post.coverUrl, width: 1200, height: 630, alt: post.title }]
+    : [{ url: `${BASE}/api/og/blog/${slug}`, width: 1200, height: 630, alt: post.title }];
+
   return {
     title: `${post.title} — ${brand}`,
-    description: post.metaDescription ?? post.excerpt ?? undefined,
+    description,
+    keywords: post.tags.map((t) => t.name).join(', ') || undefined,
+    authors: [{ name: post.author }],
     alternates: {
       canonical,
       languages: {
         cs: `${BASE}/cs/blog/${slug}`,
         en: `${BASE}/blog/${slug}`,
+        'x-default': `${BASE}/blog/${slug}`,
       },
     },
     openGraph: {
       title: post.title,
-      description: post.metaDescription ?? post.excerpt ?? undefined,
+      description,
       type: 'article',
-      publishedTime: post.publishedAt ?? post.createdAt,
+      url: canonical,
+      siteName: brand,
+      locale: locale === 'cs' ? 'cs_CZ' : locale === 'de' ? 'de_DE' : locale === 'uk' ? 'uk_UA' : 'en_US',
+      publishedTime: publishDate,
+      modifiedTime: publishDate,
       authors: [post.author],
-      ...(post.coverUrl ? { images: [{ url: post.coverUrl }] } : {}),
+      section: post.tags[0]?.name ?? 'Blog',
+      tags: post.tags.map((t) => t.name),
+      images: ogImages,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description,
+      images: ogImages.map((i) => i.url),
+    },
+    robots: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large' as const,
+      'max-video-preview': -1,
     },
   };
 }
@@ -124,12 +152,20 @@ export default async function BlogDetailPage({ params }: Props) {
     ? `${BASE}/blog/${slug}`
     : `${BASE}/${locale}/blog/${slug}`;
 
+  const wordCount = processedContent
+    ? processedContent.replace(/<[^>]+>/g, '').split(/\s+/).filter(Boolean).length
+    : 0;
+
+  const LANG_MAP: Record<string, string> = { cs: 'cs-CZ', en: 'en-US', de: 'de-DE', uk: 'uk-UA' };
+
   const articleSchema = {
     '@context': 'https://schema.org',
     '@type': 'Article',
+    '@id': `${canonicalUrl}#article`,
     headline: post.title,
+    alternativeHeadline: post.excerpt ?? undefined,
     description: post.metaDescription ?? post.excerpt ?? undefined,
-    author: { '@type': 'Organization', name: post.author },
+    author: { '@type': 'Organization', name: post.author, url: BASE },
     datePublished: publishDate,
     dateModified: publishDate,
     mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
@@ -137,15 +173,47 @@ export default async function BlogDetailPage({ params }: Props) {
       '@type': 'Organization',
       name: brand,
       url: BASE,
+      logo: { '@type': 'ImageObject', url: `${BASE}/logo.png` },
     },
-    inLanguage: locale === 'cs' ? 'cs-CZ' : 'en-US',
-    ...(post.coverUrl ? { image: post.coverUrl } : {}),
-    ...(post.tags.length > 0 ? { keywords: post.tags.map((t) => t.name).join(', ') } : {}),
+    inLanguage: LANG_MAP[locale] ?? 'en-US',
+    isAccessibleForFree: true,
+    wordCount,
+    timeRequired: `PT${post.readingTime}M`,
+    ...(post.coverUrl ? {
+      image: {
+        '@type': 'ImageObject',
+        url: post.coverUrl,
+        width: 1200,
+        height: 630,
+      },
+      thumbnailUrl: post.coverUrl,
+    } : {}),
+    ...(post.tags.length > 0 ? {
+      keywords: post.tags.map((t) => t.name).join(', '),
+      articleSection: post.tags[0].name,
+      about: post.tags.map((t) => ({ '@type': 'Thing', name: t.name })),
+    } : {}),
+    ...(headings.length > 0 ? {
+      hasPart: headings.map((h) => ({
+        '@type': 'WebPageElement',
+        name: h.text,
+        url: `${canonicalUrl}#${h.id}`,
+      })),
+    } : {}),
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['.blog-detail-h1', '.blog-detail-content p:first-of-type'],
+    },
+    potentialAction: {
+      '@type': 'ReadAction',
+      target: canonicalUrl,
+    },
   };
 
   const faqSchema = faqs.length > 0 ? {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    '@id': `${canonicalUrl}#faq`,
     mainEntity: faqs.map((faq) => ({
       '@type': 'Question',
       name: faq.question,
@@ -163,7 +231,7 @@ export default async function BlogDetailPage({ params }: Props) {
       {
         '@type': 'ListItem',
         position: 1,
-        name: 'LovelyGirls Praha',
+        name: brand,
         item: BASE,
       },
       {
@@ -181,6 +249,25 @@ export default async function BlogDetailPage({ params }: Props) {
     ],
   };
 
+  // WebPage schema with speakable + related links
+  const webPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': canonicalUrl,
+    url: canonicalUrl,
+    name: post.title,
+    description: post.metaDescription ?? post.excerpt ?? undefined,
+    inLanguage: LANG_MAP[locale] ?? 'en-US',
+    isPartOf: { '@type': 'WebSite', name: brand, url: BASE },
+    breadcrumb: { '@id': `${canonicalUrl}#breadcrumb` },
+    primaryImageOfPage: post.coverUrl ? { '@type': 'ImageObject', url: post.coverUrl } : undefined,
+    ...(related.length > 0 ? {
+      relatedLink: related.map((p) =>
+        locale === 'en' ? `${BASE}/blog/${p.slug}` : `${BASE}/${locale}/blog/${p.slug}`
+      ),
+    } : {}),
+  };
+
   return (
     <main>
       <script
@@ -190,6 +277,10 @@ export default async function BlogDetailPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
       />
       {faqSchema && (
         <script
