@@ -40,7 +40,7 @@ export default async function AdminOgPage({ params }: Props) {
         .og2-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(255,255,255,0.4); font-size: 12.5px; }
         .og2-empty small { font-size: 10.5px; color: rgba(255,255,255,0.3); }
         .og2-upload { display: flex; gap: 8px; align-items: center; position: relative; }
-        .og2-file { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+        .og2-file { position: absolute; opacity: 0; width: 1px; height: 1px; overflow: hidden; }
         .og2-file-label { flex: 1; padding: 9px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: rgba(255,255,255,0.78); font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
         .og2-file-label:hover { background: rgba(255,255,255,0.08); }
         .og2-up-btn { padding: 9px 18px; background: linear-gradient(135deg, #f27d8d, #c84b8b); border: none; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
