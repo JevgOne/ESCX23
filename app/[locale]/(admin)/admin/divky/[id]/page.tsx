@@ -1,6 +1,8 @@
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { getGirlById } from '@/lib/queries';
+import { db } from '@/lib/db';
+import { photoUrl } from '@/lib/photoUrl';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 
 export const dynamic = 'force-dynamic';
@@ -21,7 +23,18 @@ export default async function AdminGirlDetailPage({
   const slug = String(girl.slug);
   const age = Number(girl.age);
   const status = String(girl.status);
-  const primaryPhoto = girl.og_image ? String(girl.og_image) : null;
+
+  // Fetch primary photo from girl_photos table
+  const photoResult = await db.execute({
+    sql: `SELECT url FROM girl_photos WHERE girl_id = ? AND is_primary = 1 LIMIT 1`,
+    args: [Number(id)],
+  });
+  const primaryPhoto = photoResult.rows[0]?.url
+    ? photoUrl(String(photoResult.rows[0].url))
+    : (girl.og_image ? String(girl.og_image) : null);
+
+  // Google Calendar status
+  const calendarUrl = girl.calendar_embed_url ? String(girl.calendar_embed_url) : null;
   const location = girl.location ? String(girl.location) : null;
   const height = girl.height ? Number(girl.height) : null;
   const weight = girl.weight ? Number(girl.weight) : null;
@@ -52,6 +65,7 @@ export default async function AdminGirlDetailPage({
     { label: 'Top', value: isTop ? 'Ano' : 'Ne' },
     { label: 'Featured', value: isFeatured ? 'Ano' : 'Ne' },
     { label: 'Verified', value: verified ? 'Ano' : 'Ne' },
+    { label: 'Google Kalendář', value: calendarUrl ? 'Nastaven' : 'Nenastaveno' },
     { label: 'Vytvořeno', value: createdAt ? new Date(createdAt).toLocaleString('cs-CZ') : '—' },
     { label: 'Upraveno', value: updatedAt ? new Date(updatedAt).toLocaleString('cs-CZ') : '—' },
   ];

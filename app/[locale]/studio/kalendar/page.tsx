@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { requireGirl } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { toCalendarEmbedUrl } from '@/lib/calendar';
 import StudioTopbar from '@/components/studio/StudioTopbar';
 
 export const dynamic = 'force-dynamic';
@@ -21,9 +22,10 @@ export default async function StudioKalendarPage({
     sql: `SELECT calendar_embed_url FROM girls WHERE id = ?`,
     args: [girlId],
   });
-  const calendarUrl = res.rows[0]?.calendar_embed_url
+  const rawUrl = res.rows[0]?.calendar_embed_url
     ? String(res.rows[0].calendar_embed_url)
     : null;
+  const calendarUrl = rawUrl ? toCalendarEmbedUrl(rawUrl) : null;
 
   return (
     <>

@@ -1,6 +1,8 @@
 import { setRequestLocale } from 'next-intl/server';
 import { getBookings } from '@/lib/queries';
+import { db } from '@/lib/db';
 import { photoUrl } from '@/lib/photoUrl';
+import { toCalendarEmbedUrl } from '@/lib/calendar';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 
 export const dynamic = 'force-dynamic';
@@ -32,6 +34,22 @@ export default async function AdminRezervacePage({
   setRequestLocale(locale);
 
   const bookings = await getBookings(status);
+
+  // Fetch all girls with calendar URLs
+  const calResult = await db.execute(
+    `SELECT g.id, g.name, g.calendar_embed_url,
+       (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo
+     FROM girls g
+     WHERE g.calendar_embed_url IS NOT NULL AND g.calendar_embed_url != ''
+       AND g.status IN ('active','inactive')
+     ORDER BY g.name`
+  );
+  const calendars = calResult.rows.map((r) => ({
+    id: Number(r.id),
+    name: String(r.name),
+    photo: r.photo ? photoUrl(String(r.photo)) : null,
+    embedUrl: toCalendarEmbedUrl(String(r.calendar_embed_url)),
+  }));
 
   return (
     <>
@@ -127,6 +145,43 @@ export default async function AdminRezervacePage({
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Google Calendar embeds */}
+      {calendars.length > 0 && (
+        <div style={{ marginTop: '48px' }}>
+          <div style={{
+            fontSize: '12px', color: 'var(--color-coral)', fontWeight: 600,
+            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '20px',
+          }}>
+            Google Kalendáře dívek
+          </div>
+          <div style={{ display: 'grid', gap: '24px' }}>
+            {calendars.map((cal) => (
+              <div key={cal.id} style={{
+                background: 'var(--color-bg-card)', border: '1px solid var(--color-line)',
+                borderRadius: '12px', overflow: 'hidden',
+              }}>
+                <div style={{
+                  padding: '12px 16px', borderBottom: '1px solid var(--color-line)',
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                }}>
+                  {cal.photo && (
+                    <img src={cal.photo} alt="" style={{
+                      width: 28, height: 28, borderRadius: '50%', objectFit: 'cover',
+                    }} />
+                  )}
+                  <span style={{ fontWeight: 600, fontSize: '14px' }}>{cal.name}</span>
+                </div>
+                <iframe
+                  src={cal.embedUrl}
+                  style={{ width: '100%', height: '400px', border: 'none' }}
+                  title={`Kalendář — ${cal.name}`}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </>

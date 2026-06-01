@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { put } from '@vercel/blob';
 import { db } from './db';
 import { requireAdmin, requireFullAdmin } from './auth';
 import {
@@ -975,4 +976,149 @@ export async function rejectReview(formData: FormData) {
     args: [id],
   });
   revalidatePath('/cs/admin/recenze');
+}
+
+/* =========================================================
+ *  Blog actions
+ * ========================================================= */
+
+export async function createBlogPost(formData: FormData) {
+  await requireAdmin();
+
+  const slug = String(formData.get('slug') ?? '').trim();
+  const titleCs = String(formData.get('title_cs') ?? '').trim();
+  const titleEn = String(formData.get('title_en') ?? '').trim();
+  if (!slug || !titleCs) throw new Error('Slug a titulek CS jsou povinné');
+
+  const status = String(formData.get('status') ?? 'draft');
+  const author = String(formData.get('author') ?? 'Redakce');
+  const readingTime = Number(formData.get('reading_time_min') ?? 5);
+  const publishedAt = formData.get('published_at') ? String(formData.get('published_at')).replace('T', ' ') : null;
+
+  const result = await db.execute({
+    sql: `INSERT INTO blog_posts (slug, title_cs, title_en, excerpt_cs, excerpt_en,
+            content_cs, content_en, meta_description_cs, meta_description_en,
+            author, status, reading_time_min, published_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      slug, titleCs, titleEn,
+      String(formData.get('excerpt_cs') || '') || null,
+      String(formData.get('excerpt_en') || '') || null,
+      String(formData.get('content_cs') || '') || null,
+      String(formData.get('content_en') || '') || null,
+      String(formData.get('meta_description_cs') || '') || null,
+      String(formData.get('meta_description_en') || '') || null,
+      author, status, readingTime,
+      status === 'published' ? (publishedAt ?? new Date().toISOString()) : publishedAt,
+    ],
+  });
+
+  const postId = Number(result.lastInsertRowid);
+
+  // Assign tags
+  const tagIds = formData.getAll('tag_ids').map(Number).filter(Boolean);
+  for (const tagId of tagIds) {
+    await db.execute({
+      sql: 'INSERT OR IGNORE INTO blog_post_tags (post_id, tag_id) VALUES (?, ?)',
+      args: [postId, tagId],
+    });
+  }
+
+  revalidatePath('/cs/admin/blog');
+  revalidatePath('/cs/blog');
+  revalidatePath('/en/blog');
+  redirect(`/cs/admin/blog/${postId}`);
+}
+
+export async function updateBlogPost(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  const slug = String(formData.get('slug') ?? '').trim();
+  const titleCs = String(formData.get('title_cs') ?? '').trim();
+  const titleEn = String(formData.get('title_en') ?? '').trim();
+  if (!slug || !titleCs) throw new Error('Slug a titulek CS jsou povinné');
+
+  const status = String(formData.get('status') ?? 'draft');
+  const author = String(formData.get('author') ?? 'Redakce');
+  const readingTime = Number(formData.get('reading_time_min') ?? 5);
+  const publishedAt = formData.get('published_at') ? String(formData.get('published_at')).replace('T', ' ') : null;
+
+  await db.execute({
+    sql: `UPDATE blog_posts SET
+            slug=?, title_cs=?, title_en=?,
+            excerpt_cs=?, excerpt_en=?,
+            content_cs=?, content_en=?,
+            meta_description_cs=?, meta_description_en=?,
+            author=?, status=?, reading_time_min=?,
+            published_at=?, updated_at=CURRENT_TIMESTAMP
+          WHERE id=?`,
+    args: [
+      slug, titleCs, titleEn,
+      String(formData.get('excerpt_cs') || '') || null,
+      String(formData.get('excerpt_en') || '') || null,
+      String(formData.get('content_cs') || '') || null,
+      String(formData.get('content_en') || '') || null,
+      String(formData.get('meta_description_cs') || '') || null,
+      String(formData.get('meta_description_en') || '') || null,
+      author, status, readingTime,
+      status === 'published' ? (publishedAt ?? new Date().toISOString()) : publishedAt,
+      id,
+    ],
+  });
+
+  // Re-sync tags
+  await db.execute({ sql: 'DELETE FROM blog_post_tags WHERE post_id = ?', args: [id] });
+  const tagIds = formData.getAll('tag_ids').map(Number).filter(Boolean);
+  for (const tagId of tagIds) {
+    await db.execute({
+      sql: 'INSERT OR IGNORE INTO blog_post_tags (post_id, tag_id) VALUES (?, ?)',
+      args: [id, tagId],
+    });
+  }
+
+  revalidatePath('/cs/admin/blog');
+  revalidatePath('/cs/blog');
+  revalidatePath('/en/blog');
+  revalidatePath(`/cs/blog/${slug}`);
+  revalidatePath(`/en/blog/${slug}`);
+  redirect(`/cs/admin/blog/${id}`);
+}
+
+export async function deleteBlogPost(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get('id'));
+  await db.execute({ sql: 'DELETE FROM blog_post_tags WHERE post_id = ?', args: [id] });
+  await db.execute({ sql: 'DELETE FROM blog_posts WHERE id = ?', args: [id] });
+  revalidatePath('/cs/admin/blog');
+  revalidatePath('/cs/blog');
+  revalidatePath('/en/blog');
+  redirect('/cs/admin/blog');
+}
+
+export async function uploadBlogCover(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get('id'));
+  const file = formData.get('cover') as File | null;
+  if (!file || !id) throw new Error('Missing file or id');
+
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+  const filename = `blog/${id}/${Date.now()}.${ext}`;
+  const blob = await put(filename, file, {
+    access: 'public',
+    contentType: file.type || `image/${ext}`,
+    addRandomSuffix: false,
+  });
+
+  await db.execute({
+    sql: 'UPDATE blog_posts SET cover_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    args: [blob.url, id],
+  });
+
+  revalidatePath('/cs/admin/blog');
+  revalidatePath(`/cs/admin/blog/${id}`);
+  revalidatePath('/cs/blog');
+  revalidatePath('/en/blog');
+  redirect(`/cs/admin/blog/${id}`);
 }
