@@ -59,6 +59,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
+        l2.display_name AS fallback_location,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
@@ -67,6 +68,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
       LEFT JOIN locations l ON l.id = gs.location_id
+      LEFT JOIN locations l2 ON l2.district = g.location AND l2.is_active = 1
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status IN ('active', 'inactive') AND (g.vip = 0 OR g.vip IS NULL)
       ORDER BY g.name
@@ -102,6 +104,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       const isNew = createdAt ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 : false;
 
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+      const fallbackLoc = r.fallback_location ? String(r.fallback_location) : null;
 
       return {
         id: Number(r.id),
@@ -111,7 +114,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         height: r.height != null ? Number(r.height) : null,
         weight: r.weight != null ? Number(r.weight) : null,
         bust: r.bust != null ? Number(r.bust) : null,
-        location: scheduleLoc ?? String(r.location ?? 'Praha'),
+        location: scheduleLoc ?? fallbackLoc ?? String(r.location ?? 'Praha'),
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
         secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
@@ -511,6 +514,7 @@ export async function getGirlsForDay(
         gs.start_time AS shift_from, gs.end_time AS shift_to, gs.is_active AS gs_active,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location, l.district AS schedule_district,
+        l2.display_name AS fallback_location,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
@@ -519,6 +523,7 @@ export async function getGirlsForDay(
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
       LEFT JOIN locations l ON l.id = gs.location_id
+      LEFT JOIN locations l2 ON l2.district = g.location AND l2.is_active = 1
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
       ORDER BY g.name
@@ -540,9 +545,10 @@ export async function getGirlsForDay(
 
       if (!from || !to) return null;
 
-      // Prefer schedule's location (from girl_schedules.location_id → locations table)
+      // Prefer schedule's location, then fallback from locations table, then g.location
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
-      const loc = scheduleLoc ?? String(r.location ?? 'Praha');
+      const fallbackLoc = r.fallback_location ? String(r.fallback_location) : null;
+      const loc = scheduleLoc ?? fallbackLoc ?? String(r.location ?? 'Praha');
       if (locationFilter && locationFilter !== 'all') {
         const locSlug = loc.toLowerCase().replace(/\s/g, '-').replace(/\./g, '');
         if (!locSlug.includes(locationFilter.toLowerCase())) return null;
@@ -1546,6 +1552,7 @@ export async function getGirlsForListing(
       gs.start_time AS shift_from, gs.end_time AS shift_to,
       se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
       l.display_name AS schedule_location,
+      l2.display_name AS fallback_location,
       (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
       (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
       (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count,
@@ -1573,6 +1580,7 @@ export async function getGirlsForListing(
     LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
       AND gs.day_of_week = ? AND gs.is_active = 1
     LEFT JOIN locations l ON l.id = gs.location_id
+    LEFT JOIN locations l2 ON l2.district = g.location AND l2.is_active = 1
     LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
     WHERE ${whereSQL}
   `;
@@ -1617,6 +1625,7 @@ export async function getGirlsForListing(
         ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000
         : false;
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+      const fallbackLoc = r.fallback_location ? String(r.fallback_location) : null;
       return {
         id: Number(r.id),
         slug: String(r.slug),
@@ -1625,7 +1634,7 @@ export async function getGirlsForListing(
         height: r.height != null ? Number(r.height) : null,
         weight: r.weight != null ? Number(r.weight) : null,
         bust: r.bust != null ? Number(r.bust) : null,
-        location: scheduleLoc ?? String(r.location ?? 'Praha'),
+        location: scheduleLoc ?? fallbackLoc ?? String(r.location ?? 'Praha'),
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
         secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
@@ -1658,6 +1667,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
+        l2.display_name AS fallback_location,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
@@ -1666,6 +1676,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
       LEFT JOIN locations l ON l.id = gs.location_id
+      LEFT JOIN locations l2 ON l2.district = g.location AND l2.is_active = 1
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
         AND g.hashtags IS NOT NULL
@@ -1701,6 +1712,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
       const createdAt = r.created_at ? new Date(String(r.created_at)) : null;
       const isNew = createdAt ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 : false;
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+      const fallbackLoc = r.fallback_location ? String(r.fallback_location) : null;
 
       return {
         id: Number(r.id),
@@ -1710,7 +1722,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         height: r.height != null ? Number(r.height) : null,
         weight: r.weight != null ? Number(r.weight) : null,
         bust: r.bust != null ? Number(r.bust) : null,
-        location: scheduleLoc ?? String(r.location ?? 'Praha'),
+        location: scheduleLoc ?? fallbackLoc ?? String(r.location ?? 'Praha'),
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
         secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
