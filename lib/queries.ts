@@ -482,7 +482,7 @@ export async function getLocationBySlug(slug: string, locale = 'cs') {
 
 export async function getActiveLocations(): Promise<Location[]> {
   const result = await db.execute(
-    `SELECT id, name, display_name, district, city, is_primary, opening_date FROM locations WHERE is_active = 1 ORDER BY is_primary DESC, id ASC`
+    `SELECT * FROM locations WHERE is_active = 1 ORDER BY is_primary DESC, id ASC`
   );
   return result.rows.map((r) => ({
     id: Number(r.id),
