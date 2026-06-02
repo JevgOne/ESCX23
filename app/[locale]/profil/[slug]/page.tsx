@@ -139,7 +139,7 @@ export default async function ProfilPage({ params }: Props) {
     getActivePricingPlans(),
     getAllServices(),
     girlRaw ? getGirlServices(Number(girlRaw.id)) : Promise.resolve([]),
-    girlRaw ? getGirlScheduleForToday(Number(girlRaw.id)) : Promise.resolve({ shiftFrom: null, shiftTo: null, scheduleLocation: null }),
+    girlRaw ? getGirlScheduleForToday(Number(girlRaw.id)) : Promise.resolve({ shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleAddress: null }),
   ]);
   // Only show services the girl actually offers (basic auto-included + extras she checked)
   const services = allServices.filter((s) => girlServiceIds.includes(Number(s.id)));
@@ -303,6 +303,7 @@ export default async function ProfilPage({ params }: Props) {
               shiftFrom={todaySchedule.shiftFrom}
               shiftTo={todaySchedule.shiftTo}
               scheduleLocation={todaySchedule.scheduleLocation}
+              scheduleAddress={todaySchedule.scheduleAddress}
               topServices={servicesTyped.slice(0, 6).map((s) => ({ name: String((s as { name?: unknown }).name ?? '') })).filter((s) => s.name)}
               bio={(() => {
                 const g = girl as unknown as Record<string, unknown>;
@@ -330,6 +331,19 @@ export default async function ProfilPage({ params }: Props) {
               plans={planTyped as { id: unknown; duration: unknown; price: unknown }[]}
               altDistricts={[]}
               scheduleLocation={todaySchedule.scheduleLocation}
+              scheduleAddress={todaySchedule.scheduleAddress}
+              primaryPhotoUrl={(() => {
+                const primary = photoTyped.find((p) => p.is_primary) ?? photoTyped[0];
+                return primary?.url ? String(primary.url) : null;
+              })()}
+              personalMessage={(() => {
+                const g = girl as unknown as Record<string, unknown>;
+                return g.personal_message ? String(g.personal_message) : null;
+              })()}
+              voiceUrl={(() => {
+                const g = girl as unknown as Record<string, unknown>;
+                return g.voice_url ? String(g.voice_url) : null;
+              })()}
             />
           </div>
         </div>

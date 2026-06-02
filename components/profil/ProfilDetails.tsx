@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ServiceRow } from '@/lib/queries';
+import { photoUrl } from '@/lib/photoUrl';
 
 interface Girl {
   id: unknown;
@@ -94,6 +95,10 @@ interface ProfilDetailsProps {
   plans?: { id: unknown; duration: unknown; price: unknown }[];
   altDistricts?: string[];
   scheduleLocation?: string | null;
+  scheduleAddress?: string | null;
+  primaryPhotoUrl?: string | null;
+  personalMessage?: string | null;
+  voiceUrl?: string | null;
 }
 
 const FLAG_MAP: Record<string, string> = {
@@ -176,6 +181,14 @@ const TATTOO_LEVEL: Record<string, Record<string, string>> = {
   full:        { cs: 'Celé tělo',  en: 'Full body',   de: 'Ganzkörper',   uk: 'По всьому тілу' },
 };
 
+const PIERCING_VAL: Record<string, Record<string, string>> = {
+  ears:     { cs: 'Uši',      en: 'Ears',     de: 'Ohren',    uk: 'Вуха' },
+  belly:    { cs: 'Pupík',    en: 'Belly',    de: 'Bauch',    uk: 'Пупок' },
+  nose:     { cs: 'Nos',      en: 'Nose',     de: 'Nase',     uk: 'Ніс' },
+  tongue:   { cs: 'Jazyk',    en: 'Tongue',   de: 'Zunge',    uk: 'Язик' },
+  intimate: { cs: 'Intimní',  en: 'Intimate', de: 'Intim',    uk: 'Інтимний' },
+};
+
 function parseList(raw: unknown): string[] {
   if (!raw) return [];
   const s = String(raw).trim();
@@ -186,7 +199,7 @@ function parseList(raw: unknown): string[] {
   return s.split(',').map((l) => l.trim()).filter(Boolean);
 }
 
-export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, services = [], plans = [], altDistricts = [], scheduleLocation }: ProfilDetailsProps) {
+export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, services = [], plans = [], altDistricts = [], scheduleLocation, scheduleAddress, primaryPhotoUrl, personalMessage, voiceUrl }: ProfilDetailsProps) {
   const name = String(girl.name ?? '');
   const age = Number(girl.age ?? 0);
   const rating = Number(girl.rating ?? 0);
@@ -246,6 +259,11 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
 
   return (
     <div className="profile-info-col">
+      {primaryPhotoUrl && (
+        <div className="profile-details-avatar">
+          <img src={photoUrl(primaryPhotoUrl)} alt={name} loading="eager" />
+        </div>
+      )}
       <div className="profile-status-line">
         <span className="verified">✓ {labels.verified}</span>
         <span className="profile-meta-sep">·</span>
@@ -260,7 +278,7 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
       </div>
 
       <div className="profile-meta-line">
-        <span>📍 {cityName(locale)}{district !== 'Praha' ? ` · ${district}` : ''}</span>
+        <span>📍 {scheduleAddress ?? (district !== 'Praha' ? `${cityName(locale)} · ${district}` : cityName(locale))}</span>
         {shiftFrom && shiftTo && (
           <>
             <span className="profile-meta-sep">·</span>
@@ -299,6 +317,18 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
             <span className="psd-value">{String(girl.bust)}{bustUnit ? ` · ${bustUnit}` : ''}</span>
           </span>
         )}
+        {girl.waist != null && (
+          <span className="psd-pill">
+            <span className="psd-label">{labels.acc.waist}</span>
+            <span className="psd-value">{String(girl.waist)} cm</span>
+          </span>
+        )}
+        {girl.hips != null && (
+          <span className="psd-pill">
+            <span className="psd-label">{labels.acc.hips}</span>
+            <span className="psd-value">{String(girl.hips)} cm</span>
+          </span>
+        )}
         {girl.eyes != null && String(girl.eyes).trim() !== '' && (
           <span className="psd-pill">
             <span className="psd-label">{locale === 'cs' ? 'Oči' : locale === 'de' ? 'Augen' : locale === 'uk' ? 'Очі' : 'Eyes'}</span>
@@ -322,6 +352,17 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
             </span>
           </span>
         )}
+        {(() => {
+          const piercingRaw = girl.piercing ? String(girl.piercing).toLowerCase().trim() : null;
+          if (!piercingRaw || piercingRaw === 'none' || piercingRaw === '') return null;
+          const piercingText = PIERCING_VAL[piercingRaw]?.[locale] ?? piercingRaw;
+          return (
+            <span className="psd-pill">
+              <span className="psd-label">{locale === 'cs' ? 'Piercing' : 'Piercing'}</span>
+              <span className="psd-value">{piercingText}</span>
+            </span>
+          );
+        })()}
         {languages.map((lang) => (
           <span key={lang} className="psd-pill lang">
             <span className="psd-flag">{FLAG_MAP[lang] ?? '🌐'}</span>
@@ -332,39 +373,57 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
 
       {bio && <p className="profile-bio">{bio}</p>}
 
-      {/* TOP SLUŽBY — 6 best chips inline + link to full */}
+      {personalMessage && (
+        <blockquote className="profile-personal-msg">
+          &ldquo;{personalMessage}&rdquo;
+        </blockquote>
+      )}
+
+      {voiceUrl && (
+        <div className="profile-voice">
+          <div className="profile-voice-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+            {locale === 'cs' ? 'Poslechni si mě' : locale === 'de' ? 'Hör mich an' : locale === 'uk' ? 'Послухай мене' : 'Listen to me'}
+          </div>
+          <audio controls preload="none" className="profile-voice-audio">
+            <source src={voiceUrl} />
+          </audio>
+        </div>
+      )}
+
+      {/* Styl — static content block */}
+      <div className="profile-mini-block">
+        <div className="profile-mini-label">{labels.styl_h}</div>
+        <p className="profile-styl-sub">{labels.styl_sub}</p>
+        <p className="profile-styl-note">{labels.styl_note}</p>
+      </div>
+
+      {/* TOP SLUŽBY — 8 best chips inline + link to full */}
       {includedServices.length + extraServices.length > 0 && (
         <div className="profile-mini-block">
           <div className="profile-mini-label">★ {locale === 'cs' ? 'Top služby' : locale === 'de' ? 'Top Leistungen' : locale === 'uk' ? 'Топ послуги' : 'Top services'}</div>
           <div className="profile-mini-chips">
-            {includedServices.slice(0, 3).map((svc) => (
+            {includedServices.slice(0, 4).map((svc) => (
               <Link key={`i-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-included">
                 <span className="mini-chip-dot">✓</span>{localizedServiceName(svc, locale)}
               </Link>
             ))}
-            {extraServices.slice(0, 3).map((svc) => (
+            {extraServices.slice(0, 4).map((svc) => (
               <Link key={`e-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-extra">
                 {localizedServiceName(svc, locale)}
               </Link>
             ))}
             <a href="#sluzby" className="mini-chip mini-chip-more">
-              +{Math.max(0, services.length - 6)} {locale === 'cs' ? 'dalších' : locale === 'de' ? 'weitere' : locale === 'uk' ? 'інших' : 'more'} →
+              +{Math.max(0, services.length - 8)} {locale === 'cs' ? 'dalších' : locale === 'de' ? 'weitere' : locale === 'uk' ? 'інших' : 'more'} →
             </a>
           </div>
         </div>
       )}
-
-      {/* LOKACE — main + alternatives */}
-      <div className="profile-mini-block">
-        <div className="profile-mini-label">📍 {locale === 'cs' ? 'Kde ji najdeš' : locale === 'de' ? 'Wo zu finden' : locale === 'uk' ? 'Де знайти' : 'Where to find'}</div>
-        <div className="profile-location-row">
-          <span className="loc-chip-main">📍 {district}</span>
-          {altDistricts.map((d) => (
-            <span key={d} className="loc-chip-alt">{d} <em>{locale === 'cs' ? '(domluva)' : locale === 'de' ? '(Termin)' : locale === 'uk' ? '(домовленість)' : '(by appt)'}</em></span>
-          ))}
-        </div>
-        <div className="profile-location-note">{labels.kde_address_note}</div>
-      </div>
 
       {hashtags.length > 0 && (
         <div className="profile-hashtags">
@@ -375,6 +434,18 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
           ))}
         </div>
       )}
+
+      {/* LOKACE — main + alternatives */}
+      <div className="profile-mini-block">
+        <div className="profile-mini-label">📍 {locale === 'cs' ? 'Kde ji najdeš' : locale === 'de' ? 'Wo zu finden' : locale === 'uk' ? 'Де знайти' : 'Where to find'}</div>
+        <div className="profile-location-row">
+          <span className="loc-chip-main">📍 {scheduleAddress ?? district}</span>
+          {altDistricts.map((d) => (
+            <span key={d} className="loc-chip-alt">{d} <em>{locale === 'cs' ? '(domluva)' : locale === 'de' ? '(Termin)' : locale === 'uk' ? '(домовленість)' : '(by appt)'}</em></span>
+          ))}
+        </div>
+        <div className="profile-location-note">{labels.kde_address_note}</div>
+      </div>
 
       {/* RECENZE summary + napsat novou */}
       <div className="profile-mini-block">

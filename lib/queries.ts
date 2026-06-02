@@ -1262,6 +1262,7 @@ export interface GirlTodaySchedule {
   shiftFrom: string | null;
   shiftTo: string | null;
   scheduleLocation: string | null;
+  scheduleAddress: string | null;
 }
 
 export async function getGirlScheduleForToday(girlId: number): Promise<GirlTodaySchedule> {
@@ -1273,7 +1274,8 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
       SELECT
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
-        l.display_name AS schedule_location
+        l.display_name AS schedule_location,
+        l.display_name AS schedule_address
       FROM girls g
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
@@ -1286,8 +1288,8 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
   });
 
   const r = result.rows[0];
-  if (!r) return { shiftFrom: null, shiftTo: null, scheduleLocation: null };
-  if (r.exception_type === 'unavailable') return { shiftFrom: null, shiftTo: null, scheduleLocation: null };
+  if (!r) return { shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleAddress: null };
+  if (r.exception_type === 'unavailable') return { shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleAddress: null };
 
   let from: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
   let to: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
@@ -1298,8 +1300,9 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
   }
 
   const scheduleLocation = r.schedule_location ? String(r.schedule_location) : null;
+  const scheduleAddress = r.schedule_address ? String(r.schedule_address) : null;
 
-  return { shiftFrom: from, shiftTo: to, scheduleLocation };
+  return { shiftFrom: from, shiftTo: to, scheduleLocation, scheduleAddress };
 }
 
 /* =========================================================

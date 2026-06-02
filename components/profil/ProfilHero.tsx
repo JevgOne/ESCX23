@@ -98,9 +98,10 @@ interface ProfilHeroProps {
   personalMessage?: string | null;
   voiceUrl?: string | null;
   scheduleLocation?: string | null;
+  scheduleAddress?: string | null;
 }
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -181,7 +182,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span>{locText}</span>
+            <span>{scheduleAddress ?? locText}</span>
           </div>
           {statusText && (
             <div className="ig-status">
