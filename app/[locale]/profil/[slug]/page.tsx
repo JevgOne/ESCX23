@@ -304,9 +304,9 @@ export default async function ProfilPage({ params }: Props) {
               shiftTo={todaySchedule.shiftTo}
               scheduleLocation={todaySchedule.scheduleLocation}
               scheduleAddress={todaySchedule.scheduleAddress}
-              topServices={servicesTyped.slice(0, 8).map((s) => {
+              topServices={servicesTyped.slice(0, 12).map((s) => {
                 const key = `name_${locale}` as keyof typeof s;
-                return { name: String(s[key] ?? s.name_en ?? s.slug ?? '') };
+                return { name: String(s[key] ?? s.name_en ?? s.slug ?? ''), category: String(s.category ?? 'basic') };
               }).filter((s) => s.name)}
               bio={(() => {
                 const g = girl as unknown as Record<string, unknown>;

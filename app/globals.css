@@ -3193,6 +3193,11 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     border-color: rgba(74, 222, 128, 0.28);
     color: var(--color-green);
   }
+  .ig-service-chip-extra {
+    background: rgba(251, 191, 36, 0.08);
+    border-color: rgba(251, 191, 36, 0.25);
+    color: #fbbf24;
+  }
 
   /* Style & Wardrobe — mobile only */
   .profile-ig-styl {
@@ -9088,9 +9093,13 @@ body {
   font-weight: 700;
 }
 .mini-chip-extra {
-  background: rgba(242, 125, 141, 0.05);
-  border-color: rgba(242, 125, 141, 0.18);
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.25);
   color: var(--color-text);
+}
+.mini-chip-extra .mini-chip-dot {
+  color: #fbbf24;
+  font-weight: 700;
 }
 .mini-chip-more {
   background: transparent;
