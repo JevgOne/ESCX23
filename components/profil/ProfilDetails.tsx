@@ -259,11 +259,6 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
 
   return (
     <div className="profile-info-col">
-      {primaryPhotoUrl && (
-        <div className="profile-details-avatar">
-          <img src={photoUrl(primaryPhotoUrl)} alt={name} loading="eager" />
-        </div>
-      )}
       <div className="profile-status-line">
         <span className="verified">✓ {labels.verified}</span>
         <span className="profile-meta-sep">·</span>
