@@ -167,6 +167,76 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
 
   return (
     <div className="profile-photo-col">
+      {/* Desktop profile card — compact summary above hero photo */}
+      <div className="profile-left-card">
+        <div className="plc-photo">
+          <img src={photoUrl(primaryPhoto?.url ? String(primaryPhoto.url) : null)} alt={altBase} loading="eager" />
+        </div>
+        <div className="plc-name">{name}{age != null && <>, <span className="plc-age">{age}</span></>}</div>
+        <div className="plc-verified">✓ {verifiedLabel}</div>
+        <div className="plc-location">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          <span>{scheduleAddress ?? locText}</span>
+        </div>
+        {statusText && (
+          <div className="plc-status">
+            <span className="plc-status-dot" />
+            <span>{statusText}</span>
+          </div>
+        )}
+        {rating > 0 && (
+          <div className="plc-rating">
+            <span className="plc-stars">{'★'.repeat(Math.round(rating))}{'☆'.repeat(5 - Math.round(rating))}</span>
+            <span className="plc-rating-num">{rating.toFixed(1)}</span>
+            <span className="plc-dot">·</span>
+            <span>{reviewsCount} {reviewsLbl}</span>
+          </div>
+        )}
+        <div className="plc-stats">
+          {height && <span className="plc-stat">{height}<small>cm</small></span>}
+          {weight && <span className="plc-stat">{weight}<small>kg</small></span>}
+          {bust && <span className="plc-stat">{bust}<small>{statLbl.bust}</small></span>}
+        </div>
+        {languages.length > 0 && (
+          <div className="plc-langs">
+            {languages.map(lang => (
+              <span key={lang}>{FLAG_MAP[lang.toLowerCase()] ?? '🏳️'}</span>
+            ))}
+          </div>
+        )}
+        <div className="plc-cta">
+          {phone && (
+            <a href={`tel:${phone}`} className="plc-btn plc-btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
+              {ctaCallLbl}
+            </a>
+          )}
+          <div className="plc-cta-row">
+            {waUrl && (
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" className="plc-btn plc-btn-wa">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347" />
+                </svg>
+                WhatsApp
+              </a>
+            )}
+            {tgUrl && (
+              <a href={tgUrl} target="_blank" rel="noopener noreferrer" className="plc-btn plc-btn-tg">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="m9.78 18.65.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.24 3.64 11.95c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.27 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" />
+                </svg>
+                Telegram
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Mobile-only Instagram-style header */}
       <div className="profile-ig-header">
         <div className="ig-avatar">
