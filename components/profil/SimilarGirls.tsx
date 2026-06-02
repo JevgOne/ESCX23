@@ -79,7 +79,7 @@ export default async function SimilarGirls({ currentSlug, locale }: Props) {
           <h2 className="similar-girls-h2">{heading}</h2>
           <p className="similar-girls-sub">{subtitle}</p>
         </div>
-        <div className="similar-girls-grid">
+        <div className="girls-grid">
           {others.map((g) => (
             <GirlCard key={g.id} girl={g} />
           ))}

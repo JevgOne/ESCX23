@@ -99,9 +99,12 @@ interface ProfilHeroProps {
   voiceUrl?: string | null;
   scheduleLocation?: string | null;
   scheduleAddress?: string | null;
+  stylH?: string;
+  stylSub?: string;
+  stylNote?: string;
 }
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -283,6 +286,14 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           {hashtags.slice(0, 10).map((tag) => (
             <span key={tag} className="ig-hashtag">{tag.replace(/^#/, '')}</span>
           ))}
+        </div>
+      )}
+
+      {stylH && (
+        <div className="profile-mini-block profile-ig-styl">
+          <div className="profile-mini-label">{stylH}</div>
+          {stylSub && <p className="profile-styl-sub">{stylSub}</p>}
+          {stylNote && <p className="profile-styl-note">{stylNote}</p>}
         </div>
       )}
 

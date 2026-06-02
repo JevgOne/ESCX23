@@ -304,7 +304,10 @@ export default async function ProfilPage({ params }: Props) {
               shiftTo={todaySchedule.shiftTo}
               scheduleLocation={todaySchedule.scheduleLocation}
               scheduleAddress={todaySchedule.scheduleAddress}
-              topServices={servicesTyped.slice(0, 6).map((s) => ({ name: String((s as { name?: unknown }).name ?? '') })).filter((s) => s.name)}
+              topServices={servicesTyped.slice(0, 8).map((s) => {
+                const key = `name_${locale}` as keyof typeof s;
+                return { name: String(s[key] ?? s.name_en ?? s.slug ?? '') };
+              }).filter((s) => s.name)}
               bio={(() => {
                 const g = girl as unknown as Record<string, unknown>;
                 if (locale === 'cs') return String(g.description_cs ?? g.bio ?? '');
@@ -320,6 +323,9 @@ export default async function ProfilPage({ params }: Props) {
                 const g = girl as unknown as Record<string, unknown>;
                 return g.voice_url ? String(g.voice_url) : null;
               })()}
+              stylH={labels.styl_h}
+              stylSub={labels.styl_sub}
+              stylNote={labels.styl_note}
             />
             <ProfilDetails
               girl={girlTyped}
