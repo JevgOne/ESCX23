@@ -398,24 +398,26 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
         <p className="profile-styl-note">{labels.styl_note}</p>
       </div>
 
-      {/* TOP SLUŽBY — 8 best chips inline + link to full */}
+      {/* SLUŽBY — extras highlighted, basic with "na domluvě" icon */}
       {includedServices.length + extraServices.length > 0 && (
         <div className="profile-mini-block">
-          <div className="profile-mini-label">★ {locale === 'cs' ? 'Top služby' : locale === 'de' ? 'Top Leistungen' : locale === 'uk' ? 'Топ послуги' : 'Top services'}</div>
+          <div className="profile-mini-label">★ {locale === 'cs' ? 'Služby' : locale === 'de' ? 'Leistungen' : locale === 'uk' ? 'Послуги' : 'Services'}</div>
           <div className="profile-mini-chips">
+            {extraServices.slice(0, 6).map((svc) => (
+              <Link key={`e-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-extra">
+                <span className="mini-chip-dot">★</span>{localizedServiceName(svc, locale)}
+              </Link>
+            ))}
             {includedServices.slice(0, 4).map((svc) => (
               <Link key={`i-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-included">
-                <span className="mini-chip-dot">✓</span>{localizedServiceName(svc, locale)}
+                <span className="mini-chip-dot">💬</span>{localizedServiceName(svc, locale)}
               </Link>
             ))}
-            {extraServices.slice(0, 4).map((svc) => (
-              <Link key={`e-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-extra">
-                {localizedServiceName(svc, locale)}
-              </Link>
-            ))}
-            <a href="#sluzby" className="mini-chip mini-chip-more">
-              +{Math.max(0, services.length - 8)} {locale === 'cs' ? 'dalších' : locale === 'de' ? 'weitere' : locale === 'uk' ? 'інших' : 'more'} →
-            </a>
+            {services.length > 10 && (
+              <a href="#sluzby" className="mini-chip mini-chip-more">
+                +{services.length - 10} {locale === 'cs' ? 'dalších' : locale === 'de' ? 'weitere' : locale === 'uk' ? 'інших' : 'more'} →
+              </a>
+            )}
           </div>
         </div>
       )}

@@ -3241,10 +3241,9 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     display: none !important;
   }
 
-  /* Shrink hero photo on mobile — info dominates above */
+  /* Hide hero photo on mobile — thumbnails grid is the gallery */
   .profile-hero-photo {
-    aspect-ratio: 3/4;
-    border-radius: 14px;
+    display: none;
   }
 
   /* Bio snippet on mobile */
@@ -3263,11 +3262,18 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     margin: 0;
   }
 
-  /* Gallery thumbnails — 3 cols on mobile, tighter */
+  /* Gallery grid on mobile — 3 cols, no gap, IG-style */
   .profile-thumbs-grid {
     grid-template-columns: repeat(3, 1fr) !important;
-    gap: 3px !important;
-    margin-top: 8px;
+    gap: 2px !important;
+    margin-top: 0;
+  }
+  .profile-thumb {
+    border-radius: 0;
+    border: none;
+  }
+  .profile-thumb.active {
+    border-color: transparent;
   }
 }
 .profile-thumbs {
