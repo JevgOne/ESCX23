@@ -2868,6 +2868,7 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 .ig-stat-details { display: none !important; }
 .profile-ig-services { display: none !important; }
 .profile-ig-hashtags { display: none !important; }
+.profile-ig-styl { display: none !important; }
 .profile-ig-bio { display: none; }
 .profile-personal-msg {
   border-left: 3px solid var(--color-coral);
@@ -3191,6 +3192,12 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     background: rgba(74, 222, 128, 0.08);
     border-color: rgba(74, 222, 128, 0.28);
     color: var(--color-green);
+  }
+
+  /* Style & Wardrobe — mobile only */
+  .profile-ig-styl {
+    display: block !important;
+    margin-bottom: 16px;
   }
 
   /* Hashtags — compact, horizontally scrollable */
