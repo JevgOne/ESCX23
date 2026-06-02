@@ -8,9 +8,9 @@ export async function GET(request: Request) {
   }
 
   const result = await db.execute(
-    `UPDATE stories SET status='expired', is_active=0
+    `UPDATE stories SET is_active=0
      WHERE expires_at IS NOT NULL AND expires_at < datetime('now')
-       AND status != 'expired'`
+       AND is_active = 1`
   );
 
   return NextResponse.json({ success: true, affected: result.rowsAffected });

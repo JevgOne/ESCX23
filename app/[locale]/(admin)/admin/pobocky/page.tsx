@@ -17,6 +17,7 @@ interface LocationRow {
   address: string | null;
   is_active: number;
   is_primary: number;
+  opening_date: string | null;
 }
 
 const COLUMNS: DataTableColumn<LocationRow>[] = [
@@ -48,6 +49,11 @@ const COLUMNS: DataTableColumn<LocationRow>[] = [
     render: (row) => <span>{row.is_primary ? 'Ano' : '—'}</span>,
   },
   {
+    key: 'opening_date',
+    label: 'Otevření',
+    render: (row) => <span>{row.opening_date ?? '—'}</span>,
+  },
+  {
     key: 'actions',
     label: 'Akce',
     render: (row): ReactNode => (
@@ -74,7 +80,7 @@ export default async function AdminPobockyPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const result = await db.execute('SELECT id, name, display_name, city, district, address, is_active, is_primary FROM locations ORDER BY id ASC');
+  const result = await db.execute('SELECT id, name, display_name, city, district, address, is_active, is_primary, opening_date FROM locations ORDER BY id ASC');
   const rows = result.rows as unknown as LocationRow[];
 
   return (

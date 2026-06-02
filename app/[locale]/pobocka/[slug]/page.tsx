@@ -9,6 +9,7 @@ import { breadcrumbListJsonLd, localBusinessJsonLd, faqPageJsonLd, itemListPeopl
 import { getCanonicalUrl } from '@/lib/seo/meta';
 import { getLocationContent } from '@/lib/seo/landing-content';
 import { photoUrl } from '@/lib/photoUrl';
+import { pragueDateISO, formatOpeningDate } from '@/lib/utils';
 
 export const revalidate = 3600;
 
@@ -256,6 +257,16 @@ export default async function PobockaDetailPage({ params }: Props) {
       })))
     : null;
 
+  const today = pragueDateISO();
+  const isUpcoming = loc.openingDate != null && loc.openingDate > today;
+
+  const openingBanner: Record<string, { title: string; datePrefix: string }> = {
+    cs: { title: 'Nový apartmán — otevíráme brzy!', datePrefix: 'Plánované otevření' },
+    en: { title: 'New apartment — opening soon!', datePrefix: 'Planned opening' },
+    de: { title: 'Neues Apartment — Eröffnung bald!', datePrefix: 'Geplante Eröffnung' },
+    uk: { title: 'Новий апартамент — незабаром відкриття!', datePrefix: 'Планове відкриття' },
+  };
+
   /* Show today's companions at this location */
   const allGirls = await getGirlsWithToday().catch(() => []);
   // Filter by district match
@@ -324,6 +335,24 @@ export default async function PobockaDetailPage({ params }: Props) {
         ]}
         locale={locale}
       />
+
+      {isUpcoming && loc.openingDate && (
+        <section className="section" style={{ paddingBottom: 0 }}>
+          <div className="container">
+            <div className="pobocka-opening-banner">
+              <span className="pobocka-opening-icon">&#127881;</span>
+              <div>
+                <div className="pobocka-opening-title">
+                  {(openingBanner[locale] ?? openingBanner.en).title}
+                </div>
+                <div className="pobocka-opening-date">
+                  {(openingBanner[locale] ?? openingBanner.en).datePrefix}: {formatOpeningDate(loc.openingDate, locale)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="pobocka-hero">
         <div className="pobocka-hero-bg" />

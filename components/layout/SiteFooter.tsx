@@ -2,6 +2,7 @@ import { getTranslations, getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import LogoMark from '@/components/ui/LogoMark';
 import { getActiveLocations, getFooterStats } from '@/lib/queries';
+import { pragueDateISO } from '@/lib/utils';
 
 const LOGO_SUB: Record<string, string> = {
   cs: 'Praha · Privát',
@@ -125,21 +126,28 @@ export default async function SiteFooter() {
             </ul>
           </div>
 
-          {locations.length > 0 && (
-            <div className="footer-col">
-              <h4>{locationsLbl}</h4>
-              <ul>
-                {locations.map((loc) => {
-                  const label = `${loc.city ?? 'Praha'}${loc.district ? ` · ${loc.district}` : ''}${loc.displayName && loc.displayName !== loc.district ? ` (${loc.displayName})` : ''}`;
-                  return (
-                    <li key={loc.id}>
-                      <a href={`${localePrefix}/pobocka/${loc.name}`}>{label}</a>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
+          {locations.length > 0 && (() => {
+            const todayStr = pragueDateISO();
+            const soonLbl = locale === 'en' ? 'soon' : locale === 'de' ? 'bald' : locale === 'uk' ? 'скоро' : 'brzy';
+            return (
+              <div className="footer-col">
+                <h4>{locationsLbl}</h4>
+                <ul>
+                  {locations.map((loc) => {
+                    const isUpcoming = loc.openingDate != null && loc.openingDate > todayStr;
+                    const label = `${loc.city ?? 'Praha'}${loc.district ? ` · ${loc.district}` : ''}${loc.displayName && loc.displayName !== loc.district ? ` (${loc.displayName})` : ''}`;
+                    return (
+                      <li key={loc.id}>
+                        <a href={`${localePrefix}/pobocka/${loc.name}`}>
+                          {label}{isUpcoming ? ` — ${soonLbl}` : ''}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })()}
         </div>
 
         <p className="footer-disclaimer">{t('disclaimer')}</p>

@@ -133,9 +133,10 @@ export default async function RozvrhPage({ params, searchParams }: Props) {
   const days = generate7Days(today, locale);
 
   const allLabel = locale === 'en' ? 'All locations' : locale === 'de' ? 'Alle Standorte' : locale === 'uk' ? 'Всі локації' : 'Všechny pobočky';
+  const openLocations = dbLocations.filter((l) => !l.openingDate || l.openingDate <= today);
   const locations = [
     { slug: 'all', label: allLabel },
-    ...dbLocations.map((l) => ({
+    ...openLocations.map((l) => ({
       slug: l.name,
       label: l.displayName,
     })),

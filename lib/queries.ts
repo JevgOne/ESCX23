@@ -424,6 +424,7 @@ export interface Location {
   district: string | null;
   city?: string | null;
   isPrimary: boolean;
+  openingDate: string | null;
 }
 
 export interface FooterStats {
@@ -475,12 +476,13 @@ export async function getLocationBySlug(slug: string, locale = 'cs') {
     featuresText: localized('features_text'),
     hoursText: localized('hours_text') ?? 'Denně 10:00 — 22:30',
     isPrimary: Number(r.is_primary) === 1,
+    openingDate: r.opening_date ? String(r.opening_date) : null,
   };
 }
 
 export async function getActiveLocations(): Promise<Location[]> {
   const result = await db.execute(
-    `SELECT id, name, display_name, district, city, is_primary FROM locations WHERE is_active = 1 ORDER BY is_primary DESC, id ASC`
+    `SELECT id, name, display_name, district, city, is_primary, opening_date FROM locations WHERE is_active = 1 ORDER BY is_primary DESC, id ASC`
   );
   return result.rows.map((r) => ({
     id: Number(r.id),
@@ -489,6 +491,7 @@ export async function getActiveLocations(): Promise<Location[]> {
     district: r.district ? String(r.district) : null,
     city: (r as Record<string, unknown>).city ? String((r as Record<string, unknown>).city) : null,
     isPrimary: Number((r as Record<string, unknown>).is_primary ?? 0) === 1,
+    openingDate: (r as Record<string, unknown>).opening_date ? String((r as Record<string, unknown>).opening_date) : null,
   }));
 }
 
@@ -981,8 +984,8 @@ export interface AdminStoryRow {
 export async function getStoriesForAdmin(statusFilter?: string): Promise<AdminStoryRow[]> {
   let sql = `
     SELECT
-      s.id, s.girl_id, s.media_url, s.media_type, s.bg_type, s.caption, s.category,
-      s.status, s.views_count, s.expires_at, s.created_at,
+      s.id, s.girl_id, s.media_url, s.media_type,
+      s.is_active, s.views_count, s.expires_at, s.created_at,
       g.name AS girl_name
     FROM stories s
     LEFT JOIN girls g ON g.id = s.girl_id AND s.girl_id != 0
@@ -991,8 +994,11 @@ export async function getStoriesForAdmin(statusFilter?: string): Promise<AdminSt
   const args: string[] = [];
 
   if (statusFilter && statusFilter !== 'all') {
-    sql += ` AND s.status = ?`;
-    args.push(statusFilter);
+    if (statusFilter === 'live') {
+      sql += ` AND s.is_active = 1 AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)`;
+    } else if (statusFilter === 'expired') {
+      sql += ` AND (s.is_active = 0 OR (s.expires_at IS NOT NULL AND s.expires_at <= CURRENT_TIMESTAMP))`;
+    }
   }
 
   sql += ` ORDER BY s.created_at DESC LIMIT 100`;
@@ -1004,10 +1010,12 @@ export async function getStoriesForAdmin(statusFilter?: string): Promise<AdminSt
     girlName: r.girl_name ? String(r.girl_name) : null,
     mediaUrl: String(r.media_url),
     mediaType: String(r.media_type),
-    bgType: r.bg_type ? String(r.bg_type) : null,
-    caption: r.caption ? String(r.caption) : null,
-    category: r.category ? String(r.category) : null,
-    status: String(r.status ?? 'live'),
+    bgType: null,
+    caption: null,
+    category: null,
+    status: Number(r.is_active) === 1
+      ? (r.expires_at && String(r.expires_at) <= new Date().toISOString() ? 'expired' : 'live')
+      : 'expired',
     viewsCount: Number(r.views_count ?? 0),
     expiresAt: r.expires_at ? String(r.expires_at) : null,
     createdAt: String(r.created_at),
@@ -1033,13 +1041,12 @@ export interface PublicStory {
 export async function getPublicStories(): Promise<PublicStory[]> {
   const res = await db.execute(`
     SELECT
-      s.id, s.girl_id, s.media_url, s.media_type, s.caption, s.created_at,
+      s.id, s.girl_id, s.media_url, s.media_type, s.created_at,
       g.name AS girl_name, g.slug AS girl_slug,
       (SELECT url FROM girl_photos WHERE girl_id=g.id ORDER BY is_primary DESC, id ASC LIMIT 1) AS girl_photo
     FROM stories s
     INNER JOIN girls g ON g.id = s.girl_id
-    WHERE s.status = 'live'
-      AND s.is_active = 1
+    WHERE s.is_active = 1
       AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)
       AND s.girl_id > 0
       AND g.status = 'active'
@@ -1056,7 +1063,7 @@ export async function getPublicStories(): Promise<PublicStory[]> {
     girlPhoto: r.girl_photo ? String(r.girl_photo) : null,
     mediaUrl: String(r.media_url),
     mediaType: (String(r.media_type) === 'video' ? 'video' : 'image') as 'image' | 'video',
-    caption: r.caption ? String(r.caption) : null,
+    caption: null,
     createdAt: String(r.created_at),
   }));
 }

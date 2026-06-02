@@ -169,6 +169,12 @@ export default async function StudioKalendarPage({
           </div>
         </div>
 
+        <div className="cal-legend">
+          <span className="cal-legend-item cal-legend-available">Pracuji</span>
+          <span className="cal-legend-item cal-legend-off">Volno</span>
+          <span className="cal-legend-item cal-legend-today">Dnes</span>
+        </div>
+
         <div className="cal-grid">
           {days.map((day) => {
             const sched = schedMap.get(day.dayIdx);
@@ -200,7 +206,7 @@ export default async function StudioKalendarPage({
               >
                 <div className="cal-day-head">
                   <span className="cal-day-name">{day.dayName}</span>
-                  <span className="cal-day-num">{day.dayNum}.{day.monthNum}.</span>
+                  <span className="cal-day-num">{day.dayNum}</span>
                 </div>
 
                 {isOff ? (

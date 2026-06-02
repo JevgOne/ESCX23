@@ -1,16 +1,17 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { getActiveLocations } from '@/lib/queries';
+import { pragueDateISO, formatOpeningDate } from '@/lib/utils';
 
 interface LocationsRowProps {
   locale: string;
 }
 
 const PREPARING_LABEL: Record<string, string> = {
-  cs: 'Připravujeme',
-  en: 'Coming soon',
-  de: 'In Vorbereitung',
-  uk: 'Готується',
+  cs: 'Otevíráme',
+  en: 'Opening',
+  de: 'Eröffnung',
+  uk: 'Відкриття',
 };
 
 const PRIMARY_LABEL: Record<string, string> = {
@@ -28,19 +29,19 @@ export default async function LocationsRow({ locale }: LocationsRowProps) {
 
   const preparingLabel = PREPARING_LABEL[locale] ?? PREPARING_LABEL.en;
   const primaryLabel = PRIMARY_LABEL[locale] ?? PRIMARY_LABEL.en;
-  const preparingSlugs = new Set(['praha-3', 'praha-5']);
+  const today = pragueDateISO();
 
   return (
     <section className="location-section" id="pobocky">
       <div className="container">
         <div className="section-head">
-          <div className="section-eyebrow">— {t('eyebrow')}</div>
+          <div className="section-eyebrow">{t('eyebrow')}</div>
           <h2 className="section-h2">{t('h2')}</h2>
           <p className="section-sub">{t('sub')}</p>
         </div>
         <div className="loc-list">
           {dbLocations.map((loc) => {
-            const isPreparing = preparingSlugs.has(loc.name);
+            const isPreparing = loc.openingDate != null && loc.openingDate > today;
             const displayParts = (loc.displayName ?? loc.name).split(', ');
             const districtName = displayParts[0] ?? loc.name;
             const prahaNum = displayParts[1] ?? loc.district ?? 'Praha';
@@ -66,7 +67,9 @@ export default async function LocationsRow({ locale }: LocationsRowProps) {
                     <span className="loc-row-badge-primary">{primaryLabel}</span>
                   )}
                   {isPreparing && (
-                    <span className="loc-row-badge-soon">{preparingLabel}</span>
+                    <span className="loc-row-badge-soon">
+                      {preparingLabel}{loc.openingDate ? ` · ${formatOpeningDate(loc.openingDate, locale)}` : ''}
+                    </span>
                   )}
                 </div>
                 {!isPreparing && (

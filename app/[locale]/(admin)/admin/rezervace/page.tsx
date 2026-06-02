@@ -176,7 +176,10 @@ export default async function AdminRezervacePage({
                 </div>
                 <iframe
                   src={cal.embedUrl}
-                  style={{ width: '100%', height: '400px', border: 'none' }}
+                  style={{
+                    width: '100%', height: '400px', border: 'none',
+                    filter: 'invert(1) hue-rotate(180deg)',
+                  }}
                   title={`Kalendář — ${cal.name}`}
                 />
               </div>

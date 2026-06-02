@@ -453,13 +453,15 @@ export async function createPobocka(formData: FormData) {
   const langCols = (base: string) => LANGS.map((s) => `${base}${s === '' ? '' : s}`);
   const I18N_FIELDS = ['description', 'transport_text', 'payment_text', 'parking_text', 'features_text', 'hours_text'];
 
-  const insertCols = ['name','display_name','city','district','address','postal_code','phone','email','is_active','is_primary',
+  const openingDate = getStr('opening_date') || null;
+  const insertCols = ['name','display_name','city','district','address','postal_code','phone','email','is_active','is_primary','opening_date',
     ...I18N_FIELDS.flatMap(langCols)];
   const insertVals = [
     name, display_name, city,
     getStr('district'), getStr('address'), getStr('postal_code'), getStr('phone'), getStr('email'),
     formData.get('is_active') === 'on' ? 1 : 0,
     formData.get('is_primary') === 'on' ? 1 : 0,
+    openingDate,
     ...I18N_FIELDS.flatMap((f) => [getStr(`${f}_cs`) ?? getStr(f), getStr(`${f}_en`), getStr(`${f}_de`), getStr(`${f}_uk`)]),
   ];
   await db.execute({
@@ -486,8 +488,9 @@ export async function updatePobocka(formData: FormData) {
   if (!city) throw new Error('Město je povinné');
 
   const getStr = (k: string) => (formData.get(k) ? String(formData.get(k)) : null);
+  const openingDate = getStr('opening_date') || null;
   const I18N_FIELDS = ['description', 'transport_text', 'payment_text', 'parking_text', 'features_text', 'hours_text'];
-  const baseCols = ['name','display_name','city','district','address','postal_code','phone','email','is_active','is_primary'];
+  const baseCols = ['name','display_name','city','district','address','postal_code','phone','email','is_active','is_primary','opening_date'];
   const i18nCols = I18N_FIELDS.flatMap((f) => [f, `${f}_en`, `${f}_de`, `${f}_uk`]);
   const allCols = [...baseCols, ...i18nCols];
   const baseVals = [
@@ -495,6 +498,7 @@ export async function updatePobocka(formData: FormData) {
     getStr('district'), getStr('address'), getStr('postal_code'), getStr('phone'), getStr('email'),
     formData.get('is_active') === 'on' ? 1 : 0,
     formData.get('is_primary') === 'on' ? 1 : 0,
+    openingDate,
   ];
   const i18nVals = I18N_FIELDS.flatMap((f) => [
     getStr(`${f}_cs`) ?? getStr(f),
@@ -808,7 +812,7 @@ export async function approveStory(formData: FormData) {
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
   await db.execute({
-    sql: `UPDATE stories SET status='live', is_active=1 WHERE id=?`,
+    sql: `UPDATE stories SET is_active=1 WHERE id=?`,
     args: [id],
   });
   revalidatePath('/cs/admin/stories');
@@ -819,7 +823,7 @@ export async function expireStory(formData: FormData) {
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
   await db.execute({
-    sql: `UPDATE stories SET status='expired', is_active=0, expires_at=CURRENT_TIMESTAMP WHERE id=?`,
+    sql: `UPDATE stories SET is_active=0, expires_at=CURRENT_TIMESTAMP WHERE id=?`,
     args: [id],
   });
   revalidatePath('/cs/admin/stories');
@@ -847,9 +851,9 @@ export async function createCategoryStory(formData: FormData) {
   if (!mediaUrl) throw new Error('URL pozadí je povinné');
 
   await db.execute({
-    sql: `INSERT INTO stories (girl_id, media_url, media_type, bg_type, caption, category, status, is_active, expires_at)
-          VALUES (0, ?, ?, ?, ?, ?, 'live', 1, ?)`,
-    args: [mediaUrl, bgType === 'VIDEO' ? 'video' : 'image', bgType, caption || null, category, expiresAt],
+    sql: `INSERT INTO stories (girl_id, media_url, media_type, is_active, expires_at)
+          VALUES (0, ?, ?, 1, ?)`,
+    args: [mediaUrl, bgType === 'VIDEO' ? 'video' : 'image', expiresAt],
   });
 
   revalidatePath('/cs/admin/stories');

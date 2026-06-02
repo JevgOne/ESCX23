@@ -51,7 +51,7 @@ export default async function HashtagCloud({ locale }: HashtagCloudProps) {
     <section className="section hashtag-section">
       <div className="container">
         <div className="section-head">
-          <div className="section-eyebrow">— {t('eyebrow')}</div>
+          <div className="section-eyebrow">{t('eyebrow')}</div>
           <h2 className="section-h2">{t('h2')}</h2>
           <p className="section-sub">{t('sub')}</p>
         </div>

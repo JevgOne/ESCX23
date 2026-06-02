@@ -48,6 +48,17 @@ export function prettyDistrict(location: string | null | undefined): string | nu
   return location;
 }
 
+export function formatOpeningDate(dateStr: string, locale: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDate();
+  const month = d.getMonth() + 1;
+  if (locale === 'en') {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[d.getMonth()]} ${day}`;
+  }
+  return `${day}.${month}.`;
+}
+
 export function relativeTime(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const diffMs = Date.now() - d.getTime();

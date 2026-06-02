@@ -264,6 +264,66 @@ export interface LocationContent {
 }
 
 export const LOCATION_CONTENT: Record<string, LocationContent> = {
+  'praha-3': {
+    metaDesc: {
+      cs: 'Apartmán Žižkov Praha 3 — nový diskrétní privát. Otevření červen 2026. Ověřené společnice, soukromý vchod, hotovostní platba.',
+      en: 'Zizkov apartment Prague 3 — new discreet private flat. Opening June 2026. Verified companions, private entrance, cash payment.',
+      de: 'Apartment Zizkov Prag 3 — neues diskretes Privatapartment. Eröffnung Juni 2026. Verifizierte Begleiterinnen.',
+      uk: 'Апартамент Жижков Прага 3 — новий дискретний приватний апартамент. Відкриття червень 2026.',
+    },
+    intro: {
+      cs: 'Nový apartmán LovelyGirls na Žižkově (Praha 3) otevíráme v červnu 2026. Diskrétní byt s vlastním vchodem v klidné ulici, snadná dostupnost metrem i tramvají. Žižkov je oblíbená čtvrť plná kaváren a vináren — náš apartmán v ní nabídne stejný komfort a soukromí jako hlavní pobočka na Vinohradech.',
+      en: 'The new LovelyGirls Zizkov apartment (Prague 3) opens in June 2026. Discreet flat with private entrance on a quiet street, easy metro and tram access. Zizkov is a popular neighborhood full of cafes and wine bars — our apartment offers the same comfort and privacy as the main Vinohrady location.',
+      de: 'Das neue LovelyGirls Zizkov Apartment (Prag 3) eröffnet im Juni 2026. Diskrete Wohnung mit privatem Eingang, Metro- und Tramanbindung.',
+      uk: 'Новий апартамент LovelyGirls на Жижкові (Прага 3) відкривається у червні 2026. Дискретна квартира з приватним входом у тихій вулиці, зручний доступ метро та трамваєм.',
+    },
+    faq: [
+      {
+        q: { cs: 'Kdy otevíráte apartmán na Žižkově?', en: 'When does the Zizkov apartment open?', de: 'Wann eröffnet das Zizkov-Apartment?', uk: 'Коли відкривається апартамент на Жижкові?' },
+        a: { cs: 'Plánované otevření je 18. června 2026. Sledujte naše stránky pro aktuální informace.', en: 'Planned opening is June 18, 2026. Follow our pages for updates.', de: 'Geplante Eröffnung am 18. Juni 2026.', uk: 'Планове відкриття 18 червня 2026. Слідкуйте за нашими сторінками.' },
+      },
+      {
+        q: { cs: 'Jak se dostanu na Žižkov MHD?', en: 'How do I get to Zizkov by public transport?', de: 'Wie komme ich mit dem ÖPNV nach Zizkov?', uk: 'Як дістатися на Жижков громадським транспортом?' },
+        a: { cs: 'Metro A — stanice Jiřího z Poděbrad (5 minut pěšky), tramvaje po Seifertově a Husitské ulici. Žižkov je velmi dobře dopravně obsloužený.', en: 'Metro A — Jiřího z Poděbrad station (5 min walk), trams on Seifertova and Husitská streets. Zizkov has excellent public transport.', de: 'Metro A — Jiřího z Poděbrad (5 Min. Fußweg), Tram auf Seifertova.', uk: 'Метро A — станція Jiřího z Poděbrad (5 хвилин пішки), трамваї по Seifertova та Husitská. Жижков має відмінне транспортне сполучення.' },
+      },
+      {
+        q: { cs: 'Bude na Žižkově stejná nabídka jako na Vinohradech?', en: 'Will Zizkov offer the same services as Vinohrady?', de: 'Hat Zizkov das gleiche Angebot wie Vinohrady?', uk: 'Чи буде на Жижкові такий же вибір як на Виноградах?' },
+        a: { cs: 'Ano — stejné společnice, stejný ceník, stejný komfort. Některé dívky budou pracovat v obou lokacích.', en: 'Yes — same companions, same pricing, same comfort. Some girls will work at both locations.', de: 'Ja — gleiche Begleiterinnen, gleiche Preise, gleicher Komfort.', uk: 'Так — ті ж супутниці, ті ж ціни, той же комфорт. Деякі дівчата працюватимуть в обох локаціях.' },
+      },
+    ],
+    relatedHashtags: ['spolecnice-praha', 'blondynky-praha', 'gfe-praha', 'studentky-praha'],
+  },
+
+  'praha-5': {
+    metaDesc: {
+      cs: 'Apartmán Smíchov Praha 5 — nový diskrétní privát u Anděla. Otevření červenec 2026. Ověřené společnice, soukromý vchod.',
+      en: 'Smichov apartment Prague 5 — new discreet private flat near Andel. Opening July 2026. Verified companions, private entrance.',
+      de: 'Apartment Smichov Prag 5 — neues diskretes Privatapartment nahe Andel. Eröffnung Juli 2026.',
+      uk: 'Апартамент Смíхов Прага 5 — новий дискретний приватний апартамент біля Анділа. Відкриття липень 2026.',
+    },
+    intro: {
+      cs: 'Apartmán LovelyGirls na Smíchově (Praha 5, Anděl) otevíráme v červenci 2026. Moderní byt s vlastním vchodem v blízkosti metra Anděl — jedna z nejživějších částí Prahy. Apartmán nabídne stejný komfort a diskrétnost jako naše ostatní pobočky.',
+      en: 'The LovelyGirls Smichov apartment (Prague 5, Andel) opens in July 2026. Modern flat with private entrance near Andel metro — one of Prague\'s liveliest neighborhoods. Same comfort and discretion as our other locations.',
+      de: 'Das LovelyGirls Smichov Apartment (Prag 5, Andel) eröffnet im Juli 2026. Moderne Wohnung nahe der Metro Andel.',
+      uk: 'Апартамент LovelyGirls на Смíхові (Прага 5, Анділ) відкривається у липні 2026. Сучасна квартира з приватним входом біля метро Анділ — одна з найжвавіших частин Праги.',
+    },
+    faq: [
+      {
+        q: { cs: 'Kdy otevíráte apartmán na Smíchově?', en: 'When does the Smichov apartment open?', de: 'Wann eröffnet das Smichov-Apartment?', uk: 'Коли відкривається апартамент на Смíхові?' },
+        a: { cs: 'Plánované otevření je 25. července 2026.', en: 'Planned opening is July 25, 2026.', de: 'Geplante Eröffnung am 25. Juli 2026.', uk: 'Планове відкриття 25 липня 2026.' },
+      },
+      {
+        q: { cs: 'Kde přesně na Smíchově se apartmán nachází?', en: 'Where exactly in Smichov is the apartment?', de: 'Wo genau in Smichov befindet sich das Apartment?', uk: 'Де саме на Смíхові знаходиться апартамент?' },
+        a: { cs: 'V blízkosti metra Anděl (linka B). Přesnou adresu sdílíme po potvrzení rezervace.', en: 'Near Andel metro (line B). Exact address shared after booking confirmation.', de: 'Nahe der Metro Andel (Linie B). Adresse nach Buchung.', uk: 'Біля метро Анділ (лінія B). Точну адресу надаємо після підтвердження бронювання.' },
+      },
+      {
+        q: { cs: 'Bude Smíchov levnější než Vinohrady?', en: 'Will Smichov be cheaper than Vinohrady?', de: 'Wird Smichov günstiger sein als Vinohrady?', uk: 'Чи буде Смíхов дешевшим ніж Виногради?' },
+        a: { cs: 'Ceník je jednotný pro všechny pobočky — stejné programy, stejné ceny.', en: 'Pricing is unified across all locations — same programs, same prices.', de: 'Die Preise sind an allen Standorten gleich.', uk: 'Ціни єдині для всіх локацій — ті ж програми, ті ж ціни.' },
+      },
+    ],
+    relatedHashtags: ['spolecnice-praha', 'brunetky-praha', 'gfe-praha', 'cernovlasky-praha'],
+  },
+
   'vinohrady': {
     metaDesc: {
       cs: 'Apartmán Vinohrady Praha 2 — ověřené společnice, diskrétní privátní byt. Metro a tramvaj minutu pěšky, hotovostní platba.',

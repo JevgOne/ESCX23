@@ -169,6 +169,14 @@ export default async function AdminEditPobockaPage({
               </label>
             </div>
           </div>
+          <div className="admin-form-field" style={{ marginTop: '12px' }}>
+            <label htmlFor="opening_date">Datum otevření</label>
+            <input id="opening_date" name="opening_date" type="date"
+              defaultValue={String(loc.opening_date ?? '')} />
+            <span style={{ fontSize: '11px', color: 'var(--color-text-dim)' }}>
+              Pokud je v budoucnu, pobočka se zobrazí jako &quot;Připravujeme&quot;
+            </span>
+          </div>
         </fieldset>
 
         <div className="admin-submit-row">
