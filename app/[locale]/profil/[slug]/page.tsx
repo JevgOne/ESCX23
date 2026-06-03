@@ -21,7 +21,6 @@ import ProfilGallery from '@/components/profil/ProfilGallery';
 import ProfilServices from '@/components/profil/ProfilServices';
 import ProfilPricing from '@/components/profil/ProfilPricing';
 import ProfilReviews from '@/components/profil/ProfilReviews';
-import ProfilStickyCta from '@/components/profil/ProfilStickyCta';
 import VipGate from '@/components/profil/VipGate';
 import SimilarGirls from '@/components/profil/SimilarGirls';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
@@ -382,7 +381,7 @@ export default async function ProfilPage({ params }: Props) {
         <SimilarGirls currentSlug={slug} locale={locale} />
       </div>
 
-      <ProfilStickyCta girl={girlTyped} labels={labels} shiftFrom={todaySchedule.shiftFrom} shiftTo={todaySchedule.shiftTo} locale={locale} scheduleLocation={todaySchedule.scheduleLocation} />
+      {/* Sticky CTA bar removed — info already in header */}
     </main>
   );
 }
