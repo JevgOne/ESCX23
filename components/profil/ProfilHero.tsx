@@ -177,7 +177,6 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           />
         </div>
         <div className="ig-info">
-          <div className="ig-verified-line">✓ {locale === 'cs' ? 'Ověřené' : locale === 'de' ? 'Verifiziert' : locale === 'uk' ? 'Перевірено' : 'Verified'}</div>
           <div className="ig-name-row">
             <span className="ig-name">{name}</span>
           </div>
@@ -266,6 +265,14 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
         </div>
       )}
 
+      <div className="ig-verified-line">✓ {locale === 'cs' ? 'Ověřené fotografie' : locale === 'de' ? 'Verifizierte Fotos' : locale === 'uk' ? 'Перевірені фото' : 'Verified photos'}</div>
+
+      {bio && (
+        <div className="profile-ig-bio">
+          <p>{bio.length > 200 ? bio.slice(0, 200) + '…' : bio}</p>
+        </div>
+      )}
+
       {topServices.length > 0 && (
         <div className="profile-ig-services">
           <div className="ig-services-lbl">
@@ -324,13 +331,6 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           </a>
         )}
       </div>
-
-      {/* Mobile-only bio snippet */}
-      {bio && (
-        <div className="profile-ig-bio">
-          <p>{bio.length > 200 ? bio.slice(0, 200) + '…' : bio}</p>
-        </div>
-      )}
 
       {personalMessage && (
         <blockquote className="profile-personal-msg">
