@@ -3294,8 +3294,10 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   }
   .profile-ig-bio p {
     color: var(--color-text-muted);
-    font-size: 13.5px;
-    line-height: 1.65;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.7;
     margin: 0;
   }
 
