@@ -293,13 +293,17 @@ export default async function JoinPage({ params, searchParams }: Props) {
           <fieldset className="apply-form-section">
             <legend>{locale === 'cs' ? 'Styl & Šatník' : 'Style & Wardrobe'}</legend>
             <div className="form-group">
-              <div className="jn-svc-label">{locale === 'cs' ? 'Jak se obvykle oblékáte?' : 'How do you usually dress?'}</div>
+              <div className="jn-svc-label">{locale === 'cs' ? 'Váš běžný styl oblékání' : 'Your everyday style'}</div>
+              <p className="jn-svc-hint">{locale === 'cs' ? 'Jak se běžně oblékáte? Zaškrtněte vše co vás vystihuje' : 'How do you normally dress? Check all that apply'}</p>
               <div className="jn-svc-grid">
                 {([
                   { id: 'elegant', cs: 'Elegantní', en: 'Elegant' },
                   { id: 'casual', cs: 'Casual / ležérní', en: 'Casual' },
                   { id: 'sporty', cs: 'Sportovní', en: 'Sporty' },
-                  { id: 'sexy', cs: 'Sexy / dráždivý', en: 'Sexy / provocative' },
+                  { id: 'glamour', cs: 'Glamour / okázalý', en: 'Glamour' },
+                  { id: 'minimalist', cs: 'Minimalistický', en: 'Minimalist' },
+                  { id: 'romantic', cs: 'Romantický / ženský', en: 'Romantic / feminine' },
+                  { id: 'streetwear', cs: 'Streetwear / moderní', en: 'Streetwear / trendy' },
                   { id: 'business', cs: 'Business / formální', en: 'Business / formal' },
                   { id: 'bohemian', cs: 'Bohémský / artsy', en: 'Bohemian / artsy' },
                 ] as const).map((s) => (
@@ -311,22 +315,24 @@ export default async function JoinPage({ params, searchParams }: Props) {
               </div>
             </div>
             <div className="form-group">
-              <div className="jn-svc-label">{locale === 'cs' ? 'Co si můžete obléct na schůzku?' : 'What can you wear for a date?'}</div>
-              <p className="jn-svc-hint">{locale === 'cs' ? 'Zaškrtněte vše, co máte k dispozici' : 'Check everything you have available'}</p>
+              <div className="jn-svc-label">{locale === 'cs' ? 'Sexy outfity na vyžádání' : 'Sexy outfits on request'}</div>
+              <p className="jn-svc-hint">{locale === 'cs' ? 'Co můžete obléct na přání klienta? Zaškrtněte vše co máte' : 'What can you wear on client request? Check all you have'}</p>
               <div className="jn-svc-grid">
                 {([
-                  { id: 'cocktail_dress', cs: 'Koktejlové šaty', en: 'Cocktail dress' },
-                  { id: 'evening_gown', cs: 'Večerní šaty', en: 'Evening gown' },
-                  { id: 'lingerie', cs: 'Lingerie / spodní prádlo', en: 'Lingerie' },
-                  { id: 'swimwear', cs: 'Plavky / bikiny', en: 'Swimwear / bikini' },
-                  { id: 'stockings', cs: 'Punčochy / podvazky', en: 'Stockings / garters' },
+                  { id: 'lingerie', cs: 'Sexy lingerie', en: 'Sexy lingerie' },
+                  { id: 'stockings', cs: 'Punčochy & podvazky', en: 'Stockings & garters' },
                   { id: 'high_heels', cs: 'Vysoké podpatky', en: 'High heels' },
-                  { id: 'boots', cs: 'Kozačky', en: 'Boots' },
-                  { id: 'latex_leather', cs: 'Latex / kůže', en: 'Latex / leather' },
-                  { id: 'uniform', cs: 'Uniforma / kostým', en: 'Uniform / costume' },
-                  { id: 'business_suit', cs: 'Business outfit', en: 'Business outfit' },
-                  { id: 'jeans_tshirt', cs: 'Džíny & tričko', en: 'Jeans & t-shirt' },
-                  { id: 'mini_skirt', cs: 'Minisukně', en: 'Mini skirt' },
+                  { id: 'boots', cs: 'Kozačky / overknee', en: 'Boots / overknee' },
+                  { id: 'latex', cs: 'Latex / vinyl', en: 'Latex / vinyl' },
+                  { id: 'leather', cs: 'Kůže / kožené doplňky', en: 'Leather / leather accessories' },
+                  { id: 'corset', cs: 'Korzet', en: 'Corset' },
+                  { id: 'bodystocking', cs: 'Bodystocking / catsuit', en: 'Bodystocking / catsuit' },
+                  { id: 'costume', cs: 'Kostým / role-play outfit', en: 'Costume / role-play outfit' },
+                  { id: 'nurse', cs: 'Zdravotní sestřička', en: 'Nurse' },
+                  { id: 'schoolgirl', cs: 'Školačka', en: 'Schoolgirl' },
+                  { id: 'maid', cs: 'Pokojská', en: 'Maid' },
+                  { id: 'secretary', cs: 'Sekretářka', en: 'Secretary' },
+                  { id: 'swimwear', cs: 'Plavky / bikiny', en: 'Swimwear / bikini' },
                 ] as const).map((s) => (
                   <label key={s.id} className="jn-svc-chk">
                     <input type="checkbox" name="wardrobe_item" value={s.id} />
