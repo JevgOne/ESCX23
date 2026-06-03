@@ -268,7 +268,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
       {topServices.length > 0 && (
         <div className="profile-ig-services">
           <div className="ig-services-lbl">
-            ★ {locale === 'cs' ? 'TOP služby' : locale === 'de' ? 'Top-Services' : locale === 'uk' ? 'ТОП послуги' : 'Top services'}
+            ★ {locale === 'cs' ? 'Služby' : locale === 'de' ? 'Leistungen' : locale === 'uk' ? 'Послуги' : 'Services'}
           </div>
           <div className="ig-services-list">
             {topServices.filter(s => s.category === 'basic').map((s, i) => (
