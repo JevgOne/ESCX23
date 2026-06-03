@@ -3804,8 +3804,13 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--color-green);
+  color: #fff;
   font-weight: 600;
+  font-size: 12px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 20px;
+  padding: 5px 14px 5px 10px;
 }
 .profile-meta-live::before {
   content: '';
@@ -3814,6 +3819,7 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   background: var(--color-green);
   box-shadow: 0 0 8px var(--color-green);
   animation: pulse-green 2s infinite;
+  flex-shrink: 0;
 }
 
 .profile-facts {
