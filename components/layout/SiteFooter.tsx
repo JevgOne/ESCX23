@@ -139,7 +139,7 @@ export default async function SiteFooter() {
                     return (
                       <li key={loc.id}>
                         <a href={`${localePrefix}/pobocka/${loc.name}`}>
-                          {label}{isUpcoming ? ` — ${soonLbl}` : ''}
+                          {label}{isUpcoming ? ` — ${loc.openingDate ? new Date(loc.openingDate + 'T00:00:00').toLocaleDateString(locale === 'cs' ? 'cs-CZ' : locale === 'de' ? 'de-DE' : locale === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'numeric', year: 'numeric' }) : soonLbl}` : ''}
                         </a>
                       </li>
                     );
