@@ -11,6 +11,7 @@ import {
   getGirlScheduleForToday,
   type ServiceRow,
 } from '@/lib/queries';
+import { photoUrl } from '@/lib/photoUrl';
 import { getCurrentUser } from '@/lib/auth';
 import { profilePersonJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { getProfileCanonical, getProfileAlternates, ogLocale } from '@/lib/seo/meta';
@@ -94,6 +95,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const languages = getProfileAlternates(slug);
   const status = String(girl.status ?? 'active');
 
+  // Primary photo for OG image
+  const photos = await getPhotosForGirl(Number(girl.id));
+  const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
+  const primaryPhotoUrl = primaryPhoto?.url ? photoUrl(String(primaryPhoto.url)) : null;
+
   return {
     title: localizedTitle,
     description: metaDesc,
@@ -107,12 +113,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: canonical,
       type: 'profile',
       locale: ogLocale(locale),
-      // Next.js automatically picks up opengraph-image.tsx in this route; do not override here.
+      images: primaryPhotoUrl ? [{ url: primaryPhotoUrl, width: 800, height: 1067, alt: `${name}, ${age}` }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
       title: localizedTitle,
       description: ogDesc,
+      images: primaryPhotoUrl ? [primaryPhotoUrl] : undefined,
     },
     robots:
       status === 'active'

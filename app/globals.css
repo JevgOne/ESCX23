@@ -2870,6 +2870,8 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 .profile-ig-hashtags { display: none !important; }
 .profile-ig-styl { display: none !important; }
 .profile-ig-bio { display: none; }
+.profile-photo-col > .profile-voice { display: none; }
+.profile-photo-col > .profile-personal-msg { display: none; }
 .profile-personal-msg {
   border-left: 3px solid var(--color-coral);
   margin: 12px 0 16px;
