@@ -265,8 +265,6 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
         </div>
       )}
 
-      <div className="ig-verified-line">✓ {locale === 'cs' ? 'Ověřené fotografie' : locale === 'de' ? 'Verifizierte Fotos' : locale === 'uk' ? 'Перевірені фото' : 'Verified photos'}</div>
-
       {bio && (
         <div className="profile-ig-bio">
           <p>{bio.length > 200 ? bio.slice(0, 200) + '…' : bio}</p>
@@ -375,6 +373,8 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           )}
         </div>
       </div>
+
+      <div className="ig-verified-line">✓ {locale === 'cs' ? 'Ověřené fotografie' : locale === 'de' ? 'Verifizierte Fotos' : locale === 'uk' ? 'Перевірені фото' : 'Verified photos'}{girl.created_at != null ? ` · ${new Date(String(girl.created_at)).toLocaleDateString('cs-CZ')}` : ''}</div>
 
       <div className="media-tabs">
         <span className="media-tab active">{fotoLabel} <span className="media-tab-count">{photos.length}</span></span>
