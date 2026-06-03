@@ -1,6 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { getGirlById, getGirlServices, getAllServices, getActiveLocations } from '@/lib/queries';
+import { getGirlById, getGirlServices, getAllServices } from '@/lib/queries';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import { updateGirl, deleteGirl } from '@/lib/admin-actions';
 import { getBasicServices, getExtraServices } from '@/lib/services';
@@ -330,10 +330,9 @@ export default async function AdminGirlEditPage({
   const girl = await getGirlById(Number(id));
   if (!girl) notFound();
 
-  const [existingServiceIds, allServices, locations] = await Promise.all([
+  const [existingServiceIds, allServices] = await Promise.all([
     getGirlServices(Number(id)),
     getAllServices(),
-    getActiveLocations(),
   ]);
 
   // Map lib/services.ts slug → DB integer ID (girl_services FK uses numeric id)
@@ -452,13 +451,12 @@ export default async function AdminGirlEditPage({
           </div>
 
           <div className="gf2-field">
-            <label className="gf2-label" htmlFor="slug">
-              Slug
-              <span style={{ color: '#e8836a', fontSize: '10px', fontWeight: 400, textTransform: 'none', marginLeft: '6px' }}>
-                ⚠ Změna přeruší URL
-              </span>
-            </label>
-            <input id="slug" name="slug" type="text" defaultValue={g.slug} required className="gf2-mono" />
+            <label className="gf2-label">Slug</label>
+            <input type="hidden" name="slug" value={g.slug} />
+            <div style={{ padding: '9px 12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', color: 'rgba(255,255,255,0.5)', fontSize: '14px', fontFamily: 'monospace' }}>
+              /{g.slug}
+            </div>
+            <div className="gf2-hint">Generuje se automaticky z jména</div>
           </div>
 
           <div className="gf2-row">
@@ -476,17 +474,7 @@ export default async function AdminGirlEditPage({
             </div>
           </div>
 
-          <div className="gf2-field">
-            <label className="gf2-label" htmlFor="location">Pobočka</label>
-            <select id="location" name="location" defaultValue={g.location}>
-              <option value="">— nevybráno —</option>
-              {locations.map((loc) => (
-                <option key={loc.id} value={loc.name}>
-                  {loc.displayName}{loc.district ? ` — ${loc.district}` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Pobočka se nastavuje v rozvrhu, ne na profilu dívky */}
         </div>
 
         {/* SEKCE 2: Kontakt */}
@@ -502,14 +490,11 @@ export default async function AdminGirlEditPage({
               <input id="email" name="email" type="email" defaultValue={g.email} placeholder="nika@example.com" />
             </div>
             <div className="gf2-field">
-              <label className="gf2-label" htmlFor="phone">Telefon</label>
-              <input id="phone" name="phone" type="tel" defaultValue={g.phone} placeholder="+420 XXX XXX XXX" />
+              <label className="gf2-label">Telefon / WhatsApp / Telegram</label>
+              <div style={{ padding: '9px 12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>
+                +420 734 332 131 <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>(stejný pro všechny)</span>
+              </div>
             </div>
-          </div>
-
-          <div className="gf2-field">
-            <label className="gf2-label" htmlFor="telegram">Telegram</label>
-            <input id="telegram" name="telegram" type="text" defaultValue={g.telegram} placeholder="@username nebo číslo" />
           </div>
 
           <div className="gf2-field">
@@ -617,28 +602,17 @@ export default async function AdminGirlEditPage({
           </div>
 
           <div className="gf2-field">
-            <label className="gf2-label">Tetování (%)</label>
-            <div className="gf2-slider-row">
-              <input
-                type="range"
-                name="tattoo_percentage"
-                min={0}
-                max={100}
-                defaultValue={g.tattoo_percentage}
-                className="gf2-slider"
-              />
-              <input
-                type="number"
-                name="tattoo_percentage_display"
-                min={0}
-                max={100}
-                defaultValue={g.tattoo_percentage}
-                className="gf2-slider-num"
-                aria-hidden="true"
-                tabIndex={-1}
-                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', padding: '6px', width: '56px', textAlign: 'center' }}
-              />
-            </div>
+            <label className="gf2-label" htmlFor="tattoo_percentage">Tetování (% pokrytí těla)</label>
+            <input
+              id="tattoo_percentage"
+              type="number"
+              name="tattoo_percentage"
+              min={0}
+              max={100}
+              defaultValue={g.tattoo_percentage}
+              placeholder="0"
+            />
+            <div className="gf2-hint">0 = žádné, 5 = diskrétní, 30 = viditelné, 70+ = výrazné/celé tělo</div>
           </div>
 
           <div className="gf2-field">
@@ -887,48 +861,43 @@ export default async function AdminGirlEditPage({
           </div>
         </div>
 
-        {/* SEKCE 12: Status / Badges */}
+        {/* SEKCE 12: Zvýraznění */}
         <div className="gf2-section">
           <div className="gf2-section-head">
             <div className="gf2-step-badge">12</div>
-            <div className="gf2-section-title">Status / Badges</div>
+            <div className="gf2-section-title">Zvýraznění profilu</div>
           </div>
 
           <div className="gf2-field" style={{ maxWidth: '240px' }}>
-            <label className="gf2-label" htmlFor="badge_type">Badge typ</label>
+            <label className="gf2-label" htmlFor="badge_type">Badge na kartě</label>
             <select id="badge_type" name="badge_type" defaultValue={g.badge_type}>
               {BADGE_OPTIONS.map((b) => (
                 <option key={b.value} value={b.value}>{b.label}</option>
               ))}
             </select>
+            <div className="gf2-hint">Zobrazí se jako štítek na fotce v seznamu dívek</div>
           </div>
 
           <div className="gf2-checks-row">
             <label className="gf2-check-label">
-              <input type="checkbox" name="vip" defaultChecked={g.vip} />
-              VIP profil (jen pro členy)
-            </label>
-            <label className="gf2-check-label">
               <input type="checkbox" name="is_featured" defaultChecked={g.is_featured} />
-              Featured (zvýrazněná)
+              Featured (zvýrazněná na homepage)
             </label>
             <label className="gf2-check-label">
               <input type="checkbox" name="is_top" defaultChecked={g.is_top} />
-              Top dívka
+              Top dívka (řadí se první)
             </label>
             <label className="gf2-check-label">
               <input type="checkbox" name="is_new" defaultChecked={g.is_new} />
-              Je nová (badge NEW)
+              Nová (badge NEW na kartě)
             </label>
             <label className="gf2-check-label">
-              <input type="checkbox" name="verified" defaultChecked={g.verified} />
-              Ověřená
-            </label>
-            <label className="gf2-check-label">
-              <input type="checkbox" name="online" defaultChecked={g.online} />
-              Online teď
+              <input type="checkbox" name="vip" defaultChecked={g.vip} />
+              VIP (jen pro VIP členy)
             </label>
           </div>
+          {/* verified = vždy on (fotky ověřujeme my), online se neřeší manuálně */}
+          <input type="hidden" name="verified" value="on" />
         </div>
 
         <div className="gf2-submit-row">

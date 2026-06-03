@@ -102,9 +102,10 @@ interface ProfilHeroProps {
   stylH?: string;
   stylSub?: string;
   stylNote?: string;
+  styleWardrobe?: string | null;
 }
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -295,13 +296,74 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
         </div>
       )}
 
-      {stylH && (
-        <div className="profile-mini-block profile-ig-styl">
-          <div className="profile-mini-label">{stylH}</div>
-          {stylSub && <p className="profile-styl-sub">{stylSub}</p>}
-          {stylNote && <p className="profile-styl-note">{stylNote}</p>}
-        </div>
-      )}
+      {(() => {
+        if (!styleWardrobe) return null;
+        let parsed: { style?: string[]; wardrobe?: string[] } = {};
+        try { parsed = JSON.parse(styleWardrobe); } catch { return null; }
+        const styles = parsed.style ?? [];
+        const wardrobe = parsed.wardrobe ?? [];
+        if (styles.length === 0 && wardrobe.length === 0) return null;
+
+        const STYLE_LABELS: Record<string, Record<string, string>> = {
+          elegant:    { cs: 'Elegantní', en: 'Elegant', de: 'Elegant', uk: 'Елегантний' },
+          casual:     { cs: 'Ležérní', en: 'Casual', de: 'Lässig', uk: 'Повсякденний' },
+          sporty:     { cs: 'Sportovní', en: 'Sporty', de: 'Sportlich', uk: 'Спортивний' },
+          glamour:    { cs: 'Glamour', en: 'Glamour', de: 'Glamour', uk: 'Гламурний' },
+          minimalist: { cs: 'Minimalistický', en: 'Minimalist', de: 'Minimalistisch', uk: 'Мінімалістичний' },
+          romantic:   { cs: 'Romantický', en: 'Romantic', de: 'Romantisch', uk: 'Романтичний' },
+          streetwear: { cs: 'Streetwear', en: 'Streetwear', de: 'Streetwear', uk: 'Streetwear' },
+          business:   { cs: 'Business', en: 'Business', de: 'Business', uk: 'Діловий' },
+          bohemian:   { cs: 'Bohémský', en: 'Bohemian', de: 'Bohème', uk: 'Бохо' },
+        };
+        const WARDROBE_LABELS: Record<string, Record<string, string>> = {
+          lingerie:     { cs: 'Spodní prádlo', en: 'Lingerie', de: 'Dessous', uk: 'Білизна' },
+          stockings:    { cs: 'Punčochy', en: 'Stockings', de: 'Strümpfe', uk: 'Панчохи' },
+          high_heels:   { cs: 'Vysoké podpatky', en: 'High heels', de: 'High Heels', uk: 'Високі підбори' },
+          boots:        { cs: 'Kozačky', en: 'Boots', de: 'Stiefel', uk: 'Чоботи' },
+          latex:        { cs: 'Latex', en: 'Latex', de: 'Latex', uk: 'Латекс' },
+          leather:      { cs: 'Kůže', en: 'Leather', de: 'Leder', uk: 'Шкіра' },
+          corset:       { cs: 'Korzet', en: 'Corset', de: 'Korsett', uk: 'Корсет' },
+          bodystocking: { cs: 'Bodystocking', en: 'Bodystocking', de: 'Bodystocking', uk: 'Бодістокінг' },
+          costume:      { cs: 'Kostým', en: 'Costume', de: 'Kostüm', uk: 'Костюм' },
+          nurse:        { cs: 'Zdravotní sestra', en: 'Nurse', de: 'Krankenschwester', uk: 'Медсестра' },
+          schoolgirl:   { cs: 'Školačka', en: 'Schoolgirl', de: 'Schulmädchen', uk: 'Школярка' },
+          maid:         { cs: 'Pokojská', en: 'Maid', de: 'Dienstmädchen', uk: 'Покоївка' },
+          secretary:    { cs: 'Sekretářka', en: 'Secretary', de: 'Sekretärin', uk: 'Секретарка' },
+          swimwear:     { cs: 'Plavky', en: 'Swimwear', de: 'Bademode', uk: 'Купальник' },
+        };
+
+        const stylLabel = locale === 'cs' ? 'Styl' : locale === 'de' ? 'Stil' : locale === 'uk' ? 'Стиль' : 'Style';
+        const wardrobeLabel = locale === 'cs' ? 'Sexy outfity' : locale === 'de' ? 'Sexy Outfits' : locale === 'uk' ? 'Сексі вбрання' : 'Sexy outfits';
+
+        return (
+          <div className="profile-mini-block profile-ig-styl">
+            {styles.length > 0 && (
+              <>
+                <div className="profile-mini-label">{stylLabel}</div>
+                <div className="ig-services-list" style={{ marginBottom: wardrobe.length > 0 ? '10px' : 0 }}>
+                  {styles.map((s) => (
+                    <span key={s} className="ig-styl-chip ig-styl-chip-style">
+                      {STYLE_LABELS[s]?.[locale] ?? STYLE_LABELS[s]?.en ?? s}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+            {wardrobe.length > 0 && (
+              <>
+                <div className="profile-mini-label">{wardrobeLabel}</div>
+                <div className="ig-services-list">
+                  {wardrobe.map((w) => (
+                    <span key={w} className="ig-styl-chip ig-styl-chip-wardrobe">
+                      {WARDROBE_LABELS[w]?.[locale] ?? WARDROBE_LABELS[w]?.en ?? w}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="profile-ig-cta">
         {phone && (

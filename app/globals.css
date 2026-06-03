@@ -3217,6 +3217,24 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     display: block !important;
     margin-bottom: 16px;
   }
+  .ig-styl-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    gap: 5px;
+  }
+  .ig-styl-chip-style {
+    background: rgba(242, 125, 141, 0.10);
+    border: 1px solid rgba(242, 125, 141, 0.30);
+    color: var(--color-coral);
+  }
+  .ig-styl-chip-wardrobe {
+    background: rgba(168, 85, 247, 0.10);
+    border: 1px solid rgba(168, 85, 247, 0.28);
+    color: #c084fc;
+  }
 
   /* Hashtags — compact, horizontally scrollable */
   .profile-ig-hashtags {
@@ -9124,6 +9142,26 @@ body {
 }
 .mini-chip-more:hover {
   background: rgba(242, 125, 141, 0.08);
+}
+
+/* Style & Wardrobe chips (desktop) */
+.mini-chip-style {
+  background: rgba(242, 125, 141, 0.08);
+  border-color: rgba(242, 125, 141, 0.25);
+  color: var(--color-text);
+}
+.mini-chip-style .mini-chip-dot {
+  color: var(--color-coral);
+  font-weight: 700;
+}
+.mini-chip-wardrobe {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: rgba(168, 85, 247, 0.22);
+  color: var(--color-text);
+}
+.mini-chip-wardrobe .mini-chip-dot {
+  color: #c084fc;
+  font-weight: 700;
 }
 
 /* Programs mini grid */

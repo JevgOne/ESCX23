@@ -332,6 +332,10 @@ export default async function ProfilPage({ params }: Props) {
               stylH={labels.styl_h}
               stylSub={labels.styl_sub}
               stylNote={labels.styl_note}
+              styleWardrobe={(() => {
+                const g = girl as unknown as Record<string, unknown>;
+                return g.style_wardrobe ? String(g.style_wardrobe) : null;
+              })()}
             />
             <ProfilDetails
               girl={girlTyped}
@@ -355,6 +359,10 @@ export default async function ProfilPage({ params }: Props) {
               voiceUrl={(() => {
                 const g = girl as unknown as Record<string, unknown>;
                 return g.voice_url ? String(g.voice_url) : null;
+              })()}
+              styleWardrobe={(() => {
+                const g = girl as unknown as Record<string, unknown>;
+                return g.style_wardrobe ? String(g.style_wardrobe) : null;
               })()}
             />
           </div>

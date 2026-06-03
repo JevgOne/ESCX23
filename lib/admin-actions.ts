@@ -52,11 +52,11 @@ export async function updateGirl(formData: FormData) {
     status: String(formData.get('status') ?? 'pending'),
     online: formData.get('online') === 'on' ? 1 : 0,
     badge_type: getStr('badge_type'),
-    location: getStr('location'),
+    location: null,
     nationality: getStr('nationality'),
-    telegram: getStr('telegram'),
+    telegram: null,
     email: getStr('email'),
-    phone: getStr('phone'),
+    phone: '+420734332131',
     languages: languagesCsv,
     is_new: formData.get('is_new') === 'on' ? 1 : 0,
     is_top: formData.get('is_top') === 'on' ? 1 : 0,
@@ -109,20 +109,25 @@ export async function updateGirl(formData: FormData) {
 export async function createGirl(formData: FormData) {
   await requireAdmin();
   const name = String(formData.get('name') ?? '').trim();
-  const rawSlug = String(formData.get('slug') ?? '').trim();
   const age = Number(formData.get('age'));
   const email = formData.get('email') ? String(formData.get('email')).trim() : null;
-  const phone = formData.get('phone') ? String(formData.get('phone')).trim() : null;
+  const phone = '+420734332131'; // agency phone — same for all girls
 
   if (!name) throw new Error('Jméno je povinné');
-  if (!rawSlug) throw new Error('Slug je povinný');
   if (!age || age < 18) throw new Error('Věk musí být minimálně 18');
 
   const nameCheck = await db.execute({ sql: `SELECT id FROM girls WHERE name=? LIMIT 1`, args: [name] });
   if (nameCheck.rows.length > 0) throw new Error('Dívka s tímto jménem již existuje');
 
-  const slugCheck = await db.execute({ sql: `SELECT id FROM girls WHERE slug=? LIMIT 1`, args: [rawSlug] });
-  if (slugCheck.rows.length > 0) throw new Error('Slug již existuje');
+  // Auto-generate slug from name
+  const baseSlug = slugify(name);
+  let rawSlug = baseSlug;
+  let suffix = 2;
+  while (true) {
+    const slugCheck = await db.execute({ sql: `SELECT id FROM girls WHERE slug=? LIMIT 1`, args: [rawSlug] });
+    if (slugCheck.rows.length === 0) break;
+    rawSlug = `${baseSlug}-${suffix++}`;
+  }
 
   const getStr = (k: string) => (formData.get(k) ? String(formData.get(k)).trim() : null);
   const getNum = (k: string) => (formData.get(k) ? Number(formData.get(k)) : null);

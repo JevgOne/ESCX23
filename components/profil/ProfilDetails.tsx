@@ -99,6 +99,7 @@ interface ProfilDetailsProps {
   primaryPhotoUrl?: string | null;
   personalMessage?: string | null;
   voiceUrl?: string | null;
+  styleWardrobe?: string | null;
 }
 
 const FLAG_MAP: Record<string, string> = {
@@ -199,7 +200,7 @@ function parseList(raw: unknown): string[] {
   return s.split(',').map((l) => l.trim()).filter(Boolean);
 }
 
-export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, services = [], plans = [], altDistricts = [], scheduleLocation, scheduleAddress, primaryPhotoUrl, personalMessage, voiceUrl }: ProfilDetailsProps) {
+export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, services = [], plans = [], altDistricts = [], scheduleLocation, scheduleAddress, primaryPhotoUrl, personalMessage, voiceUrl, styleWardrobe }: ProfilDetailsProps) {
   const name = String(girl.name ?? '');
   const age = Number(girl.age ?? 0);
   const rating = Number(girl.rating ?? 0);
@@ -391,12 +392,77 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
         </div>
       )}
 
-      {/* Styl — static content block (desktop only, mobile has it in ProfilHero) */}
-      <div className="profile-mini-block profile-desktop-only">
-        <div className="profile-mini-label">{labels.styl_h}</div>
-        <p className="profile-styl-sub">{labels.styl_sub}</p>
-        <p className="profile-styl-note">{labels.styl_note}</p>
-      </div>
+      {/* Styl & Šatník — from DB (desktop only, mobile has it in ProfilHero) */}
+      {(() => {
+        if (!styleWardrobe) return null;
+        let parsed: { style?: string[]; wardrobe?: string[] } = {};
+        try { parsed = JSON.parse(styleWardrobe); } catch { return null; }
+        const styles = parsed.style ?? [];
+        const wardrobe = parsed.wardrobe ?? [];
+        if (styles.length === 0 && wardrobe.length === 0) return null;
+
+        const STYLE_LABELS: Record<string, Record<string, string>> = {
+          elegant:    { cs: 'Elegantní', en: 'Elegant', de: 'Elegant', uk: 'Елегантний' },
+          casual:     { cs: 'Ležérní', en: 'Casual', de: 'Lässig', uk: 'Повсякденний' },
+          sporty:     { cs: 'Sportovní', en: 'Sporty', de: 'Sportlich', uk: 'Спортивний' },
+          glamour:    { cs: 'Glamour', en: 'Glamour', de: 'Glamour', uk: 'Гламурний' },
+          minimalist: { cs: 'Minimalistický', en: 'Minimalist', de: 'Minimalistisch', uk: 'Мінімалістичний' },
+          romantic:   { cs: 'Romantický', en: 'Romantic', de: 'Romantisch', uk: 'Романтичний' },
+          streetwear: { cs: 'Streetwear', en: 'Streetwear', de: 'Streetwear', uk: 'Streetwear' },
+          business:   { cs: 'Business', en: 'Business', de: 'Business', uk: 'Діловий' },
+          bohemian:   { cs: 'Bohémský', en: 'Bohemian', de: 'Bohème', uk: 'Бохо' },
+        };
+        const WARDROBE_LABELS: Record<string, Record<string, string>> = {
+          lingerie:     { cs: 'Spodní prádlo', en: 'Lingerie', de: 'Dessous', uk: 'Білизна' },
+          stockings:    { cs: 'Punčochy', en: 'Stockings', de: 'Strümpfe', uk: 'Панчохи' },
+          high_heels:   { cs: 'Vysoké podpatky', en: 'High heels', de: 'High Heels', uk: 'Високі підбори' },
+          boots:        { cs: 'Kozačky', en: 'Boots', de: 'Stiefel', uk: 'Чоботи' },
+          latex:        { cs: 'Latex', en: 'Latex', de: 'Latex', uk: 'Латекс' },
+          leather:      { cs: 'Kůže', en: 'Leather', de: 'Leder', uk: 'Шкіра' },
+          corset:       { cs: 'Korzet', en: 'Corset', de: 'Korsett', uk: 'Корсет' },
+          bodystocking: { cs: 'Bodystocking', en: 'Bodystocking', de: 'Bodystocking', uk: 'Бодістокінг' },
+          costume:      { cs: 'Kostým', en: 'Costume', de: 'Kostüm', uk: 'Костюм' },
+          nurse:        { cs: 'Zdravotní sestra', en: 'Nurse', de: 'Krankenschwester', uk: 'Медсестра' },
+          schoolgirl:   { cs: 'Školačka', en: 'Schoolgirl', de: 'Schulmädchen', uk: 'Школярка' },
+          maid:         { cs: 'Pokojská', en: 'Maid', de: 'Dienstmädchen', uk: 'Покоївка' },
+          secretary:    { cs: 'Sekretářka', en: 'Secretary', de: 'Sekretärin', uk: 'Секретарка' },
+          swimwear:     { cs: 'Plavky', en: 'Swimwear', de: 'Bademode', uk: 'Купальник' },
+        };
+
+        const stylLabel = locale === 'cs' ? 'Styl' : locale === 'de' ? 'Stil' : locale === 'uk' ? 'Стиль' : 'Style';
+        const wardrobeLabel = locale === 'cs' ? 'Sexy outfity' : locale === 'de' ? 'Sexy Outfits' : locale === 'uk' ? 'Сексі вбрання' : 'Sexy outfits';
+
+        return (
+          <div className="profile-mini-block profile-desktop-only">
+            {styles.length > 0 && (
+              <>
+                <div className="profile-mini-label">{stylLabel}</div>
+                <div className="profile-mini-chips" style={{ marginBottom: wardrobe.length > 0 ? '12px' : 0 }}>
+                  {styles.map((s) => (
+                    <span key={s} className="mini-chip mini-chip-style">
+                      <span className="mini-chip-dot">♦</span>
+                      {STYLE_LABELS[s]?.[locale] ?? STYLE_LABELS[s]?.en ?? s}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+            {wardrobe.length > 0 && (
+              <>
+                <div className="profile-mini-label">{wardrobeLabel}</div>
+                <div className="profile-mini-chips">
+                  {wardrobe.map((w) => (
+                    <span key={w} className="mini-chip mini-chip-wardrobe">
+                      <span className="mini-chip-dot">♠</span>
+                      {WARDROBE_LABELS[w]?.[locale] ?? WARDROBE_LABELS[w]?.en ?? w}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       {/* SLUŽBY — desktop only, mobile has them in ProfilHero IG section */}
       {includedServices.length + extraServices.length > 0 && (

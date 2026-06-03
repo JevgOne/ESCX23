@@ -177,35 +177,16 @@ export default async function AdminNovaDivkaPage({
             </div>
           </div>
 
-          <div className="gf2-new-field">
-            <label htmlFor="slug">Slug *</label>
-            <input
-              id="slug"
-              name="slug"
-              type="text"
-              required
-              placeholder="nika"
-              defaultValue={defaults.slug}
-              style={{ fontFamily: 'monospace' }}
-              pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              title="Pouze malá písmena, číslice a pomlčky (např. petra-nova)"
-            />
-            <div className="gf2-new-hint">URL-friendly, bez diakritiky, malá písmena (např. petra-nova)</div>
-          </div>
+          {/* Slug se generuje automaticky z jména */}
         </div>
 
         <div className="gf2-new-card">
           <h3>Kontakt</h3>
-          <div className="gf2-new-row">
-            <div className="gf2-new-field">
-              <label htmlFor="email">Email</label>
-              <input id="email" name="email" type="email" placeholder="nika@example.com" defaultValue={defaults.email} />
-            </div>
-            <div className="gf2-new-field">
-              <label htmlFor="phone">Telefon</label>
-              <input id="phone" name="phone" type="tel" placeholder="+420 XXX XXX XXX" defaultValue={defaults.phone} />
-            </div>
+          <div className="gf2-new-field">
+            <label htmlFor="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="nika@example.com" defaultValue={defaults.email} />
           </div>
+          <div className="gf2-new-info">Telefon / WhatsApp / Telegram: +420 734 332 131 (nastaví se automaticky — stejný pro všechny)</div>
         </div>
 
         <div className="gf2-new-card">
