@@ -179,7 +179,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
         <div className="ig-info">
           <div className="ig-name-row">
             <span className="ig-name">{name}</span>
-            <span className="ig-verified-badge" title={verifiedLabel}>✓</span>
+            <span className="ig-verified-tick">✓</span>
           </div>
           <div className="ig-loc">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
