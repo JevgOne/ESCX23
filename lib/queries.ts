@@ -1299,8 +1299,20 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
     to = r.ex_to ? String(r.ex_to).substring(0, 5) : to;
   }
 
-  const scheduleLocation = r.schedule_location ? String(r.schedule_location) : null;
-  const scheduleAddress = r.schedule_address ? String(r.schedule_address) : null;
+  let scheduleLocation = r.schedule_location ? String(r.schedule_location) : null;
+  let scheduleAddress = r.schedule_address ? String(r.schedule_address) : null;
+
+  // Fallback: if no schedule today, get the girl's primary location
+  if (!scheduleAddress) {
+    const fallback = await db.execute({
+      sql: `SELECT DISTINCT l.display_name FROM girl_schedules gs JOIN locations l ON l.id = gs.location_id WHERE gs.girl_id = ? AND gs.is_active = 1 LIMIT 1`,
+      args: [girlId],
+    });
+    if (fallback.rows[0]?.display_name) {
+      scheduleAddress = String(fallback.rows[0].display_name);
+      scheduleLocation = scheduleAddress;
+    }
+  }
 
   return { shiftFrom: from, shiftTo: to, scheduleLocation, scheduleAddress };
 }
