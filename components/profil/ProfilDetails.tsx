@@ -285,44 +285,27 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
         )}
       </div>
 
-      {/* Premium stat hero strip — věk/výška/váha */}
-      <div className="profile-stat-hero profile-desktop-only">
-        <div className="profile-stat-hero-cell">
-          <div className="psh-num coral">{age}<span className="psh-unit">{locale === 'cs' ? 'let' : locale === 'de' ? 'J.' : locale === 'uk' ? 'р.' : 'y/o'}</span></div>
-          <div className="psh-label">{locale === 'cs' ? 'Věk' : locale === 'de' ? 'Alter' : locale === 'uk' ? 'Вік' : 'Age'}</div>
-        </div>
+      {/* Compact stats — all in one pill row */}
+      <div className="profile-stat-details profile-desktop-only">
+        <span className="psd-pill psd-pill-age">
+          <span className="psd-value psd-value-coral">{age} {locale === 'cs' ? 'let' : locale === 'de' ? 'J.' : locale === 'uk' ? 'р.' : 'y/o'}</span>
+        </span>
         {girl.height != null && (
-          <div className="profile-stat-hero-cell">
-            <div className="psh-num">{String(girl.height)}<span className="psh-unit">cm</span></div>
-            <div className="psh-label">{locale === 'cs' ? 'Výška' : locale === 'de' ? 'Größe' : locale === 'uk' ? 'Зріст' : 'Height'}</div>
-          </div>
+          <span className="psd-pill">
+            <span className="psd-label">{locale === 'cs' ? 'Výška' : locale === 'de' ? 'Größe' : locale === 'uk' ? 'Зріст' : 'Height'}</span>
+            <span className="psd-value">{String(girl.height)} cm</span>
+          </span>
         )}
         {girl.weight != null && (
-          <div className="profile-stat-hero-cell">
-            <div className="psh-num">{String(girl.weight)}<span className="psh-unit">kg</span></div>
-            <div className="psh-label">{locale === 'cs' ? 'Váha' : locale === 'de' ? 'Gewicht' : locale === 'uk' ? 'Вага' : 'Weight'}</div>
-          </div>
+          <span className="psd-pill">
+            <span className="psd-label">{locale === 'cs' ? 'Váha' : locale === 'de' ? 'Gewicht' : locale === 'uk' ? 'Вага' : 'Weight'}</span>
+            <span className="psd-value">{String(girl.weight)} kg</span>
+          </span>
         )}
-      </div>
-
-      {/* Detail pills — bust, eyes, hair, tattoo, piercing + jazyky */}
-      <div className="profile-stat-details profile-desktop-only">
         {girl.bust != null && (
           <span className="psd-pill">
             <span className="psd-label">{locale === 'cs' ? 'Prsa' : locale === 'de' ? 'Brust' : locale === 'uk' ? 'Груди' : 'Bust'}</span>
             <span className="psd-value">{String(girl.bust)}{bustUnit ? ` · ${bustUnit}` : ''}</span>
-          </span>
-        )}
-        {girl.waist != null && (
-          <span className="psd-pill">
-            <span className="psd-label">{labels.acc.waist}</span>
-            <span className="psd-value">{String(girl.waist)} cm</span>
-          </span>
-        )}
-        {girl.hips != null && (
-          <span className="psd-pill">
-            <span className="psd-label">{labels.acc.hips}</span>
-            <span className="psd-value">{String(girl.hips)} cm</span>
           </span>
         )}
         {girl.eyes != null && String(girl.eyes).trim() !== '' && (
@@ -369,12 +352,6 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
 
       {bio && <p className="profile-bio profile-desktop-only">{bio}</p>}
 
-      {personalMessage && (
-        <blockquote className="profile-personal-msg profile-desktop-only">
-          &ldquo;{personalMessage}&rdquo;
-        </blockquote>
-      )}
-
       {voiceUrl && (
         <div className="profile-voice profile-desktop-only">
           <div className="profile-voice-label">
@@ -389,6 +366,25 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
           <audio controls preload="none" className="profile-voice-audio">
             <source src={voiceUrl} />
           </audio>
+        </div>
+      )}
+
+      {/* SLUŽBY — desktop only, mobile has them in ProfilHero IG section */}
+      {includedServices.length + extraServices.length > 0 && (
+        <div className="profile-mini-block profile-desktop-only">
+          <div className="profile-mini-label">★ {locale === 'cs' ? 'Služby' : locale === 'de' ? 'Leistungen' : locale === 'uk' ? 'Послуги' : 'Services'}</div>
+          <div className="profile-mini-chips">
+            {includedServices.map((svc) => (
+              <Link key={`i-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-included">
+                <span className="mini-chip-dot">✓</span>{localizedServiceName(svc, locale)}
+              </Link>
+            ))}
+            {extraServices.map((svc) => (
+              <Link key={`e-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-extra">
+                <span className="mini-chip-dot">💬</span>{localizedServiceName(svc, locale)}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
@@ -464,29 +460,11 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
         );
       })()}
 
-      {/* SLUŽBY — desktop only, mobile has them in ProfilHero IG section */}
-      {includedServices.length + extraServices.length > 0 && (
-        <div className="profile-mini-block profile-desktop-only">
-          <div className="profile-mini-label">★ {locale === 'cs' ? 'Služby' : locale === 'de' ? 'Leistungen' : locale === 'uk' ? 'Послуги' : 'Services'}</div>
-          <div className="profile-mini-chips">
-            {includedServices.map((svc) => (
-              <Link key={`i-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-included">
-                <span className="mini-chip-dot">✓</span>{localizedServiceName(svc, locale)}
-              </Link>
-            ))}
-            {extraServices.map((svc) => (
-              <Link key={`e-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-extra">
-                <span className="mini-chip-dot">💬</span>{localizedServiceName(svc, locale)}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
+      {/* Hashtagy — skryté vizuálně, zůstávají v HTML pro SEO crawlery */}
       {hashtags.length > 0 && (
-        <div className="profile-hashtags profile-desktop-only">
+        <div className="profile-hashtags-seo" aria-hidden="true">
           {hashtags.map((tag) => (
-            <Link key={tag} href={`${hashtagPath}/${tag}`} className="profile-hashtag-pill">
+            <Link key={tag} href={`${hashtagPath}/${tag}`} tabIndex={-1}>
               #{tag}
             </Link>
           ))}

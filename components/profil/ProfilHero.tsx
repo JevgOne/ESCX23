@@ -424,18 +424,6 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
         />
       </div>
 
-      <div className="verified-strip">
-        <div className="verified-check">✓</div>
-        <div className="verified-text">
-          <div className="verified-text-main">{verifiedLabel}</div>
-          {girl.created_at != null && (
-            <div className="verified-text-meta">
-              {new Date(String(girl.created_at)).toLocaleDateString('cs-CZ')}
-            </div>
-          )}
-        </div>
-      </div>
-
       <div className="media-tabs">
         <span className="media-tab active">{fotoLabel} <span className="media-tab-count">{photos.length}</span></span>
         <span className="media-tab">{videoLabel} <span className="media-tab-count">0</span></span>

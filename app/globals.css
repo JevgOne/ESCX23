@@ -9143,6 +9143,22 @@ body {
   background: rgba(242, 125, 141, 0.08);
 }
 
+/* Age pill accent */
+.psd-value-coral {
+  color: var(--color-coral);
+  font-weight: 700;
+}
+
+/* SEO-only hashtags — hidden visually, present in DOM for crawlers */
+.profile-hashtags-seo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 /* Style & Wardrobe chips (desktop) */
 .mini-chip-style {
   background: rgba(242, 125, 141, 0.08);
