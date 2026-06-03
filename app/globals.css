@@ -2870,7 +2870,6 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 .profile-ig-hashtags { display: none !important; }
 .profile-ig-styl { display: none !important; }
 .profile-ig-bio { display: none; }
-.ig-verified-line { display: none; }
 .profile-photo-col > .profile-voice { display: none; }
 .profile-photo-col > .profile-personal-msg { display: none; }
 .profile-personal-msg {
@@ -2978,16 +2977,6 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     letter-spacing: -0.01em;
     color: var(--color-text);
     line-height: 1;
-  }
-  .ig-verified-line {
-    display: block;
-    color: #4ecca3;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    line-height: 1;
-    margin-bottom: 2px;
   }
   .verified-strip { display: none !important; }
   .profile-ig-cta { display: none !important; }
