@@ -44,17 +44,24 @@ export async function submitApplication(formData: FormData) {
   const bio_en = formData.get('bio_en') ? String(formData.get('bio_en')) : null;
   const experience = formData.get('experience') ? String(formData.get('experience')) : null;
 
+  // Style & Wardrobe — combine style types + wardrobe items into JSON
+  const styleTypes = formData.getAll('style_type').map(String).filter(Boolean);
+  const wardrobeItems = formData.getAll('wardrobe_item').map(String).filter(Boolean);
+  const styleWardrobe = (styleTypes.length > 0 || wardrobeItems.length > 0)
+    ? JSON.stringify({ style: styleTypes, wardrobe: wardrobeItems })
+    : null;
+
   await db.execute({
     sql: `INSERT INTO girl_applications
       (name, age, height, weight, bust, bust_natural, waist, hips, email, phone, telegram,
        hair, eyes, tattoo, tattoo_description, piercing,
-       languages, services, availability, bio_cs, bio_en, experience, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+       languages, services, availability, bio_cs, bio_en, experience, style_wardrobe, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
     args: [
       name, age, height, weight, bust, bustNatural, waist, hips,
       email, phone, telegram,
       hair, eyes, tattoo, tattooDescription, piercing,
-      languages, services, availability, bio_cs, bio_en, experience,
+      languages, services, availability, bio_cs, bio_en, experience, styleWardrobe,
     ],
   });
 

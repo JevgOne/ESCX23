@@ -291,6 +291,53 @@ export default async function JoinPage({ params, searchParams }: Props) {
           </fieldset>
 
           <fieldset className="apply-form-section">
+            <legend>{locale === 'cs' ? 'Styl & Šatník' : 'Style & Wardrobe'}</legend>
+            <div className="form-group">
+              <div className="jn-svc-label">{locale === 'cs' ? 'Jak se obvykle oblékáte?' : 'How do you usually dress?'}</div>
+              <div className="jn-svc-grid">
+                {([
+                  { id: 'elegant', cs: 'Elegantní', en: 'Elegant' },
+                  { id: 'casual', cs: 'Casual / ležérní', en: 'Casual' },
+                  { id: 'sporty', cs: 'Sportovní', en: 'Sporty' },
+                  { id: 'sexy', cs: 'Sexy / dráždivý', en: 'Sexy / provocative' },
+                  { id: 'business', cs: 'Business / formální', en: 'Business / formal' },
+                  { id: 'bohemian', cs: 'Bohémský / artsy', en: 'Bohemian / artsy' },
+                ] as const).map((s) => (
+                  <label key={s.id} className="jn-svc-chk">
+                    <input type="checkbox" name="style_type" value={s.id} />
+                    <span>{locale === 'cs' ? s.cs : s.en}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="form-group">
+              <div className="jn-svc-label">{locale === 'cs' ? 'Co si můžete obléct na schůzku?' : 'What can you wear for a date?'}</div>
+              <p className="jn-svc-hint">{locale === 'cs' ? 'Zaškrtněte vše, co máte k dispozici' : 'Check everything you have available'}</p>
+              <div className="jn-svc-grid">
+                {([
+                  { id: 'cocktail_dress', cs: 'Koktejlové šaty', en: 'Cocktail dress' },
+                  { id: 'evening_gown', cs: 'Večerní šaty', en: 'Evening gown' },
+                  { id: 'lingerie', cs: 'Lingerie / spodní prádlo', en: 'Lingerie' },
+                  { id: 'swimwear', cs: 'Plavky / bikiny', en: 'Swimwear / bikini' },
+                  { id: 'stockings', cs: 'Punčochy / podvazky', en: 'Stockings / garters' },
+                  { id: 'high_heels', cs: 'Vysoké podpatky', en: 'High heels' },
+                  { id: 'boots', cs: 'Kozačky', en: 'Boots' },
+                  { id: 'latex_leather', cs: 'Latex / kůže', en: 'Latex / leather' },
+                  { id: 'uniform', cs: 'Uniforma / kostým', en: 'Uniform / costume' },
+                  { id: 'business_suit', cs: 'Business outfit', en: 'Business outfit' },
+                  { id: 'jeans_tshirt', cs: 'Džíny & tričko', en: 'Jeans & t-shirt' },
+                  { id: 'mini_skirt', cs: 'Minisukně', en: 'Mini skirt' },
+                ] as const).map((s) => (
+                  <label key={s.id} className="jn-svc-chk">
+                    <input type="checkbox" name="wardrobe_item" value={s.id} />
+                    <span>{locale === 'cs' ? s.cs : s.en}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset className="apply-form-section">
             <legend>{t('section.services')}</legend>
             <div className="form-group">
               <label htmlFor="languages">{t('field.languages')}</label>
