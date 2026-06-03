@@ -391,16 +391,16 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
         </div>
       )}
 
-      {/* Styl — static content block */}
-      <div className="profile-mini-block">
+      {/* Styl — static content block (desktop only, mobile has it in ProfilHero) */}
+      <div className="profile-mini-block profile-desktop-only">
         <div className="profile-mini-label">{labels.styl_h}</div>
         <p className="profile-styl-sub">{labels.styl_sub}</p>
         <p className="profile-styl-note">{labels.styl_note}</p>
       </div>
 
-      {/* SLUŽBY — extras highlighted, basic with "na domluvě" icon */}
+      {/* SLUŽBY — desktop only, mobile has them in ProfilHero IG section */}
       {includedServices.length + extraServices.length > 0 && (
-        <div className="profile-mini-block">
+        <div className="profile-mini-block profile-desktop-only">
           <div className="profile-mini-label">★ {locale === 'cs' ? 'Služby' : locale === 'de' ? 'Leistungen' : locale === 'uk' ? 'Послуги' : 'Services'}</div>
           <div className="profile-mini-chips">
             {includedServices.map((svc) => (
@@ -418,7 +418,7 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
       )}
 
       {hashtags.length > 0 && (
-        <div className="profile-hashtags">
+        <div className="profile-hashtags profile-desktop-only">
           {hashtags.map((tag) => (
             <Link key={tag} href={`${hashtagPath}/${tag}`} className="profile-hashtag-pill">
               #{tag}

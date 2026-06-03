@@ -3238,11 +3238,12 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     color: var(--color-coral);
   }
 
-  /* Hide the duplicate name/loc/stats block in ProfilDetails on mobile */
+  /* Hide ProfilDetails blocks that are duplicated in ProfilHero on mobile */
   .profile-status-line,
   .profile-name-block,
   .profile-meta-line,
-  .profile-stat-hero:not(.ig-stat-hero) {
+  .profile-stat-hero:not(.ig-stat-hero),
+  .profile-desktop-only {
     display: none !important;
   }
 
