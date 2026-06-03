@@ -271,10 +271,10 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
             ★ {locale === 'cs' ? 'TOP služby' : locale === 'de' ? 'Top-Services' : locale === 'uk' ? 'ТОП послуги' : 'Top services'}
           </div>
           <div className="ig-services-list">
-            {topServices.filter(s => s.category === 'basic').slice(0, 4).map((s, i) => (
+            {topServices.filter(s => s.category === 'basic').map((s, i) => (
               <span key={i} className="ig-service-chip ig-service-chip-top">✓ {s.name}</span>
             ))}
-            {topServices.filter(s => s.category !== 'basic').slice(0, 4).map((s, i) => (
+            {topServices.filter(s => s.category !== 'basic').map((s, i) => (
               <span key={`e-${i}`} className="ig-service-chip ig-service-chip-extra">💬 {s.name}</span>
             ))}
           </div>

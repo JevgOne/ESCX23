@@ -355,7 +355,7 @@ export default async function ProfilPage({ params }: Props) {
         </div>
 
         <div className="container" style={{ marginTop: '48px' }}>
-          <ProfilServices services={servicesTyped} locale={locale} heading={t('services.h2')} />
+          {/* Services are now shown inline in ProfilDetails chips — full section removed */}
           <ProfilReviews
             reviews={reviewTyped}
             totalCount={totalReviews}

@@ -403,21 +403,16 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
         <div className="profile-mini-block">
           <div className="profile-mini-label">★ {locale === 'cs' ? 'Služby' : locale === 'de' ? 'Leistungen' : locale === 'uk' ? 'Послуги' : 'Services'}</div>
           <div className="profile-mini-chips">
-            {includedServices.slice(0, 6).map((svc) => (
+            {includedServices.map((svc) => (
               <Link key={`i-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-included">
                 <span className="mini-chip-dot">✓</span>{localizedServiceName(svc, locale)}
               </Link>
             ))}
-            {extraServices.slice(0, 6).map((svc) => (
+            {extraServices.map((svc) => (
               <Link key={`e-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-extra">
                 <span className="mini-chip-dot">💬</span>{localizedServiceName(svc, locale)}
               </Link>
             ))}
-            {services.length > 10 && (
-              <a href="#sluzby" className="mini-chip mini-chip-more">
-                +{services.length - 10} {locale === 'cs' ? 'dalších' : locale === 'de' ? 'weitere' : locale === 'uk' ? 'інших' : 'more'} →
-              </a>
-            )}
           </div>
         </div>
       )}
