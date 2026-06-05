@@ -17,18 +17,22 @@ export function getAllPages(): PageDefinition[] {
   const locales = ['cs', 'en', 'de', 'uk'];
   const pages: PageDefinition[] = [];
 
-  // Static pages for each locale
+  // Static pages for each locale — must match actual Next.js routes
   const staticPages = [
     { slug: '', name: 'Homepage' },
     { slug: '/divky', name: 'Girls' },
     { slug: '/cenik', name: 'Pricing' },
-    { slug: '/schedule', name: 'Schedule' },
-    { slug: '/discounts', name: 'Discounts' },
+    { slug: '/rozvrh', name: 'Schedule' },
+    { slug: '/slevy', name: 'Discounts' },
     { slug: '/faq', name: 'FAQ' },
     { slug: '/blog', name: 'Blog' },
-    { slug: '/sluzby', name: 'Services' },
+    { slug: '/recenze', name: 'Reviews' },
+    { slug: '/o-nas', name: 'About Us' },
+    { slug: '/kontakt', name: 'Contact' },
     { slug: '/podminky', name: 'Terms' },
     { slug: '/soukromi', name: 'Privacy' },
+    { slug: '/join', name: 'Join' },
+    { slug: '/clenstvi/zadost', name: 'Membership Application' },
   ];
 
   for (const locale of locales) {

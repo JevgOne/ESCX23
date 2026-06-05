@@ -1,5 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import { getActivePricingPlans } from '@/lib/queries';
 import { offerListJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
@@ -50,7 +51,7 @@ export async function generateMetadata({
   const { buildOgImages } = await import('@/lib/seo/og');
   const ogImages = await buildOgImages('cenik', locale, '/cenik', TITLES[locale] ?? TITLES.en);
 
-  return {
+  return applyDBOverride(`/${locale}/cenik`, {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
     openGraph: {
@@ -60,7 +61,8 @@ export async function generateMetadata({
       url: canonical,
       locale: ogLocale(locale),
     },
-  };
+  });
+
 }
 
 export default async function CenikPage({

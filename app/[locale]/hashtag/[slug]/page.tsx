@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import { Link } from '@/i18n/navigation';
 import { getGirlsForHashtag } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
@@ -79,7 +80,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : locale === 'uk' ? `Супутниці зі спеціалізацією ${lowered} у Празі. Перевірені профілі.`
     : `Companions specialising in ${lowered} in Prague. Verified profiles, transparent pricing.`;
   const description = content?.metaDesc[locale as 'cs' | 'en' | 'de' | 'uk'] ?? fallbackDesc;
-  return {
+  return applyDBOverride(`/${locale}/hashtag/${slug}`, {
     title,
     description,
     alternates: {
@@ -93,7 +94,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale: locale === 'cs' ? 'cs_CZ' : locale === 'de' ? 'de_DE' : locale === 'uk' ? 'uk_UA' : 'en_US',
     },
     robots: { index: true, follow: true },
-  };
+  });
+
 }
 
 export default async function HashtagPage({ params }: Props) {

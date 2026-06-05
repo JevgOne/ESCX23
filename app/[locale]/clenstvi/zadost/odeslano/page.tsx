@@ -1,5 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 
 interface MetaBundle { title: string }
 const META: Record<string, MetaBundle> = {
@@ -44,7 +45,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const M = META[locale] ?? META.en;
-  return { title: M.title, robots: { index: false, follow: false } };
+  return applyDBOverride(`/${locale}/clenstvi/zadost/odeslano`, { title: M.title, robots: { index: false, follow: false } });
+
 }
 
 export default async function ClenstviOdeslanoPage({

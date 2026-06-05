@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import { Link } from '@/i18n/navigation';
 import { getBlogPosts } from '@/lib/queries';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonical = locale === 'en' ? `${BASE}/blog` : `${BASE}/${locale}/blog`;
   const title = `${t('h1')} — LovelyGirls Praha`;
   const description = t('sub');
-  return {
+  return applyDBOverride(`/${locale}/blog`, {
     title,
     description,
     alternates: {
@@ -49,7 +50,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       'max-image-preview': 'large' as const,
       'max-video-preview': -1,
     },
-  };
+  });
+
 }
 
 export default async function BlogPage({ params }: Props) {

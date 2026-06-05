@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import { getGirlsForListing, getTopServicesForFilter } from '@/lib/queries';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
 import FiltersBar from '@/components/divky/FiltersBar';
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { buildOgImages } = await import('@/lib/seo/og');
   const ogImages = await buildOgImages('divky', locale, '/divky', t('h1'));
 
-  return {
+  return applyDBOverride(`/${locale}/divky`, {
     title: t('h1'),
     description: t('sub'),
     openGraph: {
@@ -35,7 +36,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: canonical,
       locale: ogLocale(locale),
     },
-  };
+  });
+
 }
 
 export default async function DivkyPage({ params, searchParams }: Props) {

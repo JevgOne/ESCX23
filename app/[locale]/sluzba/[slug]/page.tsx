@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import { getServiceBySlug, getRelatedServices, getGirlsWithToday } from '@/lib/queries';
 import { Link } from '@/i18n/navigation';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
@@ -27,7 +28,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const row = svc as unknown as Record<string, unknown>;
   const title = localizedField(row, 'seo_title', locale) || localizedField(row, 'name', locale);
   const description = localizedField(row, 'seo_description', locale) || localizedField(row, 'description', locale);
-  return { title, description };
+  return applyDBOverride(`/${locale}/sluzba/${slug}`, { title, description });
+
 }
 
 export default async function ServicePage({ params }: Props) {

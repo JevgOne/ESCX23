@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import { Link } from '@/i18n/navigation';
 import { getBlogPostBySlug, getRelatedBlogPosts } from '@/lib/queries';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? [{ url: post.coverUrl, width: 1200, height: 630, alt: post.title }]
     : [{ url: `${BASE}/api/og/blog/${slug}`, width: 1200, height: 630, alt: post.title }];
 
-  return {
+  return applyDBOverride(`/${locale}/blog/${slug}`, {
     title: `${post.title} — ${brand}`,
     description,
     keywords: post.tags.map((t) => t.name).join(', ') || undefined,
@@ -74,7 +75,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       'max-image-preview': 'large' as const,
       'max-video-preview': -1,
     },
-  };
+  });
+
 }
 
 /** Extract h2 headings from HTML content for auto-generated TOC. */

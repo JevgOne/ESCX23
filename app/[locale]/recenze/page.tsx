@@ -1,5 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import Link from 'next/link';
 import { getRecentApprovedReviews, getReviewPageData } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
@@ -116,7 +117,7 @@ export async function generateMetadata({
   const { buildOgImages } = await import('@/lib/seo/og');
   const ogImages = await buildOgImages('recenze', locale, '/recenze', TITLES[locale] ?? TITLES.cs);
 
-  return {
+  return applyDBOverride(`/${locale}/recenze`, {
     title: TITLES[locale] ?? TITLES.cs,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.cs,
     alternates: {
@@ -136,7 +137,8 @@ export async function generateMetadata({
       url: canonical,
       locale: ogLocale(locale),
     },
-  };
+  });
+
 }
 
 export default async function RecenzePage({

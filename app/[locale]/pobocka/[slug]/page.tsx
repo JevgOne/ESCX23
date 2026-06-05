@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import { getLocationBySlug, getActiveLocations, getGirlsWithToday } from '@/lib/queries';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import Link from 'next/link';
@@ -199,7 +200,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lc = getLocationContent(slug);
   const desc = lc?.metaDesc[locale as 'cs' | 'en' | 'de' | 'uk'] ?? M.description(loc.displayName);
   const canonical = getCanonicalUrl(locale, `/pobocka/${slug}`);
-  return {
+  return applyDBOverride(`/${locale}/pobocka/${slug}`, {
     title: M.title(loc.displayName),
     description: desc,
     alternates: { canonical },
@@ -211,7 +212,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale: locale === 'cs' ? 'cs_CZ' : locale === 'de' ? 'de_DE' : locale === 'uk' ? 'uk_UA' : 'en_US',
     },
     robots: { index: true, follow: true },
-  };
+  });
+
 }
 
 export default async function PobockaDetailPage({ params }: Props) {

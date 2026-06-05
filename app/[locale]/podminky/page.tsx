@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
 export const revalidate = 86400;
@@ -12,11 +13,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'podminky' });
   const tCommon = await getTranslations({ locale, namespace: 'common' });
-  return {
+  return applyDBOverride(`/${locale}/podminky`, {
     title: `${t('h1')} — ${tCommon('siteName')}`,
     description: t('lead'),
     robots: { index: false, follow: false },
-  };
+  });
+
 }
 
 export default async function PodminkyPage({ params }: Props) {

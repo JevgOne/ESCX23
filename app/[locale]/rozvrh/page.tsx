@@ -1,5 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import { redirect } from 'next/navigation';
 import { getGirlsForDay, getActiveLocations } from '@/lib/queries';
 import { pragueDateISO } from '@/lib/utils';
@@ -87,7 +88,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { buildOgImages } = await import('@/lib/seo/og');
   const ogImages = await buildOgImages('rozvrh', locale, '/rozvrh', TITLES[locale] ?? TITLES.en);
 
-  return {
+  return applyDBOverride(`/${locale}/rozvrh`, {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
     robots: { index: true, follow: false },
@@ -108,7 +109,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       url: canonical,
       locale: ogLocale(locale),
     },
-  };
+  });
+
 }
 
 export default async function RozvrhPage({ params, searchParams }: Props) {

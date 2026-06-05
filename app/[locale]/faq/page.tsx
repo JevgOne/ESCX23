@@ -1,5 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import { getFaqItems } from '@/lib/queries';
 import { faqPageJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
@@ -48,7 +49,7 @@ export async function generateMetadata({
   const { buildOgImages } = await import('@/lib/seo/og');
   const ogImages = await buildOgImages('faq', locale, '/faq', TITLES[locale] ?? TITLES.en);
 
-  return {
+  return applyDBOverride(`/${locale}/faq`, {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
     alternates: {
@@ -68,7 +69,8 @@ export async function generateMetadata({
       url: canonical,
       locale: ogLocale(locale),
     },
-  };
+  });
+
 }
 
 export default async function FaqPage({

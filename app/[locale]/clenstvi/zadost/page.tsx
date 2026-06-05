@@ -1,5 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import { submitMemberApplication } from './actions';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
@@ -107,7 +108,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const M = META[locale] ?? META.en;
-  return { title: M.title, description: M.description };
+  return applyDBOverride(`/${locale}/clenstvi/zadost`, { title: M.title, description: M.description });
+
 }
 
 export default async function ClenstviZadostPage({

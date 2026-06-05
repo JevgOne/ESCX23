@@ -1,5 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import { getActiveDiscounts } from '@/lib/queries';
 import { discountOffersJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
@@ -49,7 +50,7 @@ export async function generateMetadata({
   const { buildOgImages } = await import('@/lib/seo/og');
   const ogImages = await buildOgImages('slevy', locale, '/slevy', TITLES[locale] ?? TITLES.en);
 
-  return {
+  return applyDBOverride(`/${locale}/slevy`, {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
     openGraph: {
@@ -59,7 +60,8 @@ export async function generateMetadata({
       url: canonical,
       locale: ogLocale(locale),
     },
-  };
+  });
+
 }
 
 export default async function SlevyPage({

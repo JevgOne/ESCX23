@@ -5,6 +5,28 @@
 
 import { SEOMetadata } from './seo-types';
 
+// Pages known to have inline generateMetadata() with full SEO
+const PAGES_WITH_INLINE_META = new Set([
+  '', '/divky', '/cenik', '/rozvrh', '/slevy', '/faq', '/blog',
+  '/recenze', '/o-nas', '/kontakt', '/soukromi', '/podminky', '/join',
+  '/clenstvi/zadost', '/clenstvi/zadost/odeslano',
+]);
+
+// Dynamic route prefixes with inline metadata
+const DYNAMIC_INLINE_PREFIXES = [
+  '/profil/', '/sluzba/', '/pobocka/', '/blog/', '/hashtag/',
+];
+
+/**
+ * Check if a page path has inline generateMetadata() in code.
+ * These pages have working SEO even without DB records.
+ */
+export function hasInlineMetadata(pagePath: string): boolean {
+  const withoutLocale = pagePath.replace(/^\/[a-z]{2}/, '');
+  if (PAGES_WITH_INLINE_META.has(withoutLocale)) return true;
+  return DYNAMIC_INLINE_PREFIXES.some((p) => withoutLocale.startsWith(p));
+}
+
 /**
  * Calculate SEO score (like Yoast SEO)
  * @param seo - SEO metadata to analyze

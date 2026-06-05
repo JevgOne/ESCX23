@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import {
   getGirlBySlug,
   getPhotosForGirl,
@@ -99,7 +100,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const primaryPhotoUrl = primaryPhoto?.url ? photoUrl(String(primaryPhoto.url)) : null;
 
-  return {
+  return applyDBOverride(`/${locale}/profil/${slug}`, {
     title: localizedTitle,
     description: metaDesc,
     alternates: {
@@ -124,7 +125,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       status === 'active'
         ? { index: true, follow: true }
         : { index: false, follow: false },
-  };
+  });
+
 }
 
 export default async function ProfilPage({ params }: Props) {

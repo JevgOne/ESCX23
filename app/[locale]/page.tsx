@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { applyDBOverride } from '@/lib/seo/db-override';
 import Hero from '@/components/home/Hero';
 import StoriesRow from '@/components/home/StoriesRow';
 import FeaturedNew from '@/components/home/FeaturedNew';
@@ -48,7 +49,7 @@ export async function generateMetadata({
   const { getCustomOgImage } = await import('@/lib/seo/og');
   const customOg = await getCustomOgImage('home');
 
-  return {
+  return applyDBOverride(`/${locale}`, {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
     openGraph: {
@@ -64,7 +65,8 @@ export async function generateMetadata({
       description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
       ...(customOg ? { images: [customOg] } : {}),
     },
-  };
+  });
+
 }
 
 export default async function HomePage({
