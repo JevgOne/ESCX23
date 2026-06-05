@@ -2,7 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { requireGirl } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { pragueDateISO } from '@/lib/utils';
-import { toCalendarEmbedUrl } from '@/lib/calendar';
+import { getValidAccessTokenByGirl, getUpcomingEvents, type GCalEvent } from '@/lib/gcal';
 import StudioTopbar from '@/components/studio/StudioTopbar';
 
 export const dynamic = 'force-dynamic';
@@ -36,6 +36,19 @@ interface Booking {
 
 const DAY_NAMES = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
 const DAY_NAMES_FULL = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'];
+const DAY_NAMES_SHORT_CS = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
+
+function formatEventDate(iso: string): string {
+  const d = new Date(iso.length === 10 ? iso + 'T12:00:00' : iso);
+  const pragueStr = d.toLocaleString('en-US', { timeZone: 'Europe/Prague' });
+  const prague = new Date(pragueStr);
+  return `${DAY_NAMES_SHORT_CS[prague.getDay()]} ${prague.getDate()}.${prague.getMonth() + 1}.`;
+}
+
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleTimeString('cs-CZ', { timeZone: 'Europe/Prague', hour: '2-digit', minute: '2-digit', hour12: false });
+}
 
 function generate14Days(today: string) {
   const days = [];
@@ -71,8 +84,8 @@ export default async function StudioKalendarPage({
   const girlId = user.girl_id!;
   const today = pragueDateISO();
 
-  // Fetch schedule, exceptions, bookings in parallel
-  const [schedRes, excRes, bookRes, girlRes] = await Promise.all([
+  // Fetch schedule, exceptions, bookings, girl info, gcal token in parallel
+  const [schedRes, excRes, bookRes, girlRes, gcalTokenRes] = await Promise.all([
     db.execute({
       sql: `SELECT gs.day_of_week, gs.start_time, gs.end_time, gs.is_active,
               l.display_name AS location_name
@@ -97,14 +110,34 @@ export default async function StudioKalendarPage({
       args: [girlId, today],
     }),
     db.execute({
-      sql: `SELECT name, calendar_embed_url FROM girls WHERE id = ?`,
+      sql: `SELECT name FROM girls WHERE id = ?`,
+      args: [girlId],
+    }),
+    db.execute({
+      sql: `SELECT calendar_id FROM google_calendar_tokens WHERE girl_id = ?`,
       args: [girlId],
     }),
   ]);
 
   const girlName = girlRes.rows[0] ? String(girlRes.rows[0].name) : '';
-  const rawCalUrl = girlRes.rows[0]?.calendar_embed_url ? String(girlRes.rows[0].calendar_embed_url) : null;
-  const googleCalUrl = rawCalUrl ? toCalendarEmbedUrl(rawCalUrl) : null;
+
+  // Google Calendar: fetch events server-side (read-only, admin connects)
+  const gcalToken = gcalTokenRes.rows[0] ?? null;
+  let gcalEvents: GCalEvent[] = [];
+  let gcalError = false;
+
+  if (gcalToken) {
+    try {
+      const token = await getValidAccessTokenByGirl(girlId);
+      if (token) {
+        gcalEvents = await getUpcomingEvents(token, String(gcalToken.calendar_id));
+      } else {
+        gcalError = true;
+      }
+    } catch {
+      gcalError = true;
+    }
+  }
 
   const schedules: ScheduleSlot[] = schedRes.rows.map((r) => ({
     dayOfWeek: Number(r.day_of_week),
@@ -239,16 +272,30 @@ export default async function StudioKalendarPage({
           })}
         </div>
 
-        {/* Google Calendar embed */}
-        {googleCalUrl && (
+        {/* Google Calendar events (read-only, admin connects) */}
+        {gcalEvents.length > 0 && (
           <div className="cal-google">
             <div className="cal-google-title">Google Kalendář</div>
-            <div className="cal-google-wrap">
-              <iframe
-                src={`${googleCalUrl}&mode=AGENDA&showTitle=0&showNav=1&showTabs=0&showCalendars=0&showPrint=0`}
-                className="cal-google-iframe"
-                title="Google Calendar"
-              />
+            <div className="cal-google-events">
+              {gcalEvents.map((ev) => (
+                <div key={ev.id} className="cal-gcal-event">
+                  <div className="cal-gcal-event-date">
+                    {formatEventDate(ev.start)}
+                  </div>
+                  <div className="cal-gcal-event-time">
+                    {ev.allDay ? 'Celý den' : `${formatTime(ev.start)} — ${formatTime(ev.end)}`}
+                  </div>
+                  <div className="cal-gcal-event-title">{ev.summary}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {gcalError && (
+          <div className="cal-google">
+            <div className="cal-google-title">Google Kalendář</div>
+            <div className="cal-google-error">
+              <p>Připojení ke Google Calendar vypršelo. Kontaktujte administrátora.</p>
             </div>
           </div>
         )}
