@@ -2,6 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { db } from '@/lib/db';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import { createBlogPost } from '@/lib/admin-actions';
+import { requireFullAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -19,6 +20,7 @@ export default async function AdminNewBlogPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireFullAdmin();
 
   const tagResult = await db.execute('SELECT id, slug, name_cs FROM blog_tags ORDER BY name_cs ASC');
   const allTags = tagResult.rows as unknown as TagRow[];

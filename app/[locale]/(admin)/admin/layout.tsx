@@ -16,10 +16,9 @@ export const metadata: Metadata = {
 const MANAGER_ALLOWED_PATHS = [
   '/admin',
   '/admin/divky',
-  '/admin/aplikace',
   '/admin/schedules',
-  '/admin/verifikace',
   '/admin/recenze',
+  '/admin/rezervace',
   '/admin/stories',
 ];
 

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import { updateFaq, deleteFaq } from '@/lib/admin-actions';
+import { requireFullAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -31,6 +32,7 @@ export default async function AdminEditFaqPage({
 }) {
   const { locale, id } = await params;
   setRequestLocale(locale);
+  await requireFullAdmin();
 
   const result = await db.execute({ sql: 'SELECT * FROM faq_items WHERE id=?', args: [Number(id)] });
   if (result.rows.length === 0) notFound();

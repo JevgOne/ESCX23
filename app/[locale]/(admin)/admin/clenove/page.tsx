@@ -2,6 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { db } from '@/lib/db';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import { updateApplicationStatus } from './actions';
+import { requireFullAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -57,6 +58,7 @@ export default async function AdminClenove({
   const { locale } = await params;
   const sp = await searchParams;
   setRequestLocale(locale);
+  await requireFullAdmin();
 
   const activeStatus = sp.status ?? 'pending';
   const applications = await getApplications(activeStatus);

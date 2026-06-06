@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { deleteBlogPost } from '@/lib/admin-actions';
+import { requireFullAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -103,6 +104,7 @@ export default async function AdminBlogPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireFullAdmin();
 
   const result = await db.execute(
     `SELECT id, slug, title_cs, title_en, status, cover_url, reading_time_min, published_at, created_at

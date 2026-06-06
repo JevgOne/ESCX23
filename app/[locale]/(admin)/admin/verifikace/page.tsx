@@ -4,6 +4,7 @@ import { photoUrl } from '@/lib/photoUrl';
 import { relativeTime } from '@/lib/utils';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import { approvePhoto, rejectPhoto } from '@/lib/admin-actions';
+import { requireFullAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -15,6 +16,7 @@ export default async function AdminVerifikacePage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireFullAdmin();
 
   const photos = await getPendingPhotos();
 

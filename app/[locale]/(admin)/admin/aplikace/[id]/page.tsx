@@ -5,6 +5,7 @@ import { getApplicationById, type ApplicationRow } from '@/lib/queries';
 import { rejectApplication, reopenApplication, updateApplicationNotes, createGirlFromApplication } from '@/lib/admin-actions';
 import { getExtraServices } from '@/lib/services';
 import { relativeTime } from '@/lib/utils';
+import { requireFullAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -22,6 +23,7 @@ interface Props {
 export default async function AdminAplikaceDetailPage({ params }: Props) {
   const { locale, id } = await params;
   setRequestLocale(locale);
+  await requireFullAdmin();
 
   const appId = Number(id);
   if (!appId) notFound();

@@ -4,7 +4,7 @@ import { put, del } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from './db';
-import { getCurrentUser, requireAdmin, requireGirl } from './auth';
+import { requireAdmin } from './auth';
 import { watermarkImage } from './watermark';
 
 const ALLOWED_EXT = new Set(['jpg', 'jpeg', 'png', 'webp', 'avif', 'heic']);
@@ -13,7 +13,6 @@ const MAX_BYTES = 10 * 1024 * 1024;
 export async function uploadPhotoForm(formData: FormData) {
   const file = formData.get('photo') as File | null;
   const girlId = Number(formData.get('girl_id'));
-  const source = String(formData.get('source') ?? 'admin') as 'admin' | 'studio';
   const skipWatermark = formData.get('skip_watermark') === '1';
 
   if (!file || file.size === 0) return { error: 'No file' };
@@ -22,12 +21,7 @@ export async function uploadPhotoForm(formData: FormData) {
   const ext = (file.name.split('.').pop() ?? '').toLowerCase();
   if (!ALLOWED_EXT.has(ext)) return { error: 'Invalid file type' };
 
-  if (source === 'studio') {
-    const user = await requireGirl();
-    if (!user.girl_id || user.girl_id !== girlId) redirect('/studio/login');
-  } else {
-    await requireAdmin();
-  }
+  await requireAdmin();
 
   // Apply watermark by default. Admin can opt out via skip_watermark=1.
   let uploadPayload: File | Buffer = file;

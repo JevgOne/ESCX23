@@ -3,13 +3,14 @@
 import { put } from '@vercel/blob';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { requireGirl } from './auth';
+import { requireGirl, requireAdmin } from './auth';
 import { db } from './db';
 import { saveReviewReply } from './queries';
 
 export async function updateGirlBasic(formData: FormData) {
-  const user = await requireGirl();
-  const girlId = user.girl_id!;
+  await requireAdmin();
+  const girlId = Number(formData.get('girl_id') ?? 0);
+  if (!girlId) redirect('/cs/admin/divky');
 
   const name = String(formData.get('name') ?? '').trim();
   const age = Number(formData.get('age') ?? 18);
@@ -26,8 +27,9 @@ export async function updateGirlBasic(formData: FormData) {
 }
 
 export async function updateGirlBody(formData: FormData) {
-  const user = await requireGirl();
-  const girlId = user.girl_id!;
+  await requireAdmin();
+  const girlId = Number(formData.get('girl_id') ?? 0);
+  if (!girlId) redirect('/cs/admin/divky');
 
   const height = formData.get('height') ? Number(formData.get('height')) : null;
   const weight = formData.get('weight') ? Number(formData.get('weight')) : null;
@@ -50,8 +52,9 @@ export async function updateGirlBody(formData: FormData) {
 }
 
 export async function updateGirlLifestyle(formData: FormData) {
-  const user = await requireGirl();
-  const girlId = user.girl_id!;
+  await requireAdmin();
+  const girlId = Number(formData.get('girl_id') ?? 0);
+  if (!girlId) redirect('/cs/admin/divky');
 
   const nationality = String(formData.get('nationality') ?? '').trim() || null;
 
@@ -236,6 +239,22 @@ export async function addStory(formData: FormData) {
 
   revalidatePath('/cs/studio/stories');
   redirect('/cs/studio/stories?saved=1');
+}
+
+export async function updateGirlHashtags(formData: FormData) {
+  const user = await requireGirl();
+  const girlId = user.girl_id!;
+
+  const slugs = formData.getAll('hashtag_slugs').map(String).filter(Boolean);
+  const hashtagsJson = JSON.stringify(slugs);
+
+  await db.execute({
+    sql: `UPDATE girls SET hashtags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    args: [hashtagsJson, girlId],
+  });
+
+  revalidatePath('/cs/studio/hashtagy');
+  redirect('/cs/studio/hashtagy?saved=1');
 }
 
 export async function deleteStory(formData: FormData) {

@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { uploadOgImage, deleteOgImage } from '@/lib/og-images';
 import { OG_PAGE_KEYS } from '@/lib/og-keys';
 import AdminTopbar from '@/components/admin/AdminTopbar';
+import { requireFullAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -14,6 +15,7 @@ interface Props {
 export default async function AdminOgPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireFullAdmin();
 
   const result = await db.execute(
     `SELECT page_key, url, uploaded_at FROM og_images`

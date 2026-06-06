@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { deletePobocka } from '@/lib/admin-actions';
+import { requireFullAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -79,6 +80,7 @@ export default async function AdminPobockyPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireFullAdmin();
 
   const result = await db.execute('SELECT id, name, display_name, city, district, address, is_active, is_primary, opening_date FROM locations ORDER BY id ASC');
   const rows = result.rows as unknown as LocationRow[];

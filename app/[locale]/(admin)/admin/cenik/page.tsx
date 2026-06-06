@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { deletePricingPlan, deletePricingExtra } from '@/lib/admin-actions';
+import { requireFullAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -104,6 +105,7 @@ export default async function AdminCenikPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireFullAdmin();
 
   const plansResult = await db.execute('SELECT id, duration, price, is_popular, is_active, display_order, title_cs, title_en FROM pricing_plans ORDER BY display_order ASC, duration ASC');
   const plans = plansResult.rows as unknown as PlanRow[];

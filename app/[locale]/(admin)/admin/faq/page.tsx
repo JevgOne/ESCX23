@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { deleteFaq } from '@/lib/admin-actions';
+import { requireFullAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -66,6 +67,7 @@ export default async function AdminFaqPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireFullAdmin();
 
   const result = await db.execute(
     'SELECT id, category, display_order, is_active, question_cs, question_en FROM faq_items ORDER BY category ASC, display_order ASC'

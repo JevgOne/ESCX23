@@ -876,7 +876,7 @@ const PRESET_TIMES: Record<string, [string, string]> = {
 export async function addGirlSchedule(formData: FormData) {
   await requireAdmin();
   const girlId = Number(formData.get('girl_id'));
-  if (!girlId) throw new Error('Chybí girl_id');
+  if (!girlId) redirect('/cs/admin/schedules?error=missing_girl');
 
   const locationId = formData.get('location_id') ? Number(formData.get('location_id')) : null;
 
@@ -925,7 +925,7 @@ export async function addGirlSchedule(formData: FormData) {
   }
 
   if (!anyDaySelected) {
-    throw new Error('Vyberte alespoň jeden den');
+    redirect('/cs/admin/schedules?error=no_days');
   }
 
   revalidatePath('/cs/admin/schedules');

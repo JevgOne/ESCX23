@@ -20,10 +20,10 @@ export default async function AdminSchedulesPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ girl?: string; modal?: string }>;
+  searchParams: Promise<{ girl?: string; modal?: string; error?: string }>;
 }) {
   const { locale } = await params;
-  const { girl: girlFilter, modal } = await searchParams;
+  const { girl: girlFilter, modal, error } = await searchParams;
   setRequestLocale(locale);
 
   const [allData, locations] = await Promise.all([
@@ -309,6 +309,17 @@ export default async function AdminSchedulesPage({
       `}} />
       <AdminTopbar title="Správa rozvrhů" />
 
+      {error === 'missing_girl' && (
+        <div style={{ padding: '10px 16px', marginBottom: 16, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#fca5a5', fontSize: 13 }}>
+          Vyberte dívku před přidáním rozvrhu.
+        </div>
+      )}
+      {error === 'no_days' && (
+        <div style={{ padding: '10px 16px', marginBottom: 16, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#fca5a5', fontSize: 13 }}>
+          Vyberte alespoň jeden den.
+        </div>
+      )}
+
       <div className="sch2-page-header">
         <h1 className="sch2-page-title">Pracovní doba dívek</h1>
         <div className="sch2-page-header-actions">
@@ -334,7 +345,7 @@ export default async function AdminSchedulesPage({
         <div className="sch2-filter-label">FILTR PODLE DÍVKY</div>
         <div className="sch2-filter-grid">
           <a
-            href="/${locale}/admin/schedules"
+            href={`/${locale}/admin/schedules`}
             className={`sch2-fchip${!girlFilter ? ' sch2-fchip--all' : ''}`}
           >
             Všechny ({withSchedule.length})
@@ -468,7 +479,7 @@ export default async function AdminSchedulesPage({
               <div className="sx-modal">
                 <div className="sx-header">
                   <span className="sx-title">Přidat rozvrh</span>
-                  <a href="/${locale}/admin/schedules" className="sx-close">×</a>
+                  <a href={`/${locale}/admin/schedules`} className="sx-close">×</a>
                 </div>
 
                 <div className="sx-body">
@@ -561,7 +572,7 @@ export default async function AdminSchedulesPage({
                 </div>
 
                 <div className="sx-footer">
-                  <a href="/${locale}/admin/schedules" className="sx-btn sx-btn-secondary">Zrušit</a>
+                  <a href={`/${locale}/admin/schedules`} className="sx-btn sx-btn-secondary">Zrušit</a>
                   <button type="submit" className="sx-btn sx-btn-primary">Přidat</button>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { requireGirl } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { addStory, deleteStory } from '@/lib/studio-actions';
+import { addStory } from '@/lib/studio-actions';
 import StudioTopbar from '@/components/studio/StudioTopbar';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +12,7 @@ export default async function StudioStoriesPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ saved?: string; deleted?: string }>;
+  searchParams: Promise<{ saved?: string }>;
 }) {
   const { locale } = await params;
   const sp = await searchParams;
@@ -49,10 +49,6 @@ export default async function StudioStoriesPage({
         {sp.saved === '1' && (
           <div className="studio-alert studio-alert-ok">Story přidána!</div>
         )}
-        {sp.deleted === '1' && (
-          <div className="studio-alert studio-alert-ok">Story smazána.</div>
-        )}
-
         <div className="studio-stories-upload">
           <h3 className="studio-section-title" style={{ marginBottom: 12 }}>Přidat novou story</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 13, marginBottom: 16 }}>
@@ -100,10 +96,6 @@ export default async function StudioStoriesPage({
                   {story.expired && <span className="studio-story-expired">Expirovaná</span>}
                   {!story.expired && <span className="studio-story-live">Aktivní</span>}
                 </div>
-                <form action={deleteStory} style={{ marginTop: 6 }}>
-                  <input type="hidden" name="storyId" value={story.id} />
-                  <button type="submit" className="studio-story-delete">Smazat</button>
-                </form>
               </div>
             ))}
           </div>

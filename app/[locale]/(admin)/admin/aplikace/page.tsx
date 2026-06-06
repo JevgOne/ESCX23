@@ -2,6 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import { getApplications, getApplicationCounts, type ApplicationRow } from '@/lib/queries';
 import { relativeTime } from '@/lib/utils';
+import { requireFullAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -46,6 +47,7 @@ export default async function AdminAplikacePage({ params, searchParams }: Props)
   const { locale } = await params;
   const sp = await searchParams;
   setRequestLocale(locale);
+  await requireFullAdmin();
 
   const statusFilter: Status | undefined =
     sp.status === 'pending' || sp.status === 'approved' || sp.status === 'rejected'

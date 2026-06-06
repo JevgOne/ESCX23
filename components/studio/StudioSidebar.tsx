@@ -18,9 +18,12 @@ const NAV: NavItem[] = [
   { href: '/cs/studio/hlas',          label: 'Hlasová zpráva',   emoji: '🎙️' },
   { href: '/cs/studio/program',       label: 'Doporučený program', emoji: '💎' },
   { href: '/cs/studio/sluzby',        label: 'Služby',           emoji: '💋' },
+  { href: '/cs/studio/hashtagy',      label: 'Hashtagy',         emoji: '#️⃣' },
   { href: '/cs/studio/jazyky',       label: 'Jazyky',           emoji: '🌐' },
+  { href: '/cs/studio/fotky',        label: 'Fotky',            emoji: '📷' },
   { href: '/cs/studio/stories',      label: 'Stories',           emoji: '📸' },
   { href: '/cs/studio/recenze',      label: 'Recenze',          emoji: '⭐' },
+  { href: '/cs/studio/rezervace',    label: 'Rezervace',        emoji: '📅' },
   { href: '/cs/studio/statistiky',   label: 'Statistiky',       emoji: '📈' },
   { href: '/cs/studio/profil-status', label: 'Status profilu',  emoji: '🟢' },
 ];
