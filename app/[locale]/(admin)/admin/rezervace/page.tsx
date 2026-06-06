@@ -41,41 +41,46 @@ export default async function AdminRezervacePage({
   const bookings = await getBookings(status);
 
   // Fetch all active girls with optional GCal token
-  const calResult = await db.execute(
-    `SELECT g.id, g.name, gct.calendar_id, gct.girl_id AS connected_girl_id,
-       (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo
-     FROM girls g
-     LEFT JOIN google_calendar_tokens gct ON gct.girl_id = g.id
-     WHERE g.status IN ('active','inactive')
-     ORDER BY g.name`
-  );
+  let girlCalendars: { id: number; name: string; photo: string | null; connected: boolean; gcalError: boolean; events: GCalEvent[] }[] = [];
+  try {
+    const calResult = await db.execute(
+      `SELECT g.id, g.name, gct.calendar_id, gct.girl_id AS connected_girl_id,
+         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo
+       FROM girls g
+       LEFT JOIN google_calendar_tokens gct ON gct.girl_id = g.id
+       WHERE g.status IN ('active','inactive')
+       ORDER BY g.name`
+    );
 
-  const girlCalendars = await Promise.all(
-    calResult.rows.map(async (r) => {
-      const girlId = Number(r.id);
-      const connected = r.connected_girl_id != null;
-      let events: GCalEvent[] = [];
-      let gcalError = false;
-      if (connected) {
-        try {
-          const token = await getValidAccessTokenByGirl(girlId);
-          if (token) {
-            events = await getUpcomingEvents(token, String(r.calendar_id), 7);
-          } else {
-            gcalError = true;
-          }
-        } catch { gcalError = true; }
-      }
-      return {
-        id: girlId,
-        name: String(r.name),
-        photo: r.photo ? photoUrl(String(r.photo)) : null,
-        connected,
-        gcalError,
-        events,
-      };
-    })
-  );
+    girlCalendars = await Promise.all(
+      calResult.rows.map(async (r) => {
+        const girlId = Number(r.id);
+        const connected = r.connected_girl_id != null;
+        let events: GCalEvent[] = [];
+        let gcalError = false;
+        if (connected) {
+          try {
+            const token = await getValidAccessTokenByGirl(girlId);
+            if (token) {
+              events = await getUpcomingEvents(token, String(r.calendar_id), 7);
+            } else {
+              gcalError = true;
+            }
+          } catch { gcalError = true; }
+        }
+        return {
+          id: girlId,
+          name: String(r.name),
+          photo: r.photo ? photoUrl(String(r.photo)) : null,
+          connected,
+          gcalError,
+          events,
+        };
+      })
+    );
+  } catch {
+    // google_calendar_tokens table may not exist yet — skip GCal section
+  }
 
   return (
     <>
