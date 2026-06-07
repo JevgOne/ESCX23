@@ -7175,34 +7175,18 @@ body {
 
 /* ===== ADMIN / STUDIO — mobile sidebar ===== */
 @media (max-width: 768px) {
-  .admin-shell,
-  .studio-shell {
-    flex-direction: column;
-  }
-  .admin-sidebar,
-  .studio-sidebar {
-    width: 100%;
-    height: auto;
-    position: static;
-    overflow-x: auto;
-    padding: 12px 16px;
-  }
-  .admin-sidebar-nav,
-  .studio-sidebar nav {
-    flex-direction: row;
-    gap: 4px;
-    overflow-x: auto;
-  }
-  .admin-sidebar a,
-  .studio-sidebar a {
-    white-space: nowrap;
-    padding: 8px 12px;
-    flex-shrink: 0;
-  }
   .admin-main,
   .studio-main {
     padding: 16px;
   }
+  /* Studio keeps horizontal scroll strip */
+  .studio-shell { flex-direction: column; }
+  .studio-sidebar {
+    width: 100%; height: auto; position: static;
+    overflow-x: auto; padding: 12px 16px;
+  }
+  .studio-sidebar nav { flex-direction: row; gap: 4px; overflow-x: auto; }
+  .studio-sidebar a { white-space: nowrap; padding: 8px 12px; flex-shrink: 0; }
 }
 
 /* ===== SCHEDULE EDITOR — mobile ===== */
@@ -13644,8 +13628,8 @@ body {
   }
 }
 
-/* ----- Admin sidebar hamburger (769px–900px range) ----- */
-@media (min-width: 769px) and (max-width: 900px) {
+/* ----- Admin sidebar hamburger (≤900px — mobile + tablet) ----- */
+@media (max-width: 900px) {
   #admin-sidebar-toggle {
     display: none;
   }
@@ -13672,6 +13656,7 @@ body {
     left: -260px;
     top: 0;
     height: 100vh;
+    height: 100dvh;
     width: 240px;
     z-index: 200;
     transition: left 0.28s ease;
@@ -13702,6 +13687,12 @@ body {
   .admin-topbar-pill {
     display: none;
   }
+}
+/* ----- Extra mobile tweaks (≤480px) ----- */
+@media (max-width: 480px) {
+  .admin-topbar h1 { font-size: 17px; }
+  .admin-sidebar { width: 85vw; max-width: 280px; }
+  .admin-sidebar-logo { padding-bottom: 16px; }
 }
 
 @media (min-width: 901px) {
