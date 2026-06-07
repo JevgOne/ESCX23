@@ -337,60 +337,65 @@ export default async function AdminSchedulesPage({
           border-radius: 0 0 20px 20px;
         }
 
-        /* Mobile: show schedule as tag list instead of 7-col grid */
+        /* Mobile list — hidden on desktop */
         .sched-mobile-list { display: none; }
 
-        /* Responsive — tablet */
+        /* ── Responsive <=900px ── */
         @media (max-width: 900px) {
-          .sched-header { flex-direction: column; align-items: flex-start; }
-          .sched-girl-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        /* Responsive — mobile */
-        @media (max-width: 900px) {
-          .sched-title { font-size: 17px; flex-wrap: wrap; }
-          .sched-actions { width: 100%; }
-          .sched-actions .admin-btn-submit { width: 100%; text-align: center; }
+          .sched-header { flex-direction: column; align-items: stretch; gap: 10px; }
+          .sched-title { font-size: 17px; }
+          .sched-actions { display: flex; gap: 6px; }
+          .sched-actions .admin-btn-submit { flex: 1; text-align: center; font-size: 12px; padding: 8px 12px; }
           .sched-actions .admin-btn-danger,
           .sched-actions .admin-btn-secondary { font-size: 11px; padding: 6px 10px; }
-          .sched-filters { gap: 4px; }
+
+          /* Filters — scrollable row */
+          .sched-filters { flex-wrap: nowrap; overflow-x: auto; gap: 5px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
 
           /* Hide 7-col grid, show mobile list */
           .sched-grid { display: none !important; }
-          .sched-mobile-list { display: flex !important; flex-direction: column; gap: 0; }
+          .sched-row-actions { display: none !important; }
+          .sched-mobile-list { display: flex !important; flex-direction: column; gap: 0; padding: 4px 0; }
+
           .sched-mob-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 12px 16px;
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px;
             border-bottom: 1px solid var(--color-line);
           }
           .sched-mob-item:last-child { border-bottom: none; }
-          .sched-mob-day {
-            min-width: 36px;
-            font-size: 13px; font-weight: 800; color: var(--color-coral);
-            text-transform: uppercase;
+
+          .sched-mob-badge {
+            display: flex; align-items: center; justify-content: center;
+            min-width: 38px; height: 28px;
+            border-radius: 8px;
+            font-size: 11px; font-weight: 800;
+            color: #fff; text-transform: uppercase;
+            letter-spacing: 0.04em;
           }
+          .sched-mob-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
           .sched-mob-time {
-            flex: 1;
-            font-size: 13px; font-family: ui-monospace, monospace;
-            color: var(--color-text-muted);
+            font-size: 14px; font-family: ui-monospace, monospace;
+            font-weight: 600; color: var(--color-text);
           }
           .sched-mob-loc {
             font-size: 10px; color: var(--color-text-dim);
-            text-transform: uppercase; letter-spacing: 0.04em;
+            letter-spacing: 0.02em;
           }
           .sched-mob-del {
-            padding: 4px 8px; background: rgba(239,68,68,0.08);
-            border: 1px solid rgba(239,68,68,0.25); border-radius: 6px;
-            color: #fca5a5; font-size: 11px; cursor: pointer;
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(239,68,68,0.06);
+            border: 1px solid rgba(239,68,68,0.2); border-radius: 8px;
+            color: rgba(239,68,68,0.7); font-size: 14px; cursor: pointer;
+            flex-shrink: 0;
           }
 
-          /* Hide desktop delete row */
-          .sched-row-actions { display: none !important; }
-
-          /* Card head compact */
-          .sched-card-head { padding: 12px 16px; }
-          .sched-avatar { width: 32px; height: 32px; }
-          .sched-card-name { font-size: 13px; }
+          /* Card compact */
+          .sched-card { border-radius: 12px; }
+          .sched-card-head { padding: 10px 14px; }
+          .sched-avatar { width: 34px; height: 34px; }
+          .sched-card-name { font-size: 14px; }
+          .sched-card-meta { font-size: 11px; }
 
           /* Modal — full screen */
           .sched-overlay { padding: 0; align-items: stretch; }
@@ -457,7 +462,9 @@ export default async function AdminSchedulesPage({
             key={d.girlId}
             href={`/${locale}/admin/schedules?girl=${d.girlSlug}`}
             className={`admin-filter-pill${girlFilter === d.girlSlug ? ' active' : ''}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: d.girlColor || 'var(--color-pink)', flexShrink: 0 }} />
             {d.girlName}
           </a>
         ))}
@@ -523,14 +530,18 @@ export default async function AdminSchedulesPage({
                 })}
               </div>
 
-              {/* Mobile: list of working days only */}
+              {/* Mobile: compact list with colored day badges */}
               <div className="sched-mobile-list">
                 {girl.schedules.map((s) => (
                   <div key={s.id} className="sched-mob-item">
-                    <span className="sched-mob-day">{DAY_NAMES[s.day_of_week]?.substring(0, 2)}</span>
-                    <span className="sched-mob-time">{s.start_time?.substring(0, 5)}–{s.end_time?.substring(0, 5)}</span>
-                    {s.location_name && <span className="sched-mob-loc">{s.location_name}</span>}
-                    <form action={deleteGirlSchedule} style={{ display: 'inline' }}>
+                    <span className="sched-mob-badge" style={{ background: girl.girlColor || 'var(--color-pink)' }}>
+                      {DAY_NAMES[s.day_of_week]?.substring(0, 2)}
+                    </span>
+                    <div className="sched-mob-info">
+                      <span className="sched-mob-time">{s.start_time?.substring(0, 5)} – {s.end_time?.substring(0, 5)}</span>
+                      {s.location_name && <span className="sched-mob-loc">{s.location_name}</span>}
+                    </div>
+                    <form action={deleteGirlSchedule}>
                       <input type="hidden" name="id" value={s.id} />
                       <button type="submit" className="sched-mob-del">×</button>
                     </form>
