@@ -12,7 +12,7 @@ import {
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const DAY_NAMES = ['Ponděl\u00ed', '\u00dater\u00fd', 'St\u0159eda', '\u010ctvrtek', 'P\u00e1tek', 'Sobota', 'Ned\u011ble'];
+const DAY_NAMES = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'];
 
 export default async function AdminSchedulesPage({
   params,
@@ -42,8 +42,8 @@ export default async function AdminSchedulesPage({
       <style dangerouslySetInnerHTML={{ __html: `
         /* ── Schedule overview ── */
         .sched-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-        .sched-title { font-size: 20px; font-weight: 700; color: var(--color-text); margin: 0; }
-        .sched-title-count { font-size: 13px; color: var(--color-text-dim); font-weight: 400; margin-left: 8px; }
+        .sched-title { font-size: 20px; font-weight: 700; color: var(--color-text); margin: 0; display: flex; align-items: baseline; gap: 10px; }
+        .sched-title-count { font-size: 12px; color: var(--color-text-dim); font-weight: 500; padding: 3px 10px; background: var(--color-bg-elev); border-radius: 999px; }
         .sched-actions { display: flex; gap: 8px; }
 
         .sched-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
@@ -55,21 +55,25 @@ export default async function AdminSchedulesPage({
           border: 1px solid var(--color-line);
           border-radius: var(--card-radius);
           overflow: hidden;
+          transition: border-color 0.2s;
         }
+        .sched-card:hover { border-color: var(--color-line-mid); }
         .sched-card-head {
           display: flex; align-items: center; gap: 12px;
           padding: 14px 18px;
           border-bottom: 1px solid var(--color-line);
+          background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
         }
         .sched-avatar {
           width: 38px; height: 38px; border-radius: 50%; overflow: hidden;
           display: flex; align-items: center; justify-content: center;
           font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+          box-shadow: 0 2px 8px -2px rgba(0,0,0,0.4);
         }
         .sched-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .sched-card-info { flex: 1; min-width: 0; }
         .sched-card-name { font-size: 14px; font-weight: 600; color: var(--color-text); }
-        .sched-card-meta { font-size: 12px; color: var(--color-text-dim); margin-top: 1px; }
+        .sched-card-meta { font-size: 11px; color: var(--color-text-dim); margin-top: 2px; letter-spacing: 0.02em; }
 
         .sched-grid {
           display: grid;
@@ -77,114 +81,131 @@ export default async function AdminSchedulesPage({
           gap: 0;
         }
         .sched-grid-day {
-          padding: 12px 10px;
+          padding: 14px 8px;
           text-align: center;
           border-right: 1px solid var(--color-line);
-          min-height: 72px;
-          display: flex; flex-direction: column; align-items: center; gap: 4px;
+          min-height: 80px;
+          display: flex; flex-direction: column; align-items: center; gap: 6px;
+          transition: background 0.15s;
         }
         .sched-grid-day:last-child { border-right: none; }
-        .sched-grid-day--off { opacity: 0.35; }
+        .sched-grid-day--off { opacity: 0.3; }
+        .sched-grid-day--on { background: rgba(242,125,141,0.04); }
         .sched-day-label {
           font-size: 10px; font-weight: 700; text-transform: uppercase;
-          letter-spacing: 0.1em; color: var(--color-text-dim);
+          letter-spacing: 0.12em; color: var(--color-text-dim);
+          padding-bottom: 4px;
         }
+        .sched-grid-day--on .sched-day-label { color: var(--color-coral); }
         .sched-day-time {
           font-size: 12px; font-family: ui-monospace, monospace;
-          color: var(--color-text-muted); line-height: 1.5;
-        }
-        .sched-day-pill {
-          display: inline-block; margin-top: 2px;
-          padding: 2px 8px; border-radius: 999px;
-          font-size: 10px; font-weight: 600;
-          background: rgba(242,125,141,0.12); color: var(--color-coral);
+          color: var(--color-text-muted); line-height: 1.6;
+          background: rgba(255,255,255,0.03);
+          padding: 3px 8px; border-radius: 6px;
         }
         .sched-day-loc {
-          font-size: 10px; color: var(--color-text-dim); margin-top: 2px;
+          font-size: 9px; color: var(--color-text-dim); margin-top: 1px;
+          text-transform: uppercase; letter-spacing: 0.06em;
         }
 
         .sched-row-actions {
-          display: flex; gap: 4px; padding: 10px 18px;
+          display: flex; gap: 4px; padding: 8px 18px;
           border-top: 1px solid var(--color-line);
           justify-content: flex-end;
+          flex-wrap: wrap;
         }
 
         .sched-empty {
-          text-align: center; padding: 48px 20px;
+          text-align: center; padding: 60px 20px;
           color: var(--color-text-dim); font-size: 14px;
           border: 1px dashed var(--color-line); border-radius: var(--card-radius);
+          background: var(--color-bg-card);
         }
 
         /* ── Add modal ── */
         .sched-overlay {
           position: fixed; inset: 0; z-index: 1000;
-          background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+          background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
           display: flex; align-items: flex-start; justify-content: center;
           padding: 48px 16px; overflow-y: auto;
         }
         .sched-modal {
           background: var(--color-bg-card);
           border: 1px solid var(--color-line-mid);
-          border-radius: 16px;
-          max-width: 580px; width: 100%;
-          box-shadow: 0 24px 64px -16px rgba(0,0,0,0.7);
+          border-radius: 20px;
+          max-width: 600px; width: 100%;
+          box-shadow: 0 32px 80px -16px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
         }
         .sched-modal-head {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 18px 24px;
+          padding: 20px 28px;
           border-bottom: 1px solid var(--color-line);
+          background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+          border-radius: 20px 20px 0 0;
         }
-        .sched-modal-title { font-size: 18px; font-weight: 700; color: var(--color-text); }
+        .sched-modal-title {
+          font-size: 18px; font-weight: 700; color: var(--color-text);
+          display: flex; align-items: center; gap: 10px;
+        }
+        .sched-modal-title::before {
+          content: ''; display: block; width: 4px; height: 18px;
+          background: linear-gradient(180deg, var(--color-coral), var(--color-magenta));
+          border-radius: 2px;
+        }
         .sched-modal-close {
-          width: 32px; height: 32px; border-radius: 8px;
+          width: 34px; height: 34px; border-radius: 10px;
           background: var(--color-bg-elev); color: var(--color-text-dim);
           text-decoration: none; display: flex; align-items: center; justify-content: center;
-          font-size: 18px; line-height: 1;
+          font-size: 18px; line-height: 1; transition: all 0.15s;
+          border: 1px solid var(--color-line);
         }
-        .sched-modal-close:hover { color: var(--color-text); background: var(--color-bg-card); }
+        .sched-modal-close:hover { color: var(--color-text); background: rgba(255,255,255,0.08); }
 
-        .sched-modal-body { padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+        .sched-modal-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
 
-        .sched-fieldset {
-          border: 1px solid var(--color-line-mid); border-radius: 12px;
-          padding: 16px 20px; background: transparent;
-        }
-        .sched-legend {
+        .sched-section { display: flex; flex-direction: column; gap: 12px; }
+        .sched-section-label {
           font-size: 11px; font-weight: 700; text-transform: uppercase;
-          letter-spacing: 0.1em; color: var(--color-coral); padding: 0 8px;
+          letter-spacing: 0.12em; color: var(--color-coral);
+          display: flex; align-items: center; gap: 8px;
+        }
+        .sched-section-label::after {
+          content: ''; flex: 1; height: 1px;
+          background: linear-gradient(90deg, var(--color-line-mid), transparent);
         }
 
         /* Girl selector */
-        .sched-girl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+        .sched-girl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .sched-girl-opt { display: block; cursor: pointer; position: relative; }
         .sched-girl-opt input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
         .sched-girl-chip {
           display: flex; align-items: center; gap: 8px;
-          padding: 10px 12px;
+          padding: 10px 14px;
           background: var(--color-bg-elev);
-          border: 1.5px solid var(--color-line-mid);
+          border: 1.5px solid var(--color-line);
           border-radius: 10px;
           color: var(--color-text-muted);
           font-size: 13px; font-weight: 500;
           transition: all 0.15s;
         }
-        .sched-girl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .sched-girl-opt:hover .sched-girl-chip { border-color: rgba(255,255,255,0.2); color: var(--color-text); }
+        .sched-girl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
+        .sched-girl-opt:hover .sched-girl-chip { border-color: rgba(255,255,255,0.2); color: var(--color-text); background: rgba(255,255,255,0.04); }
         .sched-girl-opt input:checked + .sched-girl-chip {
           background: linear-gradient(135deg, var(--color-coral), var(--color-magenta));
           border-color: transparent; color: #fff; font-weight: 600;
-          box-shadow: 0 4px 12px -4px rgba(242,125,141,0.4);
+          box-shadow: 0 4px 16px -4px rgba(242,125,141,0.5);
         }
+        .sched-girl-opt input:checked + .sched-girl-chip .sched-girl-dot { box-shadow: 0 0 8px rgba(255,255,255,0.5); }
 
         /* Location selector */
-        .sched-loc-row { display: flex; gap: 8px; margin-top: 12px; }
+        .sched-loc-row { display: flex; gap: 8px; }
         .sched-loc-opt { flex: 1; display: block; cursor: pointer; position: relative; }
         .sched-loc-opt input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
         .sched-loc-chip {
-          display: block; padding: 12px; text-align: center;
+          display: block; padding: 14px 12px; text-align: center;
           background: var(--color-bg-elev);
-          border: 1.5px solid var(--color-line-mid);
-          border-radius: 10px;
+          border: 1.5px solid var(--color-line);
+          border-radius: 12px;
           color: var(--color-text-muted);
           font-size: 13px; font-weight: 600;
           transition: all 0.15s;
@@ -193,19 +214,19 @@ export default async function AdminSchedulesPage({
         .sched-loc-opt input:checked + .sched-loc-chip {
           background: linear-gradient(135deg, var(--color-coral), var(--color-magenta));
           border-color: transparent; color: #fff;
-          box-shadow: 0 4px 12px -4px rgba(242,125,141,0.4);
+          box-shadow: 0 4px 16px -4px rgba(242,125,141,0.5);
         }
 
         /* Day selector */
-        .sched-day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
+        .sched-day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .sched-day-opt { display: block; cursor: pointer; position: relative; }
         .sched-day-opt input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
         .sched-day-btn {
           display: flex; flex-direction: column; align-items: center; gap: 2px;
-          padding: 12px 4px;
+          padding: 14px 4px;
           background: var(--color-bg-elev);
-          border: 1.5px solid var(--color-line-mid);
-          border-radius: 10px;
+          border: 1.5px solid var(--color-line);
+          border-radius: 12px;
           color: var(--color-text-muted);
           font-size: 13px; font-weight: 700;
           transition: all 0.15s;
@@ -213,27 +234,28 @@ export default async function AdminSchedulesPage({
         }
         .sched-day-check {
           display: none; position: absolute; top: -5px; right: -5px;
-          width: 16px; height: 16px;
+          width: 18px; height: 18px;
           background: var(--color-green); border: 2px solid var(--color-bg-card);
           border-radius: 50%;
-          font-size: 8px; color: #fff; font-weight: 700;
+          font-size: 9px; color: #fff; font-weight: 700;
           align-items: center; justify-content: center;
         }
-        .sched-day-opt:hover .sched-day-btn { border-color: rgba(255,255,255,0.2); color: var(--color-text); }
+        .sched-day-opt:hover .sched-day-btn { border-color: rgba(255,255,255,0.2); color: var(--color-text); transform: translateY(-1px); }
         .sched-day-opt input:checked + .sched-day-btn {
           background: linear-gradient(135deg, var(--color-coral), var(--color-magenta));
           border-color: transparent; color: #fff;
-          box-shadow: 0 4px 12px -4px rgba(242,125,141,0.4);
+          box-shadow: 0 4px 16px -4px rgba(242,125,141,0.5);
+          transform: scale(1.04);
         }
         .sched-day-opt input:checked + .sched-day-btn .sched-day-check { display: flex; }
 
         /* Time blocks per selected day */
-        .sched-times-stack { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+        .sched-times-stack { display: flex; flex-direction: column; gap: 12px; }
         .sched-time-block {
           display: none;
           background: var(--color-bg-elev);
           border: 1px solid var(--color-line);
-          border-radius: 12px; padding: 16px;
+          border-radius: 14px; padding: 18px;
         }
         .sched-form:has(input[name="day_0"]:checked) .sched-time-0,
         .sched-form:has(input[name="day_1"]:checked) .sched-time-1,
@@ -245,69 +267,74 @@ export default async function AdminSchedulesPage({
 
         .sched-time-head {
           font-size: 13px; font-weight: 700; color: var(--color-text);
-          margin-bottom: 12px;
+          margin-bottom: 14px;
           display: flex; align-items: center; gap: 8px;
         }
         .sched-time-head-dot {
-          width: 6px; height: 6px; border-radius: 50%;
-          background: var(--color-coral);
+          width: 8px; height: 8px; border-radius: 50%;
+          background: linear-gradient(135deg, var(--color-coral), var(--color-magenta));
+          box-shadow: 0 0 8px rgba(242,125,141,0.4);
         }
 
-        .sched-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+        .sched-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
         .sched-preset-opt { display: block; cursor: pointer; position: relative; }
         .sched-preset-opt input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
         .sched-preset-chip {
-          display: flex; flex-direction: column; align-items: center; gap: 3px;
-          padding: 10px 8px;
-          background: rgba(0,0,0,0.2);
+          display: flex; flex-direction: column; align-items: center; gap: 4px;
+          padding: 12px 8px;
+          background: rgba(0,0,0,0.25);
           border: 1.5px solid var(--color-line);
-          border-radius: 10px;
+          border-radius: 12px;
           transition: all 0.15s;
         }
-        .sched-preset-name { font-size: 12px; font-weight: 600; color: var(--color-text-muted); }
+        .sched-preset-name { font-size: 12px; font-weight: 700; color: var(--color-text-muted); }
         .sched-preset-time { font-size: 11px; font-family: ui-monospace, monospace; color: var(--color-text-dim); }
-        .sched-preset-opt:hover .sched-preset-chip { border-color: rgba(255,255,255,0.15); }
+        .sched-preset-opt:hover .sched-preset-chip { border-color: rgba(255,255,255,0.15); background: rgba(0,0,0,0.3); }
         .sched-preset-opt input:checked + .sched-preset-chip {
           background: rgba(242,125,141,0.12);
           border-color: var(--color-coral);
+          box-shadow: 0 0 0 1px rgba(242,125,141,0.15);
         }
         .sched-preset-opt input:checked + .sched-preset-chip .sched-preset-name { color: var(--color-text); }
         .sched-preset-opt input:checked + .sched-preset-chip .sched-preset-time { color: var(--color-gold); }
 
         .sched-custom-row {
           display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-          padding-top: 10px; border-top: 1px solid var(--color-line);
+          padding-top: 12px; border-top: 1px solid var(--color-line);
         }
-        .sched-time-field { display: flex; flex-direction: column; gap: 4px; }
+        .sched-time-field { display: flex; flex-direction: column; gap: 5px; }
         .sched-time-field label {
           font-size: 10px; font-weight: 700; text-transform: uppercase;
           letter-spacing: 0.1em; color: var(--color-text-dim);
         }
         .sched-time-field input[type="time"] {
-          background: var(--color-bg-card);
+          background: rgba(0,0,0,0.3);
           border: 1px solid var(--color-line-mid);
-          border-radius: 8px;
-          padding: 8px 12px;
+          border-radius: 10px;
+          padding: 10px 14px;
           color: var(--color-text);
-          font-family: ui-monospace, monospace; font-size: 13px;
+          font-family: ui-monospace, monospace; font-size: 14px;
         }
         .sched-time-field input[type="time"]:focus {
           border-color: var(--color-coral); outline: none;
+          box-shadow: 0 0 0 3px rgba(242,125,141,0.15);
         }
 
         .sched-empty-times {
           color: var(--color-text-dim); font-size: 12px; font-style: italic;
-          padding: 14px; text-align: center;
+          padding: 18px; text-align: center;
           background: var(--color-bg-elev);
           border: 1px dashed var(--color-line);
-          border-radius: 10px;
+          border-radius: 12px;
         }
         .sched-form:has(input[name^="day_"]:checked) .sched-empty-times { display: none; }
 
         .sched-modal-foot {
           display: flex; justify-content: flex-end; gap: 10px;
-          padding: 16px 24px;
+          padding: 18px 28px;
           border-top: 1px solid var(--color-line);
+          background: linear-gradient(0deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+          border-radius: 0 0 20px 20px;
         }
 
         /* Responsive */
@@ -318,25 +345,27 @@ export default async function AdminSchedulesPage({
           .sched-girl-grid { grid-template-columns: repeat(2, 1fr); }
           .sched-day-grid { grid-template-columns: repeat(4, 1fr); }
           .sched-presets { grid-template-columns: 1fr; }
+          .sched-modal-body { padding: 20px; }
+          .sched-modal-head, .sched-modal-foot { padding-left: 20px; padding-right: 20px; }
         }
       `}} />
       <AdminTopbar title="Rozvrhy" />
 
       {error === 'missing_girl' && (
         <div style={{ padding: '10px 16px', marginBottom: 16, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#fca5a5', fontSize: 13 }}>
-          Vyberte d\u00edvku p\u0159ed p\u0159id\u00e1n\u00edm rozvrhu.
+          Vyberte dívku před přidáním rozvrhu.
         </div>
       )}
       {error === 'no_days' && (
         <div style={{ padding: '10px 16px', marginBottom: 16, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#fca5a5', fontSize: 13 }}>
-          Vyberte alespo\u0148 jeden den.
+          Vyberte alespoň jeden den.
         </div>
       )}
 
       <div className="sched-header">
         <h2 className="sched-title">
-          Pracovn\u00ed doba d\u00edvek
-          <span className="sched-title-count">{totalCount} z\u00e1znam\u016f</span>
+          Pracovní doba dívek
+          <span className="sched-title-count">{totalCount} záznamů</span>
         </h2>
         <div className="sched-actions">
           <form action={fixScheduleColors} style={{ display: 'inline' }}>
@@ -344,9 +373,9 @@ export default async function AdminSchedulesPage({
           </form>
           <form action={deleteAllSchedules} style={{ display: 'inline' }}>
             <input type="hidden" name="girl_id" value="" />
-            <button type="submit" className="admin-btn-danger">Smazat v\u0161e</button>
+            <button type="submit" className="admin-btn-danger">Smazat vše</button>
           </form>
-          <a href="?modal=add" className="admin-btn-submit">+ P\u0159idat rozvrh</a>
+          <a href="?modal=add" className="admin-btn-submit">+ Přidat rozvrh</a>
         </div>
       </div>
 
@@ -356,7 +385,7 @@ export default async function AdminSchedulesPage({
           href={`/${locale}/admin/schedules`}
           className={`admin-filter-pill${!girlFilter ? ' active' : ''}`}
         >
-          V\u0161echny ({withSchedule.length})
+          Všechny ({withSchedule.length})
         </a>
         {withSchedule.map((d) => (
           <a
@@ -373,11 +402,10 @@ export default async function AdminSchedulesPage({
       <div className="sched-cards">
         {filtered.length === 0 && (
           <div className="sched-empty">
-            \u017d\u00e1dn\u00e9 rozvrhy nenalezeny.
+            Žádné rozvrhy nenalezeny.
           </div>
         )}
         {filtered.map((girl) => {
-          // Group schedules by day
           const byDay = new Map<number, typeof girl.schedules>();
           for (const s of girl.schedules) {
             const arr = byDay.get(s.day_of_week) ?? [];
@@ -397,10 +425,10 @@ export default async function AdminSchedulesPage({
                 </div>
                 <div className="sched-card-info">
                   <div className="sched-card-name">{girl.girlName}</div>
-                  <div className="sched-card-meta">{girl.schedules.length} sm\u011bn</div>
+                  <div className="sched-card-meta">{girl.schedules.length} směn</div>
                 </div>
                 <a href={`/${locale}/admin/schedules?modal=add&prefill_girl=${girl.girlId}`} className="admin-action-btn edit" style={{ textDecoration: 'none' }}>
-                  + P\u0159idat
+                  + Přidat
                 </a>
               </div>
 
@@ -409,7 +437,7 @@ export default async function AdminSchedulesPage({
                   const daySchedules = byDay.get(i);
                   const isOff = !daySchedules || daySchedules.length === 0;
                   return (
-                    <div key={i} className={`sched-grid-day${isOff ? ' sched-grid-day--off' : ''}`}>
+                    <div key={i} className={`sched-grid-day${isOff ? ' sched-grid-day--off' : ' sched-grid-day--on'}`}>
                       <span className="sched-day-label">{dayName.substring(0, 2)}</span>
                       {isOff ? (
                         <span style={{ fontSize: 11, color: 'var(--color-text-dim)' }}>Volno</span>
@@ -435,7 +463,7 @@ export default async function AdminSchedulesPage({
                   <form key={s.id} action={deleteGirlSchedule} style={{ display: 'inline' }}>
                     <input type="hidden" name="id" value={s.id} />
                     <button type="submit" className="admin-action-btn danger" title={`Smazat ${DAY_NAMES[s.day_of_week]} ${s.start_time?.substring(0, 5)}`}>
-                      \u00d7 {DAY_NAMES[s.day_of_week]?.substring(0, 2)}
+                      × {DAY_NAMES[s.day_of_week]?.substring(0, 2)}
                     </button>
                   </form>
                 ))}
@@ -448,17 +476,17 @@ export default async function AdminSchedulesPage({
       {/* Add schedule modal */}
       {modal === 'add' && (
         <div className="sched-overlay">
-          <form action={addGirlSchedule} className="sched-form" style={{ width: '100%', maxWidth: 580, display: 'flex', flexDirection: 'column' }}>
+          <form action={addGirlSchedule} className="sched-form" style={{ width: '100%', maxWidth: 600, display: 'flex', flexDirection: 'column' }}>
             <div className="sched-modal">
               <div className="sched-modal-head">
-                <span className="sched-modal-title">P\u0159idat rozvrh</span>
-                <a href={`/${locale}/admin/schedules`} className="sched-modal-close">\u00d7</a>
+                <span className="sched-modal-title">Přidat rozvrh</span>
+                <a href={`/${locale}/admin/schedules`} className="sched-modal-close">×</a>
               </div>
 
               <div className="sched-modal-body">
                 {/* Step 1: Girl */}
-                <fieldset className="sched-fieldset">
-                  <legend className="sched-legend">D\u00edvka</legend>
+                <div className="sched-section">
+                  <div className="sched-section-label">Dívka</div>
                   <div className="sched-girl-grid">
                     {allData.map((d) => (
                       <label key={d.girlId} className="sched-girl-opt">
@@ -470,11 +498,11 @@ export default async function AdminSchedulesPage({
                       </label>
                     ))}
                   </div>
-                </fieldset>
+                </div>
 
                 {/* Step 2: Location */}
-                <fieldset className="sched-fieldset">
-                  <legend className="sched-legend">Pobo\u010dka</legend>
+                <div className="sched-section">
+                  <div className="sched-section-label">Pobočka</div>
                   <div className="sched-loc-row">
                     {locations.map((loc) => (
                       <label key={loc.id} className="sched-loc-opt">
@@ -483,30 +511,30 @@ export default async function AdminSchedulesPage({
                       </label>
                     ))}
                   </div>
-                </fieldset>
+                </div>
 
                 {/* Step 3: Days */}
-                <fieldset className="sched-fieldset">
-                  <legend className="sched-legend">Dny</legend>
+                <div className="sched-section">
+                  <div className="sched-section-label">Dny</div>
                   <div className="sched-day-grid">
                     {DAY_NAMES.map((dayName, i) => (
                       <label key={i} className="sched-day-opt">
                         <input type="checkbox" name={`day_${i}`} value="1" />
                         <span className="sched-day-btn">
-                          <span className="sched-day-check">\u2713</span>
+                          <span className="sched-day-check">✓</span>
                           {dayName.substring(0, 3)}
                         </span>
                       </label>
                     ))}
                   </div>
-                </fieldset>
+                </div>
 
                 {/* Step 4: Time per day */}
-                <fieldset className="sched-fieldset">
-                  <legend className="sched-legend">\u010cas</legend>
+                <div className="sched-section">
+                  <div className="sched-section-label">Čas</div>
 
                   <div className="sched-empty-times">
-                    Vyberte dny v\u00fd\u0161e a zde se zobraz\u00ed nastaven\u00ed \u010dasu.
+                    Vyberte dny výše a zde se zobrazí nastavení času.
                   </div>
 
                   <div className="sched-times-stack">
@@ -521,45 +549,45 @@ export default async function AdminSchedulesPage({
                           <label className="sched-preset-opt">
                             <input type="radio" name={`preset_${i}`} value="ranni" />
                             <span className="sched-preset-chip">
-                              <span className="sched-preset-name">Rann\u00ed</span>
-                              <span className="sched-preset-time">10:00 \u2013 16:00</span>
+                              <span className="sched-preset-name">Ranní</span>
+                              <span className="sched-preset-time">10:00 – 16:00</span>
                             </span>
                           </label>
                           <label className="sched-preset-opt">
                             <input type="radio" name={`preset_${i}`} value="odpoledni" />
                             <span className="sched-preset-chip">
-                              <span className="sched-preset-name">Odpoledn\u00ed</span>
-                              <span className="sched-preset-time">16:30 \u2013 22:30</span>
+                              <span className="sched-preset-name">Odpolední</span>
+                              <span className="sched-preset-time">16:30 – 22:30</span>
                             </span>
                           </label>
                           <label className="sched-preset-opt">
                             <input type="radio" name={`preset_${i}`} value="celodenni" defaultChecked />
                             <span className="sched-preset-chip">
-                              <span className="sched-preset-name">Celodenn\u00ed</span>
-                              <span className="sched-preset-time">10:00 \u2013 22:00</span>
+                              <span className="sched-preset-name">Celodenní</span>
+                              <span className="sched-preset-time">10:00 – 22:00</span>
                             </span>
                           </label>
                         </div>
 
                         <div className="sched-custom-row">
                           <div className="sched-time-field">
-                            <label>Od (vlastn\u00ed)</label>
+                            <label>Od (vlastní)</label>
                             <input type="time" name={`start_${i}`} />
                           </div>
                           <div className="sched-time-field">
-                            <label>Do (vlastn\u00ed)</label>
+                            <label>Do (vlastní)</label>
                             <input type="time" name={`end_${i}`} />
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                </fieldset>
+                </div>
               </div>
 
               <div className="sched-modal-foot">
-                <a href={`/${locale}/admin/schedules`} className="admin-btn-secondary" style={{ textDecoration: 'none' }}>Zru\u0161it</a>
-                <button type="submit" className="admin-btn-submit">P\u0159idat rozvrh</button>
+                <a href={`/${locale}/admin/schedules`} className="admin-btn-secondary" style={{ textDecoration: 'none' }}>Zrušit</a>
+                <button type="submit" className="admin-btn-submit">Přidat rozvrh</button>
               </div>
             </div>
           </form>
