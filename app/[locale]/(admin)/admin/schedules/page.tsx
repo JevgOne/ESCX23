@@ -347,7 +347,7 @@ export default async function AdminSchedulesPage({
         }
 
         /* Responsive — mobile */
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .sched-title { font-size: 17px; flex-wrap: wrap; }
           .sched-actions { width: 100%; }
           .sched-actions .admin-btn-submit { width: 100%; text-align: center; }
