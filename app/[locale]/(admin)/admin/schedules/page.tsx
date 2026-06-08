@@ -6,7 +6,6 @@ import {
   addGirlSchedule,
   deleteGirlSchedule,
   deleteAllSchedules,
-  fixScheduleColors,
 } from '@/lib/admin-actions';
 
 export const dynamic = 'force-dynamic';
@@ -438,9 +437,6 @@ export default async function AdminSchedulesPage({
           <span className="sched-title-count">{totalCount} záznamů</span>
         </h2>
         <div className="sched-actions">
-          <form action={fixScheduleColors} style={{ display: 'inline' }}>
-            <button type="submit" className="admin-btn-secondary">Opravit barvy</button>
-          </form>
           <form action={deleteAllSchedules} style={{ display: 'inline' }}>
             <input type="hidden" name="girl_id" value="" />
             <button type="submit" className="admin-btn-danger">Smazat vše</button>
@@ -508,16 +504,23 @@ export default async function AdminSchedulesPage({
                 {DAY_NAMES.map((dayName, i) => {
                   const daySchedules = byDay.get(i);
                   const isOff = !daySchedules || daySchedules.length === 0;
+                  const girlCol = girl.girlColor || 'var(--color-pink)';
                   return (
-                    <div key={i} className={`sched-grid-day${isOff ? ' sched-grid-day--off' : ' sched-grid-day--on'}`}>
-                      <span className="sched-day-label">{dayName.substring(0, 2)}</span>
+                    <div
+                      key={i}
+                      className={`sched-grid-day${isOff ? ' sched-grid-day--off' : ' sched-grid-day--on'}`}
+                      style={!isOff ? { background: `${girlCol}0a`, borderTop: `2px solid ${girlCol}` } : undefined}
+                    >
+                      <span className="sched-day-label" style={!isOff ? { color: girlCol } : undefined}>
+                        {dayName.substring(0, 2)}
+                      </span>
                       {isOff ? (
-                        <span style={{ fontSize: 11, color: 'var(--color-text-dim)' }}>Volno</span>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-dim)' }}>—</span>
                       ) : (
                         daySchedules.map((s) => (
                           <div key={s.id}>
                             <div className="sched-day-time">
-                              {s.start_time?.substring(0, 5)}&ndash;{s.end_time?.substring(0, 5)}
+                              {s.start_time?.substring(0, 5)}–{s.end_time?.substring(0, 5)}
                             </div>
                             {s.location_name && (
                               <div className="sched-day-loc">{s.location_name}</div>
