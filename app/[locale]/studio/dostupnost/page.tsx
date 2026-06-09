@@ -86,7 +86,7 @@ export default async function StudioDostupnostPage({
 
       <div className="studio-content">
         <div className="studio-readonly-note">
-          Rozvrh spravuje agentura. Zde vidíš svůj aktuální rozvrh.
+          Rozvrh spravuje agentura. Pokud potřebuješ změnu, kontaktuj management.
         </div>
 
         {/* Today */}

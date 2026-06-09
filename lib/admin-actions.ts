@@ -56,7 +56,7 @@ export async function updateGirl(formData: FormData) {
     nationality: getStr('nationality'),
     telegram: null,
     email: getStr('email'),
-    phone: '+420734332131',
+    phone: getStr('phone'),
     languages: languagesCsv,
     is_new: formData.get('is_new') === 'on' ? 1 : 0,
     is_top: formData.get('is_top') === 'on' ? 1 : 0,
@@ -111,7 +111,7 @@ export async function createGirl(formData: FormData) {
   const name = String(formData.get('name') ?? '').trim();
   const age = Number(formData.get('age'));
   const email = formData.get('email') ? String(formData.get('email')).trim() : null;
-  const phone = '+420734332131'; // agency phone — same for all girls
+  const phone = formData.get('phone') ? String(formData.get('phone')).trim() : '';
 
   if (!name) throw new Error('Jméno je povinné');
   if (!age || age < 18) throw new Error('Věk musí být minimálně 18');

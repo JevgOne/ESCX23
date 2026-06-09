@@ -45,6 +45,105 @@ export interface GirlCard {
   hashtags: string[];
 }
 
+/** Dívky nabízející konkrétní službu (pro /sluzba/[slug]). */
+export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[]> {
+  const dayOfWeek = pragueDayOfWeek();
+  const today = pragueDateISO();
+  const now = formatPragueTime();
+
+  const result = await db.execute({
+    sql: `
+      SELECT
+        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
+        g.created_at, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        gs.start_time AS shift_from, gs.end_time AS shift_to,
+        se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
+        l.display_name AS schedule_location,
+        l2.display_name AS fallback_location,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
+        (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
+        (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
+      FROM girls g
+      INNER JOIN girl_services gsvc ON gsvc.girl_id = g.id
+      INNER JOIN services svc ON svc.id = gsvc.service_id AND svc.slug = ?
+      LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
+        AND gs.day_of_week = ? AND gs.is_active = 1
+      LEFT JOIN locations l ON l.id = gs.location_id
+      LEFT JOIN locations l2 ON l2.district = g.location AND l2.is_active = 1
+      LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
+      WHERE g.status IN ('active', 'inactive') AND (g.vip = 0 OR g.vip IS NULL)
+        AND gsvc.is_included != 0
+      ORDER BY g.name
+    `,
+    args: [serviceSlug, dayOfWeek, today],
+  });
+
+  return result.rows
+    .map((r): GirlCard | null => {
+      const isPaused = String(r.status ?? '') === 'inactive';
+
+      let from: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
+      let to: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
+      let status: GirlStatus = 'off';
+
+      if (r.exception_type === 'unavailable') {
+        if (!isPaused) return null;
+      }
+      if (r.exception_type === 'custom_hours') {
+        from = r.ex_from ? String(r.ex_from).substring(0, 5) : from;
+        to = r.ex_to ? String(r.ex_to).substring(0, 5) : to;
+      }
+
+      if (from && to) {
+        if (now >= from && now <= to) status = 'working';
+        else if (now < from) status = 'later';
+        else status = 'off';
+      }
+
+      if (status === 'off' && !isPaused) return null;
+
+      const createdAt = r.created_at ? new Date(String(r.created_at)) : null;
+      const isNew = createdAt ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 : false;
+
+      const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+      const fallbackLoc = r.fallback_location ? String(r.fallback_location) : null;
+
+      return {
+        id: Number(r.id),
+        slug: String(r.slug),
+        name: String(r.name),
+        age: Number(r.age),
+        height: r.height != null ? Number(r.height) : null,
+        weight: r.weight != null ? Number(r.weight) : null,
+        bust: r.bust != null ? Number(r.bust) : null,
+        location: scheduleLoc ?? fallbackLoc ?? String(r.location ?? 'Praha'),
+        primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
+        secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
+        photoCount: Number(r.photo_count),
+        videoCount: Number(r.video_count),
+        status: isPaused ? 'off' : status,
+        shiftFrom: from,
+        shiftTo: to,
+        isVip: false,
+        isPaused,
+        isNew,
+        languages: parseLangs(r.languages),
+        rating: r.rating != null ? Number(r.rating) : 0,
+        reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
+        hashtags: parseLangs(r.hashtags),
+      };
+    })
+    .filter((g): g is GirlCard => g !== null)
+    .sort((a, b) => {
+      const rank = { working: 0, later: 1, off: 2 } as const;
+      const ra = rank[a.status] ?? 2;
+      const rb = rank[b.status] ?? 2;
+      if (ra !== rb) return ra - rb;
+      return a.name.localeCompare(b.name);
+    });
+}
+
 /** Vše live dívky (homepage / /divky listing / /rozvrh) s dnešním rozvrhem a stavem. */
 export async function getGirlsWithToday(): Promise<GirlCard[]> {
   const dayOfWeek = pragueDayOfWeek();

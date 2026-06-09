@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
-import { getServiceBySlug, getRelatedServices, getGirlsWithToday } from '@/lib/queries';
+import { getServiceBySlug, getRelatedServices, getGirlsForService } from '@/lib/queries';
 import { Link } from '@/i18n/navigation';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
@@ -44,8 +44,7 @@ export default async function ServicePage({ params }: Props) {
   const content = localizedField(row, 'content', locale);
   const related = await getRelatedServices(slug, svc.category, 6);
 
-  // TODO Sprint 2: filter by actual girl_services join. For now show all active girls.
-  const allGirls = await getGirlsWithToday();
+  const allGirls = await getGirlsForService(slug);
 
   const labelByCat: Record<string, Record<string, string>> = {
     basic: { cs: 'V ceně', en: 'Included', de: 'Inklusive', uk: 'У ціні' },
