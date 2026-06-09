@@ -116,7 +116,7 @@ export async function authenticate(
 export async function requireAdmin(): Promise<AuthUser> {
   const user = await getCurrentUser();
   if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-    redirect('/admin/login');
+    redirect('/cs/admin/login');
   }
   return user;
 }
@@ -131,7 +131,7 @@ export async function requireFullAdmin(): Promise<AuthUser> {
     if (user?.role === 'manager') {
       redirect('/cs/admin');
     }
-    redirect('/admin/login');
+    redirect('/cs/admin/login');
   }
   return user;
 }
@@ -139,7 +139,7 @@ export async function requireFullAdmin(): Promise<AuthUser> {
 export async function requireGirl(): Promise<AuthUser> {
   const user = await getCurrentUser();
   if (!user || user.role !== 'girl') {
-    redirect('/studio/login');
+    redirect('/cs/studio/login');
   }
   return user;
 }

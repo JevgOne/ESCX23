@@ -1,6 +1,6 @@
 import { routing, type Locale } from '@/i18n/routing';
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lovelygirls.cz';
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
 
 const SEGMENT_TO_KEY: Record<string, string> = {};
 for (const [key, val] of Object.entries(routing.pathnames)) {

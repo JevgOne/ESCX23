@@ -1,4 +1,4 @@
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lovelygirls.cz';
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
 
 const LOCALE_PREFIXES: Record<string, string> = {
   en: '',

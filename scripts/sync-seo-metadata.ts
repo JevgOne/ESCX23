@@ -15,7 +15,7 @@ const db = createClient({
   url: process.env.DATABASE_URL ?? 'file:./data/app.db',
 });
 
-const BASE = 'https://lovelygirls.cz';
+const BASE = 'https://www.lovelygirls.cz';
 
 // Default titles/descriptions per locale for static pages
 const STATIC_DEFAULTS: Record<string, Record<string, { title: string; desc: string }>> = {

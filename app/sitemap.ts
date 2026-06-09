@@ -10,7 +10,7 @@ import { photoUrl } from '@/lib/photoUrl';
 
 export const dynamic = 'force-dynamic';
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lovelygirls.cz';
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
 const LOCALES = ['en', 'cs', 'de', 'uk'] as const;
 type Locale = (typeof LOCALES)[number];
 

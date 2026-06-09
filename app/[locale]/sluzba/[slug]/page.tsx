@@ -23,28 +23,44 @@ function localizedField(row: Record<string, unknown>, base: string, locale: stri
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
-  const svc = await getServiceBySlug(slug);
-  if (!svc) return {};
-  const row = svc as unknown as Record<string, unknown>;
-  const title = localizedField(row, 'seo_title', locale) || localizedField(row, 'name', locale);
-  const description = localizedField(row, 'seo_description', locale) || localizedField(row, 'description', locale);
-  return applyDBOverride(`/${locale}/sluzba/${slug}`, { title, description });
-
+  try {
+    const svc = await getServiceBySlug(slug);
+    if (!svc) return {};
+    const row = svc as unknown as Record<string, unknown>;
+    const title = localizedField(row, 'seo_title', locale) || localizedField(row, 'name', locale);
+    const description = localizedField(row, 'seo_description', locale) || localizedField(row, 'description', locale);
+    return applyDBOverride(`/${locale}/sluzba/${slug}`, { title, description });
+  } catch {
+    return {};
+  }
 }
 
 export default async function ServicePage({ params }: Props) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
-  const svc = await getServiceBySlug(slug);
+  let svc: Awaited<ReturnType<typeof getServiceBySlug>>;
+  try {
+    svc = await getServiceBySlug(slug);
+  } catch {
+    notFound();
+  }
   if (!svc) notFound();
 
   const row = svc as unknown as Record<string, unknown>;
   const name = localizedField(row, 'name', locale);
   const description = localizedField(row, 'description', locale);
   const content = localizedField(row, 'content', locale);
-  const related = await getRelatedServices(slug, svc.category, 6);
 
-  const allGirls = await getGirlsForService(slug);
+  let related: Awaited<ReturnType<typeof getRelatedServices>> = [];
+  let allGirls: Awaited<ReturnType<typeof getGirlsForService>> = [];
+  try {
+    [related, allGirls] = await Promise.all([
+      getRelatedServices(slug, svc.category, 6),
+      getGirlsForService(slug),
+    ]);
+  } catch (e) {
+    console.error('[sluzba] DB error for', slug, e);
+  }
 
   const labelByCat: Record<string, Record<string, string>> = {
     basic: { cs: 'V ceně', en: 'Included', de: 'Inklusive', uk: 'У ціні' },

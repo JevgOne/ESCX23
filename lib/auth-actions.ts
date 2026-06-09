@@ -10,11 +10,11 @@ export async function loginAdmin(formData: FormData) {
   const user = await authenticate(email, password);
 
   if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-    redirect('/admin/login?error=invalid');
+    redirect('/cs/admin/login?error=invalid');
   }
 
   await setSession(user.id, user.role);
-  redirect('/admin');
+  redirect('/cs/admin');
 }
 
 export async function loginGirl(formData: FormData) {
@@ -24,11 +24,11 @@ export async function loginGirl(formData: FormData) {
   const user = await authenticate(email, password);
 
   if (!user || user.role !== 'girl') {
-    redirect('/studio/login?error=invalid');
+    redirect('/cs/studio/login?error=invalid');
   }
 
   await setSession(user.id, user.role);
-  redirect('/studio');
+  redirect('/cs/studio');
 }
 
 export async function logoutAction() {
@@ -36,7 +36,7 @@ export async function logoutAction() {
   await clearSession();
 
   if (user?.role === 'girl') {
-    redirect('/studio/login');
+    redirect('/cs/studio/login');
   }
-  redirect('/admin/login');
+  redirect('/cs/admin/login');
 }

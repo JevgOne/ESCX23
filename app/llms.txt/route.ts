@@ -6,7 +6,7 @@ const LAST_UPDATED = '2026-05-28';
 
 export async function GET() {
   const hdrs = await headers();
-  const host = hdrs.get('host') ?? 'lovelygirls.cz';
+  const host = hdrs.get('host') ?? 'www.lovelygirls.cz';
   const base = `https://${host}`;
 
   const body = `# LovelyGirls Prague

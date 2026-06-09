@@ -13,6 +13,24 @@ const config: NextConfig = {
     ],
   },
   serverExternalPackages: ['@libsql/client', '@vercel/blob', 'sharp'],
+  async redirects() {
+    return [
+      // non-www → www (permanent 301)
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'lovelygirls.cz' }],
+        destination: 'https://www.lovelygirls.cz/:path*',
+        permanent: true,
+      },
+      // old Vercel preview → www (permanent 301)
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'escx23.vercel.app' }],
+        destination: 'https://www.lovelygirls.cz/:path*',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

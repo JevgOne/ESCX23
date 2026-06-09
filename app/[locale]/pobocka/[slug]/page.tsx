@@ -227,7 +227,7 @@ export default async function PobockaDetailPage({ params }: Props) {
   const others = (await getActiveLocations()).filter((l) => l.name !== slug);
   const district = loc.district ?? L.cityFallback;
   const lc = getLocationContent(slug);
-  const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lovelygirls.cz';
+  const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
   const localePrefix = locale === 'en' ? '' : `/${locale}`;
   const canonical = getCanonicalUrl(locale, `/pobocka/${slug}`);
 

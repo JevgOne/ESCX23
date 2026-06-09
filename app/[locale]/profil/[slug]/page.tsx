@@ -263,7 +263,7 @@ export default async function ProfilPage({ params }: Props) {
 
   const girlsLabel = locale === 'cs' ? 'Dívky' : locale === 'de' ? 'Mädchen' : locale === 'uk' ? 'Дівчата' : 'Girls';
 
-  const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lovelygirls.cz';
+  const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
   const localePrefix = locale === 'en' ? '' : `/${locale}`;
   const profileSegment = locale === 'en' ? 'profile' : 'profil';
   const divkyTranslated = locale === 'en' ? 'girls' : locale === 'de' ? 'maedchen' : locale === 'uk' ? 'divchata' : 'divky';

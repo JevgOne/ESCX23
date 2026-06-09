@@ -6,7 +6,7 @@ import { getGCalAuthUrl } from '@/lib/gcal';
 export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-    return NextResponse.redirect(new URL('/admin/login', request.url));
+    return NextResponse.redirect(new URL('/cs/admin/login', request.url));
   }
 
   const url = new URL(request.url);

@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lovelygirls.cz';
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
 
 /** Returns custom OG image URL from admin (if uploaded) for a given page key. */
 export async function getCustomOgImage(key: string): Promise<string | null> {

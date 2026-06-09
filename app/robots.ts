@@ -10,14 +10,14 @@ function resolveBaseUrl(host: string): string {
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const hdrs = await headers();
-  const host = hdrs.get('host') ?? 'lovelygirls.cz';
+  const host = hdrs.get('host') ?? 'www.lovelygirls.cz';
   const base = resolveBaseUrl(host);
 
   // Preview deploys (Vercel branch/PR URLs) — block indexing of preview content
   // Vercel preview URLs always look like *-projectname-team.vercel.app
   const isPreview =
     process.env.VERCEL_ENV === 'preview' ||
-    (host.includes('vercel.app') && !host.startsWith('escx23.'));
+    (host.includes('vercel.app') && host !== 'www.lovelygirls.cz');
 
   if (isPreview) {
     return {

@@ -13,7 +13,7 @@ import { breadcrumbListJsonLd, faqPageJsonLd, itemListPeopleJsonLd, collectionPa
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lovelygirls.cz';
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
 
 interface Props {
   params: Promise<{ locale: string; slug: string }>;

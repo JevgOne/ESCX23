@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-    return NextResponse.redirect(new URL('/admin/login', request.url));
+    return NextResponse.redirect(new URL('/cs/admin/login', request.url));
   }
 
   const formData = await request.formData();
