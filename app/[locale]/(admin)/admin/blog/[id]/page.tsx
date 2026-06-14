@@ -61,7 +61,7 @@ export default async function AdminEditBlogPage({
       <AdminTopbar title={`Blog: ${post.title_cs.slice(0, 50)}…`} />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href="/cs/admin/blog" style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/blog`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na seznam
         </a>
       </div>
@@ -202,7 +202,7 @@ export default async function AdminEditBlogPage({
 
         <div className="admin-submit-row">
           <button type="submit" className="admin-btn-submit">Uložit změny</button>
-          <a href="/cs/admin/blog" className="admin-btn-secondary">Zrušit</a>
+          <a href={`/${locale}/admin/blog`} className="admin-btn-secondary">Zrušit</a>
         </div>
       </form>
 

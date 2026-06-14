@@ -24,8 +24,16 @@ export async function applyDBOverride(
     ...(dbSeo.meta_keywords ? { keywords: dbSeo.meta_keywords } : {}),
     openGraph: {
       ...ogBase,
-      ...(dbSeo.og_title ? { title: dbSeo.og_title } : {}),
-      ...(dbSeo.og_description ? { description: dbSeo.og_description } : {}),
+      ...(dbSeo.og_title
+        ? { title: dbSeo.og_title }
+        : dbSeo.meta_title
+          ? { title: dbSeo.meta_title }
+          : {}),
+      ...(dbSeo.og_description
+        ? { description: dbSeo.og_description }
+        : dbSeo.meta_description
+          ? { description: dbSeo.meta_description }
+          : {}),
       ...(dbSeo.og_image ? { images: [{ url: dbSeo.og_image, width: 1200, height: 630 }] } : {}),
     },
     ...(dbSeo.canonical_url

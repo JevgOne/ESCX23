@@ -11,6 +11,14 @@ import { pragueDateISO, pragueDayOfWeek, formatPragueTime } from './utils';
 
 export type GirlStatus = 'working' | 'later' | 'off';
 
+/** is_new=1 → always new. is_new=0/NULL → fallback to 30 days from created_at. */
+function computeIsNew(dbIsNew: unknown, createdAt: unknown): boolean {
+  if (Number(dbIsNew) === 1) return true;
+  if (!createdAt) return false;
+  const d = new Date(String(createdAt));
+  return Date.now() - d.getTime() < 30 * 24 * 60 * 60 * 1000;
+}
+
 function parseLangs(raw: unknown): string[] {
   if (!raw) return ['cs', 'en'];
   const s = String(raw).trim();
@@ -55,7 +63,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        g.created_at, g.is_new, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
@@ -103,8 +111,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
 
       if (status === 'off' && !isPaused) return null;
 
-      const createdAt = r.created_at ? new Date(String(r.created_at)) : null;
-      const isNew = createdAt ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 : false;
+      const isNew = computeIsNew(r.is_new, r.created_at);
 
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
       const fallbackLoc = r.fallback_location ? String(r.fallback_location) : null;
@@ -154,7 +161,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        g.created_at, g.is_new, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
@@ -199,8 +206,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
 
       if (status === 'off' && !isPaused) return null;
 
-      const createdAt = r.created_at ? new Date(String(r.created_at)) : null;
-      const isNew = createdAt ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 : false;
+      const isNew = computeIsNew(r.is_new, r.created_at);
 
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
       const fallbackLoc = r.fallback_location ? String(r.fallback_location) : null;
@@ -612,7 +618,7 @@ export async function getGirlsForDay(
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.languages, g.rating, g.reviews_count,
+        g.created_at, g.is_new, g.languages, g.rating, g.reviews_count,
         gs.start_time AS shift_from, gs.end_time AS shift_to, gs.is_active AS gs_active,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location, l.district AS schedule_district,
@@ -656,8 +662,7 @@ export async function getGirlsForDay(
         if (!locSlug.includes(locationFilter.toLowerCase())) return null;
       }
 
-      const createdAt = r.created_at ? new Date(String(r.created_at)) : null;
-      const isNew = createdAt ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 : false;
+      const isNew = computeIsNew(r.is_new, r.created_at);
 
       let status: GirlStatus = 'working';
       if (!isToday) {
@@ -1657,7 +1662,7 @@ export async function getGirlsForListing(
   const baseSql = `
     SELECT
       g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-      g.created_at, g.languages, g.rating, g.reviews_count, g.status,
+      g.created_at, g.is_new, g.languages, g.rating, g.reviews_count, g.status,
       gs.start_time AS shift_from, gs.end_time AS shift_to,
       se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
       l.display_name AS schedule_location,
@@ -1729,10 +1734,7 @@ export async function getGirlsForListing(
         if (now >= from && now <= to) status = 'working';
         else if (now < from) status = 'later';
       }
-      const createdAt = r.created_at ? new Date(String(r.created_at)) : null;
-      const isNew = createdAt
-        ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000
-        : false;
+      const isNew = computeIsNew(r.is_new, r.created_at);
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
       const fallbackLoc = r.fallback_location ? String(r.fallback_location) : null;
       return {
@@ -1772,7 +1774,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.languages, g.hashtags, g.rating, g.reviews_count,
+        g.created_at, g.is_new, g.languages, g.hashtags, g.rating, g.reviews_count,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
@@ -1818,8 +1820,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         else if (now < from) status = 'later';
       }
 
-      const createdAt = r.created_at ? new Date(String(r.created_at)) : null;
-      const isNew = createdAt ? Date.now() - createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 : false;
+      const isNew = computeIsNew(r.is_new, r.created_at);
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
       const fallbackLoc = r.fallback_location ? String(r.fallback_location) : null;
 

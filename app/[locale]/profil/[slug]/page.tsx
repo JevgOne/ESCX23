@@ -76,9 +76,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const age = Number(girl.age ?? 0);
   const girlRec = girl as unknown as Record<string, unknown>;
 
-  // Title — localized, e.g. "Anetta, 19 — Společnice Praha"
+  // Title — admin override → localized pattern "Anetta, 19 — Společnice Praha"
   const titleFn = PROFILE_TITLE_SUFFIX[locale] ?? PROFILE_TITLE_SUFFIX.en;
-  const localizedTitle = titleFn(name, age);
+  const customTitle = (girlRec[`meta_title_${locale}`] as string | null | undefined)
+    ?? (girlRec[`meta_title_en`] as string | null | undefined);
+  const localizedTitle = (customTitle && customTitle.trim()) || titleFn(name, age);
 
   // Meta description — chain: meta_description_{loc} → og_description_{loc} → description_{loc} → EN fallback → bio → generic
   const metaDescRaw = pickLocalizedText(girlRec, locale, ['meta_description', 'og_description', 'description']);
@@ -90,6 +92,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // OG description — priority: og_description_{loc} → meta_description_{loc} → description_{loc} → EN fallback → bio → generic
   const ogDescRaw = pickLocalizedText(girlRec, locale, ['og_description', 'meta_description', 'description']);
   const ogDesc = ogDescRaw ? ogDescRaw.substring(0, 200) : metaDesc;
+
+  // OG title — admin override → same as page title
+  const customOgTitle = (girlRec[`og_title_${locale}`] as string | null | undefined)
+    ?? (girlRec[`og_title_en`] as string | null | undefined);
+  const ogTitle = (customOgTitle && customOgTitle.trim()) || localizedTitle;
 
   const canonical = getProfileCanonical(locale, slug);
   const languages = getProfileAlternates(slug);
@@ -108,7 +115,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       languages,
     },
     openGraph: {
-      title: localizedTitle,
+      title: ogTitle,
       description: ogDesc,
       url: canonical,
       type: 'profile',
@@ -117,7 +124,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: localizedTitle,
+      title: ogTitle,
       description: ogDesc,
       images: primaryPhotoUrl ? [primaryPhotoUrl] : undefined,
     },

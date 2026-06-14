@@ -90,7 +90,7 @@ export default async function AdminPobockyPage({
       <AdminTopbar title="Pobočky" />
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-        <a href="/cs/admin/pobocky/nova" className="admin-btn-primary">
+        <a href={`/${locale}/admin/pobocky/nova`} className="admin-btn-primary">
           + Nová pobočka
         </a>
       </div>

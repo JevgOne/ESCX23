@@ -285,69 +285,70 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
         )}
       </div>
 
-      {/* Compact stats — all in one pill row */}
-      <div className="profile-stat-details profile-desktop-only">
-        <span className="psd-pill psd-pill-age">
-          <span className="psd-value psd-value-coral">{age} {locale === 'cs' ? 'let' : locale === 'de' ? 'J.' : locale === 'uk' ? 'р.' : 'y/o'}</span>
-        </span>
+      {/* Info card — key/value rows (desktop) */}
+      <div className="profile-info-card profile-desktop-only">
+        <div className="pic-row">
+          <span className="pic-label">{locale === 'cs' ? 'Věk' : locale === 'de' ? 'Alter' : locale === 'uk' ? 'Вік' : 'Age'}</span>
+          <span className="pic-value pic-value-coral">{age} {locale === 'cs' ? 'let' : locale === 'de' ? 'J.' : locale === 'uk' ? 'р.' : 'y/o'}</span>
+        </div>
         {girl.height != null && (
-          <span className="psd-pill">
-            <span className="psd-label">{locale === 'cs' ? 'Výška' : locale === 'de' ? 'Größe' : locale === 'uk' ? 'Зріст' : 'Height'}</span>
-            <span className="psd-value">{String(girl.height)} cm</span>
-          </span>
+          <div className="pic-row">
+            <span className="pic-label">{locale === 'cs' ? 'Výška' : locale === 'de' ? 'Größe' : locale === 'uk' ? 'Зріст' : 'Height'}</span>
+            <span className="pic-value">{String(girl.height)} cm</span>
+          </div>
         )}
         {girl.weight != null && (
-          <span className="psd-pill">
-            <span className="psd-label">{locale === 'cs' ? 'Váha' : locale === 'de' ? 'Gewicht' : locale === 'uk' ? 'Вага' : 'Weight'}</span>
-            <span className="psd-value">{String(girl.weight)} kg</span>
-          </span>
+          <div className="pic-row">
+            <span className="pic-label">{locale === 'cs' ? 'Váha' : locale === 'de' ? 'Gewicht' : locale === 'uk' ? 'Вага' : 'Weight'}</span>
+            <span className="pic-value">{String(girl.weight)} kg</span>
+          </div>
         )}
         {girl.bust != null && (
-          <span className="psd-pill">
-            <span className="psd-label">{locale === 'cs' ? 'Prsa' : locale === 'de' ? 'Brust' : locale === 'uk' ? 'Груди' : 'Bust'}</span>
-            <span className="psd-value">{String(girl.bust)}{bustUnit ? ` · ${bustUnit}` : ''}</span>
-          </span>
+          <div className="pic-row">
+            <span className="pic-label">{locale === 'cs' ? 'Prsa' : locale === 'de' ? 'Brust' : locale === 'uk' ? 'Груди' : 'Bust'}</span>
+            <span className="pic-value">{String(girl.bust)}{bustUnit ? ` · ${bustUnit}` : ''}</span>
+          </div>
         )}
         {girl.eyes != null && String(girl.eyes).trim() !== '' && (
-          <span className="psd-pill">
-            <span className="psd-label">{locale === 'cs' ? 'Oči' : locale === 'de' ? 'Augen' : locale === 'uk' ? 'Очі' : 'Eyes'}</span>
-            <span className="psd-value">{localizeValue(String(girl.eyes), EYES_MAP, locale)}</span>
-          </span>
+          <div className="pic-row">
+            <span className="pic-label">{locale === 'cs' ? 'Oči' : locale === 'de' ? 'Augen' : locale === 'uk' ? 'Очі' : 'Eyes'}</span>
+            <span className="pic-value">{localizeValue(String(girl.eyes), EYES_MAP, locale)}</span>
+          </div>
         )}
         {girl.hair != null && String(girl.hair).trim() !== '' && (
-          <span className="psd-pill">
-            <span className="psd-label">{locale === 'cs' ? 'Vlasy' : locale === 'de' ? 'Haare' : locale === 'uk' ? 'Волосся' : 'Hair'}</span>
-            <span className="psd-value">{localizeValue(String(girl.hair), HAIR_MAP, locale)}</span>
-          </span>
+          <div className="pic-row">
+            <span className="pic-label">{locale === 'cs' ? 'Vlasy' : locale === 'de' ? 'Haare' : locale === 'uk' ? 'Волосся' : 'Hair'}</span>
+            <span className="pic-value">{localizeValue(String(girl.hair), HAIR_MAP, locale)}</span>
+          </div>
         )}
         {tattooPercent > 0 && (
-          <span className="psd-pill">
-            <span className="psd-label">{locale === 'cs' ? 'Tetování' : locale === 'de' ? 'Tattoo' : locale === 'uk' ? 'Татуювання' : 'Tattoo'}</span>
-            <span className="psd-value">
+          <div className="pic-row">
+            <span className="pic-label">{locale === 'cs' ? 'Tetování' : locale === 'de' ? 'Tattoo' : locale === 'uk' ? 'Татуювання' : 'Tattoo'}</span>
+            <span className="pic-value">
               {(() => {
                 const level = tattooPercent <= 5 ? 'discreet' : tattooPercent <= 30 ? 'visible' : tattooPercent <= 70 ? 'significant' : 'full';
                 return TATTOO_LEVEL[level]?.[locale] ?? TATTOO_LEVEL[level]?.cs;
               })()}
             </span>
-          </span>
+          </div>
         )}
         {(() => {
           const piercingRaw = girl.piercing ? String(girl.piercing).toLowerCase().trim() : null;
           if (!piercingRaw || piercingRaw === 'none' || piercingRaw === '') return null;
           const piercingText = PIERCING_VAL[piercingRaw]?.[locale] ?? piercingRaw;
           return (
-            <span className="psd-pill">
-              <span className="psd-label">{locale === 'cs' ? 'Piercing' : 'Piercing'}</span>
-              <span className="psd-value">{piercingText}</span>
-            </span>
+            <div className="pic-row">
+              <span className="pic-label">Piercing</span>
+              <span className="pic-value">{piercingText}</span>
+            </div>
           );
         })()}
-        {languages.map((lang) => (
-          <span key={lang} className="psd-pill lang">
-            <span className="psd-flag">{FLAG_MAP[lang] ?? '🌐'}</span>
-            <span className="psd-value">{getLangName(lang, locale)}</span>
-          </span>
-        ))}
+        {languages.length > 0 && (
+          <div className="pic-row">
+            <span className="pic-label">{locale === 'cs' ? 'Jazyky' : locale === 'de' ? 'Sprachen' : locale === 'uk' ? 'Мови' : 'Languages'}</span>
+            <span className="pic-value">{languages.map((lang) => `${FLAG_MAP[lang] ?? '🌐'} ${getLangName(lang, locale)}`).join(', ')}</span>
+          </div>
+        )}
       </div>
 
       {bio && <p className="profile-bio profile-desktop-only">{bio}</p>}

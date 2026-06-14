@@ -44,7 +44,7 @@ export default async function AdminEditFaqPage({
       <AdminTopbar title={`Editace FAQ: ${faq.question_cs.slice(0, 60)}…`} />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href="/cs/admin/faq" style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/faq`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na seznam
         </a>
       </div>
@@ -118,7 +118,7 @@ export default async function AdminEditFaqPage({
 
         <div className="admin-submit-row">
           <button type="submit" className="admin-btn-submit">Uložit změny</button>
-          <a href="/cs/admin/faq" className="admin-btn-secondary">Zrušit</a>
+          <a href={`/${locale}/admin/faq`} className="admin-btn-secondary">Zrušit</a>
         </div>
       </form>
 

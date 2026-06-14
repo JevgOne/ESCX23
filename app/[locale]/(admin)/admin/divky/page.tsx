@@ -140,7 +140,7 @@ export default async function AdminDivkyPage({
             </a>
           ))}
         </div>
-        <a href="/cs/admin/divky/nova" className="admin-btn-primary" style={{ whiteSpace: 'nowrap' }}>
+        <a href={`/${locale}/admin/divky/nova`} className="admin-btn-primary" style={{ whiteSpace: 'nowrap' }}>
           + Nová dívka
         </a>
       </div>

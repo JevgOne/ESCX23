@@ -40,7 +40,7 @@ export default async function AdminEditPlanPage({
       <AdminTopbar title={`Editace programu: ${plan.duration} min`} />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href="/cs/admin/cenik" style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/cenik`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na ceník
         </a>
       </div>
@@ -106,7 +106,7 @@ export default async function AdminEditPlanPage({
 
         <div className="admin-submit-row">
           <button type="submit" className="admin-btn-submit">Uložit změny</button>
-          <a href="/cs/admin/cenik" className="admin-btn-secondary">Zrušit</a>
+          <a href={`/${locale}/admin/cenik`} className="admin-btn-secondary">Zrušit</a>
         </div>
       </form>
 

@@ -2,15 +2,24 @@
 
 import { put } from '@vercel/blob';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { requireGirl, requireAdmin } from './auth';
 import { db } from './db';
 import { saveReviewReply } from './queries';
 
+async function studioRedirect(path: string): Promise<never> {
+  const hdrs = await headers();
+  const pathname = hdrs.get('x-pathname') ?? '';
+  const match = pathname.match(/^\/(cs|en|de|uk)\//);
+  const locale = match ? match[1] : 'cs';
+  redirect(`/${locale}${path}`);
+}
+
 export async function updateGirlBasic(formData: FormData) {
   await requireAdmin();
   const girlId = Number(formData.get('girl_id') ?? 0);
-  if (!girlId) redirect('/cs/admin/divky');
+  if (!girlId) await studioRedirect('/admin/divky');
 
   const name = String(formData.get('name') ?? '').trim();
   const age = Number(formData.get('age') ?? 18);
@@ -23,13 +32,13 @@ export async function updateGirlBasic(formData: FormData) {
 
   revalidatePath('/cs/studio');
   revalidatePath('/cs/studio/zakladni');
-  redirect('/cs/studio/zakladni?saved=1');
+  await studioRedirect('/studio/zakladni?saved=1');
 }
 
 export async function updateGirlBody(formData: FormData) {
   await requireAdmin();
   const girlId = Number(formData.get('girl_id') ?? 0);
-  if (!girlId) redirect('/cs/admin/divky');
+  if (!girlId) await studioRedirect('/admin/divky');
 
   const height = formData.get('height') ? Number(formData.get('height')) : null;
   const weight = formData.get('weight') ? Number(formData.get('weight')) : null;
@@ -48,13 +57,13 @@ export async function updateGirlBody(formData: FormData) {
   });
 
   revalidatePath('/cs/studio/telo');
-  redirect('/cs/studio/telo?saved=1');
+  await studioRedirect('/studio/telo?saved=1');
 }
 
 export async function updateGirlLifestyle(formData: FormData) {
   await requireAdmin();
   const girlId = Number(formData.get('girl_id') ?? 0);
-  if (!girlId) redirect('/cs/admin/divky');
+  if (!girlId) await studioRedirect('/admin/divky');
 
   const nationality = String(formData.get('nationality') ?? '').trim() || null;
 
@@ -66,7 +75,7 @@ export async function updateGirlLifestyle(formData: FormData) {
   });
 
   revalidatePath('/cs/studio/zivotni-styl');
-  redirect('/cs/studio/zivotni-styl?saved=1');
+  await studioRedirect('/studio/zivotni-styl?saved=1');
 }
 
 export async function updateGirlStatus(formData: FormData) {
@@ -87,7 +96,7 @@ export async function updateGirlStatus(formData: FormData) {
 
   revalidatePath('/cs/studio/profil-status');
   revalidatePath('/cs/studio');
-  redirect('/cs/studio/profil-status?saved=1');
+  await studioRedirect('/studio/profil-status?saved=1');
 }
 
 export async function replyToReview(formData: FormData) {
@@ -98,14 +107,14 @@ export async function replyToReview(formData: FormData) {
   const replyText = String(formData.get('reply') ?? '').trim();
 
   if (!reviewId || !replyText) {
-    redirect('/cs/studio/recenze?error=empty');
+    await studioRedirect('/studio/recenze?error=empty');
   }
 
   await saveReviewReply(reviewId, girlId, replyText);
 
   revalidatePath('/cs/studio/recenze');
   revalidatePath('/cs/recenze');
-  redirect('/cs/studio/recenze?replied=1');
+  await studioRedirect('/studio/recenze?replied=1');
 }
 
 export async function updateGirlServices(formData: FormData) {
@@ -125,7 +134,7 @@ export async function updateGirlServices(formData: FormData) {
   }
 
   revalidatePath('/cs/studio/sluzby');
-  redirect('/cs/studio/sluzby?saved=1');
+  await studioRedirect('/studio/sluzby?saved=1');
 }
 
 export async function updateGirlLanguages(formData: FormData) {
@@ -141,7 +150,7 @@ export async function updateGirlLanguages(formData: FormData) {
   });
 
   revalidatePath('/cs/studio/jazyky');
-  redirect('/cs/studio/jazyky?saved=1');
+  await studioRedirect('/studio/jazyky?saved=1');
 }
 
 export async function updatePersonalMessage(formData: FormData) {
@@ -157,7 +166,7 @@ export async function updatePersonalMessage(formData: FormData) {
   });
 
   revalidatePath('/cs/studio/zprava');
-  redirect('/cs/studio/zprava?saved=1');
+  await studioRedirect('/studio/zprava?saved=1');
 }
 
 export async function updatePreferredProgram(formData: FormData) {
@@ -173,7 +182,7 @@ export async function updatePreferredProgram(formData: FormData) {
   });
 
   revalidatePath('/cs/studio/program');
-  redirect('/cs/studio/program?saved=1');
+  await studioRedirect('/studio/program?saved=1');
 }
 
 export async function uploadVoiceMessage(formData: FormData) {
@@ -189,21 +198,21 @@ export async function uploadVoiceMessage(formData: FormData) {
       args: [girlId],
     });
     revalidatePath('/cs/studio/hlas');
-    redirect('/cs/studio/hlas?saved=1');
+    await studioRedirect('/studio/hlas?saved=1');
   }
 
   if (!file || file.size === 0) {
-    redirect('/cs/studio/hlas?error=nofile');
+    return studioRedirect('/studio/hlas?error=nofile');
   }
 
   const ext = (file.name.split('.').pop() ?? '').toLowerCase();
   const allowed = new Set(['mp3', 'wav', 'ogg', 'webm', 'm4a', 'aac']);
   if (!allowed.has(ext)) {
-    redirect('/cs/studio/hlas?error=format');
+    await studioRedirect('/studio/hlas?error=format');
   }
 
   if (file.size > 5 * 1024 * 1024) {
-    redirect('/cs/studio/hlas?error=size');
+    await studioRedirect('/studio/hlas?error=size');
   }
 
   const filename = `voices/${girlId}/${Date.now()}.${ext}`;
@@ -219,7 +228,7 @@ export async function uploadVoiceMessage(formData: FormData) {
   });
 
   revalidatePath('/cs/studio/hlas');
-  redirect('/cs/studio/hlas?saved=1');
+  await studioRedirect('/studio/hlas?saved=1');
 }
 
 export async function addStory(formData: FormData) {
@@ -229,7 +238,7 @@ export async function addStory(formData: FormData) {
   const mediaUrl = String(formData.get('media_url') ?? '').trim();
   const mediaType = String(formData.get('media_type') ?? 'image');
 
-  if (!mediaUrl) redirect('/cs/studio/stories');
+  if (!mediaUrl) await studioRedirect('/studio/stories');
 
   await db.execute({
     sql: `INSERT INTO stories (girl_id, media_url, media_type, expires_at)
@@ -238,7 +247,7 @@ export async function addStory(formData: FormData) {
   });
 
   revalidatePath('/cs/studio/stories');
-  redirect('/cs/studio/stories?saved=1');
+  await studioRedirect('/studio/stories?saved=1');
 }
 
 export async function updateGirlHashtags(formData: FormData) {
@@ -254,7 +263,7 @@ export async function updateGirlHashtags(formData: FormData) {
   });
 
   revalidatePath('/cs/studio/hashtagy');
-  redirect('/cs/studio/hashtagy?saved=1');
+  await studioRedirect('/studio/hashtagy?saved=1');
 }
 
 export async function deleteStory(formData: FormData) {
@@ -262,7 +271,7 @@ export async function deleteStory(formData: FormData) {
   const girlId = user.girl_id!;
 
   const storyId = Number(formData.get('storyId') ?? 0);
-  if (!storyId) redirect('/cs/studio/stories');
+  if (!storyId) await studioRedirect('/studio/stories');
 
   await db.execute({
     sql: `DELETE FROM stories WHERE id = ? AND girl_id = ?`,
@@ -270,5 +279,5 @@ export async function deleteStory(formData: FormData) {
   });
 
   revalidatePath('/cs/studio/stories');
-  redirect('/cs/studio/stories?deleted=1');
+  await studioRedirect('/studio/stories?deleted=1');
 }

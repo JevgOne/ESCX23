@@ -75,7 +75,7 @@ export default async function AdminGirlDetailPage({
       <AdminTopbar title={name} />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href="/cs/admin/divky" style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/divky`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na seznam dívek
         </a>
       </div>

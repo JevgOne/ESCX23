@@ -2,9 +2,18 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { put } from '@vercel/blob';
 import { db } from './db';
 import { requireAdmin, requireFullAdmin } from './auth';
+
+async function adminRedirect(path: string): Promise<never> {
+  const hdrs = await headers();
+  const pathname = hdrs.get('x-pathname') ?? '';
+  const match = pathname.match(/^\/(cs|en|de|uk)\//);
+  const locale = match ? match[1] : 'cs';
+  redirect(`/${locale}${path}`);
+}
 import {
   updateGirlById,
   deleteGirlById,
@@ -103,7 +112,7 @@ export async function updateGirl(formData: FormData) {
   revalidatePath('/admin/divky');
   revalidatePath(`/cs/admin/divky`);
   revalidatePath(`/cs/divky`);
-  redirect(`/cs/admin/divky/${id}`);
+  await adminRedirect(`/admin/divky/${id}`);
 }
 
 export async function createGirl(formData: FormData) {
@@ -241,7 +250,7 @@ export async function createGirl(formData: FormData) {
   try { revalidatePath('/cs/admin/divky'); } catch {}
   try { revalidatePath('/cs/admin/aplikace'); } catch {}
 
-  redirect(`/cs/admin/divky/${newId}/edit`);
+  await adminRedirect(`/admin/divky/${newId}/edit`);
 }
 
 /**
@@ -347,7 +356,7 @@ export async function createGirlFromApplication(formData: FormData) {
   try { revalidatePath('/cs/admin/divky'); } catch {}
   try { revalidatePath('/cs/admin/aplikace'); } catch {}
 
-  redirect(`/cs/admin/divky/${newId}/edit`);
+  await adminRedirect(`/admin/divky/${newId}/edit`);
 }
 
 function slugify(name: string): string {
@@ -375,7 +384,7 @@ export async function rejectApplication(formData: FormData) {
   });
 
   revalidatePath('/cs/admin/aplikace');
-  redirect('/cs/admin/aplikace');
+  await adminRedirect('/admin/aplikace');
 }
 
 export async function reopenApplication(formData: FormData) {
@@ -391,7 +400,7 @@ export async function reopenApplication(formData: FormData) {
   });
 
   revalidatePath('/cs/admin/aplikace');
-  redirect(`/cs/admin/aplikace/${id}`);
+  await adminRedirect(`/admin/aplikace/${id}`);
 }
 
 export async function updateApplicationNotes(formData: FormData) {
@@ -406,7 +415,7 @@ export async function updateApplicationNotes(formData: FormData) {
   });
 
   revalidatePath('/cs/admin/aplikace');
-  redirect(`/cs/admin/aplikace/${id}`);
+  await adminRedirect(`/admin/aplikace/${id}`);
 }
 
 export async function deleteGirl(formData: FormData) {
@@ -418,7 +427,7 @@ export async function deleteGirl(formData: FormData) {
 
   revalidatePath('/admin/divky');
   revalidatePath('/cs/admin/divky');
-  redirect('/cs/admin/divky');
+  await adminRedirect('/admin/divky');
 }
 
 export async function approvePhoto(formData: FormData) {
@@ -476,7 +485,7 @@ export async function createPobocka(formData: FormData) {
 
   revalidatePath('/cs/admin/pobocky');
   revalidatePath('/cs');
-  redirect('/cs/admin/pobocky');
+  await adminRedirect('/admin/pobocky');
 }
 
 export async function updatePobocka(formData: FormData) {
@@ -522,7 +531,7 @@ export async function updatePobocka(formData: FormData) {
   revalidatePath(`/en/pobocka/${name}`);
   revalidatePath(`/de/pobocka/${name}`);
   revalidatePath(`/uk/pobocka/${name}`);
-  redirect('/cs/admin/pobocky');
+  await adminRedirect('/admin/pobocky');
 }
 
 export async function deletePobocka(formData: FormData) {
@@ -534,7 +543,7 @@ export async function deletePobocka(formData: FormData) {
 
   revalidatePath('/cs/admin/pobocky');
   revalidatePath('/cs');
-  redirect('/cs/admin/pobocky');
+  await adminRedirect('/admin/pobocky');
 }
 
 // ─── CENIK — PRICING PLANS ──────────────────────────────────────────────────
@@ -563,7 +572,7 @@ export async function updatePricingPlan(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
-  redirect('/cs/admin/cenik');
+  await adminRedirect('/admin/cenik');
 }
 
 export async function createPricingPlan(formData: FormData) {
@@ -586,7 +595,7 @@ export async function createPricingPlan(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
-  redirect('/cs/admin/cenik');
+  await adminRedirect('/admin/cenik');
 }
 
 export async function deletePricingPlan(formData: FormData) {
@@ -598,7 +607,7 @@ export async function deletePricingPlan(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
-  redirect('/cs/admin/cenik');
+  await adminRedirect('/admin/cenik');
 }
 
 // ─── CENIK — EXTRAS ─────────────────────────────────────────────────────────
@@ -621,7 +630,7 @@ export async function createPricingExtra(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
-  redirect('/cs/admin/cenik');
+  await adminRedirect('/admin/cenik');
 }
 
 export async function updatePricingExtra(formData: FormData) {
@@ -646,7 +655,7 @@ export async function updatePricingExtra(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
-  redirect('/cs/admin/cenik');
+  await adminRedirect('/admin/cenik');
 }
 
 export async function deletePricingExtra(formData: FormData) {
@@ -658,7 +667,7 @@ export async function deletePricingExtra(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
-  redirect('/cs/admin/cenik');
+  await adminRedirect('/admin/cenik');
 }
 
 // ─── SLEVY ───────────────────────────────────────────────────────────────────
@@ -689,7 +698,7 @@ export async function createSleva(formData: FormData) {
 
   revalidatePath('/cs/admin/slevy');
   revalidatePath('/cs/slevy');
-  redirect('/cs/admin/slevy');
+  await adminRedirect('/admin/slevy');
 }
 
 export async function updateSleva(formData: FormData) {
@@ -723,7 +732,7 @@ export async function updateSleva(formData: FormData) {
 
   revalidatePath('/cs/admin/slevy');
   revalidatePath('/cs/slevy');
-  redirect('/cs/admin/slevy');
+  await adminRedirect('/admin/slevy');
 }
 
 export async function deleteSleva(formData: FormData) {
@@ -735,7 +744,7 @@ export async function deleteSleva(formData: FormData) {
 
   revalidatePath('/cs/admin/slevy');
   revalidatePath('/cs/slevy');
-  redirect('/cs/admin/slevy');
+  await adminRedirect('/admin/slevy');
 }
 
 // ─── FAQ ─────────────────────────────────────────────────────────────────────
@@ -764,7 +773,7 @@ export async function createFaq(formData: FormData) {
 
   revalidatePath('/cs/admin/faq');
   revalidatePath('/cs/faq');
-  redirect('/cs/admin/faq');
+  await adminRedirect('/admin/faq');
 }
 
 export async function updateFaq(formData: FormData) {
@@ -795,7 +804,7 @@ export async function updateFaq(formData: FormData) {
 
   revalidatePath('/cs/admin/faq');
   revalidatePath('/cs/faq');
-  redirect('/cs/admin/faq');
+  await adminRedirect('/admin/faq');
 }
 
 export async function deleteFaq(formData: FormData) {
@@ -807,7 +816,7 @@ export async function deleteFaq(formData: FormData) {
 
   revalidatePath('/cs/admin/faq');
   revalidatePath('/cs/faq');
-  redirect('/cs/admin/faq');
+  await adminRedirect('/admin/faq');
 }
 
 // ─── STORIES ─────────────────────────────────────────────────────────────────
@@ -862,7 +871,7 @@ export async function createCategoryStory(formData: FormData) {
   });
 
   revalidatePath('/cs/admin/stories');
-  redirect('/cs/admin/stories');
+  await adminRedirect('/admin/stories');
 }
 
 // ─── SCHEDULES ───────────────────────────────────────────────────────────────
@@ -876,7 +885,7 @@ const PRESET_TIMES: Record<string, [string, string]> = {
 export async function addGirlSchedule(formData: FormData) {
   await requireAdmin();
   const girlId = Number(formData.get('girl_id'));
-  if (!girlId) redirect('/cs/admin/schedules?error=missing_girl');
+  if (!girlId) await adminRedirect('/admin/schedules?error=missing_girl');
 
   const locationId = formData.get('location_id') ? Number(formData.get('location_id')) : null;
 
@@ -925,12 +934,12 @@ export async function addGirlSchedule(formData: FormData) {
   }
 
   if (!anyDaySelected) {
-    redirect('/cs/admin/schedules?error=no_days');
+    await adminRedirect('/admin/schedules?error=no_days');
   }
 
   revalidatePath('/cs/admin/schedules');
   revalidatePath('/cs/rozvrh');
-  redirect('/cs/admin/schedules');
+  await adminRedirect('/admin/schedules');
 }
 
 export async function deleteGirlSchedule(formData: FormData) {
@@ -942,7 +951,7 @@ export async function deleteGirlSchedule(formData: FormData) {
 
   revalidatePath('/cs/admin/schedules');
   revalidatePath('/cs/rozvrh');
-  redirect('/cs/admin/schedules');
+  await adminRedirect('/admin/schedules');
 }
 
 export async function deleteAllSchedules(formData: FormData) {
@@ -957,14 +966,14 @@ export async function deleteAllSchedules(formData: FormData) {
 
   revalidatePath('/cs/admin/schedules');
   revalidatePath('/cs/rozvrh');
-  redirect('/cs/admin/schedules');
+  await adminRedirect('/admin/schedules');
 }
 
 export async function fixScheduleColors(formData: FormData) {
   await requireAdmin();
   void formData;
   revalidatePath('/cs/admin/schedules');
-  redirect('/cs/admin/schedules');
+  await adminRedirect('/admin/schedules');
 }
 
 export async function approveReview(formData: FormData) {
@@ -1036,7 +1045,7 @@ export async function createBlogPost(formData: FormData) {
   revalidatePath('/cs/admin/blog');
   revalidatePath('/cs/blog');
   revalidatePath('/en/blog');
-  redirect(`/cs/admin/blog/${postId}`);
+  await adminRedirect(`/admin/blog/${postId}`);
 }
 
 export async function updateBlogPost(formData: FormData) {
@@ -1092,7 +1101,7 @@ export async function updateBlogPost(formData: FormData) {
   revalidatePath('/en/blog');
   revalidatePath(`/cs/blog/${slug}`);
   revalidatePath(`/en/blog/${slug}`);
-  redirect(`/cs/admin/blog/${id}`);
+  await adminRedirect(`/admin/blog/${id}`);
 }
 
 export async function deleteBlogPost(formData: FormData) {
@@ -1103,7 +1112,7 @@ export async function deleteBlogPost(formData: FormData) {
   revalidatePath('/cs/admin/blog');
   revalidatePath('/cs/blog');
   revalidatePath('/en/blog');
-  redirect('/cs/admin/blog');
+  await adminRedirect('/admin/blog');
 }
 
 export async function uploadBlogCover(formData: FormData) {
@@ -1129,7 +1138,7 @@ export async function uploadBlogCover(formData: FormData) {
   revalidatePath(`/cs/admin/blog/${id}`);
   revalidatePath('/cs/blog');
   revalidatePath('/en/blog');
-  redirect(`/cs/admin/blog/${id}`);
+  await adminRedirect(`/admin/blog/${id}`);
 }
 
 /* =========================================================
@@ -1149,7 +1158,7 @@ export async function createBlogTag(formData: FormData) {
   });
 
   revalidatePath('/cs/admin/blog/tagy');
-  redirect('/cs/admin/blog/tagy');
+  await adminRedirect('/admin/blog/tagy');
 }
 
 export async function updateBlogTag(formData: FormData) {
@@ -1171,7 +1180,7 @@ export async function updateBlogTag(formData: FormData) {
   revalidatePath('/cs/admin/blog');
   revalidatePath('/cs/blog');
   revalidatePath('/en/blog');
-  redirect('/cs/admin/blog/tagy');
+  await adminRedirect('/admin/blog/tagy');
 }
 
 export async function deleteBlogTag(formData: FormData) {
@@ -1183,5 +1192,5 @@ export async function deleteBlogTag(formData: FormData) {
   revalidatePath('/cs/admin/blog');
   revalidatePath('/cs/blog');
   revalidatePath('/en/blog');
-  redirect('/cs/admin/blog/tagy');
+  await adminRedirect('/admin/blog/tagy');
 }

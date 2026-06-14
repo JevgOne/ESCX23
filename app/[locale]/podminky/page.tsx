@@ -1,6 +1,8 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
+import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
+import { buildOgImages } from '@/lib/seo/og';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
 export const revalidate = 86400;
@@ -13,12 +15,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'podminky' });
   const tCommon = await getTranslations({ locale, namespace: 'common' });
+  const title = `${t('h1')} — ${tCommon('siteName')}`;
+  const canonical = getCanonicalUrl(locale, '/podminky');
+  const ogImages = await buildOgImages('podminky', locale, '/podminky', title);
+
   return applyDBOverride(`/${locale}/podminky`, {
-    title: `${t('h1')} — ${tCommon('siteName')}`,
+    title,
     description: t('lead'),
     robots: { index: false, follow: false },
+    alternates: {
+      canonical,
+      languages: getAlternates('/podminky'),
+    },
+    openGraph: {
+      images: ogImages,
+      title,
+      description: t('lead'),
+      url: canonical,
+      locale: ogLocale(locale),
+    },
   });
-
 }
 
 export default async function PodminkyPage({ params }: Props) {

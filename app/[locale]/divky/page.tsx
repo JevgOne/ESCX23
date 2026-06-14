@@ -29,6 +29,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return applyDBOverride(`/${locale}/divky`, {
     title: t('h1'),
     description: t('sub'),
+    alternates: {
+      canonical,
+      languages,
+    },
     openGraph: {
       images: ogImages,
       title: t('h1'),

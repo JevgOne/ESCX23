@@ -53,7 +53,7 @@ export default async function AdminEditPobockaPage({
       <AdminTopbar title={`Editace: ${loc.display_name}`} />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href="/cs/admin/pobocky" style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/pobocky`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na seznam
         </a>
       </div>
@@ -183,7 +183,7 @@ export default async function AdminEditPobockaPage({
 
         <div className="admin-submit-row">
           <button type="submit" className="admin-btn-submit">Uložit změny</button>
-          <a href="/cs/admin/pobocky" className="admin-btn-secondary">Zrušit</a>
+          <a href={`/${locale}/admin/pobocky`} className="admin-btn-secondary">Zrušit</a>
         </div>
       </form>
 

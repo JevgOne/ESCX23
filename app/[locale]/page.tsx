@@ -25,17 +25,17 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const TITLES: Record<string, string> = {
-  en: 'LovelyGirls Prague — Verified Companions',
-  cs: 'LovelyGirls Praha — Ověřené společnice',
-  de: 'LovelyGirls Prag — Verifizierte Begleiterinnen',
-  uk: 'LovelyGirls Прага — Перевірені супутниці',
+  cs: 'Escort Praha — Ověřené společnice v privátním apartmánu | LovelyGirls',
+  en: 'Escort Prague — Verified Companions, Private Apartments | LovelyGirls',
+  de: 'Escort Prag — Verifizierte Begleiterinnen, Diskrete Apartments | LovelyGirls',
+  uk: 'Ескорт Прага — Перевірені супутниці, Приватні апартаменти | LovelyGirls',
 };
 
 const DESCRIPTIONS: Record<string, string> = {
-  en: 'LovelyGirls Prague: 13 verified companions, 4 private apartments in Prague 2, 8, 1 and 3, open daily 10:00–22:30. Fast WhatsApp/Telegram contact.',
-  cs: 'LovelyGirls Praha: 13 ověřených společnic, 4 privátní byty na Vinohradech, v Karlíně, Starém Městě a Žižkově, otevřeno denně 10:00–22:30.',
-  de: 'LovelyGirls Prag: 13 verifizierte Begleiterinnen, 4 private Apartments in Prag 2, 8, 1 und 3, täglich 10:00–22:30 geöffnet.',
-  uk: 'LovelyGirls Прага: 13 перевірених супутниць, 4 приватних апартаменти (Виноградах, Карлін, Старе Місто, Жижков), щодня 10:00–22:30.',
+  cs: '13 ověřených společnic v Praze. 4 diskrétní apartmány, transparentní ceník, otevřeno denně 10–22:30. Kontakt přes WhatsApp.',
+  en: '13 verified companions in Prague. 4 discreet apartments, transparent pricing, open daily 10–22:30. Instant WhatsApp booking.',
+  de: '13 verifizierte Begleiterinnen in Prag. 4 diskrete Apartments, transparente Preise, täglich 10–22:30. WhatsApp-Buchung.',
+  uk: '13 перевірених супутниць у Празі. 4 дискретних апартаменти, прозорі ціни, щодня 10–22:30. Бронювання через WhatsApp.',
 };
 
 export async function generateMetadata({
@@ -52,6 +52,10 @@ export async function generateMetadata({
   return applyDBOverride(`/${locale}`, {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
+    alternates: {
+      canonical,
+      languages,
+    },
     openGraph: {
       title: TITLES[locale] ?? TITLES.en,
       description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,

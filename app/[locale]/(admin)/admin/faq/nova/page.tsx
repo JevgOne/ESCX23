@@ -22,7 +22,7 @@ export default async function AdminNovaFaqPage({
       <AdminTopbar title="Nová FAQ otázka" />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href="/cs/admin/faq" style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/faq`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na seznam
         </a>
       </div>
@@ -94,7 +94,7 @@ export default async function AdminNovaFaqPage({
 
         <div className="admin-submit-row">
           <button type="submit" className="admin-btn-submit">Vytvořit otázku</button>
-          <a href="/cs/admin/faq" className="admin-btn-secondary">Zrušit</a>
+          <a href={`/${locale}/admin/faq`} className="admin-btn-secondary">Zrušit</a>
         </div>
       </form>
     </>

@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
+import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
+import { buildOgImages } from '@/lib/seo/og';
 import { getServiceBySlug, getRelatedServices, getGirlsForService } from '@/lib/queries';
 import { Link } from '@/i18n/navigation';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
@@ -29,7 +31,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const row = svc as unknown as Record<string, unknown>;
     const title = localizedField(row, 'seo_title', locale) || localizedField(row, 'name', locale);
     const description = localizedField(row, 'seo_description', locale) || localizedField(row, 'description', locale);
-    return applyDBOverride(`/${locale}/sluzba/${slug}`, { title, description });
+    const routePath = `/sluzba/${slug}`;
+    const canonical = getCanonicalUrl(locale, routePath);
+    const ogImages = await buildOgImages(`sluzba-${slug}`, locale, routePath, title);
+
+    return applyDBOverride(`/${locale}/sluzba/${slug}`, {
+      title,
+      description,
+      alternates: {
+        canonical,
+        languages: getAlternates(routePath),
+      },
+      openGraph: {
+        images: ogImages,
+        title,
+        description,
+        url: canonical,
+        locale: ogLocale(locale),
+      },
+    });
   } catch {
     return {};
   }

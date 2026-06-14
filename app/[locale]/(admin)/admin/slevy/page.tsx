@@ -99,7 +99,7 @@ export default async function AdminSlevyPage({
       <AdminTopbar title="Slevy" />
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-        <a href="/cs/admin/slevy/nova" className="admin-btn-primary">+ Nová sleva</a>
+        <a href={`/${locale}/admin/slevy/nova`} className="admin-btn-primary">+ Nová sleva</a>
       </div>
 
       <DataTable columns={COLUMNS} rows={rows} emptyText="Žádné slevy" />

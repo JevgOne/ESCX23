@@ -16,17 +16,17 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const TITLES: Record<string, string> = {
-  en: 'Schedule',
-  cs: 'Rozvrh',
-  de: 'Zeitplan',
-  uk: 'Розклад',
+  cs: 'Rozvrh společnic dnes — Kdo je k dispozici | LovelyGirls Praha',
+  en: 'Companion Schedule Today — Who\'s Available | LovelyGirls Prague',
+  de: 'Zeitplan Begleiterinnen heute — Verfügbarkeit | LovelyGirls Prag',
+  uk: 'Розклад супутниць сьогодні — Хто доступний | LovelyGirls Прага',
 };
 
 const DESCRIPTIONS: Record<string, string> = {
-  en: 'Who is available at LovelyGirls Prague today and this week. Filter by apartment location.',
-  cs: 'Kdo je dnes a tento týden u LovelyGirls Praha k dispozici. Filtrujte podle pobočky.',
-  de: 'Wer ist heute und diese Woche bei LovelyGirls Prag verfügbar. Nach Apartment filtern.',
-  uk: 'Хто сьогодні і цього тижня доступний у LovelyGirls Прага. Фільтруйте за локацією.',
+  cs: 'Kdo dnes pracuje u LovelyGirls Praha? Rozvrh společnic na celý týden. Filtrujte podle pobočky. Aktualizováno v reálném čase.',
+  en: 'Who\'s working at LovelyGirls Prague today? Weekly companion schedule. Filter by apartment location. Updated in real time.',
+  de: 'Wer arbeitet heute bei LovelyGirls Prag? Wöchentlicher Zeitplan. Nach Apartment filtern. Echtzeit-Aktualisierung.',
+  uk: 'Хто працює у LovelyGirls Прага сьогодні? Тижневий розклад. Фільтруйте за локацією. Оновлення в реальному часі.',
 };
 
 const CANONICAL_PATH: Record<string, string> = {

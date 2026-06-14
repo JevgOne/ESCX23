@@ -26,7 +26,7 @@ export default async function AdminEditBlogTagPage({
       <AdminTopbar title={`Tag: ${String(tag.name_cs)}`} />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href="/cs/admin/blog/tagy" style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/blog/tagy`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na tagy
         </a>
       </div>
@@ -53,7 +53,7 @@ export default async function AdminEditBlogTagPage({
 
         <div className="admin-submit-row">
           <button type="submit" className="admin-btn-submit">Uložit</button>
-          <a href="/cs/admin/blog/tagy" className="admin-btn-secondary">Zrušit</a>
+          <a href={`/${locale}/admin/blog/tagy`} className="admin-btn-secondary">Zrušit</a>
         </div>
       </form>
 

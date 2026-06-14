@@ -22,7 +22,7 @@ export default async function AdminNovaSlevaPage({
       <AdminTopbar title="Nová sleva" />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href="/cs/admin/slevy" style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/slevy`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na seznam
         </a>
       </div>
@@ -114,7 +114,7 @@ export default async function AdminNovaSlevaPage({
 
         <div className="admin-submit-row">
           <button type="submit" className="admin-btn-submit">Vytvořit slevu</button>
-          <a href="/cs/admin/slevy" className="admin-btn-secondary">Zrušit</a>
+          <a href={`/${locale}/admin/slevy`} className="admin-btn-secondary">Zrušit</a>
         </div>
       </form>
     </>

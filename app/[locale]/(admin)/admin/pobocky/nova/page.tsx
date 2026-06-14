@@ -20,7 +20,7 @@ export default async function AdminNovaPobockaPage({
       <AdminTopbar title="Nová pobočka" />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href="/cs/admin/pobocky" style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/pobocky`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na seznam
         </a>
       </div>
@@ -148,7 +148,7 @@ export default async function AdminNovaPobockaPage({
 
         <div className="admin-submit-row">
           <button type="submit" className="admin-btn-submit">Vytvořit pobočku</button>
-          <a href="/cs/admin/pobocky" className="admin-btn-secondary">Zrušit</a>
+          <a href={`/${locale}/admin/pobocky`} className="admin-btn-secondary">Zrušit</a>
         </div>
       </form>
     </>

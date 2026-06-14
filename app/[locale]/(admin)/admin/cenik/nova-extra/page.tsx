@@ -20,7 +20,7 @@ export default async function AdminNovyExtraPage({
       <AdminTopbar title="Nový extra" />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href="/cs/admin/cenik" style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/cenik`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na ceník
         </a>
       </div>
@@ -72,7 +72,7 @@ export default async function AdminNovyExtraPage({
 
         <div className="admin-submit-row">
           <button type="submit" className="admin-btn-submit">Vytvořit extra</button>
-          <a href="/cs/admin/cenik" className="admin-btn-secondary">Zrušit</a>
+          <a href={`/${locale}/admin/cenik`} className="admin-btn-secondary">Zrušit</a>
         </div>
       </form>
     </>

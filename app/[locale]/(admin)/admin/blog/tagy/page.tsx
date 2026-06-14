@@ -78,10 +78,10 @@ export default async function AdminBlogTagsPage({
       <AdminTopbar title="Blog — Tagy" />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <a href="/cs/admin/blog" style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/blog`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na blog
         </a>
-        <a href="/cs/admin/blog/tagy/novy" className="admin-btn-primary">+ Nový tag</a>
+        <a href={`/${locale}/admin/blog/tagy/novy`} className="admin-btn-primary">+ Nový tag</a>
       </div>
 
       <DataTable columns={COLUMNS} rows={rows} emptyText="Žádné tagy" />

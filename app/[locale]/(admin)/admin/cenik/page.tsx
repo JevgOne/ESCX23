@@ -120,7 +120,7 @@ export default async function AdminCenikPage({
       <section style={{ marginBottom: '40px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Programy</h2>
-          <a href="/cs/admin/cenik/nova-plan" className="admin-btn-primary">+ Nový program</a>
+          <a href={`/${locale}/admin/cenik/nova-plan`} className="admin-btn-primary">+ Nový program</a>
         </div>
         <DataTable columns={PLAN_COLS} rows={plans} emptyText="Žádné programy" />
       </section>
@@ -128,7 +128,7 @@ export default async function AdminCenikPage({
       <section>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Extras</h2>
-          <a href="/cs/admin/cenik/nova-extra" className="admin-btn-primary">+ Nový extra</a>
+          <a href={`/${locale}/admin/cenik/nova-extra`} className="admin-btn-primary">+ Nový extra</a>
         </div>
         <DataTable columns={EXTRA_COLS} rows={extras} emptyText="Žádné extras" />
       </section>

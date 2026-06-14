@@ -79,7 +79,7 @@ export default async function AdminFaqPage({
       <AdminTopbar title="FAQ" />
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-        <a href="/cs/admin/faq/nova" className="admin-btn-primary">+ Nová otázka</a>
+        <a href={`/${locale}/admin/faq/nova`} className="admin-btn-primary">+ Nová otázka</a>
       </div>
 
       <DataTable columns={COLUMNS} rows={rows} emptyText="Žádné FAQ položky" />

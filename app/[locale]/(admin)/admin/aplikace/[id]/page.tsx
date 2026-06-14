@@ -182,7 +182,7 @@ export default async function AdminAplikaceDetailPage({ params }: Props) {
       `}} />
 
       <div className="apd-wrap">
-        <a href="/cs/admin/aplikace" className="apd-back">← Zpět na seznam</a>
+        <a href={`/${locale}/admin/aplikace`} className="apd-back">← Zpět na seznam</a>
 
         <div className="apd-status-row">
           <span

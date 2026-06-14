@@ -1,8 +1,15 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { db } from './db';
+
+async function getLocale(): Promise<string> {
+  const hdrs = await headers();
+  const pathname = hdrs.get('x-pathname') ?? '';
+  const match = pathname.match(/^\/(cs|en|de|uk)\//);
+  return match ? match[1] : 'cs';
+}
 
 const SESSION_COOKIE = 'escx23_session';
 const SESSION_MAX_AGE_DAYS = 30;
@@ -22,9 +29,12 @@ export async function verifyPassword(plain: string, hash: string): Promise<boole
   return bcrypt.compare(plain, hash);
 }
 
-const SECRET =
-  process.env.SESSION_SECRET ||
-  'dev-secret-change-in-prod-' + Math.random().toString(36);
+const SECRET = process.env.SESSION_SECRET ?? (() => {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[AUTH] SESSION_SECRET is not set! Sessions will break on restart. Set it in Vercel env vars.');
+  }
+  return 'dev-secret-change-in-prod-' + Math.random().toString(36);
+})();
 
 function sign(data: string): string {
   return crypto.createHmac('sha256', SECRET).update(data).digest('hex');
@@ -116,7 +126,8 @@ export async function authenticate(
 export async function requireAdmin(): Promise<AuthUser> {
   const user = await getCurrentUser();
   if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-    redirect('/cs/admin/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/admin/login`);
   }
   return user;
 }
@@ -128,10 +139,11 @@ export async function requireAdmin(): Promise<AuthUser> {
 export async function requireFullAdmin(): Promise<AuthUser> {
   const user = await getCurrentUser();
   if (!user || user.role !== 'admin') {
+    const locale = await getLocale();
     if (user?.role === 'manager') {
-      redirect('/cs/admin');
+      redirect(`/${locale}/admin`);
     }
-    redirect('/cs/admin/login');
+    redirect(`/${locale}/admin/login`);
   }
   return user;
 }
@@ -139,7 +151,8 @@ export async function requireFullAdmin(): Promise<AuthUser> {
 export async function requireGirl(): Promise<AuthUser> {
   const user = await getCurrentUser();
   if (!user || user.role !== 'girl') {
-    redirect('/cs/studio/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/studio/login`);
   }
   return user;
 }

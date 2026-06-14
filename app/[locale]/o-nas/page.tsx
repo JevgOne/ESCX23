@@ -1,6 +1,8 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
+import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
+import { buildOgImages } from '@/lib/seo/og';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
 export const revalidate = 86400;
@@ -12,12 +14,24 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'onas' });
-  const tCommon = await getTranslations({ locale, namespace: 'common' });
+  const canonical = getCanonicalUrl(locale, '/o-nas');
+  const ogImages = await buildOgImages('o-nas', locale, '/o-nas', t('h1'));
+
   return applyDBOverride(`/${locale}/o-nas`, {
     title: t('h1'),
     description: t('lead'),
+    alternates: {
+      canonical,
+      languages: getAlternates('/o-nas'),
+    },
+    openGraph: {
+      images: ogImages,
+      title: t('h1'),
+      description: t('lead'),
+      url: canonical,
+      locale: ogLocale(locale),
+    },
   });
-
 }
 
 export default async function ONasPage({ params }: Props) {

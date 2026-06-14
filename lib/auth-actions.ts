@@ -1,42 +1,53 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { authenticate, setSession, clearSession, getCurrentUser } from './auth';
+
+async function getLocale(): Promise<string> {
+  const hdrs = await headers();
+  const pathname = hdrs.get('x-pathname') ?? '';
+  const match = pathname.match(/^\/(cs|en|de|uk)\//);
+  return match ? match[1] : 'cs';
+}
 
 export async function loginAdmin(formData: FormData) {
   const email = String(formData.get('email') ?? '');
   const password = String(formData.get('password') ?? '');
+  const locale = await getLocale();
 
   const user = await authenticate(email, password);
 
   if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-    redirect('/cs/admin/login?error=invalid');
+    redirect(`/${locale}/admin/login?error=invalid`);
   }
 
   await setSession(user.id, user.role);
-  redirect('/cs/admin');
+  redirect(`/${locale}/admin`);
 }
 
 export async function loginGirl(formData: FormData) {
   const email = String(formData.get('email') ?? '');
   const password = String(formData.get('password') ?? '');
+  const locale = await getLocale();
 
   const user = await authenticate(email, password);
 
   if (!user || user.role !== 'girl') {
-    redirect('/cs/studio/login?error=invalid');
+    redirect(`/${locale}/studio/login?error=invalid`);
   }
 
   await setSession(user.id, user.role);
-  redirect('/cs/studio');
+  redirect(`/${locale}/studio`);
 }
 
 export async function logoutAction() {
   const user = await getCurrentUser();
+  const locale = await getLocale();
   await clearSession();
 
   if (user?.role === 'girl') {
-    redirect('/cs/studio/login');
+    redirect(`/${locale}/studio/login`);
   }
-  redirect('/cs/admin/login');
+  redirect(`/${locale}/admin/login`);
 }

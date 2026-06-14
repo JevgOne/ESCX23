@@ -12,17 +12,17 @@ import TranslateButton from '@/components/ui/TranslateButton';
 export const dynamic = 'force-dynamic';
 
 const TITLES: Record<string, string> = {
-  cs: 'Recenze',
-  en: 'Reviews',
-  de: 'Bewertungen',
-  uk: 'Відгуки',
+  cs: 'Recenze klientů — Zkušenosti se společnicemi | LovelyGirls Praha',
+  en: 'Client Reviews — Companion Experiences | LovelyGirls Prague',
+  de: 'Kundenbewertungen — Erfahrungen mit Begleiterinnen | LovelyGirls Prag',
+  uk: 'Відгуки клієнтів — Досвід з супутницями | LovelyGirls Прага',
 };
 
 const DESCRIPTIONS: Record<string, string> = {
-  cs: 'Skutečné recenze klientů na společnice LovelyGirls Praha. Anonymní hodnocení, zkušenosti a doporučení.',
-  en: 'Real client reviews of LovelyGirls Prague companions. Anonymous ratings, experiences and recommendations.',
-  de: 'Echte Kundenbewertungen der LovelyGirls Prag Begleiterinnen. Anonyme Bewertungen, Erfahrungen und Empfehlungen.',
-  uk: 'Справжні відгуки клієнтів про супутниць LovelyGirls Прага. Анонімні оцінки, враження та рекомендації.',
+  cs: 'Skutečné anonymní recenze klientů LovelyGirls Praha. Hodnocení, zkušenosti a doporučení. Průměr 4.8 z 5 hvězd.',
+  en: 'Real anonymous client reviews of LovelyGirls Prague. Ratings, experiences and recommendations. Average 4.8 out of 5 stars.',
+  de: 'Echte anonyme Kundenbewertungen von LovelyGirls Prag. Bewertungen und Empfehlungen. Durchschnitt 4.8 von 5 Sternen.',
+  uk: 'Справжні анонімні відгуки клієнтів LovelyGirls Прага. Оцінки та рекомендації. Середній бал 4.8 з 5 зірок.',
 };
 
 const T: Record<string, {

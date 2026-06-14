@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getActiveDiscounts } from '@/lib/queries';
 import { discountOffersJsonLd } from '@/lib/seo/jsonld';
-import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
+import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import DiscountsGrid from '@/components/slevy/DiscountsGrid';
 import LoyaltyExplainer from '@/components/slevy/LoyaltyExplainer';
 import HowToUse from '@/components/slevy/HowToUse';
@@ -12,17 +12,17 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 export const dynamic = 'force-dynamic';
 
 const TITLES: Record<string, string> = {
-  en: 'Discounts',
-  cs: 'Slevy',
-  de: 'Rabatte',
-  uk: 'Знижки',
+  cs: 'Slevy a věrnostní program — Až 20 % sleva | LovelyGirls Praha',
+  en: 'Discounts & Loyalty Program — Up to 20 % Off | LovelyGirls Prague',
+  de: 'Rabatte & Treueprogramm — Bis zu 20 % Rabatt | LovelyGirls Prag',
+  uk: 'Знижки та програма лояльності — До 20 % знижки | LovelyGirls Прага',
 };
 
 const DESCRIPTIONS: Record<string, string> = {
-  en: 'LovelyGirls Prague loyalty program, morning discounts, birthday and referral offers. Up to 15 % off.',
-  cs: 'Věrnostní program LovelyGirls Praha, ranní slevy, narozeninové a doporučovací akce. Až 15 % sleva.',
-  de: 'LovelyGirls Prag Treueprogramm, Morgenrabatt, Geburtstagsangebot. Bis zu 15 % Rabatt.',
-  uk: 'Програма лояльності LovelyGirls Прага, ранні знижки, акції. До 15 % знижки.',
+  cs: 'Ranní sleva, věrnostní bonus po 3/5/10 návštěvách, narozeninová sleva 20 %. LovelyGirls Praha odměňuje stálé klienty.',
+  en: 'Morning discount, loyalty bonus after 3/5/10 visits, 20 % birthday discount. LovelyGirls Prague rewards returning clients.',
+  de: 'Morgenrabatt, Treuebonus nach 3/5/10 Besuchen, 20 % Geburtstagsrabatt. LovelyGirls Prag belohnt Stammkunden.',
+  uk: 'Ранкова знижка, бонус лояльності після 3/5/10 відвідувань, 20 % знижка до дня народження. LovelyGirls Прага.',
 };
 
 const GEO_LEADS: Record<string, string> = {
@@ -53,6 +53,10 @@ export async function generateMetadata({
   return applyDBOverride(`/${locale}/slevy`, {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
+    alternates: {
+      canonical,
+      languages: getAlternates('/slevy'),
+    },
     openGraph: {
       images: ogImages,
       title: TITLES[locale] ?? TITLES.en,

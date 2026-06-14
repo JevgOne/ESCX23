@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getActivePricingPlans } from '@/lib/queries';
 import { offerListJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
-import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
+import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import ProgramsGrid from '@/components/cenik/ProgramsGrid';
 import ExtrasGrid from '@/components/cenik/ExtrasGrid';
 import PricingNotes from '@/components/cenik/PricingNotes';
@@ -13,17 +13,17 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 export const revalidate = 3600;
 
 const TITLES: Record<string, string> = {
-  en: 'Pricing',
-  cs: 'Ceník',
-  de: 'Preise',
-  uk: 'Ціни',
+  cs: 'Ceník společnic Praha — Programy a ceny | LovelyGirls',
+  en: 'Escort Pricing Prague — Packages & Rates | LovelyGirls',
+  de: 'Escort Preise Prag — Programme und Preise | LovelyGirls',
+  uk: 'Ціни ескорт Прага — Програми та тарифи | LovelyGirls',
 };
 
 const DESCRIPTIONS: Record<string, string> = {
-  en: 'Companion programs from 2,500 CZK / 30 min to 4,500 CZK / 2 hours. All prices include the private apartment. Cash payment only.',
-  cs: 'Programy společnic od 2 500 Kč / 30 min do 4 500 Kč / 120 min. Cena zahrnuje soukromý apartmán. Platba hotovostí.',
-  de: 'Begleitprogramme ab 2.500 CZK / 30 Min. bis 4.500 CZK / 120 Min. Preis inkl. Privatwohnung. Barzahlung.',
-  uk: 'Програми супутниць від 2 500 CZK / 30 хв до 4 500 CZK / 120 хв. Ціна включає апартамент. Оплата готівкою.',
+  cs: 'Transparentní ceník LovelyGirls Praha. 5 programů od 30 do 120 minut, platba v hotovosti, žádné skryté poplatky. Extra služby na výběr.',
+  en: 'Transparent pricing at LovelyGirls Prague. 5 packages from 30 to 120 minutes, cash payment, no hidden fees. Extra services available.',
+  de: 'Transparente Preise bei LovelyGirls Prag. 5 Programme von 30 bis 120 Minuten, Barzahlung, keine versteckten Gebühren.',
+  uk: 'Прозорі ціни LovelyGirls Прага. 5 програм від 30 до 120 хвилин, готівка, без прихованих платежів.',
 };
 
 const GEO_LEADS: Record<string, string> = {
@@ -54,6 +54,10 @@ export async function generateMetadata({
   return applyDBOverride(`/${locale}/cenik`, {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
+    alternates: {
+      canonical,
+      languages: getAlternates('/cenik'),
+    },
     openGraph: {
       images: ogImages,
       title: TITLES[locale] ?? TITLES.en,

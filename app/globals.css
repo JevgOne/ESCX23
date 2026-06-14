@@ -9635,6 +9635,37 @@ body {
 .psd-pill.lang { background: rgba(242, 125, 141, 0.05); border-color: rgba(242,125,141,0.18); }
 .psd-pill.lang .psd-flag { font-size: 13px; }
 
+/* Profile info card — desktop stat box (key/value rows) */
+.profile-info-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-line-mid);
+  border-radius: 12px;
+  padding: 4px 16px;
+  margin-bottom: 18px;
+}
+.pic-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-line);
+  font-size: 13px;
+}
+.pic-row:last-child {
+  border-bottom: none;
+}
+.pic-label {
+  color: var(--color-text-muted);
+}
+.pic-value {
+  font-weight: 600;
+  color: var(--color-text);
+}
+.pic-value-coral {
+  color: var(--color-coral);
+  font-weight: 700;
+}
+
 .svc-showcase-subtitle {
   font-size: 13px;
   color: var(--color-text-muted);

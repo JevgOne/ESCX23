@@ -11,17 +11,17 @@ import type { Row } from '@libsql/client';
 export const revalidate = 3600;
 
 const TITLES: Record<string, string> = {
-  en: 'FAQ',
-  cs: 'Časté dotazy',
-  de: 'FAQ',
-  uk: 'Часті питання',
+  cs: 'Časté dotazy — Escort Praha, rezervace, platba | LovelyGirls',
+  en: 'FAQ — Escort Prague Booking, Payment, Discretion | LovelyGirls',
+  de: 'FAQ — Escort Prag Buchung, Zahlung, Diskretion | LovelyGirls',
+  uk: 'Часті питання — Ескорт Прага, бронювання, оплата | LovelyGirls',
 };
 
 const DESCRIPTIONS: Record<string, string> = {
-  en: 'Frequently asked questions about booking an escort companion in Prague — legality, pricing, discretion, and what to expect.',
-  cs: 'Časté dotazy o rezervaci společnice v Praze — legalita, ceny, diskrétnost a co očekávat.',
-  de: 'Häufig gestellte Fragen zur Buchung einer Begleiterin in Prag — Legalität, Preise, Diskretion.',
-  uk: 'Часті запитання про замовлення супутниці в Празі — легальність, ціни, конфіденційність.',
+  cs: 'Odpovědi na nejčastější otázky o escort službách v Praze. Jak rezervovat, platba hotově, diskrétnost, bezpečnost, legalita.',
+  en: 'Answers to common questions about escort services in Prague. How to book, cash payment, discretion, safety, legality.',
+  de: 'Antworten auf häufige Fragen über Escort-Services in Prag. Buchung, Barzahlung, Diskretion, Sicherheit, Legalität.',
+  uk: 'Відповіді на часті питання про ескорт послуги в Празі. Як замовити, оплата готівкою, дискретність, безпека, легальність.',
 };
 
 const GEO_LEADS: Record<string, string> = {
