@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { getGirlsWithToday } from '@/lib/queries';
+import { getNewGirl } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
 
 interface FeaturedNewProps {
@@ -16,8 +16,7 @@ const META: Record<string, { yo: string; bust: string }> = {
 
 export default async function FeaturedNew({ locale }: FeaturedNewProps) {
   const t = await getTranslations({ locale, namespace: 'homepage.featuredNew' });
-  const girls = await getGirlsWithToday();
-  const girl = girls.find((g) => g.isNew) ?? null;
+  const girl = await getNewGirl();
   const M = META[locale] ?? META.en;
 
   if (!girl) return null;

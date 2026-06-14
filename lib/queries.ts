@@ -1933,6 +1933,42 @@ export interface FeaturedGirlForHero {
   photo: string;
 }
 
+export interface NewGirl {
+  slug: string;
+  name: string;
+  age: number;
+  height: number | null;
+  weight: number | null;
+  bust: number | null;
+  primaryPhoto: string | null;
+}
+
+/** Get the first active girl with is_new=1 (or newest within 30 days). No schedule filter. */
+export async function getNewGirl(): Promise<NewGirl | null> {
+  const res = await db.execute(
+    `SELECT g.slug, g.name, g.age, g.height, g.weight, g.bust, g.is_new, g.created_at,
+            (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo
+     FROM girls g
+     WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
+     ORDER BY g.is_new DESC, g.created_at DESC
+     LIMIT 10`
+  );
+  for (const r of res.rows) {
+    if (computeIsNew(r.is_new, r.created_at)) {
+      return {
+        slug: String(r.slug),
+        name: String(r.name),
+        age: Number(r.age),
+        height: r.height != null ? Number(r.height) : null,
+        weight: r.weight != null ? Number(r.weight) : null,
+        bust: r.bust != null ? Number(r.bust) : null,
+        primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
+      };
+    }
+  }
+  return null;
+}
+
 export async function getFeaturedGirlForHero(): Promise<FeaturedGirlForHero | null> {
   const res = await db.execute(
     `SELECT g.id, g.name, g.age, g.location,
