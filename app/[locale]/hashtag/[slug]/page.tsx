@@ -85,6 +85,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     alternates: {
       canonical: hashtagUrl(locale, slug),
+      languages: {
+        en: hashtagUrl('en', slug),
+        cs: hashtagUrl('cs', slug),
+        de: hashtagUrl('de', slug),
+        uk: hashtagUrl('uk', slug),
+        'x-default': hashtagUrl('en', slug),
+      },
     },
     openGraph: {
       title,
