@@ -104,9 +104,13 @@ interface ProfilHeroProps {
   stylSub?: string;
   stylNote?: string;
   styleWardrobe?: string | null;
+  isNew?: boolean;
+  isVip?: boolean;
 }
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe }: ProfilHeroProps) {
+const NEW_LABEL: Record<string, string> = { cs: 'NOVÁ', en: 'NEW', de: 'NEU', uk: 'НОВА' };
+
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -202,6 +206,13 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           </div>
         </div>
       </div>
+
+      {(isVip || isNew) && (
+        <div className="profile-hero-badges">
+          {isVip && <span className="girl-tag-pill vip">★ VIP</span>}
+          {!isVip && isNew && <span className="girl-tag-pill new">{NEW_LABEL[locale] ?? NEW_LABEL.en}</span>}
+        </div>
+      )}
 
       {(age != null || height || weight) && (
         <div className="profile-stat-hero ig-stat-hero">

@@ -179,6 +179,12 @@ export default async function ProfilPage({ params }: Props) {
   }
 
   const isPaused = String((girl as Record<string, unknown>).status ?? '') === 'inactive';
+  const girlIsNew = (() => {
+    const g = girl as Record<string, unknown>;
+    if (Number(g.is_new) !== 1) return false;
+    if (!g.created_at) return true;
+    return Date.now() - new Date(String(g.created_at)).getTime() < 14 * 24 * 60 * 60 * 1000;
+  })();
 
   const totalReviews = Number(girl.reviews_count ?? 0);
 
@@ -324,6 +330,8 @@ export default async function ProfilPage({ params }: Props) {
               shiftTo={todaySchedule.shiftTo}
               scheduleLocation={todaySchedule.scheduleLocation}
               scheduleAddress={todaySchedule.scheduleAddress}
+              isNew={girlIsNew}
+              isVip={girlVip}
               topServices={servicesTyped.map((s) => {
                 const key = `name_${locale}` as keyof typeof s;
                 return { name: String(s[key] ?? s.name_en ?? s.slug ?? ''), category: String(s.category ?? 'basic') };
