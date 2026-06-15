@@ -154,8 +154,8 @@ export default async function RecenzePage({
 
   const t = T[locale] ?? T.cs;
   const [reviews, pageData] = await Promise.all([
-    getRecentApprovedReviews(200),
-    getReviewPageData(),
+    getRecentApprovedReviews(200).catch(() => []),
+    getReviewPageData().catch(() => ({ totalReviews: 0, avgRating: 0, girlsWithReviews: [] as { name: string; slug: string; photo: string | null; reviewCount: number }[] })),
   ]);
 
   const activeGirl = sp.girl ?? null;

@@ -81,7 +81,7 @@ export default async function FaqPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const items = await getFaqItems();
+  const items = await getFaqItems().catch(() => []);
   const faqItems = items
     .map((item) => rowToQA(item, locale))
     .filter((i) => i.q && i.a);

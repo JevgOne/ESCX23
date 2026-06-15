@@ -61,9 +61,9 @@ export default async function DivkyPage({ params, searchParams }: Props) {
     service: sp.service,
     page,
     pageSize,
-  });
+  }).catch(() => ({ girls: [] as Awaited<ReturnType<typeof getGirlsForListing>>['girls'], total: 0 }));
 
-  const services = await getTopServicesForFilter(12);
+  const services = await getTopServicesForFilter(12).catch(() => []);
 
   const hasMore = page * pageSize < total;
   const tGeo = await getTranslations({ locale, namespace: 'geo' });

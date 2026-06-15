@@ -77,7 +77,7 @@ export default async function CenikPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const programs = await getActivePricingPlans();
+  const programs = await getActivePricingPlans().catch(() => []);
   const schema = offerListJsonLd(
     programs.map((p) => ({
       title_cs: p.title_cs,

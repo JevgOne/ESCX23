@@ -128,8 +128,8 @@ export default async function RozvrhPage({ params, searchParams }: Props) {
   const locationParam = sp.location ?? 'all';
 
   const [girls, dbLocations] = await Promise.all([
-    getGirlsForDay(requestedDay, locationParam !== 'all' ? locationParam : undefined),
-    getActiveLocations(),
+    getGirlsForDay(requestedDay, locationParam !== 'all' ? locationParam : undefined).catch(() => []),
+    getActiveLocations().catch(() => []),
   ]);
 
   const days = generate7Days(today, locale);
@@ -144,7 +144,7 @@ export default async function RozvrhPage({ params, searchParams }: Props) {
     })),
   ];
 
-  const totalGirls = await getGirlsForDay(today, undefined);
+  const totalGirls = await getGirlsForDay(today, undefined).catch(() => []);
   const workingCount = girls.length;
   const geoLead = buildGeoLead(locale, requestedDay, workingCount, totalGirls.length);
   const basePath = `/${locale}${CANONICAL_PATH[locale] ?? '/rozvrh'}`;

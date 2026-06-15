@@ -70,7 +70,12 @@ function pickLocalizedText(
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, locale } = await params;
-  const girl = await getGirlBySlug(slug);
+  let girl;
+  try {
+    girl = await getGirlBySlug(slug);
+  } catch {
+    return {};
+  }
   if (!girl) return {};
   const name = String(girl.name ?? '');
   const age = Number(girl.age ?? 0);
@@ -103,7 +108,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const status = String(girl.status ?? 'active');
 
   // Primary photo for OG image
-  const photos = await getPhotosForGirl(Number(girl.id));
+  const photos = await getPhotosForGirl(Number(girl.id)).catch(() => []);
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const primaryPhotoUrl = primaryPhoto?.url ? photoUrl(String(primaryPhoto.url)) : null;
 
@@ -143,18 +148,18 @@ export default async function ProfilPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'profil' });
 
   const [girlRaw, currentUser] = await Promise.all([
-    getGirlBySlug(slug),
-    getCurrentUser(),
+    getGirlBySlug(slug).catch(() => null),
+    getCurrentUser().catch(() => null),
   ]);
 
   const [girl, photos, reviews, plans, allServices, girlServiceIds, todaySchedule] = await Promise.all([
     Promise.resolve(girlRaw),
-    girlRaw ? getPhotosForGirl(Number(girlRaw.id)) : Promise.resolve([]),
-    girlRaw ? getReviewsForGirl(Number(girlRaw.id), 6) : Promise.resolve([]),
-    getActivePricingPlans(),
-    getAllServices(),
-    girlRaw ? getGirlServices(Number(girlRaw.id)) : Promise.resolve([]),
-    girlRaw ? getGirlScheduleForToday(Number(girlRaw.id)) : Promise.resolve({ shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleAddress: null }),
+    girlRaw ? getPhotosForGirl(Number(girlRaw.id)).catch(() => []) : Promise.resolve([]),
+    girlRaw ? getReviewsForGirl(Number(girlRaw.id), 6).catch(() => []) : Promise.resolve([]),
+    getActivePricingPlans().catch(() => []),
+    getAllServices().catch(() => []),
+    girlRaw ? getGirlServices(Number(girlRaw.id)).catch(() => [] as number[]) : Promise.resolve([] as number[]),
+    girlRaw ? getGirlScheduleForToday(Number(girlRaw.id)).catch(() => ({ shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleAddress: null })) : Promise.resolve({ shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleAddress: null }),
   ]);
   // Only show services the girl actually offers (basic auto-included + extras she checked)
   const services = allServices.filter((s) => girlServiceIds.includes(Number(s.id)));

@@ -82,12 +82,17 @@ export default async function RecenzeNovaPage({ params, searchParams }: Props) {
   const sp = await searchParams;
   setRequestLocale(locale);
 
-  const girlRes = await db.execute({
-    sql: `SELECT g.id, g.name, g.age, g.location,
-            (SELECT url FROM girl_photos WHERE girl_id=g.id AND is_primary=1 LIMIT 1) as photo
-          FROM girls g WHERE g.slug = ? LIMIT 1`,
-    args: [slug],
-  });
+  let girlRes;
+  try {
+    girlRes = await db.execute({
+      sql: `SELECT g.id, g.name, g.age, g.location,
+              (SELECT url FROM girl_photos WHERE girl_id=g.id AND is_primary=1 LIMIT 1) as photo
+            FROM girls g WHERE g.slug = ? LIMIT 1`,
+      args: [slug],
+    });
+  } catch {
+    notFound();
+  }
   if (girlRes.rows.length === 0) notFound();
 
   const girl = girlRes.rows[0] as Record<string, unknown>;

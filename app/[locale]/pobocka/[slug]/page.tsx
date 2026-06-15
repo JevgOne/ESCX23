@@ -194,7 +194,7 @@ const T: Record<string, PageBundle> = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, locale } = await params;
-  const loc = await getLocationBySlug(slug);
+  const loc = await getLocationBySlug(slug).catch(() => null);
   if (!loc) return {};
   const M = META[locale] ?? META.en;
   const lc = getLocationContent(slug);
@@ -220,11 +220,11 @@ export default async function PobockaDetailPage({ params }: Props) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
-  const loc = await getLocationBySlug(slug, locale);
+  const loc = await getLocationBySlug(slug, locale).catch(() => null);
   if (!loc) notFound();
 
   const L = T[locale] ?? T.en;
-  const others = (await getActiveLocations()).filter((l) => l.name !== slug);
+  const others = (await getActiveLocations().catch(() => [])).filter((l) => l.name !== slug);
   const district = loc.district ?? L.cityFallback;
   const lc = getLocationContent(slug);
   const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';

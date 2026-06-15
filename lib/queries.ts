@@ -542,8 +542,8 @@ export async function getReviewPageData() {
                 GROUP BY g.id ORDER BY cnt DESC`),
   ]);
   return {
-    totalReviews: Number(statsRes.rows[0].cnt),
-    avgRating: Number(statsRes.rows[0].avg),
+    totalReviews: Number(statsRes.rows[0]?.cnt ?? 0),
+    avgRating: Number(statsRes.rows[0]?.avg ?? 0),
     girlsWithReviews: girlsRes.rows.map((r) => ({
       name: String(r.name),
       slug: String(r.slug),

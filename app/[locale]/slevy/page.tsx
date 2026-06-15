@@ -76,7 +76,7 @@ export default async function SlevyPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const discounts = await getActiveDiscounts();
+  const discounts = await getActiveDiscounts().catch(() => []);
   const schema = discountOffersJsonLd(
     discounts.map((d) => ({
       name_cs: d.name_cs,

@@ -112,7 +112,7 @@ export default async function HashtagPage({ params }: Props) {
   const title = getTitle(slug, locale);
   if (!title) notFound();
 
-  const girls = await getGirlsForHashtag(slug);
+  const girls = await getGirlsForHashtag(slug).catch(() => []);
   const content = getHashtagContent(slug);
 
   const countLabel =
