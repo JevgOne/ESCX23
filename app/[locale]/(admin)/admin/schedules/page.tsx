@@ -685,6 +685,37 @@ export default async function AdminSchedulesPage({
                 <button type="submit" className="admin-btn-submit">Přidat rozvrh</button>
               </div>
             </div>
+            <script dangerouslySetInnerHTML={{ __html: `
+              (function(){
+                var P={ranni:['10:00','16:00'],odpoledni:['16:30','22:30'],celodenni:['10:00','22:00']};
+                document.querySelector('.sched-form').addEventListener('change',function(e){
+                  var t=e.target;
+                  if(t.type==='radio'&&t.name.startsWith('preset_')){
+                    var i=t.name.split('_')[1];
+                    var v=P[t.value];
+                    if(v){
+                      var s=document.querySelector('input[name="start_'+i+'"]');
+                      var d=document.querySelector('input[name="end_'+i+'"]');
+                      if(s)s.value=v[0];
+                      if(d)d.value=v[1];
+                    }
+                  }
+                });
+                // Set initial values for defaultChecked presets
+                document.querySelectorAll('.sched-form input[type="radio"]:checked').forEach(function(r){
+                  if(r.name.startsWith('preset_')){
+                    var i=r.name.split('_')[1];
+                    var v=P[r.value];
+                    if(v){
+                      var s=document.querySelector('input[name="start_'+i+'"]');
+                      var d=document.querySelector('input[name="end_'+i+'"]');
+                      if(s&&!s.value)s.value=v[0];
+                      if(d&&!d.value)d.value=v[1];
+                    }
+                  }
+                });
+              })();
+            `}} />
           </form>
         </div>
       )}
