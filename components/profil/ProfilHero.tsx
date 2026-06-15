@@ -1,4 +1,5 @@
 import { photoUrl } from '@/lib/photoUrl';
+import { translateLocation } from '@/lib/utils';
 
 interface Photo {
   url: unknown;
@@ -115,7 +116,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
   const altBase = age != null
     ? `${name}, ${age}, ${city} ${altNoun}`
     : `${name}, ${city} ${altNoun}`;
-  const locText = scheduleLocation ?? String(girl.location ?? city);
+  const locText = translateLocation(scheduleLocation ?? null, locale) ?? city;
   const todayLbl = TODAY_LBL[locale] ?? TODAY_LBL.en;
   const statusText = shiftFrom && shiftTo ? `${todayLbl} ${shiftFrom}–${shiftTo}` : null;
   const rating = girl.rating != null ? Number(girl.rating) : 0;
