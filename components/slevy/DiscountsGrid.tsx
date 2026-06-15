@@ -24,9 +24,9 @@ function getIcon(slug: string): string {
 const CURRENCY: Record<string, string> = { cs: 'Kč', en: 'CZK', de: 'CZK', uk: 'CZK' };
 
 function formatAmount(row: Row, locale: string): string {
-  const val = Number(row.amount_value ?? 0);
-  const type = String(row.amount_type ?? 'PERCENT');
-  if (type === 'PERCENT') return `${val} %`;
+  const val = Number(row.discount_value ?? row.amount_value ?? 0);
+  const type = String(row.discount_type ?? row.amount_type ?? 'percentage');
+  if (type === 'PERCENT' || type === 'percentage') return `${val} %`;
   const cur = CURRENCY[locale] ?? CURRENCY.en;
   const fmt = locale === 'cs' ? 'cs-CZ' : locale === 'de' ? 'de-DE' : locale === 'uk' ? 'uk-UA' : 'en-GB';
   return `${val.toLocaleString(fmt)} ${cur}`;

@@ -135,7 +135,6 @@ export default async function SlevyPage({
             <FallbackDiscountCards locale={locale} />
           )}
 
-          <LoyaltyExplainer locale={locale} />
           <HowToUse locale={locale} />
         </div>
       </section>
