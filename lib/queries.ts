@@ -1667,6 +1667,10 @@ export async function getGirlsForListing(
   const dayOfWeek = pragueDayOfWeek();
   const today = pragueDateISO();
   const now = formatPragueTime();
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowDow = pragueDayOfWeek(tomorrow);
+  const tomorrowDate = pragueDateISO(tomorrow);
   const pageSize = f.pageSize ?? 12;
   const page = f.page ?? 1;
   const offset = (page - 1) * pageSize;
@@ -1702,6 +1706,8 @@ export async function getGirlsForListing(
       se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
       l.display_name AS schedule_location,
       l2.display_name AS fallback_location,
+      gs2.start_time AS tmrw_from, gs2.end_time AS tmrw_to,
+      se2.exception_type AS tmrw_ex_type,
       (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
       (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
       (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count,
@@ -1714,8 +1720,8 @@ export async function getGirlsForListing(
         ELSE 0
       END AS working_now,
       CASE
-        WHEN g.status = 'inactive' THEN 4
-        WHEN se.exception_type = 'unavailable' THEN 3
+        WHEN g.status = 'inactive' THEN 5
+        WHEN se.exception_type = 'unavailable' THEN 4
         WHEN (COALESCE(se.start_time, gs.start_time)) IS NOT NULL
           AND ? >= SUBSTR(COALESCE(se.start_time, gs.start_time),1,5)
           AND ? <= SUBSTR(COALESCE(se.end_time, gs.end_time),1,5)
@@ -1723,7 +1729,9 @@ export async function getGirlsForListing(
         WHEN (COALESCE(se.start_time, gs.start_time)) IS NOT NULL
           AND ? < SUBSTR(COALESCE(se.start_time, gs.start_time),1,5)
         THEN 2
-        ELSE 3
+        WHEN gs2.start_time IS NOT NULL AND (se2.exception_type IS NULL OR se2.exception_type != 'unavailable')
+        THEN 3
+        ELSE 4
       END AS status_rank
     FROM girls g
     LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
@@ -1731,10 +1739,13 @@ export async function getGirlsForListing(
     LEFT JOIN locations l ON l.id = gs.location_id
     LEFT JOIN locations l2 ON l2.district = g.location AND l2.is_active = 1
     LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
+    LEFT JOIN girl_schedules gs2 ON gs2.girl_id = g.id
+      AND gs2.day_of_week = ? AND gs2.is_active = 1
+    LEFT JOIN schedule_exceptions se2 ON se2.girl_id = g.id AND se2.date = ?
     WHERE ${whereSQL}
   `;
 
-  const allArgs = [now, now, now, now, now, ...args];
+  const allArgs = [now, now, now, now, now, ...args.slice(0, 2), tomorrowDow, tomorrowDate, ...args.slice(2)];
 
   const countResult = await db.execute({
     sql: `SELECT COUNT(*) AS cnt FROM (${baseSql}) sub`,
@@ -1769,6 +1780,11 @@ export async function getGirlsForListing(
         if (now >= from && now <= to) status = 'working';
         else if (now < from) status = 'later';
       }
+      // Tomorrow shift
+      let tmrwFrom: string | null = r.tmrw_from ? String(r.tmrw_from).substring(0, 5) : null;
+      let tmrwTo: string | null = r.tmrw_to ? String(r.tmrw_to).substring(0, 5) : null;
+      if (r.tmrw_ex_type === 'unavailable') { tmrwFrom = null; tmrwTo = null; }
+
       const isNew = computeIsNew(r.is_new, r.created_at);
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
       const fallbackLoc = r.fallback_location ? String(r.fallback_location) : null;
@@ -1788,8 +1804,8 @@ export async function getGirlsForListing(
         status: isPaused ? 'off' : status,
         shiftFrom: from,
         shiftTo: to,
-        tomorrowFrom: null,
-        tomorrowTo: null,
+        tomorrowFrom: tmrwFrom,
+        tomorrowTo: tmrwTo,
         isVip: false,
         isPaused,
         isNew,
