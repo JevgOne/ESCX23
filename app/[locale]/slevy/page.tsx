@@ -129,14 +129,28 @@ export default async function SlevyPage({
         <div className="container">
           <p data-geo-lead className="sr-only">{geoLead}</p>
 
-          {discounts.length > 0 ? (
-            <DiscountsGrid discounts={discounts} locale={locale} />
-          ) : (
-            <FallbackDiscountCards locale={locale} />
-          )}
-
-          <LoyaltyExplainer locale={locale} />
-          <HowToUse locale={locale} />
+          <div style={{
+            textAlign: 'center',
+            padding: '80px 20px',
+            background: 'var(--color-bg-card)',
+            border: '1px dashed var(--color-line-mid)',
+            borderRadius: 'var(--card-radius)',
+            marginBottom: '40px',
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚧</div>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--color-text)', marginBottom: '8px' }}>
+              {locale === 'en' ? 'COMING SOON' : locale === 'de' ? 'IN VORBEREITUNG' : locale === 'uk' ? 'ГОТУЄТЬСЯ' : 'PŘIPRAVUJEME'}
+            </h2>
+            <p style={{ color: 'var(--color-text-muted)', maxWidth: 400, margin: '0 auto' }}>
+              {locale === 'en'
+                ? 'Our discount & loyalty program is being prepared. Stay tuned!'
+                : locale === 'de'
+                  ? 'Unser Rabatt- und Treueprogramm wird vorbereitet. Bleiben Sie dran!'
+                  : locale === 'uk'
+                    ? 'Наша програма знижок та лояльності готується. Слідкуйте за оновленнями!'
+                    : 'Náš slevový a věrnostní program se připravuje. Sledujte novinky!'}
+            </p>
+          </div>
         </div>
       </section>
     </main>

@@ -1989,6 +1989,55 @@ export async function getFeaturedGirlForHero(): Promise<FeaturedGirlForHero | nu
   };
 }
 
+/** Get active girls (no schedule filter) for fallback display (e.g. SimilarGirls when nobody is scheduled). */
+export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promise<GirlCard[]> {
+  const result = await db.execute({
+    sql: `
+      SELECT
+        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
+        g.created_at, g.is_new, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        l.display_name AS fallback_location,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
+        (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
+        (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
+      FROM girls g
+      LEFT JOIN locations l ON l.district = g.location AND l.is_active = 1
+      WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
+      ORDER BY g.rating DESC, g.name ASC
+      LIMIT ?
+    `,
+    args: [limit + 1],
+  });
+  return result.rows
+    .filter((r) => !excludeSlug || String(r.slug) !== excludeSlug)
+    .slice(0, limit)
+    .map((r): GirlCard => ({
+      id: Number(r.id),
+      slug: String(r.slug),
+      name: String(r.name),
+      age: Number(r.age),
+      height: r.height != null ? Number(r.height) : null,
+      weight: r.weight != null ? Number(r.weight) : null,
+      bust: r.bust != null ? Number(r.bust) : null,
+      location: r.fallback_location ? String(r.fallback_location) : String(r.location ?? 'Praha'),
+      primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
+      secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
+      photoCount: Number(r.photo_count),
+      videoCount: Number(r.video_count),
+      status: 'off',
+      shiftFrom: null,
+      shiftTo: null,
+      isVip: false,
+      isPaused: false,
+      isNew: computeIsNew(r.is_new, r.created_at),
+      languages: parseLangs(r.languages),
+      rating: r.rating != null ? Number(r.rating) : 0,
+      reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
+      hashtags: parseLangs(r.hashtags),
+    }));
+}
+
 export async function getGirlServices(girlId: number): Promise<number[]> {
   const res = await db.execute({
     sql: `SELECT service_id FROM girl_services WHERE girl_id = ?`,
