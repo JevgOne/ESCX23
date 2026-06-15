@@ -266,6 +266,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
     .filter((g): g is GirlCard => g !== null)
     .sort((a, b) => {
       // Priority: working > later > tomorrow > off
+      // Within same rank: earlier shift time first, then A-Z
       const rank = (g: GirlCard) => {
         if (g.status === 'working') return 0;
         if (g.status === 'later') return 1;
@@ -275,6 +276,9 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       const ra = rank(a);
       const rb = rank(b);
       if (ra !== rb) return ra - rb;
+      const timeA = a.shiftFrom ?? a.tomorrowFrom ?? 'ZZ';
+      const timeB = b.shiftFrom ?? b.tomorrowFrom ?? 'ZZ';
+      if (timeA !== timeB) return timeA.localeCompare(timeB);
       return a.name.localeCompare(b.name);
     });
 }
@@ -1692,11 +1696,12 @@ export async function getGirlsForListing(
 
   const whereSQL = whereClauses.join(' AND ');
 
-  // Default: priority by status (working → later → off → paused), then A-Z
-  let orderSQL = 'status_rank ASC, g.name ASC';
+  // Default: priority by status (working → later → tomorrow → off → paused),
+  // then by shift start time (morning before afternoon), then A-Z
+  let orderSQL = 'status_rank ASC, COALESCE(COALESCE(se.start_time, gs.start_time), gs2.start_time, \'ZZ\') ASC, g.name ASC';
   if (f.sort === 'newest') orderSQL = 'g.created_at DESC';
   else if (f.sort === 'name') orderSQL = 'g.name ASC';
-  else if (f.sort === 'available_first') orderSQL = 'status_rank ASC, g.name ASC';
+  else if (f.sort === 'available_first') orderSQL = 'status_rank ASC, COALESCE(COALESCE(se.start_time, gs.start_time), gs2.start_time, \'ZZ\') ASC, g.name ASC';
 
   const baseSql = `
     SELECT
