@@ -11,8 +11,9 @@ import { pragueDateISO, pragueDayOfWeek, formatPragueTime } from './utils';
 
 export type GirlStatus = 'working' | 'later' | 'off';
 
-/** is_new=1 → new for 14 days from created_at (auto-expires). is_new=0/NULL → not new. */
-function computeIsNew(dbIsNew: unknown, createdAt: unknown): boolean {
+/** badge_type='new' from admin OR is_new=1 within 14 days of created_at. */
+function computeIsNew(dbIsNew: unknown, createdAt: unknown, badgeType?: unknown): boolean {
+  if (String(badgeType ?? '') === 'new') return true;
   if (Number(dbIsNew) !== 1) return false;
   if (!createdAt) return true;
   const d = new Date(String(createdAt));
@@ -65,7 +66,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.is_new, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        g.created_at, g.is_new, g.badge_type, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
@@ -111,7 +112,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
 
       if (status === 'off' && !isPaused) return null;
 
-      const isNew = computeIsNew(r.is_new, r.created_at);
+      const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
 
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
 
@@ -167,7 +168,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.is_new, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        g.created_at, g.is_new, g.badge_type, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
@@ -226,7 +227,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       // Skip girls that have no today shift AND no tomorrow shift (unless paused)
       if (status === 'off' && !isPaused && !tmrwFrom) return null;
 
-      const isNew = computeIsNew(r.is_new, r.created_at);
+      const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
 
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
 
@@ -649,7 +650,7 @@ export async function getGirlsForDay(
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.is_new, g.languages, g.rating, g.reviews_count,
+        g.created_at, g.is_new, g.badge_type, g.languages, g.rating, g.reviews_count,
         gs.start_time AS shift_from, gs.end_time AS shift_to, gs.is_active AS gs_active,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location, l.district AS schedule_district,
@@ -690,7 +691,7 @@ export async function getGirlsForDay(
         if (!locSlug.includes(locationFilter.toLowerCase())) return null;
       }
 
-      const isNew = computeIsNew(r.is_new, r.created_at);
+      const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
 
       let status: GirlStatus = 'working';
       if (!isToday) {
@@ -1779,7 +1780,7 @@ export async function getGirlsForListing(
       let tmrwTo: string | null = r.tmrw_to ? String(r.tmrw_to).substring(0, 5) : null;
       if (r.tmrw_ex_type === 'unavailable') { tmrwFrom = null; tmrwTo = null; }
 
-      const isNew = computeIsNew(r.is_new, r.created_at);
+      const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
       return {
         id: Number(r.id),
@@ -1864,7 +1865,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         else if (now < from) status = 'later';
       }
 
-      const isNew = computeIsNew(r.is_new, r.created_at);
+      const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
 
       return {
@@ -1991,15 +1992,15 @@ export interface NewGirl {
 /** Get the first active girl with is_new=1 (or newest within 30 days). No schedule filter. */
 export async function getNewGirl(): Promise<NewGirl | null> {
   const res = await db.execute(
-    `SELECT g.slug, g.name, g.age, g.height, g.weight, g.bust, g.is_new, g.created_at,
+    `SELECT g.slug, g.name, g.age, g.height, g.weight, g.bust, g.is_new, g.badge_type, g.created_at,
             (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo
      FROM girls g
      WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
-     ORDER BY g.is_new DESC, g.created_at DESC
+     ORDER BY g.is_new DESC, g.badge_type = 'new' DESC, g.created_at DESC
      LIMIT 10`
   );
   for (const r of res.rows) {
-    if (computeIsNew(r.is_new, r.created_at)) {
+    if (computeIsNew(r.is_new, r.created_at, r.badge_type)) {
       return {
         slug: String(r.slug),
         name: String(r.name),
@@ -2040,7 +2041,7 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust,
-        g.created_at, g.is_new, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        g.created_at, g.is_new, g.badge_type, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
@@ -2075,7 +2076,7 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
       tomorrowTo: null,
       isVip: false,
       isPaused: false,
-      isNew: computeIsNew(r.is_new, r.created_at),
+      isNew: computeIsNew(r.is_new, r.created_at, r.badge_type),
       languages: parseLangs(r.languages),
       rating: r.rating != null ? Number(r.rating) : 0,
       reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
