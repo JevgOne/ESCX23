@@ -179,7 +179,8 @@ export default async function ProfilPage({ params }: Props) {
   }
 
   const isPaused = String((girl as Record<string, unknown>).status ?? '') === 'inactive';
-  const girlIsNew = (() => {
+  const badgeType = String((girl as Record<string, unknown>).badge_type ?? '');
+  const girlIsNew = badgeType === 'new' || (() => {
     const g = girl as Record<string, unknown>;
     if (Number(g.is_new) !== 1) return false;
     if (!g.created_at) return true;
