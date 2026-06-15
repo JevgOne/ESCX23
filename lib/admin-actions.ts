@@ -112,7 +112,7 @@ export async function updateGirl(formData: FormData) {
   revalidatePath('/admin/divky');
   revalidatePath(`/cs/admin/divky`);
   revalidatePath(`/cs/divky`);
-  await adminRedirect(`/admin/divky/${id}`);
+  await adminRedirect(`/admin/divky`);
 }
 
 export async function createGirl(formData: FormData) {
@@ -418,15 +418,35 @@ export async function updateApplicationNotes(formData: FormData) {
   await adminRedirect(`/admin/aplikace/${id}`);
 }
 
-export async function deleteGirl(formData: FormData) {
+export async function archiveGirl(formData: FormData) {
   await requireAdmin();
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
-  await deleteGirlById(id);
+  await db.execute({
+    sql: `UPDATE girls SET status = 'archived', updated_at = datetime('now') WHERE id = ?`,
+    args: [id],
+  });
 
   revalidatePath('/admin/divky');
   revalidatePath('/cs/admin/divky');
+  revalidatePath('/cs/divky');
+  await adminRedirect('/admin/divky');
+}
+
+export async function restoreGirl(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({
+    sql: `UPDATE girls SET status = 'inactive', updated_at = datetime('now') WHERE id = ?`,
+    args: [id],
+  });
+
+  revalidatePath('/admin/divky');
+  revalidatePath('/cs/admin/divky');
+  revalidatePath('/cs/divky');
   await adminRedirect('/admin/divky');
 }
 

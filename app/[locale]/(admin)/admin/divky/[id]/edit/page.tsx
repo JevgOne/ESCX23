@@ -2,7 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { getGirlById, getGirlServices, getAllServices } from '@/lib/queries';
 import AdminTopbar from '@/components/admin/AdminTopbar';
-import { updateGirl, deleteGirl } from '@/lib/admin-actions';
+import { updateGirl, archiveGirl } from '@/lib/admin-actions';
 import { getBasicServices, getExtraServices } from '@/lib/services';
 
 export const dynamic = 'force-dynamic';
@@ -14,6 +14,7 @@ const STATUS_OPTIONS = [
   { value: 'active', label: 'Aktivní' },
   { value: 'pending', label: 'Čeká na schválení' },
   { value: 'inactive', label: 'Dočasně nedostupná' },
+  { value: 'archived', label: 'Archivovaná' },
 ];
 const BADGE_OPTIONS = [
   { value: '', label: '— žádný —' },
@@ -907,10 +908,13 @@ export default async function AdminGirlEditPage({
       </form>
 
       <div className="gf2-danger-zone">
-        <div className="gf2-danger-title">Nebezpečná zóna</div>
-        <form action={deleteGirl}>
+        <div className="gf2-danger-title">Archivace</div>
+        <p style={{ fontSize: '12px', color: 'var(--color-text-dim)', marginBottom: '12px' }}>
+          Archivovaná dívka nebude viditelná na webu, ale její data zůstanou zachována.
+        </p>
+        <form action={archiveGirl}>
           <input type="hidden" name="id" value={g.id} />
-          <button type="submit" className="gf2-danger-btn">Smazat tuto dívku</button>
+          <button type="submit" className="gf2-danger-btn">Archivovat dívku</button>
         </form>
       </div>
     </>

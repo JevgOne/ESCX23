@@ -11,12 +11,12 @@ import { pragueDateISO, pragueDayOfWeek, formatPragueTime } from './utils';
 
 export type GirlStatus = 'working' | 'later' | 'off';
 
-/** is_new=1 → always new. is_new=0/NULL → fallback to 30 days from created_at. */
+/** is_new=1 → new for 14 days from created_at (auto-expires). is_new=0/NULL → not new. */
 function computeIsNew(dbIsNew: unknown, createdAt: unknown): boolean {
-  if (Number(dbIsNew) === 1) return true;
-  if (!createdAt) return false;
+  if (Number(dbIsNew) !== 1) return false;
+  if (!createdAt) return true;
   const d = new Date(String(createdAt));
-  return Date.now() - d.getTime() < 30 * 24 * 60 * 60 * 1000;
+  return Date.now() - d.getTime() < 14 * 24 * 60 * 60 * 1000;
 }
 
 function parseLangs(raw: unknown): string[] {
@@ -44,6 +44,8 @@ export interface GirlCard {
   status: GirlStatus;
   shiftFrom: string | null;
   shiftTo: string | null;
+  tomorrowFrom: string | null;
+  tomorrowTo: string | null;
   isVip: boolean;
   isPaused: boolean;
   isNew: boolean;
@@ -132,6 +134,8 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
         status: isPaused ? 'off' : status,
         shiftFrom: from,
         shiftTo: to,
+        tomorrowFrom: null,
+        tomorrowTo: null,
         isVip: false,
         isPaused,
         isNew,
@@ -151,11 +155,16 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
     });
 }
 
-/** Vše live dívky (homepage / /divky listing / /rozvrh) s dnešním rozvrhem a stavem. */
+/** Vše live dívky (homepage / /divky listing / /rozvrh) s dnešním + zítřejším rozvrhem a stavem. */
 export async function getGirlsWithToday(): Promise<GirlCard[]> {
   const dayOfWeek = pragueDayOfWeek();
   const today = pragueDateISO();
   const now = formatPragueTime();
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowDow = pragueDayOfWeek(tomorrow);
+  const tomorrowDate = pragueDateISO(tomorrow);
 
   const result = await db.execute({
     sql: `
@@ -166,6 +175,8 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
         l2.display_name AS fallback_location,
+        gs2.start_time AS tmrw_from, gs2.end_time AS tmrw_to,
+        se2.exception_type AS tmrw_ex_type,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
@@ -176,10 +187,13 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN locations l2 ON l2.district = g.location AND l2.is_active = 1
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
+      LEFT JOIN girl_schedules gs2 ON gs2.girl_id = g.id
+        AND gs2.day_of_week = ? AND gs2.is_active = 1
+      LEFT JOIN schedule_exceptions se2 ON se2.girl_id = g.id AND se2.date = ?
       WHERE g.status IN ('active', 'inactive') AND (g.vip = 0 OR g.vip IS NULL)
       ORDER BY g.name
     `,
-    args: [dayOfWeek, today],
+    args: [dayOfWeek, today, tomorrowDow, tomorrowDate],
   });
 
   return result.rows
@@ -190,8 +204,10 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       let to: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
       let status: GirlStatus = 'off';
 
+      // Today exceptions
       if (r.exception_type === 'unavailable') {
-        if (!isPaused) return null;
+        from = null;
+        to = null;
       }
       if (r.exception_type === 'custom_hours') {
         from = r.ex_from ? String(r.ex_from).substring(0, 5) : from;
@@ -204,7 +220,16 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         else status = 'off';
       }
 
-      if (status === 'off' && !isPaused) return null;
+      // Tomorrow shift
+      let tmrwFrom: string | null = r.tmrw_from ? String(r.tmrw_from).substring(0, 5) : null;
+      let tmrwTo: string | null = r.tmrw_to ? String(r.tmrw_to).substring(0, 5) : null;
+      if (r.tmrw_ex_type === 'unavailable') {
+        tmrwFrom = null;
+        tmrwTo = null;
+      }
+
+      // Skip girls that have no today shift AND no tomorrow shift (unless paused)
+      if (status === 'off' && !isPaused && !tmrwFrom) return null;
 
       const isNew = computeIsNew(r.is_new, r.created_at);
 
@@ -227,6 +252,8 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         status: isPaused ? 'off' : status,
         shiftFrom: from,
         shiftTo: to,
+        tomorrowFrom: tmrwFrom,
+        tomorrowTo: tmrwTo,
         isVip: false,
         isPaused,
         isNew,
@@ -238,9 +265,15 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
     })
     .filter((g): g is GirlCard => g !== null)
     .sort((a, b) => {
-      const rank = { working: 0, later: 1, off: 2 } as const;
-      const ra = rank[a.status] ?? 2;
-      const rb = rank[b.status] ?? 2;
+      // Priority: working > later > tomorrow > off
+      const rank = (g: GirlCard) => {
+        if (g.status === 'working') return 0;
+        if (g.status === 'later') return 1;
+        if (g.tomorrowFrom) return 2;
+        return 3;
+      };
+      const ra = rank(a);
+      const rb = rank(b);
       if (ra !== rb) return ra - rb;
       return a.name.localeCompare(b.name);
     });
@@ -689,6 +722,8 @@ export async function getGirlsForDay(
         status,
         shiftFrom: from,
         shiftTo: to,
+        tomorrowFrom: null,
+        tomorrowTo: null,
         isVip: false,
         isPaused: false,
         isNew,
@@ -1753,6 +1788,8 @@ export async function getGirlsForListing(
         status: isPaused ? 'off' : status,
         shiftFrom: from,
         shiftTo: to,
+        tomorrowFrom: null,
+        tomorrowTo: null,
         isVip: false,
         isPaused,
         isNew,
@@ -1840,6 +1877,8 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         status,
         shiftFrom: from,
         shiftTo: to,
+        tomorrowFrom: null,
+        tomorrowTo: null,
         isVip: false,
         isPaused: false,
         isNew,
@@ -2028,6 +2067,8 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
       status: 'off',
       shiftFrom: null,
       shiftTo: null,
+      tomorrowFrom: null,
+      tomorrowTo: null,
       isVip: false,
       isPaused: false,
       isNew: computeIsNew(r.is_new, r.created_at),

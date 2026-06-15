@@ -10,6 +10,7 @@ const FLAG_MAP: Record<string, string> = {
 
 const CITY: Record<string, string> = { en: 'Prague', de: 'Prag', uk: 'Прага', cs: 'Praha' };
 const LATER_LABEL: Record<string, string> = { cs: 'Později', en: 'Later', de: 'Später', uk: 'Пізніше' };
+const TMRW_LABEL: Record<string, string> = { cs: 'Zítra', en: 'Tmrw', de: 'Morgen', uk: 'Завтра' };
 const STAT_LABELS: Record<string, { height: string; breasts: string; weight: string; age: string }> = {
   cs: { height: 'Výška', breasts: 'Prsa', weight: 'Váha', age: 'Věk' },
   en: { height: 'Height', breasts: 'Breasts', weight: 'Weight', age: 'Age' },
@@ -87,6 +88,12 @@ export default async function GirlCard({ girl }: GirlCardProps) {
             {laterLabel} {girl.shiftFrom}
           </span>
         )}
+        {girl.status === 'off' && !girl.isPaused && girl.tomorrowFrom && girl.tomorrowTo && (
+          <span className="girl-photo-time girl-photo-time-tomorrow">
+            <span className="girl-photo-dot" />
+            {(TMRW_LABEL[locale] ?? TMRW_LABEL.en)} {girl.tomorrowFrom}–{girl.tomorrowTo}
+          </span>
+        )}
       </div>
 
       <div className="girl-info">
@@ -100,7 +107,9 @@ export default async function GirlCard({ girl }: GirlCardProps) {
                     ? ' girl-online-dot-working'
                     : girl.status === 'later'
                       ? ' girl-online-dot-later'
-                      : ' girl-online-dot-off'
+                      : girl.tomorrowFrom
+                        ? ' girl-online-dot-tomorrow'
+                        : ' girl-online-dot-off'
               }`}
             />
             <span className="girl-name">{girl.name}</span>
