@@ -65,23 +65,34 @@ const LABELS: Record<string, {
 
 export default async function SimilarGirls({ currentSlug, locale }: Props) {
   const allGirls = await getGirlsWithToday();
-  const todayOthers = allGirls
-    .filter((g) => g.slug !== currentSlug && (g.status === 'working' || g.status === 'later'))
+  // Include working, later, AND tomorrow girls — same priority as /divky
+  const others = allGirls
+    .filter((g) => g.slug !== currentSlug && (g.status === 'working' || g.status === 'later' || g.tomorrowFrom))
     .sort((a, b) => {
-      if (a.status === 'working' && b.status !== 'working') return -1;
-      if (a.status !== 'working' && b.status === 'working') return 1;
-      return 0;
+      const rank = (g: typeof a) => {
+        if (g.status === 'working') return 0;
+        if (g.status === 'later') return 1;
+        if (g.tomorrowFrom) return 2;
+        return 3;
+      };
+      const ra = rank(a);
+      const rb = rank(b);
+      if (ra !== rb) return ra - rb;
+      const timeA = a.shiftFrom ?? a.tomorrowFrom ?? 'ZZ';
+      const timeB = b.shiftFrom ?? b.tomorrowFrom ?? 'ZZ';
+      if (timeA !== timeB) return timeA.localeCompare(timeB);
+      return a.name.localeCompare(b.name);
     })
     .slice(0, 4);
 
   const L = LABELS[locale] ?? LABELS.en;
 
-  // If we have girls online/later today, show them with online labels
-  if (todayOthers.length > 0) {
-    const hasWorking = todayOthers.some((g) => g.status === 'working');
-    const eyebrow = hasWorking ? L.eyebrow_working : L.eyebrow_later;
-    const heading = hasWorking ? L.heading_working : L.heading_later;
-    const subtitle = hasWorking ? L.sub_working : L.sub_later;
+  if (others.length > 0) {
+    const hasWorking = others.some((g) => g.status === 'working');
+    const hasLater = others.some((g) => g.status === 'later');
+    const eyebrow = hasWorking ? L.eyebrow_working : hasLater ? L.eyebrow_later : L.eyebrow_other;
+    const heading = hasWorking ? L.heading_working : hasLater ? L.heading_later : L.heading_other;
+    const subtitle = hasWorking ? L.sub_working : hasLater ? L.sub_later : L.sub_other;
 
     return (
       <section className={`similar-girls section${hasWorking ? '' : ' similar-girls-later'}`}>
@@ -95,7 +106,7 @@ export default async function SimilarGirls({ currentSlug, locale }: Props) {
             <p className="similar-girls-sub">{subtitle}</p>
           </div>
           <div className="girls-grid">
-            {todayOthers.map((g) => (
+            {others.map((g) => (
               <GirlCard key={g.id} girl={g} />
             ))}
           </div>
@@ -104,7 +115,7 @@ export default async function SimilarGirls({ currentSlug, locale }: Props) {
     );
   }
 
-  // Fallback: show active girls even when nobody is scheduled today
+  // Fallback: nobody scheduled today or tomorrow
   const fallback = await getActiveGirlCards(currentSlug, 4);
   if (fallback.length === 0) return null;
 

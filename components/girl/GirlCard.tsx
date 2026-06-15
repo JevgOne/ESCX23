@@ -37,7 +37,6 @@ export default async function GirlCard({ girl }: GirlCardProps) {
   const altNoun = ALT_NOUN[locale] ?? ALT_NOUN.en;
   const altText = `${girl.name}, ${girl.age}, ${city} ${altNoun}`;
   const isAway = girl.status === 'later';
-  const address = girl.location ?? 'Praha';
 
   return (
     <Link
@@ -116,13 +115,15 @@ export default async function GirlCard({ girl }: GirlCardProps) {
           </div>
         </div>
 
-        <div className="girl-loc-row">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          <span>{address}</span>
-        </div>
+        {girl.location && (
+          <div className="girl-loc-row">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span>{girl.location}</span>
+          </div>
+        )}
 
         <div className="girl-statline">
           <div className="girl-stat-cell">
