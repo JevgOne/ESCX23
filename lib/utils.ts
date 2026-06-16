@@ -48,6 +48,26 @@ export function prettyDistrict(location: string | null | undefined): string | nu
   return location;
 }
 
+const CITY_MAP: Record<string, Record<string, string>> = {
+  cs: { Praha: 'Praha' },
+  en: { Praha: 'Prague' },
+  de: { Praha: 'Prag' },
+  uk: { Praha: 'Прага' },
+};
+
+/** Translate location string — replaces "Praha" anywhere (e.g. "Žižkov, Praha 3" → "Žižkov, Prague 3"). */
+export function translateLocation(location: string | null, locale: string): string | null {
+  if (!location) return null;
+  const map = CITY_MAP[locale] ?? CITY_MAP.en;
+  let result = location;
+  for (const [cz, localized] of Object.entries(map)) {
+    if (result.includes(cz)) {
+      result = result.replaceAll(cz, localized);
+    }
+  }
+  return result;
+}
+
 export function formatOpeningDate(dateStr: string, locale: string): string {
   const d = new Date(dateStr + 'T00:00:00');
   const day = d.getDate();
