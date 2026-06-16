@@ -174,6 +174,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         l.display_name AS schedule_location,
         gs2.start_time AS tmrw_from, gs2.end_time AS tmrw_to,
         se2.exception_type AS tmrw_ex_type,
+        l2.display_name AS tmrw_location,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
@@ -185,6 +186,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       LEFT JOIN girl_schedules gs2 ON gs2.girl_id = g.id
         AND gs2.day_of_week = ? AND gs2.is_active = 1
+      LEFT JOIN locations l2 ON l2.id = gs2.location_id
       LEFT JOIN schedule_exceptions se2 ON se2.girl_id = g.id AND se2.date = ?
       WHERE g.status IN ('active', 'inactive') AND (g.vip = 0 OR g.vip IS NULL)
       ORDER BY g.name
@@ -230,6 +232,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
 
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+      const tmrwLoc = r.tmrw_location ? String(r.tmrw_location) : null;
 
       return {
         id: Number(r.id),
@@ -239,7 +242,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         height: r.height != null ? Number(r.height) : null,
         weight: r.weight != null ? Number(r.weight) : null,
         bust: r.bust != null ? Number(r.bust) : null,
-        location: scheduleLoc,
+        location: scheduleLoc ?? tmrwLoc,
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
         secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
