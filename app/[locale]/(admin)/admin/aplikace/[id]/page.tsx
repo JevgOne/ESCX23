@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import { getApplicationById, type ApplicationRow } from '@/lib/queries';
 import { rejectApplication, reopenApplication, updateApplicationNotes, createGirlFromApplication } from '@/lib/admin-actions';
-import { getExtraServices } from '@/lib/services';
+import { getBasicServices, getExtraServices } from '@/lib/services';
 import { relativeTime } from '@/lib/utils';
 import { requireFullAdmin } from '@/lib/auth';
 
@@ -20,6 +20,60 @@ interface Props {
   params: Promise<{ locale: string; id: string }>;
 }
 
+/** Parse services field — handles JSON arrays like ["classic","kissing"] and CSV like "classic,kissing" */
+function parseServiceIds(raw: string | null): string[] {
+  if (!raw) return [];
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('[')) {
+    try {
+      const arr = JSON.parse(trimmed) as string[];
+      if (Array.isArray(arr)) return arr.map(String).filter(Boolean);
+    } catch { /* fallback to CSV */ }
+  }
+  return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+/** Parse languages field — handles JSON arrays like ["Čeština","English"] and plain text like "cs, en" */
+function formatLanguages(raw: string | null): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('[')) {
+    try {
+      const arr = JSON.parse(trimmed) as string[];
+      if (Array.isArray(arr)) return arr.join(', ');
+    } catch { /* fallback to raw */ }
+  }
+  return trimmed;
+}
+
+/** Parse style_wardrobe JSON */
+function parseStyleWardrobe(raw: string | null): { style: string[]; wardrobe: string[] } | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as { style?: string[]; wardrobe?: string[] };
+    const style = Array.isArray(parsed.style) ? parsed.style : [];
+    const wardrobe = Array.isArray(parsed.wardrobe) ? parsed.wardrobe : [];
+    if (style.length === 0 && wardrobe.length === 0) return null;
+    return { style, wardrobe };
+  } catch {
+    return null;
+  }
+}
+
+const STYLE_LABELS: Record<string, string> = {
+  elegant: 'Elegantní', casual: 'Casual / ležérní', sporty: 'Sportovní',
+  glamour: 'Glamour', minimalist: 'Minimalistický', romantic: 'Romantický / ženský',
+  streetwear: 'Streetwear / moderní', business: 'Business / formální', bohemian: 'Bohémský / artsy',
+};
+
+const WARDROBE_LABELS: Record<string, string> = {
+  lingerie: 'Sexy lingerie', stockings: 'Punčochy & podvazky', high_heels: 'Vysoké podpatky',
+  boots: 'Kozačky / overknee', latex: 'Latex / vinyl', leather: 'Kůže / kožené doplňky',
+  corset: 'Korzet', bodystocking: 'Bodystocking / catsuit', costume: 'Kostým / role-play',
+  nurse: 'Zdravotní sestřička', schoolgirl: 'Školačka', maid: 'Pokojská',
+  secretary: 'Sekretářka', swimwear: 'Plavky / bikiny',
+};
+
 export default async function AdminAplikaceDetailPage({ params }: Props) {
   const { locale, id } = await params;
   setRequestLocale(locale);
@@ -32,10 +86,11 @@ export default async function AdminAplikaceDetailPage({ params }: Props) {
   if (!app) notFound();
 
   const status = STATUS_LABEL[app.status] ?? STATUS_LABEL.pending;
-  const slugs = app.services ? app.services.split(',').map((s) => s.trim()).filter(Boolean) : [];
-  const extraServices = getExtraServices();
-  const selectedServices = slugs
-    .map((slug) => extraServices.find((s) => s.id === slug))
+  // Parse services — handle both JSON array and CSV formats
+  const parsedServiceIds = parseServiceIds(app.services);
+  const allServices = [...getBasicServices(), ...getExtraServices()];
+  const selectedServices = parsedServiceIds
+    .map((id) => allServices.find((s) => s.id === id))
     .filter((s): s is NonNullable<typeof s> => Boolean(s));
 
   return (
@@ -214,7 +269,11 @@ export default async function AdminAplikaceDetailPage({ params }: Props) {
 
         <FieldsCard app={app} />
         <BioCard app={app} />
-        <ServicesCard slugs={selectedServices.map((s) => ({ id: s.id, name: s.translations[locale as 'cs'|'en'|'de'|'uk'] ?? s.translations.cs }))} />
+        <ServicesCard
+          services={selectedServices.map((s) => ({ id: s.id, name: s.translations.cs, category: s.category }))}
+          rawIds={parsedServiceIds}
+        />
+        <StyleWardrobeCard raw={app.style_wardrobe} />
         <AvailabilityCard app={app} />
         <NotesCard app={app} />
         <ActionsCard app={app} />
@@ -252,12 +311,13 @@ function FieldsCard({ app }: { app: ApplicationRow }) {
         {field('Typ prsou', bustNaturalLabel)}
         {field('Vlasy', app.hair)}
         {field('Oči', app.eyes)}
-        {field('Tetování', app.tattoo === 1 ? `Ano${app.tattoo_description ? ` — ${app.tattoo_description}` : ''}` : 'Ne')}
+        {field('Tetování', app.tattoo_percentage > 0 ? `${app.tattoo_percentage}% pokrytí` : 'Žádné')}
         {field('Piercing', app.piercing === 1 ? 'Ano' : 'Ne')}
+        {app.nationality && field('Národnost', app.nationality)}
         {field('Telefon', app.phone)}
         {field('Email', app.email)}
         {field('Telegram', app.telegram)}
-        {field('Jazyky', app.languages)}
+        {field('Jazyky', formatLanguages(app.languages))}
         {field('Zkušenosti', app.experience)}
       </div>
     </div>
@@ -285,26 +345,79 @@ function BioCard({ app }: { app: ApplicationRow }) {
   );
 }
 
-function ServicesCard({ slugs }: { slugs: Array<{ id: string; name: string }> }) {
-  if (slugs.length === 0) return null;
+function ServicesCard({ services, rawIds }: { services: Array<{ id: string; name: string; category: string }>; rawIds: string[] }) {
+  const knownIds = new Set(services.map(s => s.id));
+  const unknownIds = rawIds.filter(id => !knownIds.has(id));
+  const basics = services.filter(s => s.category === 'basic');
+  const extras = services.filter(s => s.category === 'extra');
+
+  if (services.length === 0 && unknownIds.length === 0) return null;
   return (
     <div className="apd-card">
-      <h3>Extra služby ({slugs.length})</h3>
-      <div className="apd-services">
-        {slugs.map((s) => (
-          <span key={s.id} className="apd-service-chip">{s.name}</span>
-        ))}
-      </div>
+      <h3>Služby ({services.length + unknownIds.length})</h3>
+      {basics.length > 0 && (
+        <div style={{ marginBottom: extras.length > 0 ? 14 : 0 }}>
+          <span className="apd-label">Základní</span>
+          <div className="apd-services" style={{ marginTop: 6 }}>
+            {basics.map((s) => (
+              <span key={s.id} className="apd-service-chip" style={{ background: 'rgba(34,197,94,0.12)', borderColor: 'rgba(34,197,94,0.35)' }}>{s.name}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      {(extras.length > 0 || unknownIds.length > 0) && (
+        <div>
+          <span className="apd-label">Extra</span>
+          <div className="apd-services" style={{ marginTop: 6 }}>
+            {extras.map((s) => (
+              <span key={s.id} className="apd-service-chip">{s.name}</span>
+            ))}
+            {unknownIds.map((id) => (
+              <span key={id} className="apd-service-chip" style={{ opacity: 0.6 }}>{id}</span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function AvailabilityCard({ app }: { app: ApplicationRow }) {
-  if (!app.availability) return null;
+  if (!app.availability || app.availability.trim() === '[]' || app.availability.trim() === '') return null;
   return (
     <div className="apd-card">
       <h3>Dostupnost</h3>
       <p className="apd-value apd-bio">{app.availability}</p>
+    </div>
+  );
+}
+
+function StyleWardrobeCard({ raw }: { raw: string | null }) {
+  const data = parseStyleWardrobe(raw);
+  if (!data) return null;
+  return (
+    <div className="apd-card">
+      <h3>Styl & Šatník</h3>
+      {data.style.length > 0 && (
+        <div style={{ marginBottom: data.wardrobe.length > 0 ? 16 : 0 }}>
+          <span className="apd-label">Styl oblékání</span>
+          <div className="apd-services" style={{ marginTop: 8 }}>
+            {data.style.map((s) => (
+              <span key={s} className="apd-service-chip">{STYLE_LABELS[s] ?? s}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      {data.wardrobe.length > 0 && (
+        <div>
+          <span className="apd-label">Sexy outfity</span>
+          <div className="apd-services" style={{ marginTop: 8 }}>
+            {data.wardrobe.map((w) => (
+              <span key={w} className="apd-service-chip">{WARDROBE_LABELS[w] ?? w}</span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -28,11 +28,11 @@ export async function submitApplication(formData: FormData) {
   const telegram = formData.get('telegram') ? String(formData.get('telegram')) : null;
   const hair = formData.get('hair') ? String(formData.get('hair')) : null;
   const eyes = formData.get('eyes') ? String(formData.get('eyes')) : null;
-  const tattoo = formData.get('tattoo') === '1' ? 1 : 0;
-  const tattooDescription = formData.get('tattoo_description')
-    ? String(formData.get('tattoo_description'))
-    : null;
+  const tattooPercentage = Number(formData.get('tattoo_percentage') ?? 0);
+  const tattoo = tattooPercentage > 0 ? 1 : 0;
+  const tattooDescription = null; // replaced by tattoo_percentage
   const piercing = formData.get('piercing') === '1' ? 1 : 0;
+  const nationality = formData.get('nationality') ? String(formData.get('nationality')).trim() || null : null;
   const languages = formData.get('languages') ? String(formData.get('languages')) : null;
   // services: multiple checkboxes → CSV of extra service IDs. Basics are auto-included on conversion to girl.
   const extraServices = formData.getAll('services').map(String).filter(Boolean);
@@ -54,13 +54,13 @@ export async function submitApplication(formData: FormData) {
   await db.execute({
     sql: `INSERT INTO girl_applications
       (name, age, height, weight, bust, bust_natural, waist, hips, email, phone, telegram,
-       hair, eyes, tattoo, tattoo_description, piercing,
+       hair, eyes, tattoo, tattoo_description, tattoo_percentage, piercing, nationality,
        languages, services, availability, bio_cs, bio_en, experience, style_wardrobe, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
     args: [
       name, age, height, weight, bust, bustNatural, waist, hips,
       email, phone, telegram,
-      hair, eyes, tattoo, tattooDescription, piercing,
+      hair, eyes, tattoo, tattooDescription, tattooPercentage, piercing, nationality,
       languages, services, availability, bio_cs, bio_en, experience, styleWardrobe,
     ],
   });

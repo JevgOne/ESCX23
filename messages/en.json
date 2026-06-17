@@ -392,6 +392,7 @@
       "tattoo": "Tattoo",
       "tattoo_desc": "Tattoo description",
       "piercing": "Piercing",
+      "nationality": "Nationality",
       "phone": "Phone",
       "email": "E-mail",
       "telegram": "Telegram",
@@ -408,7 +409,7 @@
     "submit": "Send application",
     "success": {
       "title": "Application sent",
-      "body": "Thank you! Our team will contact you within 24 hours."
+      "body": "Thank you! Your profile will be indexed within 24 hours."
     }
   }
 }

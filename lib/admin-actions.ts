@@ -147,7 +147,7 @@ export async function createGirl(formData: FormData) {
   const result = await db.execute({
     sql: `INSERT INTO girls (
       name, slug, age, email, phone, status,
-      nationality, location,
+      nationality, location, languages,
       height, weight, bust, bust_natural, hair, eyes,
       tattoo_percentage, tattoo_description,
       piercing, piercing_description,
@@ -163,7 +163,7 @@ export async function createGirl(formData: FormData) {
       created_at, updated_at
     ) VALUES (
       ?, ?, ?, ?, ?, ?,
-      ?, ?,
+      ?, ?, ?,
       ?, ?, ?, ?, ?, ?,
       ?, ?,
       ?, ?,
@@ -181,7 +181,7 @@ export async function createGirl(formData: FormData) {
     args: [
       name, rawSlug, age, email, phone,
       String(formData.get('status') ?? 'pending'),
-      getStr('nationality'), getStr('location'),
+      getStr('nationality'), getStr('location'), getStr('languages'),
       getNum('height'), getNum('weight'),
       getStr('bust'),
       formData.get('bust_natural') !== null ? Number(formData.get('bust_natural')) : 1,
@@ -227,9 +227,14 @@ export async function createGirl(formData: FormData) {
       sql: `SELECT services FROM girl_applications WHERE id=?`,
       args: [fromApplication],
     });
-    const rawServices = appRes.rows[0]?.services;
+    const rawServices = appRes.rows[0]?.services ? String(appRes.rows[0].services).trim() : '';
     if (rawServices) {
-      const slugs = String(rawServices).split(',').map((s) => s.trim()).filter(Boolean);
+      let slugs: string[];
+      if (rawServices.startsWith('[')) {
+        try { slugs = JSON.parse(rawServices) as string[]; } catch { slugs = rawServices.split(',').map((s) => s.trim()).filter(Boolean); }
+      } else {
+        slugs = rawServices.split(',').map((s) => s.trim()).filter(Boolean);
+      }
       if (slugs.length > 0) {
         const slugPlaceholders = slugs.map(() => '?').join(',');
         const svcRes = await db.execute({
@@ -294,9 +299,12 @@ export async function createGirlFromApplication(formData: FormData) {
   const bustNatural = app.bust_natural != null ? Number(app.bust_natural) : 1;
   const hair = app.hair != null ? String(app.hair) : null;
   const eyes = app.eyes != null ? String(app.eyes) : null;
-  const tattoo = Number(app.tattoo ?? 0);
+  const tattooPercentage = Number(app.tattoo_percentage ?? (Number(app.tattoo ?? 0) > 0 ? 10 : 0));
   const tattooDesc = app.tattoo_description != null ? String(app.tattoo_description) : null;
   const piercing = Number(app.piercing ?? 0);
+  const piercingDesc = app.piercing_description != null ? String(app.piercing_description) : null;
+  const nationality = app.nationality != null ? String(app.nationality).trim() || null : null;
+  const languages = app.languages != null ? String(app.languages).trim() || null : null;
   const bioCs = app.bio_cs != null ? String(app.bio_cs) : null;
   const bioEn = app.bio_en != null ? String(app.bio_en) : null;
 
@@ -305,31 +313,39 @@ export async function createGirlFromApplication(formData: FormData) {
       name, slug, age, email, phone, status,
       height, weight, bust, bust_natural, hair, eyes,
       tattoo_percentage, tattoo_description,
-      piercing,
+      piercing, piercing_description,
+      nationality, languages,
       description_cs, description_en,
       created_at, updated_at
     ) VALUES (
       ?, ?, ?, ?, ?, 'pending',
       ?, ?, ?, ?, ?, ?,
       ?, ?,
-      ?,
+      ?, ?,
+      ?, ?,
       ?, ?,
       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
     )`,
     args: [
       name, slug, age, email, phone,
       height, weight, bust, bustNatural, hair, eyes,
-      tattoo > 0 ? 10 : 0, tattooDesc,
-      piercing,
+      tattooPercentage, tattooDesc,
+      piercing, piercingDesc,
+      nationality, languages,
       bioCs, bioEn,
     ],
   });
   const newId = Number(insertRes.lastInsertRowid);
 
-  // Import extras (services CSV → girl_services)
-  const rawServices = app.services != null ? String(app.services) : '';
+  // Import extras (services JSON array or CSV → girl_services)
+  const rawServices = app.services != null ? String(app.services).trim() : '';
   if (rawServices) {
-    const slugs = rawServices.split(',').map((s) => s.trim()).filter(Boolean);
+    let slugs: string[];
+    if (rawServices.startsWith('[')) {
+      try { slugs = JSON.parse(rawServices) as string[]; } catch { slugs = rawServices.split(',').map((s) => s.trim()).filter(Boolean); }
+    } else {
+      slugs = rawServices.split(',').map((s) => s.trim()).filter(Boolean);
+    }
     if (slugs.length > 0) {
       const placeholders = slugs.map(() => '?').join(',');
       const svcRes = await db.execute({

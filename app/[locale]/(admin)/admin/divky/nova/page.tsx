@@ -127,9 +127,11 @@ export default async function AdminNovaDivkaPage({
     hips: app?.hips != null ? String(app.hips) : '',
     hair: app?.hair ?? '',
     eyes: app?.eyes ?? '',
-    tattoo_percentage: app?.tattoo === 1 ? '10' : '0',
+    tattoo_percentage: String(app?.tattoo_percentage ?? (app?.tattoo === 1 ? 10 : 0)),
     tattoo_description: app?.tattoo_description ?? '',
     piercing: app?.piercing === 1 ? '1' : '0',
+    nationality: app?.nationality ?? '',
+    languages: app?.languages ?? '',
     description_cs: app?.bio_cs ?? '',
     description_en: app?.bio_en ?? '',
   };
@@ -229,6 +231,17 @@ export default async function AdminNovaDivkaPage({
                 <option value="0">Ne</option>
                 <option value="1">Ano</option>
               </select>
+            </div>
+          </div>
+          <div className="gf2-new-row">
+            <div className="gf2-new-field">
+              <label htmlFor="nationality">Národnost</label>
+              <input id="nationality" name="nationality" type="text" placeholder="Česká" defaultValue={defaults.nationality} />
+            </div>
+            <div className="gf2-new-field">
+              <label htmlFor="languages">Jazyky</label>
+              <input id="languages" name="languages" type="text" placeholder="cs, en, ru" defaultValue={defaults.languages} />
+              <div className="gf2-new-hint">Kódy oddělené čárkou: cs, en, de, ru, uk…</div>
             </div>
           </div>
           <div className="gf2-new-row">

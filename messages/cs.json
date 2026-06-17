@@ -392,6 +392,7 @@
       "tattoo": "Tetování",
       "tattoo_desc": "Popis tetování",
       "piercing": "Piercing",
+      "nationality": "Národnost",
       "phone": "Telefon",
       "email": "E-mail",
       "telegram": "Telegram",
@@ -408,7 +409,7 @@
     "submit": "Odeslat přihlášku",
     "success": {
       "title": "Přihláška odeslána",
-      "body": "Děkujeme. Náš tým vás kontaktuje do 24 hodin."
+      "body": "Děkujeme! Váš profil bude zaindexován do 24 hodin."
     }
   }
 }

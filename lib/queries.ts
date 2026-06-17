@@ -2118,13 +2118,16 @@ export interface ApplicationRow {
   eyes: string | null;
   tattoo: number | null;
   tattoo_description: string | null;
+  tattoo_percentage: number;
   piercing: number | null;
+  nationality: string | null;
   status: string;
   rejection_reason: string | null;
   notes: string | null;
   created_at: string | null;
   reviewed_at: string | null;
   converted_to_girl_id: number | null;
+  style_wardrobe: string | null;
 }
 
 function mapApplicationRow(r: Record<string, unknown>): ApplicationRow {
@@ -2151,13 +2154,16 @@ function mapApplicationRow(r: Record<string, unknown>): ApplicationRow {
     eyes: r.eyes != null ? String(r.eyes) : null,
     tattoo: r.tattoo != null ? Number(r.tattoo) : null,
     tattoo_description: r.tattoo_description != null ? String(r.tattoo_description) : null,
+    tattoo_percentage: Number(r.tattoo_percentage ?? 0),
     piercing: r.piercing != null ? Number(r.piercing) : null,
+    nationality: r.nationality != null ? String(r.nationality) : null,
     status: String(r.status ?? 'pending'),
     rejection_reason: r.rejection_reason != null ? String(r.rejection_reason) : null,
     notes: r.notes != null ? String(r.notes) : null,
     created_at: r.created_at != null ? String(r.created_at) : null,
     reviewed_at: r.reviewed_at != null ? String(r.reviewed_at) : null,
     converted_to_girl_id: r.converted_to_girl_id != null ? Number(r.converted_to_girl_id) : null,
+    style_wardrobe: r.style_wardrobe != null ? String(r.style_wardrobe) : null,
   };
 }
 

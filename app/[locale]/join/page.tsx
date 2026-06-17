@@ -120,8 +120,43 @@ export default async function JoinPage({ params, searchParams }: Props) {
   if (isSent) {
     return (
       <main>
-        <div className="container" style={{ textAlign: 'center', padding: '80px 24px' }}>
-          <div style={{ fontSize: '64px', marginBottom: '24px' }}>✓</div>
+        <style dangerouslySetInnerHTML={{ __html: `
+          .join-success { position: relative; text-align: center; padding: 80px 24px; overflow: hidden; }
+          .join-success-icon { font-size: 72px; margin-bottom: 24px; animation: join-pop 0.5s ease; }
+          @keyframes join-pop { 0% { transform: scale(0); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
+          .join-confetti { position: absolute; top: 0; left: 0; right: 0; height: 100%; pointer-events: none; overflow: hidden; }
+          .join-confetti i {
+            position: absolute; display: block; width: 8px; height: 8px; border-radius: 2px;
+            animation: join-fall linear forwards;
+          }
+          @keyframes join-fall {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(500px) rotate(720deg); opacity: 0; }
+          }
+        `}} />
+        <div className="container join-success">
+          <div className="join-confetti" aria-hidden="true">
+            {Array.from({ length: 30 }).map((_, i) => {
+              const colors = ['#f27d8d', '#22c55e', '#f59e0b', '#3b82f6', '#a855f7', '#ec4899'];
+              const color = colors[i % colors.length];
+              const left = `${5 + (i * 3.1) % 90}%`;
+              const delay = `${(i * 0.12) % 2}s`;
+              const duration = `${1.5 + (i % 5) * 0.3}s`;
+              const size = `${6 + (i % 4) * 2}px`;
+              return (
+                <i
+                  key={i}
+                  style={{
+                    left, background: color,
+                    width: size, height: size,
+                    animationDelay: delay,
+                    animationDuration: duration,
+                  }}
+                />
+              );
+            })}
+          </div>
+          <div className="join-success-icon">🎉</div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '36px', marginBottom: '16px' }}>
             {t('success.title')}
           </h1>
@@ -186,6 +221,24 @@ export default async function JoinPage({ params, searchParams }: Props) {
             </div>
             <div className="form-row">
               <div className="form-group">
+                <label htmlFor="nationality">{t('field.nationality')}</label>
+                <select id="nationality" name="nationality">
+                  <option value="">{PL.selectPrompt}</option>
+                  <option value="Česká">{locale === 'cs' ? '🇨🇿 Česká' : '🇨🇿 Czech'}</option>
+                  <option value="Slovenská">{locale === 'cs' ? '🇸🇰 Slovenská' : '🇸🇰 Slovak'}</option>
+                  <option value="Ukrajinská">{locale === 'cs' ? '🇺🇦 Ukrajinská' : '🇺🇦 Ukrainian'}</option>
+                  <option value="Ruská">{locale === 'cs' ? '🇷🇺 Ruská' : '🇷🇺 Russian'}</option>
+                  <option value="Polská">{locale === 'cs' ? '🇵🇱 Polská' : '🇵🇱 Polish'}</option>
+                  <option value="Rumunská">{locale === 'cs' ? '🇷🇴 Rumunská' : '🇷🇴 Romanian'}</option>
+                  <option value="Maďarská">{locale === 'cs' ? '🇭🇺 Maďarská' : '🇭🇺 Hungarian'}</option>
+                  <option value="Kolumbijská">{locale === 'cs' ? '🇨🇴 Kolumbijská' : '🇨🇴 Colombian'}</option>
+                  <option value="Brazilská">{locale === 'cs' ? '🇧🇷 Brazilská' : '🇧🇷 Brazilian'}</option>
+                  <option value="Jiná">{locale === 'cs' ? 'Jiná' : 'Other'}</option>
+                </select>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
                 <label htmlFor="height">{t('field.height')}</label>
                 <input id="height" name="height" type="number" min="140" max="200" placeholder="165" />
               </div>
@@ -240,10 +293,14 @@ export default async function JoinPage({ params, searchParams }: Props) {
             </div>
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="tattoo">{t('field.tattoo')}</label>
-                <select id="tattoo" name="tattoo">
-                  <option value="0">{PL.no}</option>
-                  <option value="1">{PL.yes}</option>
+                <label htmlFor="tattoo_percentage">{locale === 'cs' ? 'Tetování (% pokrytí těla)' : 'Tattoo (% body coverage)'}</label>
+                <select id="tattoo_percentage" name="tattoo_percentage">
+                  <option value="0">{locale === 'cs' ? 'Žádné' : 'None'}</option>
+                  <option value="5">{locale === 'cs' ? 'Diskrétní (~5%)' : 'Discreet (~5%)'}</option>
+                  <option value="15">{locale === 'cs' ? 'Malé (10–20%)' : 'Small (10–20%)'}</option>
+                  <option value="30">{locale === 'cs' ? 'Střední (20–40%)' : 'Medium (20–40%)'}</option>
+                  <option value="50">{locale === 'cs' ? 'Výrazné (40–60%)' : 'Significant (40–60%)'}</option>
+                  <option value="80">{locale === 'cs' ? 'Rozsáhlé (60%+)' : 'Extensive (60%+)'}</option>
                 </select>
               </div>
               <div className="form-group">
@@ -253,10 +310,6 @@ export default async function JoinPage({ params, searchParams }: Props) {
                   <option value="1">{PL.yes}</option>
                 </select>
               </div>
-            </div>
-            <div className="form-group">
-              <label htmlFor="tattoo_description">{t('field.tattoo_desc')}</label>
-              <input id="tattoo_description" name="tattoo_description" type="text" placeholder={PL.tattooDescPh} />
             </div>
           </fieldset>
 

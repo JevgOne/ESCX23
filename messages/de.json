@@ -392,6 +392,7 @@
       "tattoo": "Tätowierung",
       "tattoo_desc": "Beschreibung der Tätowierung",
       "piercing": "Piercing",
+      "nationality": "Nationalität",
       "phone": "Telefon",
       "email": "E-Mail",
       "telegram": "Telegram",
@@ -408,7 +409,7 @@
     "submit": "Bewerbung senden",
     "success": {
       "title": "Bewerbung gesendet",
-      "body": "Vielen Dank! Unser Team meldet sich innerhalb von 24 Stunden bei Ihnen."
+      "body": "Vielen Dank! Ihr Profil wird innerhalb von 24 Stunden indexiert."
     }
   }
 }
