@@ -115,7 +115,7 @@ export default async function GirlCard({ girl }: GirlCardProps) {
         {girl.status === 'off' && !girl.isPaused && girl.tomorrowFrom && girl.tomorrowTo && (
           <span className="girl-photo-time girl-photo-time-tomorrow">
             <span className="girl-photo-dot" />
-            {(TMRW_LABEL[locale] ?? TMRW_LABEL.en)}
+            {(TMRW_LABEL[locale] ?? TMRW_LABEL.en)} {girl.tomorrowFrom}–{girl.tomorrowTo}
           </span>
         )}
       </div>

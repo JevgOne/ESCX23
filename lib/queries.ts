@@ -724,7 +724,7 @@ export async function getGirlsForDay(
         if (now && from && to) {
           if (now >= from && now <= to) status = 'working';
           else if (now < from) status = 'later';
-          else status = 'off';
+          else return null; // shift already ended today — don't show in schedule
         }
       } else if (isTomorrow) {
         // Tomorrow: show "Zítra" badge
