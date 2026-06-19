@@ -65,27 +65,7 @@ async function runMigrations(client: Client) {
     // Table already exists — OK
   }
 
-  // Fix CHECK constraint on girls.status — allow 'archived' value
-  try {
-    const checkRes = await client.execute(`SELECT sql FROM sqlite_master WHERE type='table' AND name='girls'`);
-    const createSql = checkRes.rows[0]?.sql ? String(checkRes.rows[0].sql) : '';
-    if (createSql.includes("'inactive')") && !createSql.includes("'archived'")) {
-      // Recreate table without restrictive CHECK
-      await client.execute(`PRAGMA foreign_keys=OFF`);
-      await client.execute(`ALTER TABLE girls RENAME TO _girls_old`);
-      // Recreate with expanded CHECK
-      const newSql = createSql.replace(
-        /CHECK\s*\(\s*status\s+IN\s*\([^)]+\)\s*\)/i,
-        `CHECK(status IN ('active', 'pending', 'inactive', 'archived'))`
-      );
-      await client.execute(newSql);
-      await client.execute(`INSERT INTO girls SELECT * FROM _girls_old`);
-      await client.execute(`DROP TABLE _girls_old`);
-      await client.execute(`PRAGMA foreign_keys=ON`);
-    }
-  } catch {
-    // Migration already done or not needed
-  }
+  // CHECK constraint on girls.status already fixed to include 'archived' — migration removed
 }
 
 // Fire and forget on startup
