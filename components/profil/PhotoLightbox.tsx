@@ -23,23 +23,38 @@ export default function PhotoLightbox({ photos, girlName }: PhotoLightboxProps) 
       if (e.key === 'ArrowLeft') prev();
       if (e.key === 'ArrowRight') next();
     };
+    document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handler);
+    };
   }, [open, close, prev, next]);
+
+  const openAt = useCallback((i: number) => {
+    setIdx(i);
+    setOpen(true);
+  }, []);
 
   if (photos.length === 0) return null;
 
   return (
     <>
-      {/* Thumbnail triggers — rendered as invisible overlay on each gallery tile */}
-      <div className="lightbox-triggers" data-count={photos.length}>
+      {/* Gallery grid with clickable photos */}
+      <div className="lightbox-gallery">
         {photos.map((photo, i) => (
           <button
             key={String(photo.id)}
-            className="lightbox-trigger"
-            onClick={() => { setIdx(i); setOpen(true); }}
-            aria-label={`${girlName} foto ${i + 1}`}
-          />
+            className="lightbox-thumb"
+            onClick={() => openAt(i)}
+            type="button"
+          >
+            <img
+              src={photoUrl(photo.url || null)}
+              alt={`${girlName} — ${i + 1}`}
+              loading="lazy"
+            />
+          </button>
         ))}
       </div>
 
@@ -51,9 +66,11 @@ export default function PhotoLightbox({ photos, girlName }: PhotoLightboxProps) 
               &times;
             </button>
 
-            <button className="lightbox-nav lightbox-prev" onClick={prev} aria-label="Předchozí">
-              &#8249;
-            </button>
+            {photos.length > 1 && (
+              <button className="lightbox-nav lightbox-prev" onClick={prev} aria-label="Předchozí">
+                &#8249;
+              </button>
+            )}
 
             <img
               src={photoUrl(photos[idx]?.url ?? null)}
@@ -61,9 +78,11 @@ export default function PhotoLightbox({ photos, girlName }: PhotoLightboxProps) 
               className="lightbox-img"
             />
 
-            <button className="lightbox-nav lightbox-next" onClick={next} aria-label="Další">
-              &#8250;
-            </button>
+            {photos.length > 1 && (
+              <button className="lightbox-nav lightbox-next" onClick={next} aria-label="Další">
+                &#8250;
+              </button>
+            )}
 
             <div className="lightbox-counter">
               {idx + 1} / {photos.length}

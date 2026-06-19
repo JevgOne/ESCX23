@@ -477,17 +477,10 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
       </div>
 
       {allPhotos.length > 0 && (
-        <div className="profile-thumbs profile-thumbs-grid gallery-lightbox-wrap">
-          {allPhotos.map((photo, i) => (
-            <div key={i} className={`profile-thumb${i === 0 ? ' active' : ''}`}>
-              <img src={photoUrl(photo.url ? String(photo.url) : null)} alt={`${altBase} — ${i + 1}`} loading="lazy" />
-            </div>
-          ))}
-          <PhotoLightbox
-            photos={allPhotos.map((p, i) => ({ url: p.url ? String(p.url) : '', id: p.id != null ? String(p.id) : String(i) }))}
-            girlName={name}
-          />
-        </div>
+        <PhotoLightbox
+          photos={allPhotos.map((p, i) => ({ url: p.url ? String(p.url) : '', id: p.id != null ? String(p.id) : String(i) }))}
+          girlName={name}
+        />
       )}
 
       {videos.length > 0 && (
