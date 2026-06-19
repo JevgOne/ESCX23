@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LovelyGirls Praha — Black & Gold Preview</title>
+<style>
+/* ========== TOKENS ========== */
+:root {
+  --bg:          #0a0a0a;
+  --bg-card:     #111111;
+  --bg-elevated: #161616;
+  --bg-hover:    #1a1a1a;
+  --border:      #222;
+  --border-light:#2a2a2a;
+
+  --gold:        #c9a84c;
+  --gold-light:  #e2c97e;
+  --gold-pale:   #f0e2b8;
+  --gold-dark:   #a68932;
+  --gold-glow:   rgba(201,168,76,0.12);
+  --gold-glow-strong: rgba(201,168,76,0.25);
+
+  --text:        #e8e4dc;
+  --text-dim:    #8a8478;
+  --text-muted:  #5a5550;
+  --white:       #fff;
+
+  --radius:      12px;
+  --radius-sm:   8px;
+  --radius-xs:   4px;
+
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+/* ========== HEADER ========== */
+.header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(10,10,10,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+}
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-mark {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800; color: var(--bg);
+}
+.logo-name { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+.logo-name .accent { color: var(--gold); }
+.logo-sub { font-size: 11px; color: var(--text-dim); letter-spacing: 0.06em; }
+
+.main-nav { display: flex; gap: 28px; }
+.main-nav a {
+  font-size: 13px; font-weight: 500; color: var(--text-dim);
+  letter-spacing: 0.03em; text-transform: uppercase;
+  transition: color 0.2s;
+}
+.main-nav a:hover { color: var(--gold-light); }
+.main-nav a.active { color: var(--gold); }
+
+.header-langs { display: flex; gap: 8px; }
+.lang-btn {
+  font-size: 13px; padding: 4px 8px; border-radius: var(--radius-xs);
+  border: 1px solid transparent; background: none; color: var(--text-dim);
+  cursor: pointer; transition: all 0.2s;
+}
+.lang-btn:hover { color: var(--text); border-color: var(--border-light); }
+.lang-btn.active { color: var(--gold); border-color: var(--gold-dark); background: var(--gold-glow); }
+
+/* ========== HERO ========== */
+.hero {
+  padding: 80px 0 60px;
+  text-align: center;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, var(--gold-glow) 0%, transparent 70%),
+    var(--bg);
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600; color: var(--gold);
+  letter-spacing: 0.15em; text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.hero-eyebrow::before, .hero-eyebrow::after {
+  content: ''; width: 24px; height: 1px; background: var(--gold-dark);
+}
+.hero h1 {
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 800; letter-spacing: -0.03em;
+  line-height: 1.1; margin-bottom: 16px;
+}
+.hero h1 .gold { color: var(--gold-light); }
+.hero-sub {
+  font-size: 17px; color: var(--text-dim); max-width: 520px;
+  margin: 0 auto 32px; line-height: 1.6;
+}
+.hero-stats {
+  display: flex; justify-content: center; gap: 40px;
+  margin-top: 40px; padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+.hero-stat-num {
+  font-size: 28px; font-weight: 700; color: var(--gold);
+  display: block;
+}
+.hero-stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ========== BUTTONS ========== */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 28px; border-radius: 50px;
+  font-size: 14px; font-weight: 600;
+  border: none; cursor: pointer; transition: all 0.25s;
+}
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: var(--bg); box-shadow: 0 4px 24px var(--gold-glow-strong);
+}
+.btn-gold:hover {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  box-shadow: 0 6px 32px var(--gold-glow-strong);
+  transform: translateY(-1px);
+}
+.btn-outline {
+  background: transparent; color: var(--text);
+  border: 1px solid var(--border-light);
+}
+.btn-outline:hover { border-color: var(--gold-dark); color: var(--gold-light); }
+.hero-ctas { display: flex; gap: 12px; justify-content: center; }
+
+/* ========== SECTION HEADS ========== */
+.section { padding: 72px 0; }
+.section-head { text-align: center; margin-bottom: 40px; }
+.section-eyebrow {
+  font-size: 12px; font-weight: 600; color: var(--gold);
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px;
+}
+.section-h2 {
+  font-size: clamp(24px, 3vw, 32px); font-weight: 700;
+  letter-spacing: -0.02em; margin-bottom: 8px;
+}
+.section-sub { font-size: 15px; color: var(--text-dim); }
+
+/* ========== GIRL CARDS ========== */
+.girls-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+.girl-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.girl-card:hover {
+  border-color: var(--gold-dark);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px var(--gold-glow);
+  transform: translateY(-2px);
+}
+.girl-photo-wrap {
+  position: relative; aspect-ratio: 3/4; overflow: hidden;
+  background: var(--bg-elevated);
+}
+.girl-photo-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.girl-photo-placeholder {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, #1a1a1a, #222);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px; color: var(--gold-dark); opacity: 0.3;
+}
+.girl-tag-vip {
+  position: absolute; top: 12px; left: 12px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: var(--bg); font-size: 10px; font-weight: 800;
+  padding: 4px 10px; border-radius: 50px;
+  letter-spacing: 0.1em;
+}
+.girl-tag-new {
+  position: absolute; top: 12px; left: 12px;
+  background: var(--bg-elevated); color: var(--gold-light);
+  border: 1px solid var(--gold-dark);
+  font-size: 10px; font-weight: 700;
+  padding: 3px 10px; border-radius: 50px;
+  letter-spacing: 0.08em;
+}
+.girl-time {
+  position: absolute; bottom: 12px; left: 12px;
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(10,10,10,0.8); backdrop-filter: blur(8px);
+  padding: 5px 12px; border-radius: 50px;
+  font-size: 12px; font-weight: 600; color: var(--text);
+}
+.girl-time .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #34d399; box-shadow: 0 0 6px #34d399;
+}
+.girl-time .dot-later {
+  background: var(--gold); box-shadow: 0 0 6px var(--gold);
+}
+.girl-media {
+  position: absolute; bottom: 12px; right: 12px;
+  display: flex; gap: 6px;
+}
+.girl-media span {
+  background: rgba(10,10,10,0.7); backdrop-filter: blur(8px);
+  padding: 4px 8px; border-radius: 50px;
+  font-size: 11px; color: var(--text-dim);
+  display: flex; align-items: center; gap: 4px;
+}
+.girl-info { padding: 14px 16px 16px; }
+.girl-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.girl-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.girl-dot-on { background: #34d399; box-shadow: 0 0 6px #34d399; }
+.girl-dot-later { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+.girl-dot-off { background: var(--text-muted); }
+.girl-name { font-size: 16px; font-weight: 700; }
+
+.girl-loc {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-dim); margin-bottom: 10px;
+}
+.girl-loc svg { color: var(--gold-dark); flex-shrink: 0; }
+.girl-statline {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 2px; margin-bottom: 10px;
+}
+.girl-stat { text-align: center; }
+.girl-stat .label { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.girl-stat .num { display: block; font-size: 13px; font-weight: 600; color: var(--text); }
+.girl-bottom {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 10px; border-top: 1px solid var(--border);
+}
+.girl-langs { display: flex; gap: 4px; font-size: 14px; }
+.girl-rating {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--text-dim);
+}
+.girl-rating .star { color: var(--gold); }
+
+/* ========== LOCATIONS ========== */
+.locations-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.loc-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  transition: all 0.3s;
+}
+.loc-card:hover {
+  border-color: var(--gold-dark);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.loc-photo {
+  height: 100px; position: relative;
+  background: linear-gradient(135deg, var(--gold-dark), #1a1a0a);
+  opacity: 0.7;
+}
+.loc-badge {
+  position: absolute; top: 10px; left: 10px;
+  background: var(--gold); color: var(--bg);
+  font-size: 9px; font-weight: 800; padding: 3px 8px;
+  border-radius: var(--radius-xs); text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.loc-body { padding: 16px; }
+.loc-body h3 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+.loc-body .place { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; }
+.loc-hours {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-dim);
+}
+.loc-hours .dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; }
+.loc-preparing { opacity: 0.55; }
+.loc-preparing .loc-photo {
+  background: linear-gradient(135deg, #333, #1a1a1a);
+}
+.loc-badge-prep {
+  background: rgba(255,255,255,0.1); color: var(--text-dim);
+  border: 1px solid var(--border-light);
+}
+
+/* ========== TRUST ROW ========== */
+.trust-row {
+  display: flex; justify-content: center; gap: 48px;
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.trust-item { text-align: center; }
+.trust-icon { font-size: 24px; margin-bottom: 6px; }
+.trust-label { font-size: 12px; color: var(--text-dim); }
+
+/* ========== REVIEWS ========== */
+.review-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.review-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.review-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: var(--bg);
+}
+.review-meta .name { font-size: 14px; font-weight: 600; }
+.review-meta .date { font-size: 11px; color: var(--text-muted); }
+.review-stars { color: var(--gold); font-size: 13px; margin-bottom: 8px; }
+.review-text { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+.review-vibe {
+  display: inline-block; margin-top: 10px;
+  font-size: 11px; padding: 3px 10px; border-radius: 50px;
+  background: var(--gold-glow); border: 1px solid var(--gold-dark);
+  color: var(--gold-light);
+}
+.reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+/* ========== PRICING ========== */
+.pricing-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.price-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px; text-align: center;
+  transition: all 0.3s;
+}
+.price-card:hover { border-color: var(--gold-dark); }
+.price-card.popular {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold-glow), 0 8px 32px var(--gold-glow);
+  background: linear-gradient(180deg, var(--gold-glow) 0%, var(--bg-card) 40%);
+}
+.price-card.popular .price-badge {
+  background: var(--gold); color: var(--bg);
+  font-size: 10px; font-weight: 700; padding: 3px 12px;
+  border-radius: 50px; display: inline-block; margin-bottom: 12px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.price-dur { font-size: 14px; color: var(--text-dim); font-weight: 500; margin-bottom: 8px; }
+.price-val { font-size: 32px; font-weight: 800; color: var(--gold-light); margin-bottom: 4px; }
+.price-val span { font-size: 16px; font-weight: 400; color: var(--text-muted); }
+
+/* ========== FOOTER ========== */
+.footer {
+  padding: 48px 0 32px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.footer-logo { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 24px; }
+.footer-links a { font-size: 13px; color: var(--text-muted); transition: color 0.2s; }
+.footer-links a:hover { color: var(--gold-light); }
+.footer-copy { font-size: 12px; color: var(--text-muted); }
+
+/* ========== SHOW ALL BTN ========== */
+.show-all-row { text-align: center; margin-top: 32px; }
+.show-all-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; font-weight: 600; color: var(--gold);
+  padding: 10px 24px; border-radius: 50px;
+  border: 1px solid var(--gold-dark);
+  transition: all 0.2s;
+}
+.show-all-btn:hover {
+  background: var(--gold-glow);
+  border-color: var(--gold);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .main-nav { display: none; }
+  .hero h1 { font-size: 32px; }
+  .hero-stats { gap: 24px; }
+  .girls-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .trust-row { gap: 24px; flex-wrap: wrap; }
+  .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .girls-grid { grid-template-columns: 1fr; }
+  .hero-ctas { flex-direction: column; align-items: center; }
+}
+
+/* ========== DIVIDER ========== */
+.gold-line {
+  width: 48px; height: 2px; margin: 0 auto 24px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="container header-inner">
+    <a href="#" class="logo">
+      <div class="logo-mark">LG</div>
+      <div>
+        <div class="logo-name">Lovely<span class="accent">Girls</span></div>
+        <div class="logo-sub">Praha &middot; Privat</div>
+      </div>
+    </a>
+    <nav class="main-nav">
+      <a href="#" class="active">Domov</a>
+      <a href="#">Divky</a>
+      <a href="#">Cenik</a>
+      <a href="#">Rozvrh</a>
+      <a href="#">Slevy</a>
+      <a href="#">FAQ</a>
+    </nav>
+    <div class="header-langs">
+      <button class="lang-btn active">CZ</button>
+      <button class="lang-btn">EN</button>
+      <button class="lang-btn">DE</button>
+      <button class="lang-btn">UA</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-eyebrow">Praha &middot; Premium Escort</div>
+    <h1>Overene <span class="gold">spolecnice</span><br>v&nbsp;soukromi</h1>
+    <p class="hero-sub">13 overhenych divek, 4 privatni byty v Praze. Transparentni ceny, diskretni prostredi.</p>
+    <div class="hero-ctas">
+      <a href="#" class="btn btn-gold">Zobrazit divky</a>
+      <a href="#" class="btn btn-outline">Dnesni rozvrh</a>
+    </div>
+    <div class="hero-stats">
+      <div><span class="hero-stat-num">13</span><span class="hero-stat-label">Spolecnic</span></div>
+      <div><span class="hero-stat-num">7</span><span class="hero-stat-label">Prave ted</span></div>
+      <div><span class="hero-stat-num">82</span><span class="hero-stat-label">Recenzi</span></div>
+      <div><span class="hero-stat-num">4.8</span><span class="hero-stat-label">Hodnoceni</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST ROW -->
+<div class="container">
+  <div class="trust-row">
+    <div class="trust-item"><div class="trust-icon">&#x2714;</div><div class="trust-label">100% overene fotky</div></div>
+    <div class="trust-item"><div class="trust-icon">&#x1F6E1;</div><div class="trust-label">Diskretni prostredi</div></div>
+    <div class="trust-item"><div class="trust-icon">&#x2B50;</div><div class="trust-label">82 recenzi</div></div>
+    <div class="trust-item"><div class="trust-icon">&#x1F4B0;</div><div class="trust-label">Transparentni ceny</div></div>
+  </div>
+</div>
+
+<!-- GIRLS GRID -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">-- Nase divky</div>
+      <h2 class="section-h2">Prave ted online</h2>
+      <p class="section-sub">Vyberte si z nasich overenych spolecnic</p>
+    </div>
+    <div class="girls-grid" id="girls-grid"></div>
+    <div class="show-all-row">
+      <a href="#" class="show-all-btn">Zobrazit vsech 13 &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" style="border-top: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">-- Cenik</div>
+      <h2 class="section-h2">Casove programy</h2>
+      <p class="section-sub">Vsechny ceny jsou finalni, bez skrytych priplatku</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card"><div class="price-dur">30 minut</div><div class="price-val">2 500 <span>CZK</span></div></div>
+      <div class="price-card"><div class="price-dur">45 minut</div><div class="price-val">3 200 <span>CZK</span></div></div>
+      <div class="price-card popular"><div class="price-badge">Nejoblibenejsi</div><div class="price-dur">60 minut</div><div class="price-val">4 000 <span>CZK</span></div></div>
+      <div class="price-card"><div class="price-dur">90 minut</div><div class="price-val">5 500 <span>CZK</span></div></div>
+      <div class="price-card"><div class="price-dur">120 minut</div><div class="price-val">7 000 <span>CZK</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="section" style="border-top: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">-- Recenze</div>
+      <h2 class="section-h2">Co rikaji nasi klienti</h2>
+    </div>
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="review-head">
+          <div class="review-avatar">M</div>
+          <div class="review-meta"><div class="name">Martin</div><div class="date">pred 3 dny &middot; Anetta</div></div>
+        </div>
+        <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="review-text">Skvela zkusenost, Anetta je opravdu profesionalni a pratelska. Urcite se budu vracet.</div>
+        <span class="review-vibe">&#x2728; Nezapomenutelny</span>
+      </div>
+      <div class="review-card">
+        <div class="review-head">
+          <div class="review-avatar">T</div>
+          <div class="review-meta"><div class="name">Tomas</div><div class="date">pred tydnem &middot; Luna</div></div>
+        </div>
+        <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+        <div class="review-text">Luna je velmi prijemna, klidna atmosfera. Byt na Vinohradech je skvely a diskretni.</div>
+        <span class="review-vibe">&#x1F60A; Pratelska</span>
+      </div>
+      <div class="review-card">
+        <div class="review-head">
+          <div class="review-avatar">J</div>
+          <div class="review-meta"><div class="name">Jan</div><div class="date">pred 2 dny &middot; Sara</div></div>
+        </div>
+        <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="review-text">Perfektni. Sara je krasna, komunikativni a cely zazitek byl naprosto dokonaly. Top urovne!</div>
+        <span class="review-vibe">&#x1F525; Vasniva</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOCATIONS -->
+<section class="section" style="border-top: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">-- Pobocky</div>
+      <h2 class="section-h2">Nase apartmany v Praze</h2>
+      <p class="section-sub">Privatni, diskretni, pohodlne</p>
+    </div>
+    <div class="locations-grid">
+      <div class="loc-card"><div class="loc-photo"><span class="loc-badge">Hlavni apartman</span></div><div class="loc-body"><h3>Nove Mesto</h3><div class="place">Praha 2</div><div class="loc-hours"><span class="dot"></span> 10:00 — 22:30</div></div></div>
+      <div class="loc-card"><div class="loc-photo"></div><div class="loc-body"><h3>Karlin</h3><div class="place">Praha 8</div><div class="loc-hours"><span class="dot"></span> 10:00 — 22:30</div></div></div>
+      <div class="loc-card"><div class="loc-photo"></div><div class="loc-body"><h3>Stare Mesto</h3><div class="place">Praha 1</div><div class="loc-hours"><span class="dot"></span> 10:00 — 22:30</div></div></div>
+      <div class="loc-card loc-preparing"><div class="loc-photo"><span class="loc-badge loc-badge-prep">Pripravujeme</span></div><div class="loc-body"><h3>Zizkov</h3><div class="place">Praha 3</div></div></div>
+      <div class="loc-card loc-preparing"><div class="loc-photo"><span class="loc-badge loc-badge-prep">Pripravujeme</span></div><div class="loc-body"><h3>Andel</h3><div class="place">Praha 5</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-logo">
+      <div class="logo-mark" style="width:28px;height:28px;font-size:12px;">LG</div>
+      <span class="logo-name" style="font-size:15px;">Lovely<span class="accent">Girls</span></span>
+    </div>
+    <div class="footer-links">
+      <a href="#">Podminky</a>
+      <a href="#">Soukromi</a>
+      <a href="#">FAQ</a>
+      <a href="#">Kontakt</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 LovelyGirls Praha. Vstup pouze pro osoby starsi 18 let.</div>
+  </div>
+</footer>
+
+<script>
+// Generate girl cards dynamically
+const girls = [
+  { name: 'Anetta', age: 19, status: 'working', from: '10:00', to: '18:00', h: 168, w: 52, b: 3, loc: 'Nove Mesto, Praha 2', photos: 12, rating: 4.9, reviews: 14, langs: ['cz','en','de'], vip: true },
+  { name: 'Luna', age: 22, status: 'working', from: '12:00', to: '20:00', h: 172, w: 55, b: 2, loc: 'Nove Mesto, Praha 2', photos: 8, rating: 4.7, reviews: 11, langs: ['cz','en'], isNew: false },
+  { name: 'Sara', age: 24, status: 'working', from: '10:00', to: '22:00', h: 165, w: 50, b: 3, loc: 'Nove Mesto, Praha 2', photos: 15, rating: 4.8, reviews: 18, langs: ['cz','en','ru'] },
+  { name: 'Emily', age: 21, status: 'later', from: '16:00', to: '22:00', h: 170, w: 54, b: 2, loc: 'Nove Mesto, Praha 2', photos: 10, rating: 4.6, reviews: 7, langs: ['cz','en'], isNew: true },
+  { name: 'Kim', age: 25, status: 'working', from: '10:00', to: '20:00', h: 175, w: 58, b: 4, loc: 'Nove Mesto, Praha 2', photos: 20, rating: 5.0, reviews: 9, langs: ['cz','en','de','uk'] },
+  { name: 'Katy', age: 20, status: 'later', from: '18:00', to: '22:30', h: 163, w: 48, b: 2, loc: 'Nove Mesto, Praha 2', photos: 6, rating: 4.5, reviews: 4, langs: ['cz','en'] },
+  { name: 'Natalie', age: 23, status: 'working', from: '10:00', to: '18:00', h: 169, w: 53, b: 3, loc: 'Nove Mesto, Praha 2', photos: 11, rating: 4.8, reviews: 12, langs: ['cz','en','fr'] },
+  { name: 'Rebeca', age: 26, status: 'working', from: '12:00', to: '22:00', h: 174, w: 57, b: 3, loc: 'Nove Mesto, Praha 2', photos: 14, rating: 4.7, reviews: 8, langs: ['cz','en','es'] },
+];
+
+const flags = { cz: '\u{1F1E8}\u{1F1FF}', en: '\u{1F1EC}\u{1F1E7}', de: '\u{1F1E9}\u{1F1EA}', uk: '\u{1F1FA}\u{1F1E6}', ru: '\u{1F1F7}\u{1F1FA}', fr: '\u{1F1EB}\u{1F1F7}', es: '\u{1F1EA}\u{1F1F8}' };
+
+const grid = document.getElementById('girls-grid');
+girls.forEach(g => {
+  const dotClass = g.status === 'working' ? 'girl-dot-on' : g.status === 'later' ? 'girl-dot-later' : 'girl-dot-off';
+  const timeDotClass = g.status === 'later' ? 'dot-later' : '';
+  const timeText = g.status === 'working' ? `${g.from} — ${g.to}` : `Pozdeji ${g.from}`;
+  const tag = g.vip ? `<span class="girl-tag-vip">\u2605 VIP</span>` : g.isNew ? `<span class="girl-tag-new">NOVA</span>` : '';
+
+  grid.innerHTML += `
+    <div class="girl-card">
+      <div class="girl-photo-wrap">
+        <div class="girl-photo-placeholder">\u2666</div>
+        ${tag}
+        <span class="girl-time"><span class="dot ${timeDotClass}"></span>${timeText}</span>
+        <div class="girl-media"><span>\u{1F4F7} ${g.photos}</span></div>
+      </div>
+      <div class="girl-info">
+        <div class="girl-name-row">
+          <span class="girl-dot ${dotClass}"></span>
+          <span class="girl-name">${g.name}</span>
+        </div>
+        <div class="girl-loc">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${g.loc}
+        </div>
+        <div class="girl-statline">
+          <div class="girl-stat"><span class="label">Vyska</span><span class="num">${g.h}</span></div>
+          <div class="girl-stat"><span class="label">Prsa</span><span class="num">${g.b}</span></div>
+          <div class="girl-stat"><span class="label">Vaha</span><span class="num">${g.w}</span></div>
+          <div class="girl-stat"><span class="label">Vek</span><span class="num">${g.age}</span></div>
+        </div>
+        <div class="girl-bottom">
+          <div class="girl-langs">${g.langs.map(l => flags[l] || l).join(' ')}</div>
+          <div class="girl-rating"><span class="star">\u2605</span> ${g.rating.toFixed(1)} <span style="color:var(--text-muted)">\u00b7 ${g.reviews}</span></div>
+        </div>
+      </div>
+    </div>`;
+});
+</script>
+</body>
+</html>

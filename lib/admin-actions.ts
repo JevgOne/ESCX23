@@ -41,6 +41,7 @@ export async function updateGirl(formData: FormData) {
   const getStr = (k: string) => (formData.get(k) ? String(formData.get(k)).trim() : null);
   const getNum = (k: string) => (formData.get(k) ? Number(formData.get(k)) : null);
 
+  try {
   await updateGirlById(id, {
     name,
     slug,
@@ -108,6 +109,10 @@ export async function updateGirl(formData: FormData) {
       args: [id, sid],
     });
   }
+  } catch (err) {
+    console.error('[admin] updateGirl failed:', { id, error: String(err) });
+    await adminRedirect(`/admin/divky/${id}/edit?error=${encodeURIComponent('Uložení selhalo: ' + String(err))}`);
+  }
 
   revalidatePath('/admin/divky');
   revalidatePath(`/cs/admin/divky`);
@@ -144,7 +149,9 @@ export async function createGirl(formData: FormData) {
   const hashtagSlugs = formData.getAll('hashtag_slugs').map(String).filter(Boolean);
   const hashtagsJson = hashtagSlugs.length > 0 ? JSON.stringify(hashtagSlugs) : null;
 
-  const result = await db.execute({
+  let result;
+  try {
+  result = await db.execute({
     sql: `INSERT INTO girls (
       name, slug, age, email, phone, status,
       nationality, location, languages,
@@ -203,8 +210,12 @@ export async function createGirl(formData: FormData) {
       getStr('calendar_embed_url'),
     ],
   });
+  } catch (err) {
+    console.error('[admin] createGirl failed:', { error: String(err) });
+    await adminRedirect(`/admin/divky/nova?error=${encodeURIComponent('Vytvoření selhalo: ' + String(err))}`);
+  }
 
-  const newId = Number(result.lastInsertRowid);
+  const newId = Number(result!.lastInsertRowid);
 
   const serviceIds = formData.getAll('service_ids').map(Number).filter((n) => n > 0);
   for (const sid of serviceIds) {
@@ -439,10 +450,15 @@ export async function archiveGirl(formData: FormData) {
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
-  await db.execute({
-    sql: `UPDATE girls SET status = 'archived', updated_at = datetime('now') WHERE id = ?`,
-    args: [id],
-  });
+  try {
+    await db.execute({
+      sql: `UPDATE girls SET status = 'archived', updated_at = datetime('now') WHERE id = ?`,
+      args: [id],
+    });
+  } catch (err) {
+    console.error('[admin] archiveGirl failed:', { id, error: String(err) });
+    await adminRedirect(`/admin/divky/${id}/edit?error=${encodeURIComponent('Archivace selhala: ' + String(err))}`);
+  }
 
   revalidatePath('/admin/divky');
   revalidatePath('/cs/admin/divky');
@@ -455,10 +471,41 @@ export async function restoreGirl(formData: FormData) {
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
-  await db.execute({
-    sql: `UPDATE girls SET status = 'inactive', updated_at = datetime('now') WHERE id = ?`,
-    args: [id],
-  });
+  try {
+    await db.execute({
+      sql: `UPDATE girls SET status = 'inactive', updated_at = datetime('now') WHERE id = ?`,
+      args: [id],
+    });
+  } catch (err) {
+    console.error('[admin] restoreGirl failed:', { id, error: String(err) });
+    await adminRedirect(`/admin/divky?error=${encodeURIComponent('Obnovení selhalo: ' + String(err))}`);
+  }
+
+  revalidatePath('/admin/divky');
+  revalidatePath('/cs/admin/divky');
+  revalidatePath('/cs/divky');
+  await adminRedirect('/admin/divky');
+}
+
+export async function deleteGirl(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  try {
+    // Delete related records first, then the girl
+    await db.execute({ sql: `DELETE FROM girl_services WHERE girl_id = ?`, args: [id] });
+    await db.execute({ sql: `DELETE FROM girl_photos WHERE girl_id = ?`, args: [id] });
+    await db.execute({ sql: `DELETE FROM girl_videos WHERE girl_id = ?`, args: [id] });
+    await db.execute({ sql: `DELETE FROM girl_schedules WHERE girl_id = ?`, args: [id] });
+    await db.execute({ sql: `DELETE FROM schedule_exceptions WHERE girl_id = ?`, args: [id] });
+    await db.execute({ sql: `DELETE FROM stories WHERE girl_id = ?`, args: [id] });
+    await db.execute({ sql: `DELETE FROM reviews WHERE girl_id = ?`, args: [id] });
+    await db.execute({ sql: `DELETE FROM girls WHERE id = ?`, args: [id] });
+  } catch (err) {
+    console.error('[admin] deleteGirl failed:', { id, error: String(err) });
+    await adminRedirect(`/admin/divky/${id}/edit?error=${encodeURIComponent('Smazání selhalo: ' + String(err))}`);
+  }
 
   revalidatePath('/admin/divky');
   revalidatePath('/cs/admin/divky');

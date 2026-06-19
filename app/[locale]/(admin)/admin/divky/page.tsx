@@ -21,7 +21,7 @@ const STATUS_LABELS: Record<string, string> = {
 function StatusBadge({ status }: { status: string }) {
   const cls = STATUS_LABELS[status] ?? 'draft';
   const LABEL: Record<string, string> = {
-    active: 'Aktivní', inactive: 'Nedostupná', pending: 'Čekající',
+    active: 'Aktivní', inactive: 'Dočasně nedostupná', pending: 'Čekající',
     archived: 'Archiv', draft: 'Draft', paused: 'Paused',
   };
   return <span className={`status-badge ${cls}`}>{LABEL[status] ?? status}</span>;
@@ -149,7 +149,7 @@ export default async function AdminDivkyPage({
               href={s === 'all' ? '/cs/admin/divky' : `/cs/admin/divky?status=${s}`}
               className={`admin-filter-pill${activeStatus === s ? ' active' : ''}`}
             >
-              {s === 'all' ? 'Vše' : s === 'active' ? 'Aktivní' : s === 'inactive' ? 'Nedostupné' : s === 'pending' ? 'Čekající' : 'Archiv'}
+              {s === 'all' ? 'Vše' : s === 'active' ? 'Aktivní' : s === 'inactive' ? 'Dočasně nedostupné' : s === 'pending' ? 'Čekající' : 'Archiv'}
             </a>
           ))}
         </div>

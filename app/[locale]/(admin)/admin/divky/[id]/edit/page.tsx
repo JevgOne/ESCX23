@@ -2,7 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { getGirlById, getGirlServices, getAllServices } from '@/lib/queries';
 import AdminTopbar from '@/components/admin/AdminTopbar';
-import { updateGirl, archiveGirl } from '@/lib/admin-actions';
+import { updateGirl, archiveGirl, deleteGirl } from '@/lib/admin-actions';
 import { getBasicServices, getExtraServices } from '@/lib/services';
 
 export const dynamic = 'force-dynamic';
@@ -325,10 +325,13 @@ const GF2_STYLES = `
 
 export default async function AdminGirlEditPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { locale, id } = await params;
+  const { error } = await searchParams;
   setRequestLocale(locale);
 
   const girl = await getGirlById(Number(id));
@@ -432,6 +435,12 @@ export default async function AdminGirlEditPage({
           ← Zpět na profil
         </a>
       </div>
+
+      {error && (
+        <div style={{ background: 'rgba(220,50,50,0.15)', border: '1px solid rgba(220,50,50,0.5)', borderRadius: '10px', padding: '14px 18px', marginBottom: '20px', color: '#e05555', fontSize: '13px' }}>
+          {decodeURIComponent(error)}
+        </div>
+      )}
 
       <form action={updateGirl} className="gf2-wrap">
         <input type="hidden" name="id" value={g.id} />
@@ -911,14 +920,22 @@ export default async function AdminGirlEditPage({
       </form>
 
       <div className="gf2-danger-zone">
-        <div className="gf2-danger-title">Archivace</div>
+        <div className="gf2-danger-title">Správa profilu</div>
         <p style={{ fontSize: '12px', color: 'var(--color-text-dim)', marginBottom: '12px' }}>
           Archivovaná dívka nebude viditelná na webu, ale její data zůstanou zachována.
         </p>
-        <form action={archiveGirl}>
-          <input type="hidden" name="id" value={g.id} />
-          <button type="submit" className="gf2-danger-btn">Archivovat dívku</button>
-        </form>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <form action={archiveGirl}>
+            <input type="hidden" name="id" value={g.id} />
+            <button type="submit" className="gf2-danger-btn">Archivovat dívku</button>
+          </form>
+          <form action={deleteGirl}>
+            <input type="hidden" name="id" value={g.id} />
+            <button type="submit" className="gf2-danger-btn" style={{ borderColor: 'rgba(220,50,50,0.8)', color: '#ff3333' }}>
+              Smazat dívku
+            </button>
+          </form>
+        </div>
       </div>
     </>
   );

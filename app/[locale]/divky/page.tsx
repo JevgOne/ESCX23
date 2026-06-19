@@ -4,7 +4,7 @@ import { applyDBOverride } from '@/lib/seo/db-override';
 import { getGirlsForListing, getTopServicesForFilter } from '@/lib/queries';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
 import FiltersBar from '@/components/divky/FiltersBar';
-import Pagination from '@/components/divky/Pagination';
+// Pagination removed — show all girls on one page
 import PageHeader from '@/components/ui/PageHeader';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { collectionPageJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
@@ -51,21 +51,16 @@ export default async function DivkyPage({ params, searchParams }: Props) {
 
   const t = await getTranslations({ locale, namespace: 'girls' });
 
-  const page = Math.max(1, Number(sp.page ?? 1));
-  const pageSize = 12;
-
   const { girls, total } = await getGirlsForListing({
     status: sp.status,
     q: sp.q,
     sort: sp.sort,
     service: sp.service,
-    page,
-    pageSize,
+    page: 1,
+    pageSize: 999,
   }).catch(() => ({ girls: [] as Awaited<ReturnType<typeof getGirlsForListing>>['girls'], total: 0 }));
 
   const services = await getTopServicesForFilter(12).catch(() => []);
-
-  const hasMore = page * pageSize < total;
   const tGeo = await getTranslations({ locale, namespace: 'geo' });
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
@@ -147,7 +142,7 @@ export default async function DivkyPage({ params, searchParams }: Props) {
         ) : (
           <GirlCardGrid girls={girls} />
         )}
-        <Pagination currentPage={page} hasMore={hasMore} searchParams={sp} locale={locale} />
+        {/* All girls shown on single page */}
       </div>
     </main>
   );
