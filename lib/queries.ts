@@ -656,6 +656,12 @@ export async function getGirlsForDay(
   })();
   const today = pragueDateISO();
   const isToday = date === today;
+  const tomorrowDate = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return pragueDateISO(d);
+  })();
+  const isTomorrow = date === tomorrowDate;
   const now = isToday ? formatPragueTime() : null;
 
   const result = await db.execute({
@@ -709,12 +715,29 @@ export async function getGirlsForDay(
       const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
 
       let status: GirlStatus = 'working';
-      if (!isToday) {
-        status = 'later';
-      } else if (now && from && to) {
-        if (now >= from && now <= to) status = 'working';
-        else if (now < from) status = 'later';
-        else status = 'off';
+      let cardFrom: string | null = from;
+      let cardTo: string | null = to;
+      let tmrwFrom: string | null = null;
+      let tmrwTo: string | null = null;
+
+      if (isToday) {
+        if (now && from && to) {
+          if (now >= from && now <= to) status = 'working';
+          else if (now < from) status = 'later';
+          else status = 'off';
+        }
+      } else if (isTomorrow) {
+        // Tomorrow: show "Zítra" badge
+        status = 'off';
+        tmrwFrom = from;
+        tmrwTo = to;
+        cardFrom = null;
+        cardTo = null;
+      } else {
+        // 2+ days out: no status badge, just show the girl
+        status = 'off';
+        cardFrom = null;
+        cardTo = null;
       }
 
       return {
@@ -731,10 +754,10 @@ export async function getGirlsForDay(
         photoCount: Number(r.photo_count),
         videoCount: Number(r.video_count),
         status,
-        shiftFrom: from,
-        shiftTo: to,
-        tomorrowFrom: null,
-        tomorrowTo: null,
+        shiftFrom: cardFrom,
+        shiftTo: cardTo,
+        tomorrowFrom: tmrwFrom,
+        tomorrowTo: tmrwTo,
         isVip: false,
         isPaused: false,
         isNew,
