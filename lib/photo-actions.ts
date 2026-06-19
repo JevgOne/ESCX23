@@ -11,50 +11,60 @@ const ALLOWED_EXT = new Set(['jpg', 'jpeg', 'png', 'webp', 'avif', 'heic']);
 const MAX_BYTES = 10 * 1024 * 1024;
 
 export async function uploadPhotoForm(formData: FormData) {
-  const file = formData.get('photo') as File | null;
   const girlId = Number(formData.get('girl_id'));
   const skipWatermark = formData.get('skip_watermark') === '1';
 
-  if (!file || file.size === 0) return { error: 'No file' };
-  if (file.size > MAX_BYTES) return { error: 'File too large (max 10MB)' };
-
-  const ext = (file.name.split('.').pop() ?? '').toLowerCase();
-  if (!ALLOWED_EXT.has(ext)) return { error: 'Invalid file type' };
-
   await requireAdmin();
 
-  // Apply watermark by default. Admin can opt out via skip_watermark=1.
-  let uploadPayload: File | Buffer = file;
-  let finalExt = ext;
-  let finalContentType = file.type || `image/${ext}`;
-  if (!skipWatermark) {
-    try {
-      const raw = Buffer.from(await file.arrayBuffer());
-      uploadPayload = await watermarkImage(raw);
-      finalExt = 'jpg';
-      finalContentType = 'image/jpeg';
-    } catch (err) {
-      console.error('Watermark failed, uploading original:', err);
+  // Support multiple files
+  const files = formData.getAll('photo') as File[];
+  const validFiles = files.filter((f) => f && f.size > 0 && f.size <= MAX_BYTES);
+  if (validFiles.length === 0) return { error: 'No file' };
+
+  // New photos get display_order BEFORE existing ones (so they show first)
+  const minRes = await db.execute({
+    sql: `SELECT COALESCE(MIN(display_order), 100) AS min_order FROM girl_photos WHERE girl_id = ?`,
+    args: [girlId],
+  });
+  let nextOrder = Number(minRes.rows[0]?.min_order ?? 100) - validFiles.length;
+
+  for (const file of validFiles) {
+    const ext = (file.name.split('.').pop() ?? '').toLowerCase();
+    if (!ALLOWED_EXT.has(ext)) continue;
+
+    let uploadPayload: File | Buffer = file;
+    let finalExt = ext;
+    let finalContentType = file.type || `image/${ext}`;
+    if (!skipWatermark) {
+      try {
+        const raw = Buffer.from(await file.arrayBuffer());
+        uploadPayload = await watermarkImage(raw);
+        finalExt = 'jpg';
+        finalContentType = 'image/jpeg';
+      } catch (err) {
+        console.error('Watermark failed, uploading original:', err);
+      }
     }
+
+    const filename = `girls/${girlId}/${Date.now()}-${crypto.randomUUID()}.${finalExt}`;
+    const blob = await put(filename, uploadPayload, {
+      access: 'public',
+      contentType: finalContentType,
+      addRandomSuffix: false,
+    });
+
+    await db.execute({
+      sql: `INSERT INTO girl_photos (girl_id, filename, url, is_primary, display_order) VALUES (?, ?, ?, 0, ?)`,
+      args: [girlId, filename, blob.url, nextOrder],
+    });
+    nextOrder++;
   }
-
-  const filename = `girls/${girlId}/${Date.now()}-${crypto.randomUUID()}.${finalExt}`;
-  const blob = await put(filename, uploadPayload, {
-    access: 'public',
-    contentType: finalContentType,
-    addRandomSuffix: false,
-  });
-
-  await db.execute({
-    sql: `INSERT INTO girl_photos (girl_id, filename, url, is_primary, display_order) VALUES (?, ?, ?, 0, 999)`,
-    args: [girlId, filename, blob.url],
-  });
 
   revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
   revalidatePath(`/cs/studio/fotky`);
   revalidatePath(`/cs`);
 
-  return { ok: true, url: blob.url };
+  return { ok: true };
 }
 
 export async function setPhotoAsPrimary(photoId: number, girlId: number) {
@@ -66,6 +76,22 @@ export async function setPhotoAsPrimary(photoId: number, girlId: number) {
   });
   await db.execute({
     sql: `UPDATE girl_photos SET is_primary = 1 WHERE id = ? AND girl_id = ?`,
+    args: [photoId, girlId],
+  });
+
+  revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
+}
+
+export async function setPhotoAsSecondary(photoId: number, girlId: number) {
+  await requireAdmin();
+
+  // Clear any existing secondary
+  await db.execute({
+    sql: `UPDATE girl_photos SET is_secondary = 0 WHERE girl_id = ?`,
+    args: [girlId],
+  });
+  await db.execute({
+    sql: `UPDATE girl_photos SET is_secondary = 1 WHERE id = ? AND girl_id = ?`,
     args: [photoId, girlId],
   });
 

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { getGirlById } from '@/lib/queries';
 import AdminTopbar from '@/components/admin/AdminTopbar';
-import { uploadPhotoForm, setPhotoAsPrimary, deletePhoto } from '@/lib/photo-actions';
+import { uploadPhotoForm, setPhotoAsPrimary, setPhotoAsSecondary, deletePhoto } from '@/lib/photo-actions';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,18 +12,20 @@ interface Photo {
   id: number;
   url: string;
   is_primary: number;
+  is_secondary: number;
   display_order: number;
 }
 
 async function getPhotos(girlId: number): Promise<Photo[]> {
   const result = await db.execute({
-    sql: `SELECT id, url, is_primary, display_order FROM girl_photos WHERE girl_id = ? ORDER BY is_primary DESC, display_order ASC, id ASC`,
+    sql: `SELECT id, url, is_primary, COALESCE(is_secondary, 0) AS is_secondary, display_order FROM girl_photos WHERE girl_id = ? ORDER BY is_primary DESC, is_secondary DESC, display_order ASC, id ASC`,
     args: [girlId],
   });
   return result.rows.map((r) => ({
     id: Number(r.id),
     url: String(r.url),
     is_primary: Number(r.is_primary),
+    is_secondary: Number(r.is_secondary),
     display_order: Number(r.display_order),
   }));
 }
@@ -54,6 +56,12 @@ export default async function AdminGirlFotkyPage({
     await setPhotoAsPrimary(photoId, Number(id));
   }
 
+  async function handleSetSecondary(formData: FormData) {
+    'use server';
+    const photoId = Number(formData.get('photo_id'));
+    await setPhotoAsSecondary(photoId, Number(id));
+  }
+
   async function handleDelete(formData: FormData) {
     'use server';
     const photoId = Number(formData.get('photo_id'));
@@ -72,10 +80,10 @@ export default async function AdminGirlFotkyPage({
 
       <div className="upload-form" style={{ marginBottom: '32px' }}>
         <div style={{ fontSize: '12px', color: 'var(--color-coral)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>
-          Nahrát fotku
+          Nahrát fotky
         </div>
         <form action={handleUpload} className="upload-dropzone">
-          <input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp,.avif" required />
+          <input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp,.avif" multiple required />
           <button type="submit" className="admin-btn-primary" style={{ marginTop: '12px' }}>
             Nahrát
           </button>
@@ -91,11 +99,16 @@ export default async function AdminGirlFotkyPage({
 
       <div className="photo-grid-admin">
         {photos.map((photo) => (
-          <div key={photo.id} className={`photo-card-admin${photo.is_primary ? ' is-primary' : ''}`}>
+          <div key={photo.id} className={`photo-card-admin${photo.is_primary ? ' is-primary' : ''}${photo.is_secondary ? ' is-secondary' : ''}`}>
             <img src={photo.url} alt="" loading="lazy" />
             {photo.is_primary === 1 && (
               <div style={{ position: 'absolute', top: '8px', left: '8px', background: 'var(--color-coral)', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.05em' }}>
-                PRIMARY
+                HLAVNÍ (zepředu)
+              </div>
+            )}
+            {photo.is_secondary === 1 && (
+              <div style={{ position: 'absolute', top: '8px', left: '8px', background: '#8b5cf6', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.05em' }}>
+                DRUHÁ (zezadu)
               </div>
             )}
             <div className="photo-card-actions">
@@ -103,7 +116,15 @@ export default async function AdminGirlFotkyPage({
                 <form action={handleSetPrimary}>
                   <input type="hidden" name="photo_id" value={photo.id} />
                   <button type="submit" className="admin-btn-secondary" style={{ fontSize: '11px', padding: '4px 8px' }}>
-                    Nastavit jako hlavní
+                    Hlavní (zepředu)
+                  </button>
+                </form>
+              )}
+              {photo.is_primary !== 1 && photo.is_secondary !== 1 && (
+                <form action={handleSetSecondary}>
+                  <input type="hidden" name="photo_id" value={photo.id} />
+                  <button type="submit" style={{ fontSize: '11px', padding: '4px 8px', background: 'rgba(139,92,246,0.15)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '6px', cursor: 'pointer' }}>
+                    Druhá (zezadu)
                   </button>
                 </form>
               )}

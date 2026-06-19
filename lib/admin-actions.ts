@@ -1230,3 +1230,55 @@ export async function deleteBlogTag(formData: FormData) {
   revalidatePath('/en/blog');
   await adminRedirect('/admin/blog/tagy');
 }
+
+/* ── Girl Videos (Vimeo) ── */
+
+function extractVimeoId(input: string): string | null {
+  const trimmed = input.trim();
+  // Pure numeric ID
+  if (/^\d+$/.test(trimmed)) return trimmed;
+  // URL patterns: vimeo.com/123, vimeo.com/video/123, player.vimeo.com/video/123
+  const match = trimmed.match(/(?:vimeo\.com\/(?:video\/)?|player\.vimeo\.com\/video\/)(\d+)/);
+  return match ? match[1] : null;
+}
+
+export async function addGirlVideo(formData: FormData) {
+  await requireAdmin();
+  const girlId = Number(formData.get('girl_id'));
+  const rawUrl = String(formData.get('vimeo_url') ?? '').trim();
+  if (!girlId || !rawUrl) throw new Error('Missing girl_id or vimeo_url');
+
+  const vimeoId = extractVimeoId(rawUrl);
+  if (!vimeoId) throw new Error('Neplatný Vimeo odkaz');
+
+  const url = `https://vimeo.com/${vimeoId}`;
+
+  // Get next display_order
+  const orderRes = await db.execute({
+    sql: `SELECT COALESCE(MAX(display_order), -1) + 1 AS next_order FROM girl_videos WHERE girl_id = ?`,
+    args: [girlId],
+  });
+  const nextOrder = Number(orderRes.rows[0]?.next_order ?? 0);
+
+  await db.execute({
+    sql: `INSERT INTO girl_videos (girl_id, filename, url, display_order, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    args: [girlId, `vimeo-${vimeoId}`, url, nextOrder],
+  });
+
+  revalidatePath(`/cs/admin/divky/${girlId}/videa`);
+  revalidatePath(`/cs/profil`);
+  await adminRedirect(`/admin/divky/${girlId}/videa`);
+}
+
+export async function removeGirlVideo(formData: FormData) {
+  await requireAdmin();
+  const videoId = Number(formData.get('video_id'));
+  const girlId = Number(formData.get('girl_id'));
+  if (!videoId) throw new Error('Missing video_id');
+
+  await db.execute({ sql: `DELETE FROM girl_videos WHERE id = ?`, args: [videoId] });
+
+  revalidatePath(`/cs/admin/divky/${girlId}/videa`);
+  revalidatePath(`/cs/profil`);
+  await adminRedirect(`/admin/divky/${girlId}/videa`);
+}

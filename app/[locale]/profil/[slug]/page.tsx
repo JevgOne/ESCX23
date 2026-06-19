@@ -10,6 +10,7 @@ import {
   getAllServices,
   getGirlServices,
   getGirlScheduleForToday,
+  getGirlVideos,
   type ServiceRow,
 } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
@@ -152,7 +153,7 @@ export default async function ProfilPage({ params }: Props) {
     getCurrentUser().catch(() => null),
   ]);
 
-  const [girl, photos, reviews, plans, allServices, girlServiceIds, todaySchedule] = await Promise.all([
+  const [girl, photos, reviews, plans, allServices, girlServiceIds, todaySchedule, videos] = await Promise.all([
     Promise.resolve(girlRaw),
     girlRaw ? getPhotosForGirl(Number(girlRaw.id)).catch(() => []) : Promise.resolve([]),
     girlRaw ? getReviewsForGirl(Number(girlRaw.id), 6).catch(() => []) : Promise.resolve([]),
@@ -160,6 +161,7 @@ export default async function ProfilPage({ params }: Props) {
     getAllServices().catch(() => []),
     girlRaw ? getGirlServices(Number(girlRaw.id)).catch(() => [] as number[]) : Promise.resolve([] as number[]),
     girlRaw ? getGirlScheduleForToday(Number(girlRaw.id)).catch(() => ({ shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleAddress: null })) : Promise.resolve({ shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleAddress: null }),
+    girlRaw ? getGirlVideos(Number(girlRaw.id)).catch(() => []) : Promise.resolve([]),
   ]);
   // Only show services the girl actually offers (basic auto-included + extras she checked)
   const services = allServices.filter((s) => girlServiceIds.includes(Number(s.id)));
@@ -359,6 +361,7 @@ export default async function ProfilPage({ params }: Props) {
                 const g = girl as unknown as Record<string, unknown>;
                 return g.style_wardrobe ? String(g.style_wardrobe) : null;
               })()}
+              videos={videos.filter((v) => v.vimeo_id).map((v) => ({ id: v.id, vimeo_id: v.vimeo_id, url: v.url }))}
             />
             <ProfilDetails
               girl={girlTyped}

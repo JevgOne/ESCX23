@@ -87,6 +87,12 @@ const PIERCING_VAL: Record<string, Record<string, string>> = {
 
 interface TopService { name: string; category?: string }
 
+interface VideoItem {
+  id: number;
+  vimeo_id: string;
+  url: string;
+}
+
 interface ProfilHeroProps {
   girl: Girl;
   photos: Photo[];
@@ -106,11 +112,12 @@ interface ProfilHeroProps {
   styleWardrobe?: string | null;
   isNew?: boolean;
   isVip?: boolean;
+  videos?: VideoItem[];
 }
 
 const NEW_LABEL: Record<string, string> = { cs: 'NOVÁ', en: 'NEW', de: 'NEU', uk: 'НОВА' };
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, videos = [] }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -438,7 +445,9 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
 
       <div className="media-tabs">
         <span className="media-tab active">{fotoLabel} <span className="media-tab-count">{photos.length}</span></span>
-        <span className="media-tab">{videoLabel} <span className="media-tab-count">0</span></span>
+        {videos.length > 0 && (
+          <span className="media-tab">{videoLabel} <span className="media-tab-count">{videos.length}</span></span>
+        )}
       </div>
 
       {allPhotos.length > 0 && (
@@ -448,6 +457,27 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
               <img src={photoUrl(photo.url ? String(photo.url) : null)} alt={`${altBase} — ${i + 1}`} loading="lazy" />
             </div>
           ))}
+        </div>
+      )}
+
+      {videos.length > 0 && (
+        <div className="profile-videos">
+          <div className="profile-videos-label">
+            {videoLabel} ({videos.length})
+          </div>
+          <div className="profile-videos-grid">
+            {videos.map((v) => (
+              <div key={v.id} className="profile-video-embed">
+                <iframe
+                  src={`https://player.vimeo.com/video/${v.vimeo_id}?badge=0&autopause=0&player_id=0`}
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  title={`${name} video`}
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

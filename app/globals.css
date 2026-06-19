@@ -9726,6 +9726,40 @@ body {
   object-fit: cover;
 }
 
+/* Profile videos (Vimeo embeds) */
+.profile-videos {
+  margin-top: 16px;
+}
+.profile-videos-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 10px;
+}
+.profile-videos-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.profile-video-embed {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 */
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+.profile-video-embed iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
 /* Reviews empty state + action row */
 .review-empty {
   text-align: center;

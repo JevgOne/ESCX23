@@ -71,7 +71,10 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
-        (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
+        COALESCE(
+          (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
+          (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1)
+        ) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
@@ -176,7 +179,10 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         se2.exception_type AS tmrw_ex_type,
         l2.display_name AS tmrw_location,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
-        (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
+        COALESCE(
+          (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
+          (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1)
+        ) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
@@ -658,7 +664,10 @@ export async function getGirlsForDay(
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location, l.district AS schedule_district,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
-        (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
+        COALESCE(
+          (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
+          (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1)
+        ) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
@@ -1829,7 +1838,10 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
-        (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
+        COALESCE(
+          (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
+          (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1)
+        ) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
@@ -2046,7 +2058,10 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust,
         g.created_at, g.is_new, g.badge_type, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
-        (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1) AS secondary_photo,
+        COALESCE(
+          (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
+          (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1)
+        ) AS secondary_photo,
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
@@ -2085,6 +2100,34 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
       reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
       hashtags: parseLangs(r.hashtags),
     }));
+}
+
+export interface GirlVideo {
+  id: number;
+  girl_id: number;
+  url: string;
+  vimeo_id: string;
+  display_order: number;
+  created_at: string | null;
+}
+
+export async function getGirlVideos(girlId: number): Promise<GirlVideo[]> {
+  const res = await db.execute({
+    sql: `SELECT id, girl_id, url, display_order, created_at FROM girl_videos WHERE girl_id = ? ORDER BY display_order ASC, id ASC`,
+    args: [girlId],
+  });
+  return res.rows.map((r) => {
+    const url = String(r.url ?? '');
+    const match = url.match(/(?:vimeo\.com\/(?:video\/)?|player\.vimeo\.com\/video\/)(\d+)/);
+    return {
+      id: Number(r.id),
+      girl_id: Number(r.girl_id),
+      url,
+      vimeo_id: match ? match[1] : '',
+      display_order: Number(r.display_order ?? 0),
+      created_at: r.created_at != null ? String(r.created_at) : null,
+    };
+  });
 }
 
 export async function getGirlServices(girlId: number): Promise<number[]> {
