@@ -46,6 +46,7 @@ export default async function AdminSidebar() {
 
   let pendingApplications = 0;
   let unreadNotifications = 0;
+  let pendingReviews = 0;
   try {
     const counts = await getApplicationCounts();
     pendingApplications = counts.pending;
@@ -54,6 +55,14 @@ export default async function AdminSidebar() {
   }
   try {
     unreadNotifications = await getUnreadNotificationCount();
+  } catch {
+    // ignore
+  }
+  try {
+    const res = await (await import('@/lib/db')).db.execute(
+      `SELECT COUNT(*) AS cnt FROM reviews WHERE status = 'pending'`
+    );
+    pendingReviews = Number(res.rows[0]?.cnt ?? 0);
   } catch {
     // ignore
   }
@@ -74,7 +83,9 @@ export default async function AdminSidebar() {
             ? pendingApplications
             : item.href === '/admin/notifikace' && unreadNotifications > 0
               ? unreadNotifications
-              : null;
+              : item.href === '/admin/recenze' && pendingReviews > 0
+                ? pendingReviews
+                : null;
           return (
             <a
               key={item.href}
