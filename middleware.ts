@@ -5,8 +5,9 @@ import { type NextRequest } from 'next/server';
 const intl = createMiddleware(routing);
 
 export default function middleware(request: NextRequest) {
+  const originalPathname = request.nextUrl.pathname;
   const response = intl(request);
-  response.headers.set('x-pathname', request.nextUrl.pathname);
+  response.headers.set('x-pathname', originalPathname);
   return response;
 }
 

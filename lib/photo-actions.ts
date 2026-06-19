@@ -13,13 +13,20 @@ const MAX_BYTES = 10 * 1024 * 1024;
 export async function uploadPhotoForm(formData: FormData) {
   const girlId = Number(formData.get('girl_id'));
   const skipWatermark = formData.get('skip_watermark') === '1';
+  const source = formData.get('source');
 
   await requireAdmin();
 
   // Support multiple files
   const files = formData.getAll('photo') as File[];
   const validFiles = files.filter((f) => f && f.size > 0 && f.size <= MAX_BYTES);
-  if (validFiles.length === 0) return { error: 'No file' };
+  if (validFiles.length === 0) {
+    if (source === 'admin') {
+      revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
+      redirect(`/cs/admin/divky/${girlId}/fotky`);
+    }
+    return { error: 'No file' };
+  }
 
   // New photos get display_order BEFORE existing ones (so they show first)
   const minRes = await db.execute({
@@ -63,6 +70,10 @@ export async function uploadPhotoForm(formData: FormData) {
   revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
   revalidatePath(`/cs/studio/fotky`);
   revalidatePath(`/cs`);
+
+  if (source === 'admin') {
+    redirect(`/cs/admin/divky/${girlId}/fotky`);
+  }
 
   return { ok: true };
 }

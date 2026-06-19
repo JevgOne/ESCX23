@@ -50,6 +50,7 @@ export interface GirlCard {
   isVip: boolean;
   isPaused: boolean;
   isNew: boolean;
+  badgeType: string | null;
   languages: string[];
   rating: number;
   reviewsCount: number;
@@ -140,6 +141,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
         isVip: false,
         isPaused,
         isNew,
+        badgeType: r.badge_type ? String(r.badge_type) : null,
         languages: parseLangs(r.languages),
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
@@ -261,6 +263,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         isVip: false,
         isPaused,
         isNew,
+        badgeType: r.badge_type ? String(r.badge_type) : null,
         languages: parseLangs(r.languages),
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
@@ -735,6 +738,7 @@ export async function getGirlsForDay(
         isVip: false,
         isPaused: false,
         isNew,
+        badgeType: r.badge_type ? String(r.badge_type) : null,
         languages: parseLangs(r.languages),
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
@@ -1815,6 +1819,7 @@ export async function getGirlsForListing(
         isVip: false,
         isPaused,
         isNew,
+        badgeType: r.badge_type ? String(r.badge_type) : null,
         languages: parseLangs(r.languages),
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
@@ -1904,6 +1909,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         isVip: false,
         isPaused: false,
         isNew,
+        badgeType: r.badge_type ? String(r.badge_type) : null,
         languages: parseLangs(r.languages),
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
@@ -2095,6 +2101,7 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
       isVip: false,
       isPaused: false,
       isNew: computeIsNew(r.is_new, r.created_at, r.badge_type),
+      badgeType: r.badge_type ? String(r.badge_type) : null,
       languages: parseLangs(r.languages),
       rating: r.rating != null ? Number(r.rating) : 0,
       reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,

@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
+import { createAdminNotification } from '@/lib/admin-notifications';
 
 export async function submitApplication(formData: FormData) {
   const name = String(formData.get('name') ?? '').trim();
@@ -64,6 +65,13 @@ export async function submitApplication(formData: FormData) {
       languages, services, availability, bio_cs, bio_en, experience, styleWardrobe,
     ],
   });
+
+  await createAdminNotification(
+    'application_new',
+    `Nová aplikace: ${name}`,
+    `${name}, ${age} let, ${phone}`,
+    `/cs/admin/aplikace`,
+  ).catch(() => {});
 
   redirect(`/${locale}/join?sent=1`);
 }

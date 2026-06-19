@@ -335,6 +335,7 @@ export default async function ProfilPage({ params }: Props) {
               scheduleAddress={todaySchedule.scheduleAddress}
               isNew={girlIsNew}
               isVip={girlVip}
+              badgeType={badgeType || null}
               topServices={servicesTyped.map((s) => {
                 const key = `name_${locale}` as keyof typeof s;
                 return { name: String(s[key] ?? s.name_en ?? s.slug ?? ''), category: String(s.category ?? 'basic') };

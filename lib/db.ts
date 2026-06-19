@@ -48,6 +48,23 @@ async function runMigrations(client: Client) {
     }
   }
 
+  // Create admin_notifications table if it doesn't exist
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS admin_notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        link TEXT,
+        read INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch {
+    // Table already exists — OK
+  }
+
   // Fix CHECK constraint on girls.status — allow 'archived' value
   try {
     const checkRes = await client.execute(`SELECT sql FROM sqlite_master WHERE type='table' AND name='girls'`);

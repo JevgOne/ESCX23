@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ServiceRow } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
+import { translateLocation } from '@/lib/utils';
 
 interface Girl {
   id: unknown;
@@ -206,7 +207,7 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
   const rating = Number(girl.rating ?? 0);
   const reviewCount = Number(girl.reviews_count ?? 0);
   const phone = girl.phone ? String(girl.phone) : null;
-  const district = scheduleLocation ?? String(girl.location ?? 'Praha');
+  const district = translateLocation(scheduleLocation ?? null, locale);
 
   const bio =
     locale === 'cs'
@@ -274,7 +275,7 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
       </div>
 
       <div className="profile-meta-line profile-desktop-only">
-        <span>📍 {scheduleAddress ?? (district !== 'Praha' ? `${cityName(locale)} · ${district}` : cityName(locale))}</span>
+        <span>📍 {scheduleAddress ?? (district ? `${cityName(locale)} · ${district}` : cityName(locale))}</span>
         {shiftFrom && shiftTo && (
           <>
             <span className="profile-meta-sep">·</span>

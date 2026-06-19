@@ -1,6 +1,7 @@
 import { Link } from '@/i18n/navigation';
 import { getLocale } from 'next-intl/server';
 import { photoUrl } from '@/lib/photoUrl';
+import { translateLocation } from '@/lib/utils';
 import type { GirlCard as GirlCardType } from '@/lib/queries';
 
 const FLAG_MAP: Record<string, string> = {
@@ -24,6 +25,25 @@ const ALT_NOUN: Record<string, string> = {
   uk: 'супутниця',
 };
 const NEW_LABEL: Record<string, string> = { cs: 'NOVÁ', en: 'NEW', de: 'NEU', uk: 'НОВА' };
+
+const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string }> = {
+  top: {
+    label: { cs: 'TOP', en: 'TOP', de: 'TOP', uk: 'TOP' },
+    css: 'top',
+  },
+  top_reviews: {
+    label: { cs: 'TOP HODNOCENÍ', en: 'TOP REVIEWS', de: 'TOP BEWERTUNG', uk: 'ТОП ВІДГУКИ' },
+    css: 'top-reviews',
+  },
+  recommended: {
+    label: { cs: 'DOPORUČUJEME', en: 'RECOMMENDED', de: 'EMPFOHLEN', uk: 'РЕКОМЕНДУЄМО' },
+    css: 'recommended',
+  },
+  hot: {
+    label: { cs: 'HOT', en: 'HOT', de: 'HOT', uk: 'HOT' },
+    css: 'hot',
+  },
+};
 
 interface GirlCardProps {
   girl: GirlCardType;
@@ -53,7 +73,12 @@ export default async function GirlCard({ girl }: GirlCardProps) {
         {girl.isVip && (
           <span className="girl-tag-pill vip">★ VIP</span>
         )}
-        {!girl.isVip && girl.isNew && (
+        {!girl.isVip && girl.badgeType && BADGE_CONFIG[girl.badgeType] && (
+          <span className={`girl-tag-pill ${BADGE_CONFIG[girl.badgeType].css}`}>
+            {BADGE_CONFIG[girl.badgeType].label[locale] ?? BADGE_CONFIG[girl.badgeType].label.en}
+          </span>
+        )}
+        {!girl.isVip && !girl.badgeType && girl.isNew && (
           <span className="girl-tag-pill new">{NEW_LABEL[locale] ?? NEW_LABEL.en}</span>
         )}
 
@@ -121,7 +146,7 @@ export default async function GirlCard({ girl }: GirlCardProps) {
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span>{girl.location}</span>
+            <span>{translateLocation(girl.location, locale)}</span>
           </div>
         )}
 

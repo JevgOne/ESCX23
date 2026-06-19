@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 // Routes a manager can access. Anything else under /admin/ is admin-only.
 const MANAGER_ALLOWED_PATHS = [
   '/admin',
+  '/admin/notifikace',
   '/admin/divky',
   '/admin/schedules',
   '/admin/recenze',

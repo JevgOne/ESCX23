@@ -29,7 +29,7 @@ export default function ProfilStickyCta({ girl, labels, shiftFrom, shiftTo, loca
   const name = String(girl.name ?? '');
   const age = String(girl.age ?? '');
   const phone = girl.phone ? String(girl.phone) : null;
-  const district = scheduleLocation ?? String(girl.location ?? 'Praha');
+  const district = scheduleLocation;
 
   const waPhone = phone ? phone.replace(/\s+/g, '').replace(/^\+/, '') : null;
   const WA_GREETING: Record<string, (n: string) => string> = {
@@ -55,8 +55,7 @@ export default function ProfilStickyCta({ girl, labels, shiftFrom, shiftTo, loca
           <span>·</span>
           <span>{age}</span>
           <span>·</span>
-          <span>{district}</span>
-          <span>·</span>
+          {district && <><span>{district}</span><span>·</span></>}
           <span>{(() => {
             const L = STICKY_LABELS[locale] ?? STICKY_LABELS.en;
             return shiftFrom && shiftTo ? `${L.today} ${shiftFrom}–${shiftTo}` : L.appt;

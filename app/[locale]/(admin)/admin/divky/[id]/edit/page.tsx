@@ -18,9 +18,12 @@ const STATUS_OPTIONS = [
 ];
 const BADGE_OPTIONS = [
   { value: '', label: '— žádný —' },
-  { value: 'new', label: 'NEW' },
+  { value: 'new', label: 'NEW (nová)' },
   { value: 'hot', label: 'HOT' },
   { value: 'vip', label: 'VIP' },
+  { value: 'top', label: 'TOP (top dívka)' },
+  { value: 'top_reviews', label: 'TOP REVIEWS (nejlépe hodnocená)' },
+  { value: 'recommended', label: 'DOPORUČUJEME' },
 ];
 const PIERCING_OPTIONS = [
   { value: '0', label: 'Žádný' },

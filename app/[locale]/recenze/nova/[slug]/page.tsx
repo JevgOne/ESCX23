@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { photoUrl } from '@/lib/photoUrl';
+import { createAdminNotification } from '@/lib/admin-notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,6 +67,13 @@ async function submitReview(formData: FormData) {
             VALUES (?, ?, ?, ?, 'pending', ?, ?)`,
       args: [girlId, ratingOverall, text, nickname, vibe, tagsJson],
     });
+
+    await createAdminNotification(
+      'review_new',
+      `Nová recenze pro ${slug}`,
+      `${nickname} napsal/a recenzi (${ratingOverall}★)`,
+      `/cs/admin/recenze`,
+    ).catch(() => {});
 
     // Rating recalc happens when admin approves the review (admin-actions.ts)
   } catch (err) {
