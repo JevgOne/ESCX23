@@ -28,43 +28,53 @@ export async function uploadPhotoForm(formData: FormData) {
     return { error: 'No file' };
   }
 
-  // New photos get display_order BEFORE existing ones (so they show first)
-  const minRes = await db.execute({
-    sql: `SELECT COALESCE(MIN(display_order), 100) AS min_order FROM girl_photos WHERE girl_id = ?`,
-    args: [girlId],
-  });
-  let nextOrder = Number(minRes.rows[0]?.min_order ?? 100) - validFiles.length;
+  try {
+    // New photos get display_order BEFORE existing ones (so they show first)
+    const minRes = await db.execute({
+      sql: `SELECT COALESCE(MIN(display_order), 100) AS min_order FROM girl_photos WHERE girl_id = ?`,
+      args: [girlId],
+    });
+    let nextOrder = Number(minRes.rows[0]?.min_order ?? 100) - validFiles.length;
 
-  for (const file of validFiles) {
-    const ext = (file.name.split('.').pop() ?? '').toLowerCase();
-    if (!ALLOWED_EXT.has(ext)) continue;
+    for (const file of validFiles) {
+      const ext = (file.name.split('.').pop() ?? '').toLowerCase();
+      if (!ALLOWED_EXT.has(ext)) continue;
 
-    let uploadPayload: File | Buffer = file;
-    let finalExt = ext;
-    let finalContentType = file.type || `image/${ext}`;
-    if (!skipWatermark) {
-      try {
-        const raw = Buffer.from(await file.arrayBuffer());
-        uploadPayload = await watermarkImage(raw);
-        finalExt = 'jpg';
-        finalContentType = 'image/jpeg';
-      } catch (err) {
-        console.error('Watermark failed, uploading original:', err);
+      let uploadPayload: File | Buffer = file;
+      let finalExt = ext;
+      let finalContentType = file.type || `image/${ext}`;
+      if (!skipWatermark) {
+        try {
+          const raw = Buffer.from(await file.arrayBuffer());
+          uploadPayload = await watermarkImage(raw);
+          finalExt = 'jpg';
+          finalContentType = 'image/jpeg';
+        } catch (err) {
+          console.error('[photo-upload] Watermark failed, uploading original:', err);
+          // Upload original without watermark
+        }
       }
+
+      const filename = `girls/${girlId}/${Date.now()}-${crypto.randomUUID()}.${finalExt}`;
+      const blob = await put(filename, uploadPayload, {
+        access: 'public',
+        contentType: finalContentType,
+        addRandomSuffix: false,
+      });
+
+      await db.execute({
+        sql: `INSERT INTO girl_photos (girl_id, filename, url, is_primary, display_order) VALUES (?, ?, ?, 0, ?)`,
+        args: [girlId, filename, blob.url, nextOrder],
+      });
+      nextOrder++;
     }
-
-    const filename = `girls/${girlId}/${Date.now()}-${crypto.randomUUID()}.${finalExt}`;
-    const blob = await put(filename, uploadPayload, {
-      access: 'public',
-      contentType: finalContentType,
-      addRandomSuffix: false,
-    });
-
-    await db.execute({
-      sql: `INSERT INTO girl_photos (girl_id, filename, url, is_primary, display_order) VALUES (?, ?, ?, 0, ?)`,
-      args: [girlId, filename, blob.url, nextOrder],
-    });
-    nextOrder++;
+  } catch (err) {
+    console.error('[photo-upload] Upload failed for girl', girlId, err);
+    if (source === 'admin') {
+      revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
+      redirect(`/cs/admin/divky/${girlId}/fotky?error=upload`);
+    }
+    return { error: 'Upload failed' };
   }
 
   revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
