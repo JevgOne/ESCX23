@@ -28,9 +28,11 @@ export default function PhotoLightbox({ photos, girlName }: PhotoLightboxProps) 
       if (e.key === 'ArrowRight') next();
     };
     document.body.style.overflow = 'hidden';
+    document.documentElement.classList.add('lightbox-active');
     window.addEventListener('keydown', handler);
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.classList.remove('lightbox-active');
       window.removeEventListener('keydown', handler);
     };
   }, [open, close, prev, next]);

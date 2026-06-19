@@ -4065,6 +4065,21 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   transition: transform 0.3s;
 }
 .lightbox-thumb:hover img { transform: scale(1.08); }
+/* When lightbox is open, force ALL page content behind it */
+html.lightbox-active body > *:not(.lightbox-overlay) {
+  position: relative !important;
+  z-index: 0 !important;
+}
+html.lightbox-active .profile-photo-col,
+html.lightbox-active .profile-stat-hero,
+html.lightbox-active .ig-stat-hero,
+html.lightbox-active header.header,
+html.lightbox-active .profile-sticky-bar,
+html.lightbox-active .profile-sticky-bar-desktop {
+  z-index: 0 !important;
+  position: relative !important;
+}
+
 .lightbox-overlay {
   position: fixed;
   top: 0;
@@ -4079,6 +4094,7 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   align-items: center;
   justify-content: center;
   animation: lightbox-fade-in 0.2s ease;
+  isolation: isolate;
 }
 @keyframes lightbox-fade-in {
   from { opacity: 0; }
