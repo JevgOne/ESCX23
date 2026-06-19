@@ -15,11 +15,16 @@ export async function uploadPhotoForm(formData: FormData) {
   const skipWatermark = formData.get('skip_watermark') === '1';
   const source = formData.get('source');
 
+  console.log('[photo-upload] START girlId=', girlId, 'source=', source);
+
   await requireAdmin();
+  console.log('[photo-upload] auth OK');
 
   // Support multiple files
   const files = formData.getAll('photo') as File[];
+  console.log('[photo-upload] files count=', files.length, 'sizes=', files.map(f => f.size));
   const validFiles = files.filter((f) => f && f.size > 0 && f.size <= MAX_BYTES);
+  console.log('[photo-upload] valid files=', validFiles.length);
   if (validFiles.length === 0) {
     if (source === 'admin') {
       revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
@@ -39,28 +44,32 @@ export async function uploadPhotoForm(formData: FormData) {
     for (const file of validFiles) {
       const ext = (file.name.split('.').pop() ?? '').toLowerCase();
       if (!ALLOWED_EXT.has(ext)) continue;
+      console.log('[photo-upload] processing file:', file.name, 'size:', file.size, 'ext:', ext);
 
       let uploadPayload: File | Buffer = file;
       let finalExt = ext;
       let finalContentType = file.type || `image/${ext}`;
       if (!skipWatermark) {
         try {
+          console.log('[photo-upload] watermarking...');
           const raw = Buffer.from(await file.arrayBuffer());
           uploadPayload = await watermarkImage(raw);
           finalExt = 'jpg';
           finalContentType = 'image/jpeg';
+          console.log('[photo-upload] watermark OK');
         } catch (err) {
           console.error('[photo-upload] Watermark failed, uploading original:', err);
-          // Upload original without watermark
         }
       }
 
+      console.log('[photo-upload] uploading to blob...');
       const filename = `girls/${girlId}/${Date.now()}-${crypto.randomUUID()}.${finalExt}`;
       const blob = await put(filename, uploadPayload, {
         access: 'public',
         contentType: finalContentType,
         addRandomSuffix: false,
       });
+      console.log('[photo-upload] blob OK:', blob.url);
 
       await db.execute({
         sql: `INSERT INTO girl_photos (girl_id, filename, url, is_primary, display_order) VALUES (?, ?, ?, 0, ?)`,
