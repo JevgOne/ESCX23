@@ -1,4 +1,5 @@
 import { photoUrl } from '@/lib/photoUrl';
+import PhotoLightbox from './PhotoLightbox';
 
 interface Photo {
   url: unknown;
@@ -31,10 +32,15 @@ export default function ProfilGallery({ photos, girlName, heading, age = null, l
     ? `${girlName}, ${age}, ${city} ${altNoun}`
     : `${girlName}, ${city} ${altNoun}`;
 
+  const lightboxPhotos = visible.map((p, i) => ({
+    url: p.url ? String(p.url) : '',
+    id: p.id != null ? String(p.id) : String(i),
+  }));
+
   return (
     <section className="profile-section">
       <div className="profile-section-title">{heading}</div>
-      <div className="gallery-6col">
+      <div className="gallery-6col gallery-lightbox-wrap">
         {visible.map((photo, i) => (
           <div key={String(photo.id ?? i)} className="gallery-tile">
             <img
@@ -44,6 +50,7 @@ export default function ProfilGallery({ photos, girlName, heading, age = null, l
             />
           </div>
         ))}
+        <PhotoLightbox photos={lightboxPhotos} girlName={girlName} />
       </div>
     </section>
   );
