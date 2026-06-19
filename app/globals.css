@@ -406,21 +406,28 @@ nav.main-nav a:hover {
   animation: pulse-green 2s infinite;
 }
 .girl-tag-pill.top {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #1a1420;
-  font-weight: 800;
+  background: rgba(245, 158, 11, 0.18);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  backdrop-filter: blur(8px);
 }
 .girl-tag-pill.top-reviews {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: #fff;
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  backdrop-filter: blur(8px);
 }
 .girl-tag-pill.recommended {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  color: #fff;
+  background: rgba(139, 92, 246, 0.18);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  backdrop-filter: blur(8px);
 }
 .girl-tag-pill.hot {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: #fff;
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  backdrop-filter: blur(8px);
 }
 
 .girl-media-pills {
