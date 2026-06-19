@@ -5,14 +5,12 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from './db';
 import { requireAdmin } from './auth';
-import { watermarkImage } from './watermark';
 
 const ALLOWED_EXT = new Set(['jpg', 'jpeg', 'png', 'webp', 'avif', 'heic']);
 const MAX_BYTES = 10 * 1024 * 1024;
 
 export async function uploadPhotoForm(formData: FormData) {
   const girlId = Number(formData.get('girl_id'));
-  const skipWatermark = formData.get('skip_watermark') === '1';
   const source = formData.get('source');
 
   console.log('[photo-upload] START girlId=', girlId, 'source=', source);
@@ -26,6 +24,7 @@ export async function uploadPhotoForm(formData: FormData) {
   const validFiles = files.filter((f) => f && f.size > 0 && f.size <= MAX_BYTES);
   console.log('[photo-upload] valid files=', validFiles.length);
   if (validFiles.length === 0) {
+    console.log('[photo-upload] NO valid files, redirecting');
     if (source === 'admin') {
       revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
       redirect(`/cs/admin/divky/${girlId}/fotky`);
@@ -40,34 +39,21 @@ export async function uploadPhotoForm(formData: FormData) {
       args: [girlId],
     });
     let nextOrder = Number(minRes.rows[0]?.min_order ?? 100) - validFiles.length;
+    console.log('[photo-upload] nextOrder=', nextOrder);
 
     for (const file of validFiles) {
       const ext = (file.name.split('.').pop() ?? '').toLowerCase();
-      if (!ALLOWED_EXT.has(ext)) continue;
-      console.log('[photo-upload] processing file:', file.name, 'size:', file.size, 'ext:', ext);
-
-      let uploadPayload: File | Buffer = file;
-      let finalExt = ext;
-      let finalContentType = file.type || `image/${ext}`;
-      // Watermark temporarily disabled for debugging
-      if (!skipWatermark && false) {
-        try {
-          console.log('[photo-upload] watermarking...');
-          const raw = Buffer.from(await file.arrayBuffer());
-          uploadPayload = await watermarkImage(raw);
-          finalExt = 'jpg';
-          finalContentType = 'image/jpeg';
-          console.log('[photo-upload] watermark OK');
-        } catch (err) {
-          console.error('[photo-upload] Watermark failed, uploading original:', err);
-        }
+      if (!ALLOWED_EXT.has(ext)) {
+        console.log('[photo-upload] skipping invalid ext:', ext);
+        continue;
       }
+      console.log('[photo-upload] processing:', file.name, file.size, ext);
 
-      console.log('[photo-upload] uploading to blob...');
-      const filename = `girls/${girlId}/${Date.now()}-${crypto.randomUUID()}.${finalExt}`;
-      const blob = await put(filename, uploadPayload, {
+      const filename = `girls/${girlId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+      console.log('[photo-upload] putting to blob:', filename);
+      const blob = await put(filename, file, {
         access: 'public',
-        contentType: finalContentType,
+        contentType: file.type || `image/${ext}`,
         addRandomSuffix: false,
       });
       console.log('[photo-upload] blob OK:', blob.url);
@@ -76,15 +62,18 @@ export async function uploadPhotoForm(formData: FormData) {
         sql: `INSERT INTO girl_photos (girl_id, filename, url, is_primary, display_order) VALUES (?, ?, ?, 0, ?)`,
         args: [girlId, filename, blob.url, nextOrder],
       });
+      console.log('[photo-upload] DB insert OK');
       nextOrder++;
     }
-  } catch (err) {
-    console.error('[photo-upload] Upload failed for girl', girlId, err);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : '';
+    console.error('[photo-upload] FAILED:', msg, stack);
     if (source === 'admin') {
       revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
-      redirect(`/cs/admin/divky/${girlId}/fotky?error=upload`);
+      redirect(`/cs/admin/divky/${girlId}/fotky?error=${encodeURIComponent(msg)}`);
     }
-    return { error: 'Upload failed' };
+    return { error: msg };
   }
 
   revalidatePath(`/cs/admin/divky/${girlId}/fotky`);

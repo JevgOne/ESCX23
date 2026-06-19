@@ -32,10 +32,13 @@ async function getPhotos(girlId: number): Promise<Photo[]> {
 
 export default async function AdminGirlFotkyPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { locale, id } = await params;
+  const sp = await searchParams;
   setRequestLocale(locale);
 
   const girl = await getGirlById(Number(id));
@@ -77,6 +80,12 @@ export default async function AdminGirlFotkyPage({
           ← Zpět na detail dívky
         </a>
       </div>
+
+      {sp.error && (
+        <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', color: '#f87171', fontSize: '13px' }}>
+          Upload selhal: {decodeURIComponent(sp.error)}
+        </div>
+      )}
 
       <div className="upload-form" style={{ marginBottom: '32px' }}>
         <div style={{ fontSize: '12px', color: 'var(--color-coral)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>
