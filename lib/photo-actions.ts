@@ -49,7 +49,8 @@ export async function uploadPhotoForm(formData: FormData) {
       let uploadPayload: File | Buffer = file;
       let finalExt = ext;
       let finalContentType = file.type || `image/${ext}`;
-      if (!skipWatermark) {
+      // Watermark temporarily disabled for debugging
+      if (!skipWatermark && false) {
         try {
           console.log('[photo-upload] watermarking...');
           const raw = Buffer.from(await file.arrayBuffer());
