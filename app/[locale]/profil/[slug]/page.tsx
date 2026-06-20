@@ -32,6 +32,7 @@ export const revalidate = 0;
 
 interface Props {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<{ media?: string }>;
 }
 
 /** Localized title suffix per locale. */
@@ -142,8 +143,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 }
 
-export default async function ProfilPage({ params }: Props) {
+export default async function ProfilPage({ params, searchParams }: Props) {
   const { locale, slug } = await params;
+  const sp = await searchParams;
+  const activeMedia = sp.media === 'video' ? 'video' as const : 'photo' as const;
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: 'profil' });
@@ -329,6 +332,8 @@ export default async function ProfilPage({ params }: Props) {
               photos={photoTyped}
               verifiedLabel={labels.verified}
               locale={locale}
+              activeMedia={activeMedia}
+              slug={slug}
               shiftFrom={todaySchedule.shiftFrom}
               shiftTo={todaySchedule.shiftTo}
               scheduleLocation={todaySchedule.scheduleLocation}

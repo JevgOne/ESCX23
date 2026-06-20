@@ -66,6 +66,30 @@ async function runMigrations(client: Client) {
   }
 
   // CHECK constraint on girls.status already fixed to include 'archived' — migration removed
+
+  // Apartment reviews table
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS apartment_reviews (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        location_id INTEGER NOT NULL,
+        author_name TEXT NOT NULL,
+        rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+        content TEXT NOT NULL,
+        cleanliness INTEGER CHECK (cleanliness >= 1 AND cleanliness <= 5),
+        discretion INTEGER CHECK (discretion >= 1 AND discretion <= 5),
+        comfort INTEGER CHECK (comfort >= 1 AND comfort <= 5),
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+        approved_by INTEGER,
+        approved_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        ip_address TEXT,
+        FOREIGN KEY (location_id) REFERENCES locations(id)
+      )
+    `);
+  } catch {
+    // Table already exists — OK
+  }
 }
 
 // Fire and forget on startup

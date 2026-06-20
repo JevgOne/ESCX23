@@ -85,6 +85,9 @@
       "added_photos": "hat {count} neue Fotos hinzugefügt",
       "added_photo": "hat ein neues Foto hinzugefügt",
       "received_review": "hat eine {rating}★ Bewertung erhalten",
+      "added_video": "hat ein neues Video hinzugefügt",
+      "added_videos": "hat {count} neue Videos hinzugefügt",
+      "updated_profile": "hat ihr Profil aktualisiert",
       "no_recent": "Noch keine Updates."
     },
     "trust": {

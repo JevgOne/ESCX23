@@ -38,15 +38,19 @@ export default async function ActivityFeed({ locale }: ActivityFeedProps) {
                   loading="lazy"
                 />
                 <div className="activity-icon">
-                  {item.kind === 'photo' ? '📷' : '⭐'}
+                  {item.kind === 'photo' ? '📷' :
+                   item.kind === 'video' ? '🎬' :
+                   item.kind === 'profile_update' ? '✨' : '⭐'}
                 </div>
                 <div className="activity-text">
                   <strong>{item.girlName}</strong>{' '}
                   {item.kind === 'photo'
-                    ? item.photoCount === 1
-                      ? t('added_photo')
-                      : t('added_photos', { count: item.photoCount ?? 1 })
-                    : t('received_review', { rating: item.rating ?? 5 })}
+                    ? (item.photoCount === 1 ? t('added_photo') : t('added_photos', { count: item.photoCount ?? 1 }))
+                    : item.kind === 'video'
+                      ? ((item.videoCount ?? 1) === 1 ? t('added_video') : t('added_videos', { count: item.videoCount ?? 1 }))
+                      : item.kind === 'profile_update'
+                        ? t('updated_profile')
+                        : t('received_review', { rating: item.rating ?? 5 })}
                 </div>
                 <div className="activity-time">{relativeTime(item.when)}</div>
               </Link>

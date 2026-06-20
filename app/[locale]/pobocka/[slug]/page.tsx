@@ -2,7 +2,8 @@ import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
-import { getLocationBySlug, getActiveLocations, getGirlsWithToday } from '@/lib/queries';
+import { getLocationBySlug, getActiveLocations, getGirlsWithToday, getApartmentReviews, getApartmentRatingStats } from '@/lib/queries';
+import { submitApartmentReview } from '@/lib/apartment-review-actions';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import Link from 'next/link';
 import { Link as I18nLink } from '@/i18n/navigation';
@@ -67,6 +68,23 @@ interface PageBundle {
   parkingH: string;
   parkingDefault: string;
   othersH: string;
+  reviewsH: string;
+  reviewsOf: string;
+  reviewsCount: (n: number) => string;
+  cleanlinessLbl: string;
+  discretionLbl: string;
+  comfortLbl: string;
+  reviewFormH: string;
+  reviewNameLbl: string;
+  reviewNamePh: string;
+  reviewRatingLbl: string;
+  reviewCommentLbl: string;
+  reviewCommentPh: string;
+  reviewSubmit: string;
+  reviewSent: string;
+  reviewValidation: string;
+  reviewRateLimit: string;
+  starLabels: string[];
 }
 
 const T: Record<string, PageBundle> = {
@@ -99,6 +117,23 @@ const T: Record<string, PageBundle> = {
     parkingH: 'Možnost parkování',
     parkingDefault: 'Modré zóny v okolních ulicích, placené parkoviště do 2 minut.',
     othersH: 'Další apartmány',
+    reviewsH: 'Hodnocení apartmánu',
+    reviewsOf: 'z 5',
+    reviewsCount: (n) => `${n} ${n === 1 ? 'hodnocení' : n < 5 ? 'hodnocení' : 'hodnocení'}`,
+    cleanlinessLbl: 'Čistota',
+    discretionLbl: 'Diskrétnost',
+    comfortLbl: 'Komfort',
+    reviewFormH: 'Ohodnoťte apartmán',
+    reviewNameLbl: 'Vaše jméno',
+    reviewNamePh: 'Jan',
+    reviewRatingLbl: 'Celkové hodnocení',
+    reviewCommentLbl: 'Váš komentář',
+    reviewCommentPh: 'Napište svůj dojem z apartmánu...',
+    reviewSubmit: 'Odeslat hodnocení',
+    reviewSent: 'Děkujeme za hodnocení! Po schválení se zobrazí na stránce.',
+    reviewValidation: 'Vyplňte prosím všechna povinná pole (jméno, hodnocení, komentář min. 10 znaků).',
+    reviewRateLimit: 'Již jste odeslali hodnocení. Zkuste to znovu za 24 hodin.',
+    starLabels: ['1 hvězda', '2 hvězdy', '3 hvězdy', '4 hvězdy', '5 hvězd'],
   },
   en: {
     bcApartments: 'Apartments',
@@ -129,6 +164,23 @@ const T: Record<string, PageBundle> = {
     parkingH: 'Parking',
     parkingDefault: 'Blue zones in nearby streets, paid parking within 2 minutes.',
     othersH: 'Other apartments',
+    reviewsH: 'Apartment reviews',
+    reviewsOf: 'of 5',
+    reviewsCount: (n) => `${n} ${n === 1 ? 'review' : 'reviews'}`,
+    cleanlinessLbl: 'Cleanliness',
+    discretionLbl: 'Discretion',
+    comfortLbl: 'Comfort',
+    reviewFormH: 'Rate this apartment',
+    reviewNameLbl: 'Your name',
+    reviewNamePh: 'John',
+    reviewRatingLbl: 'Overall rating',
+    reviewCommentLbl: 'Your comment',
+    reviewCommentPh: 'Share your experience with this apartment...',
+    reviewSubmit: 'Submit review',
+    reviewSent: 'Thank you for your review! It will appear on the page after approval.',
+    reviewValidation: 'Please fill in all required fields (name, rating, comment min. 10 characters).',
+    reviewRateLimit: 'You have already submitted a review. Please try again in 24 hours.',
+    starLabels: ['1 star', '2 stars', '3 stars', '4 stars', '5 stars'],
   },
   de: {
     bcApartments: 'Apartments',
@@ -159,6 +211,23 @@ const T: Record<string, PageBundle> = {
     parkingH: 'Parkmöglichkeiten',
     parkingDefault: 'Blaue Zonen in den umliegenden Straßen, kostenpflichtiger Parkplatz in 2 Minuten erreichbar.',
     othersH: 'Weitere Apartments',
+    reviewsH: 'Bewertungen des Apartments',
+    reviewsOf: 'von 5',
+    reviewsCount: (n) => `${n} ${n === 1 ? 'Bewertung' : 'Bewertungen'}`,
+    cleanlinessLbl: 'Sauberkeit',
+    discretionLbl: 'Diskretion',
+    comfortLbl: 'Komfort',
+    reviewFormH: 'Apartment bewerten',
+    reviewNameLbl: 'Ihr Name',
+    reviewNamePh: 'Max',
+    reviewRatingLbl: 'Gesamtbewertung',
+    reviewCommentLbl: 'Ihr Kommentar',
+    reviewCommentPh: 'Teilen Sie Ihre Erfahrung mit diesem Apartment...',
+    reviewSubmit: 'Bewertung absenden',
+    reviewSent: 'Vielen Dank für Ihre Bewertung! Sie wird nach Genehmigung auf der Seite angezeigt.',
+    reviewValidation: 'Bitte füllen Sie alle Pflichtfelder aus (Name, Bewertung, Kommentar mind. 10 Zeichen).',
+    reviewRateLimit: 'Sie haben bereits eine Bewertung abgegeben. Bitte versuchen Sie es in 24 Stunden erneut.',
+    starLabels: ['1 Stern', '2 Sterne', '3 Sterne', '4 Sterne', '5 Sterne'],
   },
   uk: {
     bcApartments: 'Апартаменти',
@@ -189,6 +258,23 @@ const T: Record<string, PageBundle> = {
     parkingH: 'Паркування',
     parkingDefault: 'Сині зони на сусідніх вулицях, платне паркування за 2 хвилини.',
     othersH: 'Інші апартаменти',
+    reviewsH: 'Відгуки про апартамент',
+    reviewsOf: 'з 5',
+    reviewsCount: (n) => `${n} ${n === 1 ? 'відгук' : n < 5 ? 'відгуки' : 'відгуків'}`,
+    cleanlinessLbl: 'Чистота',
+    discretionLbl: 'Конфіденційність',
+    comfortLbl: 'Комфорт',
+    reviewFormH: 'Оцініть апартамент',
+    reviewNameLbl: 'Ваше ім\'я',
+    reviewNamePh: 'Іван',
+    reviewRatingLbl: 'Загальна оцінка',
+    reviewCommentLbl: 'Ваш коментар',
+    reviewCommentPh: 'Поділіться враженням від апартаменту...',
+    reviewSubmit: 'Надіслати відгук',
+    reviewSent: 'Дякуємо за відгук! Він з\'явиться на сторінці після схвалення.',
+    reviewValidation: 'Будь ласка, заповніть усі обов\'язкові поля (ім\'я, оцінка, коментар мін. 10 символів).',
+    reviewRateLimit: 'Ви вже надіслали відгук. Спробуйте знову через 24 години.',
+    starLabels: ['1 зірка', '2 зірки', '3 зірки', '4 зірки', '5 зірок'],
   },
 };
 
@@ -216,12 +302,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 }
 
-export default async function PobockaDetailPage({ params }: Props) {
+export default async function PobockaDetailPage({ params, searchParams }: Props & { searchParams: Promise<{ sent?: string; error?: string }> }) {
   const { locale, slug } = await params;
+  const sp = await searchParams;
   setRequestLocale(locale);
 
   const loc = await getLocationBySlug(slug, locale).catch(() => null);
   if (!loc) notFound();
+
+  /* Apartment reviews */
+  const [reviews, ratingStats] = await Promise.all([
+    getApartmentReviews(loc.id).catch(() => [] as Awaited<ReturnType<typeof getApartmentReviews>>),
+    getApartmentRatingStats(loc.id).catch(() => ({ avgRating: 0, totalReviews: 0, avgCleanliness: null, avgDiscretion: null, avgComfort: null })),
+  ]);
 
   const L = T[locale] ?? T.en;
   const others = (await getActiveLocations().catch(() => [])).filter((l) => l.name !== slug);
@@ -250,6 +343,8 @@ export default async function PobockaDetailPage({ params }: Props) {
     priceRange: '$$$',
     openingHours: ['Mo-Su 10:00-22:30'],
     image: `${BASE}/og/default.jpg`,
+    ratingValue: ratingStats.totalReviews > 0 ? ratingStats.avgRating : undefined,
+    ratingCount: ratingStats.totalReviews > 0 ? ratingStats.totalReviews : undefined,
   });
 
   const faqJsonLd = lc && lc.faq.length > 0
@@ -515,6 +610,141 @@ export default async function PobockaDetailPage({ params }: Props) {
           </div>
         </section>
       )}
+
+      {/* Apartment Reviews Section */}
+      <section className="pobocka-section">
+        <div className="container">
+          <h2 className="pobocka-card-h2">{L.reviewsH}</h2>
+
+          {/* Success / Error messages */}
+          {sp.sent === 'ok' && (
+            <div className="apt-review-msg apt-review-msg-ok">{L.reviewSent}</div>
+          )}
+          {sp.error === 'validation' && (
+            <div className="apt-review-msg apt-review-msg-err">{L.reviewValidation}</div>
+          )}
+          {sp.error === 'ratelimit' && (
+            <div className="apt-review-msg apt-review-msg-err">{L.reviewRateLimit}</div>
+          )}
+
+          {/* Rating overview */}
+          {ratingStats.totalReviews > 0 && (
+            <div className="apt-rating-overview">
+              <div className="apt-rating-big">
+                <span className="apt-rating-value">{ratingStats.avgRating}</span>
+                <span className="apt-rating-of">{L.reviewsOf}</span>
+                <span className="apt-rating-count">{L.reviewsCount(ratingStats.totalReviews)}</span>
+              </div>
+              <div className="apt-rating-bars">
+                {ratingStats.avgCleanliness != null && (
+                  <div className="apt-rating-bar-row">
+                    <span className="apt-rating-bar-label">{L.cleanlinessLbl}</span>
+                    <div className="apt-rating-bar"><div className="apt-rating-bar-fill" style={{ width: `${(ratingStats.avgCleanliness / 5) * 100}%` }} /></div>
+                    <span className="apt-rating-bar-val">{ratingStats.avgCleanliness}</span>
+                  </div>
+                )}
+                {ratingStats.avgDiscretion != null && (
+                  <div className="apt-rating-bar-row">
+                    <span className="apt-rating-bar-label">{L.discretionLbl}</span>
+                    <div className="apt-rating-bar"><div className="apt-rating-bar-fill" style={{ width: `${(ratingStats.avgDiscretion / 5) * 100}%` }} /></div>
+                    <span className="apt-rating-bar-val">{ratingStats.avgDiscretion}</span>
+                  </div>
+                )}
+                {ratingStats.avgComfort != null && (
+                  <div className="apt-rating-bar-row">
+                    <span className="apt-rating-bar-label">{L.comfortLbl}</span>
+                    <div className="apt-rating-bar"><div className="apt-rating-bar-fill" style={{ width: `${(ratingStats.avgComfort / 5) * 100}%` }} /></div>
+                    <span className="apt-rating-bar-val">{ratingStats.avgComfort}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Reviews list */}
+          {reviews.length > 0 && (
+            <div className="apt-reviews-list">
+              {reviews.map((r) => (
+                <div key={r.id} className="apt-review-card">
+                  <div className="apt-review-header">
+                    <span className="apt-review-stars">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                    <span className="apt-review-author">{r.authorName}</span>
+                    <span className="apt-review-date">{new Date(r.createdAt).toLocaleDateString(locale === 'cs' ? 'cs-CZ' : locale === 'de' ? 'de-DE' : locale === 'uk' ? 'uk-UA' : 'en-GB')}</span>
+                  </div>
+                  <p className="apt-review-text">{r.content}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Review form */}
+          {!isUpcoming && (
+            <div className="apt-review-form-wrap">
+              <h3 className="apt-review-form-h">{L.reviewFormH}</h3>
+              <form action={submitApartmentReview} className="apt-review-form">
+                <input type="hidden" name="location_id" value={loc.id} />
+                <input type="hidden" name="location_slug" value={slug} />
+                {/* Honeypot */}
+                <div style={{ position: 'absolute', left: '-9999px' }} aria-hidden="true">
+                  <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+                </div>
+
+                <div className="apt-review-field">
+                  <label htmlFor="author_name">{L.reviewNameLbl} *</label>
+                  <input id="author_name" name="author_name" type="text" required placeholder={L.reviewNamePh} className="apt-review-input" />
+                </div>
+
+                <div className="apt-review-field">
+                  <label htmlFor="rating">{L.reviewRatingLbl} *</label>
+                  <select id="rating" name="rating" required className="apt-review-input">
+                    <option value="">—</option>
+                    {[5, 4, 3, 2, 1].map((v) => (
+                      <option key={v} value={v}>{L.starLabels[v - 1]}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="apt-review-subratings">
+                  <div className="apt-review-field">
+                    <label htmlFor="cleanliness">{L.cleanlinessLbl}</label>
+                    <select id="cleanliness" name="cleanliness" className="apt-review-input">
+                      <option value="">—</option>
+                      {[5, 4, 3, 2, 1].map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="apt-review-field">
+                    <label htmlFor="discretion">{L.discretionLbl}</label>
+                    <select id="discretion" name="discretion" className="apt-review-input">
+                      <option value="">—</option>
+                      {[5, 4, 3, 2, 1].map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="apt-review-field">
+                    <label htmlFor="comfort">{L.comfortLbl}</label>
+                    <select id="comfort" name="comfort" className="apt-review-input">
+                      <option value="">—</option>
+                      {[5, 4, 3, 2, 1].map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="apt-review-field">
+                  <label htmlFor="content">{L.reviewCommentLbl} *</label>
+                  <textarea id="content" name="content" required minLength={10} rows={4} placeholder={L.reviewCommentPh} className="apt-review-input" />
+                </div>
+
+                <button type="submit" className="apt-review-submit">{L.reviewSubmit}</button>
+              </form>
+            </div>
+          )}
+        </div>
+      </section>
 
       {others.length > 0 && (
         <section className="pobocka-others">

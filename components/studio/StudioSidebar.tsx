@@ -21,6 +21,7 @@ const NAV: NavItem[] = [
   { href: '/cs/studio/hashtagy',      label: 'Hashtagy',         emoji: '#️⃣' },
   { href: '/cs/studio/jazyky',       label: 'Jazyky',           emoji: '🌐' },
   { href: '/cs/studio/fotky',        label: 'Fotky',            emoji: '📷' },
+  { href: '/cs/studio/videa',        label: 'Videa',            emoji: '🎬' },
   { href: '/cs/studio/stories',      label: 'Stories',           emoji: '📸' },
   { href: '/cs/studio/recenze',      label: 'Recenze',          emoji: '⭐' },
   { href: '/cs/studio/rezervace',    label: 'Rezervace',        emoji: '📅' },

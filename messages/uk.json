@@ -85,6 +85,9 @@
       "added_photos": "додала {count} нових фото",
       "added_photo": "додала нове фото",
       "received_review": "отримала відгук {rating}★",
+      "added_video": "додала нове відео",
+      "added_videos": "додала {count} нових відео",
+      "updated_profile": "оновила свій профіль",
       "no_recent": "Нових оновлень поки немає."
     },
     "trust": {

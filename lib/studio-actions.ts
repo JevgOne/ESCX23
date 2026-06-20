@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { requireGirl, requireAdmin } from './auth';
 import { db } from './db';
 import { saveReviewReply } from './queries';
+import { extractVimeoId } from './vimeo';
 
 async function studioRedirect(path: string): Promise<never> {
   const hdrs = await headers();
@@ -280,4 +281,51 @@ export async function deleteStory(formData: FormData) {
 
   revalidatePath('/cs/studio/stories');
   await studioRedirect('/studio/stories?deleted=1');
+}
+
+export async function addStudioVideo(formData: FormData) {
+  const user = await requireGirl();
+  const girlId = user.girl_id;
+  if (!girlId) return studioRedirect('/studio');
+
+  const rawUrl = String(formData.get('vimeo_url') ?? '').trim();
+  if (!rawUrl) return studioRedirect('/studio/videa?error=empty');
+
+  const vimeoId = extractVimeoId(rawUrl);
+  if (!vimeoId) return studioRedirect('/studio/videa?error=invalid');
+
+  const url = `https://vimeo.com/${vimeoId}`;
+
+  const orderRes = await db.execute({
+    sql: `SELECT COALESCE(MAX(display_order), -1) + 1 AS next_order FROM girl_videos WHERE girl_id = ?`,
+    args: [girlId],
+  });
+  const nextOrder = Number((orderRes.rows[0] as Record<string, unknown>)?.next_order ?? 0);
+
+  await db.execute({
+    sql: `INSERT INTO girl_videos (girl_id, filename, url, display_order, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    args: [girlId, `vimeo-${vimeoId}`, url, nextOrder],
+  });
+
+  revalidatePath('/cs/studio/videa');
+  revalidatePath('/cs/profil');
+  await studioRedirect('/studio/videa?saved=1');
+}
+
+export async function removeStudioVideo(formData: FormData) {
+  const user = await requireGirl();
+  const girlId = user.girl_id;
+  if (!girlId) return studioRedirect('/studio');
+
+  const videoId = Number(formData.get('video_id'));
+  if (!videoId) return studioRedirect('/studio/videa');
+
+  await db.execute({
+    sql: `DELETE FROM girl_videos WHERE id = ? AND girl_id = ?`,
+    args: [videoId, girlId],
+  });
+
+  revalidatePath('/cs/studio/videa');
+  revalidatePath('/cs/profil');
+  await studioRedirect('/studio/videa');
 }

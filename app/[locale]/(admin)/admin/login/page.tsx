@@ -225,6 +225,21 @@ const LOGIN_STYLES = `
   font-weight: 600;
 }
 
+.escx-login-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+}
+.escx-login-remember input[type="checkbox"] {
+  accent-color: var(--color-coral, #f27d8d);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
 /* Kill app-wide chrome on login page */
 body:has(.escx-login-page) { overflow: hidden; }
 `;
@@ -293,6 +308,11 @@ export default async function AdminLoginPage({
               className="escx-login-input"
             />
           </div>
+
+          <label className="escx-login-remember">
+            <input type="checkbox" name="remember" />
+            <span>Zapamatovat si mě (7 dní)</span>
+          </label>
 
           <button type="submit" className="escx-login-submit">
             Přihlásit →

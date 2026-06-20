@@ -115,6 +115,8 @@ interface ProfilHeroProps {
   isVip?: boolean;
   badgeType?: string | null;
   videos?: VideoItem[];
+  activeMedia?: 'photo' | 'video';
+  slug?: string;
 }
 
 const NEW_LABEL: Record<string, string> = { cs: 'NOVÁ', en: 'NEW', de: 'NEU', uk: 'НОВА' };
@@ -138,7 +140,7 @@ const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string 
   },
 };
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [] }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '' }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -469,35 +471,50 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
         />
       </div>
 
-      <div className="media-tabs">
-        <span className="media-tab active">{fotoLabel} <span className="media-tab-count">{photos.length}</span></span>
-        {videos.length > 0 && (
-          <span className="media-tab">{videoLabel} <span className="media-tab-count">{videos.length}</span></span>
-        )}
-      </div>
+      {(() => {
+        const profileSegment = locale === 'en' ? 'profile' : 'profil';
+        const photoHref = `/${locale}/${profileSegment}/${slug}`;
+        const videoHref = `/${locale}/${profileSegment}/${slug}?media=video`;
+        return (
+          <div className="media-tabs">
+            <a
+              href={photoHref}
+              className={`media-tab${activeMedia === 'photo' ? ' active' : ''}`}
+            >
+              {fotoLabel} <span className="media-tab-count">{photos.length}</span>
+            </a>
+            {videos.length > 0 && (
+              <a
+                href={videoHref}
+                className={`media-tab${activeMedia === 'video' ? ' active' : ''}`}
+              >
+                {videoLabel} <span className="media-tab-count">{videos.length}</span>
+              </a>
+            )}
+          </div>
+        );
+      })()}
 
-      {allPhotos.length > 0 && (
+      {activeMedia === 'photo' && allPhotos.length > 0 && (
         <PhotoLightbox
           photos={allPhotos.map((p, i) => ({ url: p.url ? String(p.url) : '', id: p.id != null ? String(p.id) : String(i) }))}
           girlName={name}
         />
       )}
 
-      {videos.length > 0 && (
+      {activeMedia === 'video' && videos.length > 0 && (
         <div className="profile-videos">
-          <div className="profile-videos-label">
-            {videoLabel} ({videos.length})
-          </div>
           <div className="profile-videos-grid">
             {videos.map((v) => (
-              <div key={v.id} className="profile-video-embed">
-                <iframe
-                  src={`https://player.vimeo.com/video/${v.vimeo_id}?badge=0&autopause=0&player_id=0`}
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
-                  title={`${name} video`}
-                  loading="lazy"
-                />
+              <div key={v.id} className="profile-video-card">
+                <div className="profile-video-embed">
+                  <iframe
+                    src={`https://player.vimeo.com/video/${v.vimeo_id}?badge=0&autopause=0&player_id=0`}
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                    title={`${name} video`}
+                  />
+                </div>
               </div>
             ))}
           </div>

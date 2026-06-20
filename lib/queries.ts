@@ -430,17 +430,18 @@ export async function getHomepageStats(): Promise<HomepageStats> {
 }
 
 export interface ActivityItem {
-  kind: 'photo' | 'review';
+  kind: 'photo' | 'review' | 'video' | 'profile_update';
   girlSlug: string;
   girlName: string;
   girlPhoto: string | null;
   when: string;
   photoCount?: number;
+  videoCount?: number;
   rating?: number;
 }
 
 export async function getRecentActivity(limit = 5): Promise<ActivityItem[]> {
-  const [photoRes, reviewRes] = await Promise.all([
+  const [photoRes, reviewRes, videoRes, profileRes] = await Promise.all([
     db.execute({
       sql: `SELECT
               g.slug, g.name,
@@ -468,6 +469,34 @@ export async function getRecentActivity(limit = 5): Promise<ActivityItem[]> {
             LIMIT ?`,
       args: [limit],
     }),
+    db.execute({
+      sql: `SELECT
+              g.slug, g.name,
+              (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo,
+              DATE(v.created_at) AS day,
+              COUNT(*) AS cnt,
+              MAX(v.created_at) AS last_at
+            FROM girl_videos v
+            JOIN girls g ON g.id = v.girl_id
+            WHERE g.status = 'active'
+            GROUP BY g.id, DATE(v.created_at)
+            ORDER BY last_at DESC
+            LIMIT ?`,
+      args: [limit],
+    }),
+    db.execute({
+      sql: `SELECT
+              g.slug, g.name,
+              (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo,
+              g.updated_at
+            FROM girls g
+            WHERE g.status = 'active'
+              AND g.updated_at > g.created_at
+              AND g.updated_at > datetime('now', '-30 days')
+            ORDER BY g.updated_at DESC
+            LIMIT ?`,
+      args: [limit],
+    }),
   ]);
 
   const photos: ActivityItem[] = photoRes.rows.map((r) => ({
@@ -488,7 +517,24 @@ export async function getRecentActivity(limit = 5): Promise<ActivityItem[]> {
     rating: r.rating != null ? Number(r.rating) : undefined,
   }));
 
-  return [...photos, ...reviews]
+  const videos: ActivityItem[] = videoRes.rows.map((r) => ({
+    kind: 'video' as const,
+    girlSlug: String(r.slug),
+    girlName: String(r.name),
+    girlPhoto: r.photo ? String(r.photo) : null,
+    when: String(r.last_at),
+    videoCount: Number(r.cnt),
+  }));
+
+  const profileUpdates: ActivityItem[] = profileRes.rows.map((r) => ({
+    kind: 'profile_update' as const,
+    girlSlug: String(r.slug),
+    girlName: String(r.name),
+    girlPhoto: r.photo ? String(r.photo) : null,
+    when: String(r.updated_at),
+  }));
+
+  return [...photos, ...reviews, ...videos, ...profileUpdates]
     .sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime())
     .slice(0, limit);
 }
@@ -2270,5 +2316,117 @@ export async function getApplicationCounts(): Promise<{ pending: number; approve
     else if (s === 'rejected') out.rejected = c;
   }
   return out;
+}
+
+/* =========================================================
+ *  Apartment reviews
+ * ========================================================= */
+
+export interface ApartmentReview {
+  id: number;
+  locationId: number;
+  authorName: string;
+  rating: number;
+  content: string;
+  cleanliness: number | null;
+  discretion: number | null;
+  comfort: number | null;
+  status: string;
+  createdAt: string;
+}
+
+export async function getApartmentReviews(locationId: number): Promise<ApartmentReview[]> {
+  const result = await db.execute({
+    sql: `SELECT id, location_id, author_name, rating, content, cleanliness, discretion, comfort, status, created_at
+          FROM apartment_reviews
+          WHERE location_id = ? AND status = 'approved'
+          ORDER BY created_at DESC`,
+    args: [locationId],
+  });
+  return result.rows.map((r) => {
+    const row = r as Record<string, unknown>;
+    return {
+      id: Number(row.id),
+      locationId: Number(row.location_id),
+      authorName: String(row.author_name),
+      rating: Number(row.rating),
+      content: String(row.content),
+      cleanliness: row.cleanliness != null ? Number(row.cleanliness) : null,
+      discretion: row.discretion != null ? Number(row.discretion) : null,
+      comfort: row.comfort != null ? Number(row.comfort) : null,
+      status: String(row.status),
+      createdAt: String(row.created_at),
+    };
+  });
+}
+
+export async function getApartmentRatingStats(locationId: number): Promise<{
+  avgRating: number;
+  totalReviews: number;
+  avgCleanliness: number | null;
+  avgDiscretion: number | null;
+  avgComfort: number | null;
+}> {
+  const result = await db.execute({
+    sql: `SELECT
+            AVG(rating) AS avg_rating,
+            COUNT(*) AS total,
+            AVG(cleanliness) AS avg_cleanliness,
+            AVG(discretion) AS avg_discretion,
+            AVG(comfort) AS avg_comfort
+          FROM apartment_reviews
+          WHERE location_id = ? AND status = 'approved'`,
+    args: [locationId],
+  });
+  const row = (result.rows[0] ?? {}) as Record<string, unknown>;
+  const total = Number(row.total ?? 0);
+  return {
+    avgRating: total > 0 ? Number(Number(row.avg_rating).toFixed(1)) : 0,
+    totalReviews: total,
+    avgCleanliness: row.avg_cleanliness != null && total > 0 ? Number(Number(row.avg_cleanliness).toFixed(1)) : null,
+    avgDiscretion: row.avg_discretion != null && total > 0 ? Number(Number(row.avg_discretion).toFixed(1)) : null,
+    avgComfort: row.avg_comfort != null && total > 0 ? Number(Number(row.avg_comfort).toFixed(1)) : null,
+  };
+}
+
+export interface PendingApartmentReview {
+  id: number;
+  locationId: number;
+  locationName: string;
+  authorName: string;
+  rating: number;
+  content: string;
+  cleanliness: number | null;
+  discretion: number | null;
+  comfort: number | null;
+  status: string;
+  createdAt: string;
+}
+
+export async function getPendingApartmentReviews(): Promise<PendingApartmentReview[]> {
+  const result = await db.execute(`
+    SELECT ar.id, ar.location_id, ar.author_name, ar.rating, ar.content,
+           ar.cleanliness, ar.discretion, ar.comfort, ar.status, ar.created_at,
+           l.display_name AS location_name
+    FROM apartment_reviews ar
+    LEFT JOIN locations l ON l.id = ar.location_id
+    ORDER BY CASE ar.status WHEN 'pending' THEN 0 ELSE 1 END, ar.created_at DESC
+  `);
+  return result.rows.map((r) => {
+    const row = r as Record<string, unknown>;
+    return {
+      id: Number(row.id),
+      locationId: Number(row.location_id),
+      locationName: String(row.location_name ?? 'Neznámá'),
+      authorName: String(row.author_name),
+      rating: Number(row.rating),
+      content: String(row.content),
+      cleanliness: row.cleanliness != null ? Number(row.cleanliness) : null,
+      discretion: row.discretion != null ? Number(row.discretion) : null,
+      comfort: row.comfort != null ? Number(row.comfort) : null,
+      status: String(row.status),
+      createdAt: String(row.created_at),
+    };
+  });
 }
 

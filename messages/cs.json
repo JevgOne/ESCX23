@@ -85,6 +85,9 @@
       "added_photos": "přidala {count} nových fotografií",
       "added_photo": "přidala novou fotografii",
       "received_review": "obdržela recenzi {rating}★",
+      "added_video": "přidala nové video",
+      "added_videos": "přidala {count} nová videa",
+      "updated_profile": "aktualizovala svůj profil",
       "no_recent": "Zatím žádné nedávné aktualizace."
     },
     "trust": {

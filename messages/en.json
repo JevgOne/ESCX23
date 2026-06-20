@@ -85,6 +85,9 @@
       "added_photos": "added {count} new photos",
       "added_photo": "added a new photo",
       "received_review": "received a {rating}★ review",
+      "added_video": "added a new video",
+      "added_videos": "added {count} new videos",
+      "updated_profile": "updated her profile",
       "no_recent": "No recent updates."
     },
     "trust": {

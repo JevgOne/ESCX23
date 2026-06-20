@@ -12,7 +12,12 @@ async function getLocale(): Promise<string> {
 }
 
 const SESSION_COOKIE = 'escx23_session';
-const SESSION_MAX_AGE_DAYS = 30;
+const SESSION_MAX_AGE_SECONDS: Record<string, number> = {
+  admin: 8 * 60 * 60,      // 8 hours
+  manager: 8 * 60 * 60,    // 8 hours
+  girl: 72 * 60 * 60,      // 72 hours (3 days)
+};
+const REMEMBER_ME_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
 
 export interface AuthUser {
   id: number;
@@ -40,8 +45,8 @@ function sign(data: string): string {
   return crypto.createHmac('sha256', SECRET).update(data).digest('hex');
 }
 
-function createToken(userId: number, role: string): string {
-  const exp = Date.now() + SESSION_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+function createToken(userId: number, role: string, maxAgeSeconds: number): string {
+  const exp = Date.now() + maxAgeSeconds * 1000;
   const payload = `${userId}.${role}.${exp}`;
   const sig = sign(payload);
   return Buffer.from(`${payload}.${sig}`).toString('base64url');
@@ -61,15 +66,18 @@ function verifyToken(token: string): { userId: number; role: string } | null {
   }
 }
 
-export async function setSession(userId: number, role: string) {
-  const token = createToken(userId, role);
+export async function setSession(userId: number, role: string, remember = false) {
+  const maxAge = remember
+    ? REMEMBER_ME_MAX_AGE
+    : SESSION_MAX_AGE_SECONDS[role] ?? 8 * 60 * 60;
+  const token = createToken(userId, role, maxAge);
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: SESSION_MAX_AGE_DAYS * 24 * 60 * 60,
+    ...(remember ? { maxAge } : {}),
   });
 }
 

@@ -1280,14 +1280,7 @@ export async function deleteBlogTag(formData: FormData) {
 
 /* ── Girl Videos (Vimeo) ── */
 
-function extractVimeoId(input: string): string | null {
-  const trimmed = input.trim();
-  // Pure numeric ID
-  if (/^\d+$/.test(trimmed)) return trimmed;
-  // URL patterns: vimeo.com/123, vimeo.com/video/123, player.vimeo.com/video/123
-  const match = trimmed.match(/(?:vimeo\.com\/(?:video\/)?|player\.vimeo\.com\/video\/)(\d+)/);
-  return match ? match[1] : null;
-}
+import { extractVimeoId } from './vimeo';
 
 export async function addGirlVideo(formData: FormData) {
   await requireAdmin();

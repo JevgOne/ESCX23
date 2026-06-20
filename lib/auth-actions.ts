@@ -14,6 +14,7 @@ async function getLocale(): Promise<string> {
 export async function loginAdmin(formData: FormData) {
   const email = String(formData.get('email') ?? '');
   const password = String(formData.get('password') ?? '');
+  const remember = formData.get('remember') === 'on';
   const locale = await getLocale();
 
   const user = await authenticate(email, password);
@@ -22,13 +23,14 @@ export async function loginAdmin(formData: FormData) {
     redirect(`/${locale}/admin/login?error=invalid`);
   }
 
-  await setSession(user.id, user.role);
+  await setSession(user.id, user.role, remember);
   redirect(`/${locale}/admin`);
 }
 
 export async function loginGirl(formData: FormData) {
   const email = String(formData.get('email') ?? '');
   const password = String(formData.get('password') ?? '');
+  const remember = formData.get('remember') === 'on';
   const locale = await getLocale();
 
   const user = await authenticate(email, password);
@@ -37,7 +39,7 @@ export async function loginGirl(formData: FormData) {
     redirect(`/${locale}/studio/login?error=invalid`);
   }
 
-  await setSession(user.id, user.role);
+  await setSession(user.id, user.role, remember);
   redirect(`/${locale}/studio`);
 }
 

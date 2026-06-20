@@ -25,6 +25,10 @@ export default async function StudioLoginPage({
         <form action={loginGirl}>
           <input name="email" type="email" required placeholder="Email" autoComplete="email" />
           <input name="password" type="password" required placeholder="Heslo" autoComplete="current-password" />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', margin: '4px 0' }}>
+            <input type="checkbox" name="remember" style={{ accentColor: '#f27d8d', width: '16px', height: '16px', cursor: 'pointer' }} />
+            <span>Zapamatovat si mě (7 dní)</span>
+          </label>
           <button type="submit" className="btn-pink">Přihlásit</button>
         </form>
       </div>
