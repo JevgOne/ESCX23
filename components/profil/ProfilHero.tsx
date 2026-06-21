@@ -520,9 +520,11 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
               <div key={v.id} className="profile-video-card">
                 <div className="profile-video-embed">
                   <iframe
-                    src={`https://player.vimeo.com/video/${v.vimeo_id}?badge=0&autopause=0&player_id=0&controls=1#t=0`}
-                    allow="autoplay; fullscreen; picture-in-picture"
+                    src={`https://player.vimeo.com/video/${v.vimeo_id}?badge=0&autopause=0&player_id=0&controls=1&dnt=1`}
+                    allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
                     allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
                     title={`${name} video`}
                   />
                 </div>
