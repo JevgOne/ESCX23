@@ -1,5 +1,6 @@
 import { getPublicStoriesFiltered } from '@/lib/story-schedule';
 import NextLink from 'next/link';
+import StoriesScroll from './StoriesScroll';
 
 interface Props {
   locale: string;
@@ -68,6 +69,9 @@ const STORIES_STYLES = `
   transition: transform 0.18s;
 }
 .sr-item:hover .sr-ring { transform: scale(1.05); }
+.sr-ring-seen {
+  background: linear-gradient(135deg, #555 0%, #3a3a3a 50%, #555 100%);
+}
 .sr-photo {
   width: 100%;
   height: 100%;
@@ -126,7 +130,7 @@ export default async function StoriesRow({ locale }: Props) {
           <h2 className="sr-h2">{L.title}</h2>
           <span className="sr-sub">{L.sub}</span>
         </div>
-        <div className="sr-scroll" role="list">
+        <StoriesScroll>
           {stories.map((story) => (
             <NextLink
               key={story.id}
@@ -134,6 +138,7 @@ export default async function StoriesRow({ locale }: Props) {
               className="sr-item"
               role="listitem"
               aria-label={`Story ${story.girlName}`}
+              data-story-id={story.id}
             >
               <div className="sr-ring-wrap">
                 <div className="sr-ring">
@@ -152,7 +157,7 @@ export default async function StoriesRow({ locale }: Props) {
               <span className="sr-name">{story.girlName}</span>
             </NextLink>
           ))}
-        </div>
+        </StoriesScroll>
       </div>
     </section>
   );

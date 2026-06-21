@@ -8,6 +8,7 @@ import { incrementStoryViews } from '@/lib/admin-actions';
 import { photoUrl } from '@/lib/photoUrl';
 import StoryAutoAdvance from '@/components/stories/StoryAutoAdvance';
 import StoryVideoPlayer from '@/components/stories/StoryVideoPlayer';
+import StoryMarkSeen from '@/components/stories/StoryMarkSeen';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -162,6 +163,7 @@ export default async function StoryViewerPage({ params }: Props) {
       {story.mediaType === 'image' && (
         <StoryAutoAdvance nextUrl={nextHref ?? closeHref} durationMs={5000} />
       )}
+      <StoryMarkSeen storyId={storyId} />
     </div>
   );
 }
