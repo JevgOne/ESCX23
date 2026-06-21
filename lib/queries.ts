@@ -493,6 +493,14 @@ export async function getRecentActivity(limit = 5): Promise<ActivityItem[]> {
             WHERE g.status = 'active'
               AND g.updated_at > g.created_at
               AND g.updated_at > datetime('now', '-30 days')
+              AND NOT EXISTS (
+                SELECT 1 FROM girl_photos p
+                WHERE p.girl_id = g.id AND DATE(p.created_at) = DATE(g.updated_at)
+              )
+              AND NOT EXISTS (
+                SELECT 1 FROM girl_videos v
+                WHERE v.girl_id = g.id AND DATE(v.created_at) = DATE(g.updated_at)
+              )
             ORDER BY g.updated_at DESC
             LIMIT ?`,
       args: [limit],
