@@ -1,4 +1,4 @@
-import { getPublicStories } from '@/lib/queries';
+import { getPublicStoriesFiltered } from '@/lib/story-schedule';
 import NextLink from 'next/link';
 
 interface Props {
@@ -107,7 +107,7 @@ const STORIES_STYLES = `
 `;
 
 export default async function StoriesRow({ locale }: Props) {
-  const stories = await getPublicStories();
+  const stories = await getPublicStoriesFiltered();
   if (stories.length === 0) return null;
 
   const headingMap: Record<string, { title: string; sub: string }> = {

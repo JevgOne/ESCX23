@@ -2,7 +2,8 @@ import { setRequestLocale } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import NextLink from 'next/link';
-import { getStoryById, getAllPublicStories } from '@/lib/queries';
+import { getStoryById } from '@/lib/queries';
+import { getPublicStoriesFiltered, isStoryViewable } from '@/lib/story-schedule';
 import { incrementStoryViews } from '@/lib/admin-actions';
 import { photoUrl } from '@/lib/photoUrl';
 import StoryAutoAdvance from '@/components/stories/StoryAutoAdvance';
@@ -60,11 +61,17 @@ export default async function StoryViewerPage({ params }: Props) {
     redirect(`/${locale}`);
   }
 
+  // Check if story is still viewable (24h shift budget not exhausted)
+  const viewable = await isStoryViewable(storyId, story.girlId, story.createdAt);
+  if (!viewable) {
+    redirect(`/${locale}`);
+  }
+
   // Increment view count (fire-and-forget, no await needed for UX)
   incrementStoryViews(storyId).catch(() => {});
 
-  // Get all stories for prev/next navigation
-  const allStories = await getAllPublicStories();
+  // Get schedule-filtered stories for prev/next navigation
+  const allStories = await getPublicStoriesFiltered();
   const currentIndex = allStories.findIndex((s) => s.id === storyId);
   const prevStory = currentIndex > 0 ? allStories[currentIndex - 1] : null;
   const nextStory = currentIndex < allStories.length - 1 ? allStories[currentIndex + 1] : null;
