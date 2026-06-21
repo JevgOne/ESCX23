@@ -103,6 +103,13 @@ export default async function LocaleLayout({
           {children}
           <SiteFooter />
           {!isProtectedArea && <MobileBottomBar locale={locale} />}
+          {!isProtectedArea && (
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `document.addEventListener('contextmenu',function(e){if(e.target.tagName==='IMG'||e.target.tagName==='VIDEO'||e.target.closest('.lightbox-overlay'))e.preventDefault()});`,
+              }}
+            />
+          )}
         </NextIntlClientProvider>
       </body>
     </html>
