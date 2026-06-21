@@ -326,10 +326,10 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           </div>
           <div className="ig-services-list">
             {topServices.filter(s => s.category === 'basic').map((s, i) => (
-              <span key={i} className="ig-service-chip ig-service-chip-top">✓ {s.name}</span>
+              <a key={i} href={`/${locale}/hashtag/${s.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`} className="ig-service-chip ig-service-chip-top">✓ {s.name}</a>
             ))}
             {topServices.filter(s => s.category !== 'basic').map((s, i) => (
-              <span key={`e-${i}`} className="ig-service-chip ig-service-chip-extra">💬 {s.name}</span>
+              <a key={`e-${i}`} href={`/${locale}/hashtag/${s.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`} className="ig-service-chip ig-service-chip-extra">💬 {s.name}</a>
             ))}
           </div>
         </div>
@@ -337,9 +337,12 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
 
       {hashtags.length > 0 && (
         <div className="profile-ig-hashtags">
-          {hashtags.slice(0, 10).map((tag) => (
-            <span key={tag} className="ig-hashtag">{tag.replace(/^#/, '')}</span>
-          ))}
+          {hashtags.slice(0, 10).map((tag) => {
+            const clean = tag.replace(/^#/, '');
+            return (
+              <a key={tag} href={`/${locale}/hashtag/${clean}`} className="ig-hashtag">#{clean}</a>
+            );
+          })}
         </div>
       )}
 

@@ -180,7 +180,7 @@ export default function ProfilServices({ services, locale, heading }: Props) {
             return (
               <Link
                 key={svc.id}
-                href={{ pathname: '/sluzba/[slug]' as never, params: { slug: svc.slug } }}
+                href={{ pathname: '/hashtag/[slug]' as never, params: { slug: svc.slug } }}
                 className={`svc-card svc-card-${group}`}
                 data-group={group}
               >

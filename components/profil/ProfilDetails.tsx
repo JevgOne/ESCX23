@@ -448,11 +448,10 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
         );
       })()}
 
-      {/* Hashtagy — skryté vizuálně, zůstávají v HTML pro SEO crawlery */}
       {hashtags.length > 0 && (
-        <div className="profile-hashtags-seo" aria-hidden="true">
+        <div className="profile-hashtags-visible">
           {hashtags.map((tag) => (
-            <Link key={tag} href={`${hashtagPath}/${tag}`} tabIndex={-1}>
+            <Link key={tag} href={`${hashtagPath}/${tag}`} className="profile-hashtag-link">
               #{tag}
             </Link>
           ))}

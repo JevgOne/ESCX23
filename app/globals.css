@@ -3299,7 +3299,10 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     font-size: 12px;
     font-weight: 600;
     line-height: 1;
+    text-decoration: none;
+    transition: border-color 0.15s, transform 0.15s;
   }
+  .ig-service-chip:hover { border-color: var(--color-coral); transform: translateY(-1px); }
   .ig-service-chip-top {
     background: rgba(74, 222, 128, 0.08);
     border-color: rgba(74, 222, 128, 0.28);
@@ -3361,11 +3364,12 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     line-height: 1;
     white-space: nowrap;
     flex-shrink: 0;
+    text-decoration: none;
+    transition: color 0.15s;
   }
+  .ig-hashtag:hover { color: var(--color-coral); }
   .ig-hashtag::before {
-    content: '#';
-    margin-right: 1px;
-    color: var(--color-coral);
+    content: none;
   }
 
   /* Hide ProfilDetails blocks that are duplicated in ProfilHero on mobile */
@@ -9363,14 +9367,19 @@ body {
   font-weight: 700;
 }
 
-/* SEO-only hashtags — hidden visually, present in DOM for crawlers */
-.profile-hashtags-seo {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
+/* Visible hashtags on profile details */
+.profile-hashtags-visible {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.profile-hashtag-link {
+  display: inline-flex; align-items: center;
+  padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 500;
+  background: rgba(242,125,141,0.08); border: 1px solid rgba(242,125,141,0.18);
+  color: #f27d8d; text-decoration: none; transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.profile-hashtag-link:hover {
+  background: rgba(242,125,141,0.15); border-color: rgba(242,125,141,0.35); transform: translateY(-1px);
 }
 
 /* Style & Wardrobe chips (desktop) */
