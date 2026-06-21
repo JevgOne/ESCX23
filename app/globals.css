@@ -13061,6 +13061,31 @@ body {
 }
 @media (max-width: 900px) {
   .pobocka-hero-grid { grid-template-columns: 1fr; gap: 32px; }
+  .pobocka-hero { padding: 32px 0 40px; }
+  .pobocka-h1 { font-size: clamp(24px, 6vw, 36px); word-break: break-word; }
+  .pobocka-quick-meta { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pobocka-meta-item { padding: 10px 12px; }
+  .pobocka-hero-photo { display: none; }
+  .pobocka-card { padding: 20px 16px; border-radius: 16px; }
+  .pobocka-card-h2 { font-size: 20px; }
+  .pobocka-feature-list { grid-template-columns: 1fr; }
+  .pobocka-info-grid { grid-template-columns: 1fr !important; }
+  .apt-rcard { padding: 20px 16px 18px; border-radius: 16px; }
+  .apt-rcard-text { font-size: 14px; margin-bottom: 16px; }
+  .apt-emoji-opt .apt-emoji-label { min-width: 56px; padding: 10px 8px 8px; }
+  .apt-emoji-label-icon { font-size: 22px; }
+  .apt-score-hero { padding: 24px 16px; }
+  .apt-score-big { font-size: 48px; }
+  .apt-section { overflow-x: hidden; }
+  .pobocka-section { overflow-x: hidden; padding: 20px 0 40px; }
+  .pobocka-pronajem-includes { padding: 14px; }
+  .pobocka-others-grid { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 480px) {
+  .pobocka-quick-meta { grid-template-columns: 1fr; }
+  .pobocka-h1 { font-size: 22px; }
+  .apt-emoji-picker { gap: 6px; }
+  .apt-emoji-opt .apt-emoji-label { min-width: 48px; padding: 8px 6px 6px; border-radius: 12px; }
 }
 .pobocka-badge {
   display: inline-block;
@@ -13550,6 +13575,9 @@ body {
 @media (max-width: 640px) {
   .apt-score-big { font-size: 56px; }
   .apt-score-bars { gap: 24px; }
+  .apt-section { padding: 40px 0 48px; }
+  .apt-divider { gap: 12px; margin-bottom: 28px; }
+  .apt-divider h2 { font-size: 12px; letter-spacing: 0.14em; }
 }
 
 /* ── Messages ── */
