@@ -33,6 +33,9 @@ export default async function FeaturedNew({ locale }: FeaturedNewProps) {
             className="featured-photo"
             alt={girl.name}
             loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            sizes="(max-width: 768px) 50vw, 280px"
           />
           <span className="featured-new-badge">{t('badge')}</span>
         </div>

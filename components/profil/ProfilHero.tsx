@@ -471,6 +471,9 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           src={photoUrl(primaryPhoto?.url ? String(primaryPhoto.url) : null)}
           alt={altBase}
           loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          sizes="(max-width: 768px) 100vw, 420px"
         />
       </div>
 

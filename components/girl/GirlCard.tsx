@@ -48,9 +48,10 @@ const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string 
 
 interface GirlCardProps {
   girl: GirlCardType;
+  priority?: boolean;
 }
 
-export default async function GirlCard({ girl }: GirlCardProps) {
+export default async function GirlCard({ girl, priority }: GirlCardProps) {
   const locale = await getLocale();
   const city = CITY[locale] ?? 'Prague';
   const laterLabel = LATER_LABEL[locale] ?? LATER_LABEL.en;
@@ -66,7 +67,7 @@ export default async function GirlCard({ girl }: GirlCardProps) {
       data-status={isAway ? 'away' : 'available'}
     >
       <div className="girl-photo-wrap">
-        <img className="girl-photo girl-photo-front" src={photoUrl(girl.primaryPhoto)} alt={altText} loading="lazy" />
+        <img className="girl-photo girl-photo-front" src={photoUrl(girl.primaryPhoto)} alt={altText} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} decoding="async" sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 280px" />
         {girl.secondaryPhoto && (
           <img className="girl-photo girl-photo-back" src={photoUrl(girl.secondaryPhoto)} alt="" loading="lazy" aria-hidden="true" />
         )}

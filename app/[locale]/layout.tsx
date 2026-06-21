@@ -100,7 +100,10 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} className={`${inter.variable} ${playfair.variable}`}>
-      <head />
+      <head>
+        <link rel="preconnect" href="https://qktyf1ozcve7804i.public.blob.vercel-storage.com" />
+        <link rel="dns-prefetch" href="https://qktyf1ozcve7804i.public.blob.vercel-storage.com" />
+      </head>
       <body>
         <Suspense fallback={null}>
           <GoogleAnalytics />

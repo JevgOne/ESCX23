@@ -26,7 +26,7 @@ export default async function GirlsGridSection({ locale }: GirlsGridSectionProps
           <p className="section-sub">{t('sub')}</p>
         </div>
 
-        <GirlCardGrid girls={shown} />
+        <GirlCardGrid girls={shown} priorityCount={4} />
 
         <div className="show-all-row">
           <Link href="/divky" className="show-all-btn">
