@@ -448,22 +448,30 @@ nav.main-nav a:hover {
   backdrop-filter: blur(8px);
 }
 
-/* Ethnicity badges */
-.girl-ethnicity-pill {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 5px 12px;
-  border-radius: 8px;
-  z-index: 2;
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+/* Ethnicity badge colors (unified into girl-tag-pill) */
+.girl-tag-pill.asian {
+  background: rgba(20, 184, 166, 0.18);
+  color: #2dd4bf;
+  border: 1px solid rgba(20, 184, 166, 0.3);
+  backdrop-filter: blur(8px);
+}
+.girl-tag-pill.ebony {
+  background: rgba(99, 102, 241, 0.18);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  backdrop-filter: blur(8px);
+}
+.girl-tag-pill.mulatto {
+  background: rgba(251, 146, 60, 0.18);
+  color: #fb923c;
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  backdrop-filter: blur(8px);
+}
+.girl-tag-pill.latina {
+  background: rgba(236, 72, 153, 0.18);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  backdrop-filter: blur(8px);
 }
 
 .girl-media-pills {

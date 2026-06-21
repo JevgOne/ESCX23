@@ -27,13 +27,6 @@ const ALT_NOUN: Record<string, string> = {
 };
 const NEW_LABEL: Record<string, string> = { cs: 'NOVÁ', en: 'NEW', de: 'NEU', uk: 'НОВА' };
 
-const ETHNICITY_CONFIG: Record<string, Record<string, string>> = {
-  asian: { cs: 'Asiatka', en: 'Asian', de: 'Asiatin', uk: 'Азіатка' },
-  ebony: { cs: 'Ebony', en: 'Ebony', de: 'Ebony', uk: 'Ebony' },
-  mulatto: { cs: 'Mulatka', en: 'Mixed', de: 'Mulattin', uk: 'Мулатка' },
-  latina: { cs: 'Latina', en: 'Latina', de: 'Latina', uk: 'Латина' },
-};
-
 const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string }> = {
   top: {
     label: { cs: 'TOP', en: 'TOP', de: 'TOP', uk: 'TOP' },
@@ -50,6 +43,22 @@ const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string 
   hot: {
     label: { cs: 'HOT', en: 'HOT', de: 'HOT', uk: 'HOT' },
     css: 'hot',
+  },
+  asian: {
+    label: { cs: 'ASIATKA', en: 'ASIAN', de: 'ASIATIN', uk: 'АЗІАТКА' },
+    css: 'asian',
+  },
+  ebony: {
+    label: { cs: 'EBONY', en: 'EBONY', de: 'EBONY', uk: 'EBONY' },
+    css: 'ebony',
+  },
+  mulatto: {
+    label: { cs: 'MULATKA', en: 'MIXED', de: 'MULATTIN', uk: 'МУЛАТКА' },
+    css: 'mulatto',
+  },
+  latina: {
+    label: { cs: 'LATINA', en: 'LATINA', de: 'LATINA', uk: 'ЛАТИНА' },
+    css: 'latina',
   },
 };
 
@@ -79,22 +88,19 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
           <img className="girl-photo girl-photo-back" src={photoUrl(girl.secondaryPhoto)} alt="" loading="lazy" aria-hidden="true" />
         )}
 
-        {girl.isVip && (
+        {girl.isVip ? (
           <span className="girl-tag-pill vip">★ VIP</span>
-        )}
-        {!girl.isVip && girl.badgeType && BADGE_CONFIG[girl.badgeType] && (
+        ) : girl.badgeType && BADGE_CONFIG[girl.badgeType] ? (
           <span className={`girl-tag-pill ${BADGE_CONFIG[girl.badgeType].css}`}>
             {BADGE_CONFIG[girl.badgeType].label[locale] ?? BADGE_CONFIG[girl.badgeType].label.en}
           </span>
-        )}
-        {!girl.isVip && !girl.badgeType && girl.isNew && (
+        ) : girl.isNew ? (
           <span className="girl-tag-pill new">{NEW_LABEL[locale] ?? NEW_LABEL.en}</span>
-        )}
-        {girl.ethnicity && ETHNICITY_CONFIG[girl.ethnicity] && (
-          <span className="girl-ethnicity-pill">
-            {ETHNICITY_CONFIG[girl.ethnicity][locale] ?? ETHNICITY_CONFIG[girl.ethnicity].en}
+        ) : girl.ethnicity && BADGE_CONFIG[girl.ethnicity] ? (
+          <span className={`girl-tag-pill ${BADGE_CONFIG[girl.ethnicity].css}`}>
+            {BADGE_CONFIG[girl.ethnicity].label[locale] ?? BADGE_CONFIG[girl.ethnicity].label.en}
           </span>
-        )}
+        ) : null}
         {girl.isPaused && (
           <span className="girl-paused-badge">{PAUSED_LABEL[locale] ?? PAUSED_LABEL.en}</span>
         )}
