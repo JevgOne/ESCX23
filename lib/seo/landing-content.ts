@@ -332,10 +332,10 @@ export const LOCATION_CONTENT: Record<string, LocationContent> = {
       uk: 'Апартамент Виногради Прага 2 — перевірені супутниці, дискретні приватні апартаменти.',
     },
     intro: {
-      cs: 'Apartmán LovelyGirls na Vinohradech (Praha 2) je naší hlavní pobočkou. Diskrétní byt s vlastním vchodem, klimatizací, sprchou a Wi-Fi. Metro Náměstí Míru i tramvaj Vinohradská tržnice minutu pěšky. Modré parkovací zóny v okolních ulicích, placené parkoviště do 2 minut. Adresu obdržíte po potvrzení termínu — diskrétně, žádné kamery v okolí vchodu.',
-      en: 'LovelyGirls Vinohrady apartment (Prague 2) is our main location. Discreet flat with private entry, AC, shower, Wi-Fi. Metro Náměstí Míru and tram Vinohradská tržnice minutes away. Blue parking zones nearby, paid lot within 2 min. Exact address sent after booking — no cameras near entry.',
-      de: 'LovelyGirls Vinohrady Apartment (Prag 2) ist unser Hauptstandort. Diskret, mit eigenem Eingang, Klimaanlage, Dusche, WLAN.',
-      uk: 'Апартамент LovelyGirls на Виноградах (Прага 2) — головна локація. Дискретні, з власним входом, кондиціонер, душ, Wi-Fi.',
+      cs: 'Apartmán LovelyGirls na Vinohradech (Praha 2) je naší hlavní pobočkou. Diskrétní byt s vlastním vchodem, sprchou a Wi-Fi. Metro Náměstí Míru i tramvaj Vinohradská tržnice minutu pěšky. Modré parkovací zóny v okolních ulicích, placené parkoviště do 2 minut. Adresu obdržíte po potvrzení termínu — diskrétně, žádné kamery v okolí vchodu.',
+      en: 'LovelyGirls Vinohrady apartment (Prague 2) is our main location. Discreet flat with private entry, shower, Wi-Fi. Metro Náměstí Míru and tram Vinohradská tržnice minutes away. Blue parking zones nearby, paid lot within 2 min. Exact address sent after booking — no cameras near entry.',
+      de: 'LovelyGirls Vinohrady Apartment (Prag 2) ist unser Hauptstandort. Diskret, mit eigenem Eingang, Dusche, WLAN.',
+      uk: 'Апартамент LovelyGirls на Виноградах (Прага 2) — головна локація. Дискретні, з власним входом, душ, Wi-Fi.',
     },
     faq: [
       {
