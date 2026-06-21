@@ -15780,3 +15780,584 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
     font-size: 13px;
   }
 }
+
+/* ===== ADMIN STORIES ===== */
+.stories-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.stories-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.stories-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-dim);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.stories-tab:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--color-text-muted);
+}
+.stories-tab.active {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.stories-tab-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stories-tab-count {
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.08);
+  padding: 1px 7px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.stories-new-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-coral) 0%, #c84b8b 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.15s, transform 0.1s;
+  box-shadow: 0 4px 16px rgba(200,75,139,0.3);
+}
+.stories-new-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.stories-error {
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #fca5a5;
+  font-size: 13px;
+}
+
+.stories-form-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 28px;
+}
+
+.stories-form-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 20px;
+  color: #fff;
+}
+
+.stories-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stories-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.stories-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stories-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+
+.stories-select,
+.stories-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+}
+.stories-select:focus,
+.stories-input:focus {
+  outline: none;
+  border-color: var(--color-coral);
+}
+
+.stories-upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 20px;
+  border: 2px dashed var(--color-line);
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--color-text-dim);
+  font-size: 13px;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+.stories-upload-zone:hover {
+  border-color: var(--color-coral);
+  background: rgba(242,125,141,0.04);
+}
+
+.stories-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stories-upload-hint {
+  font-size: 11px;
+  color: var(--color-text-dim);
+  opacity: 0.7;
+}
+
+.stories-form-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.stories-submit {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-coral) 0%, #c84b8b 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  box-shadow: 0 4px 14px rgba(200,75,139,0.3);
+}
+.stories-submit:hover { opacity: 0.9; }
+
+.stories-cancel {
+  font-size: 13px;
+  color: var(--color-text-dim);
+  text-decoration: none;
+}
+.stories-cancel:hover { color: #fff; }
+
+.stories-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--color-text-dim);
+  font-size: 14px;
+  text-align: center;
+}
+
+.stories-empty-icon {
+  font-size: 36px;
+  opacity: 0.5;
+}
+
+.stories-empty-cta {
+  color: var(--color-coral);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+}
+.stories-empty-cta:hover { text-decoration: underline; }
+
+.stories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.story-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.story-card:hover {
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.story-card-media {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  background: rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+.story-card-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.story-card-type {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 16px;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+}
+
+.story-card-status {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border: 1px solid;
+}
+
+.story-card-info {
+  padding: 14px;
+}
+
+.story-card-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+.story-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--color-text-dim);
+  margin-bottom: 12px;
+}
+
+.story-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.story-action-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.story-action-btn:hover { opacity: 0.85; }
+
+.story-action-btn.approve {
+  background: rgba(34,197,94,0.15);
+  color: #4ade80;
+}
+.story-action-btn.expire {
+  background: rgba(107,114,128,0.15);
+  color: #9ca3af;
+}
+.story-action-btn.delete {
+  background: rgba(239,68,68,0.1);
+  color: #fca5a5;
+}
+
+@media (max-width: 600px) {
+  .stories-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .stories-new-btn {
+    text-align: center;
+    justify-content: center;
+  }
+  .stories-form-row {
+    grid-template-columns: 1fr;
+  }
+  .stories-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 400px) {
+  .stories-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== ADMIN APARTMENT REVIEWS (modern) ===== */
+.apt-reviews-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.apt-reviews-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.apt-reviews-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-dim);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.apt-reviews-tab:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--color-text-muted);
+}
+.apt-reviews-tab.active {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.apt-reviews-tab-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.apt-reviews-tab-count {
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.08);
+  padding: 1px 7px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.apt-reviews-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--color-text-dim);
+  font-size: 14px;
+  text-align: center;
+}
+
+.apt-reviews-empty-icon {
+  font-size: 36px;
+  opacity: 0.5;
+}
+
+.apt-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.apt-review-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  padding: 22px;
+  transition: border-color 0.2s;
+}
+.apt-review-card:hover {
+  border-color: rgba(255,255,255,0.12);
+}
+
+.apt-review-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.apt-review-stars {
+  color: var(--color-gold);
+  letter-spacing: 1px;
+  font-size: 15px;
+}
+
+.apt-review-badge {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.apt-review-badge.pending {
+  background: rgba(217,165,32,0.15);
+  color: #d4a520;
+}
+.apt-review-badge.approved {
+  background: rgba(34,197,94,0.12);
+  color: #4ade80;
+}
+.apt-review-badge.rejected {
+  background: rgba(239,68,68,0.1);
+  color: #fca5a5;
+}
+
+.apt-review-time {
+  font-size: 12px;
+  color: var(--color-text-dim);
+}
+
+.apt-review-author {
+  margin-bottom: 8px;
+}
+.apt-review-author-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+}
+.apt-review-author-location {
+  color: var(--color-text-dim);
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.apt-review-content {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: 0 0 10px;
+}
+
+.apt-review-scores {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--color-text-dim);
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.apt-review-score-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.apt-review-score-bar {
+  width: 48px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.apt-review-score-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--color-gold);
+}
+
+.apt-review-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.apt-review-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.apt-review-btn:hover { opacity: 0.85; }
+
+.apt-review-btn.approve {
+  background: rgba(34,197,94,0.15);
+  color: #4ade80;
+}
+.apt-review-btn.reject {
+  background: rgba(239,68,68,0.1);
+  color: #fca5a5;
+}
+.apt-review-btn.delete {
+  background: rgba(255,255,255,0.06);
+  color: var(--color-text-dim);
+}
+
+@media (max-width: 600px) {
+  .apt-reviews-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .apt-review-card {
+    padding: 16px;
+  }
+  .apt-review-scores {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

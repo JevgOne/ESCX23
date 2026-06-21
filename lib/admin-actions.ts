@@ -936,23 +936,52 @@ export async function deleteStory(formData: FormData) {
   revalidatePath('/cs/admin/stories');
 }
 
-export async function createCategoryStory(formData: FormData) {
+const STORY_ALLOWED_EXT = new Set(['jpg', 'jpeg', 'png', 'webp', 'mp4', 'mov', 'webm']);
+const STORY_MAX_BYTES = 50 * 1024 * 1024; // 50 MB for videos
+
+export async function createStory(formData: FormData) {
   await requireAdmin();
-  const category = String(formData.get('category') ?? '').trim();
-  const bgType = String(formData.get('bg_type') ?? 'COLOR').trim();
-  const mediaUrl = String(formData.get('media_url') ?? '').trim();
+
+  const girlId = Number(formData.get('girl_id') ?? 0);
   const caption = String(formData.get('caption') ?? '').trim().slice(0, 100);
   const expiresAt = formData.get('expires_at')
     ? String(formData.get('expires_at'))
     : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
 
-  if (!category) throw new Error('Kategorie je povinná');
-  if (!mediaUrl) throw new Error('URL pozadí je povinné');
+  const file = formData.get('media') as File | null;
+  if (!file || file.size === 0) {
+    revalidatePath('/cs/admin/stories');
+    await adminRedirect('/admin/stories?error=nofile');
+    return;
+  }
+  if (file.size > STORY_MAX_BYTES) {
+    revalidatePath('/cs/admin/stories');
+    await adminRedirect('/admin/stories?error=toolarge');
+    return;
+  }
+
+  const ext = (file.name.split('.').pop() ?? '').toLowerCase();
+  if (!STORY_ALLOWED_EXT.has(ext)) {
+    revalidatePath('/cs/admin/stories');
+    await adminRedirect('/admin/stories?error=badtype');
+    return;
+  }
+
+  const isVideo = ['mp4', 'mov', 'webm'].includes(ext);
+  const mediaType = isVideo ? 'video' : 'image';
+  const folder = isVideo ? 'stories/videos' : 'stories/photos';
+  const filename = `${folder}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+  const blob = await put(filename, file, {
+    access: 'public',
+    contentType: file.type || (isVideo ? `video/${ext}` : `image/${ext}`),
+    addRandomSuffix: false,
+  });
 
   await db.execute({
     sql: `INSERT INTO stories (girl_id, media_url, media_type, is_active, expires_at)
-          VALUES (0, ?, ?, 1, ?)`,
-    args: [mediaUrl, bgType === 'VIDEO' ? 'video' : 'image', expiresAt],
+          VALUES (?, ?, ?, 1, ?)`,
+    args: [girlId, blob.url, mediaType, expiresAt],
   });
 
   revalidatePath('/cs/admin/stories');

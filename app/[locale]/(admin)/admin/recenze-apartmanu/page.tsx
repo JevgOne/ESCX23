@@ -7,111 +7,134 @@ import { approveApartmentReview, rejectApartmentReview, deleteApartmentReview } 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-function Stars({ rating }: { rating: number }) {
-  return (
-    <span style={{ color: 'var(--color-gold)', letterSpacing: '1px' }}>
-      {'★'.repeat(rating)}{'☆'.repeat(Math.max(0, 5 - rating))}
-    </span>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, { bg: string; text: string }> = {
-    pending: { bg: 'rgba(217,165,32,0.15)', text: '#d4a520' },
-    approved: { bg: 'rgba(34,197,94,0.12)', text: '#4ade80' },
-    rejected: { bg: 'rgba(239,68,68,0.1)', text: '#fca5a5' },
-  };
-  const c = colors[status] ?? colors.pending;
-  return (
-    <span style={{
-      padding: '3px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
-      textTransform: 'uppercase', letterSpacing: '0.05em',
-      background: c.bg, color: c.text,
-    }}>
-      {status}
-    </span>
-  );
-}
+const STATUS_COLORS: Record<string, string> = {
+  pending: '#f59e0b',
+  approved: '#22c55e',
+  rejected: '#ef4444',
+};
 
 export default async function AdminApartmentReviewsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ status?: string }>;
 }) {
   const { locale } = await params;
+  const { status } = await searchParams;
   setRequestLocale(locale);
 
-  const reviews = await getPendingApartmentReviews();
-  const pendingCount = reviews.filter((r) => r.status === 'pending').length;
+  const reviews = await getPendingApartmentReviews(status);
+
+  const counts = {
+    all: (await getPendingApartmentReviews()).length,
+    pending: (await getPendingApartmentReviews('pending')).length,
+    approved: (await getPendingApartmentReviews('approved')).length,
+    rejected: (await getPendingApartmentReviews('rejected')).length,
+  };
 
   return (
     <>
       <AdminTopbar title="Recenze apartmánů" />
 
-      <div style={{ marginBottom: '20px', fontSize: '13px', color: 'var(--color-text-dim)' }}>
-        {pendingCount} {pendingCount === 1 ? 'recenze čeká' : pendingCount < 5 ? 'recenze čekají' : 'recenzí čeká'} na schválení
+      {/* Status filter tabs */}
+      <div className="apt-reviews-toolbar">
+        <div className="apt-reviews-tabs">
+          {(['all', 'pending', 'approved', 'rejected'] as const).map((s) => (
+            <a
+              key={s}
+              href={`?status=${s}`}
+              className={`apt-reviews-tab${(status === s || (!status && s === 'all')) ? ' active' : ''}`}
+            >
+              <span
+                className="apt-reviews-tab-dot"
+                style={{ background: s === 'all' ? 'var(--color-text-dim)' : STATUS_COLORS[s] }}
+              />
+              {s === 'all' ? 'Vše' : s === 'pending' ? 'Čekající' : s === 'approved' ? 'Schválené' : 'Zamítnuté'}
+              <span className="apt-reviews-tab-count">{counts[s]}</span>
+            </a>
+          ))}
+        </div>
       </div>
 
+      {/* Reviews list */}
       {reviews.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-text-dim)', fontSize: '14px' }}>
-          Žádné recenze apartmánů.
+        <div className="apt-reviews-empty">
+          <span className="apt-reviews-empty-icon">⭐</span>
+          <p>Žádné recenze{status && status !== 'all' ? ` se stavem "${status}"` : ''}.</p>
         </div>
       ) : (
-        <div className="review-queue">
+        <div className="apt-reviews-list">
           {reviews.map((review) => (
-            <div key={review.id} className="review-card-admin">
-              <div className="review-card-admin-content">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                  <Stars rating={review.rating} />
-                  <StatusBadge status={review.status} />
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-dim)' }}>
-                    {relativeTime(review.createdAt)}
-                  </span>
-                </div>
+            <div key={review.id} className="apt-review-card">
+              {/* Header: stars + badge + time */}
+              <div className="apt-review-header">
+                <span className="apt-review-stars">
+                  {'★'.repeat(review.rating)}{'☆'.repeat(Math.max(0, 5 - review.rating))}
+                </span>
+                <span className={`apt-review-badge ${review.status}`}>
+                  {review.status === 'pending' ? 'Čeká' : review.status === 'approved' ? 'Schváleno' : 'Zamítnuto'}
+                </span>
+                <span className="apt-review-time">{relativeTime(review.createdAt)}</span>
+              </div>
 
-                <div style={{ marginBottom: '8px' }}>
-                  <span style={{ fontWeight: 600, fontSize: '14px' }}>{review.authorName}</span>
-                  <span style={{ color: 'var(--color-text-dim)', fontSize: '12px', marginLeft: '8px' }}>
-                    — {review.locationName}
-                  </span>
-                </div>
+              {/* Author + location */}
+              <div className="apt-review-author">
+                <span className="apt-review-author-name">{review.authorName}</span>
+                <span className="apt-review-author-location">— {review.locationName}</span>
+              </div>
 
-                <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, margin: '0 0 8px' }}>
-                  {review.content}
-                </p>
+              {/* Review text */}
+              <p className="apt-review-content">{review.content}</p>
 
-                {(review.cleanliness != null || review.discretion != null || review.comfort != null) && (
-                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--color-text-dim)', marginBottom: '8px' }}>
-                    {review.cleanliness != null && <span>Čistota: {review.cleanliness}/5</span>}
-                    {review.discretion != null && <span>Diskrétnost: {review.discretion}/5</span>}
-                    {review.comfort != null && <span>Komfort: {review.comfort}/5</span>}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                  {review.status === 'pending' && (
-                    <>
-                      <form action={approveApartmentReview}>
-                        <input type="hidden" name="id" value={review.id} />
-                        <button type="submit" className="btn-admin btn-admin-green" style={{ fontSize: '12px', padding: '6px 14px' }}>
-                          Schválit
-                        </button>
-                      </form>
-                      <form action={rejectApartmentReview}>
-                        <input type="hidden" name="id" value={review.id} />
-                        <button type="submit" className="btn-admin btn-admin-red" style={{ fontSize: '12px', padding: '6px 14px' }}>
-                          Zamítnout
-                        </button>
-                      </form>
-                    </>
+              {/* Score bars */}
+              {(review.cleanliness != null || review.discretion != null || review.comfort != null) && (
+                <div className="apt-review-scores">
+                  {review.cleanliness != null && (
+                    <div className="apt-review-score-item">
+                      <span>Čistota {review.cleanliness}/5</span>
+                      <div className="apt-review-score-bar">
+                        <div className="apt-review-score-fill" style={{ width: `${(review.cleanliness / 5) * 100}%` }} />
+                      </div>
+                    </div>
                   )}
-                  <form action={deleteApartmentReview}>
-                    <input type="hidden" name="id" value={review.id} />
-                    <button type="submit" className="btn-admin btn-admin-ghost" style={{ fontSize: '12px', padding: '6px 14px' }}>
-                      Smazat
-                    </button>
-                  </form>
+                  {review.discretion != null && (
+                    <div className="apt-review-score-item">
+                      <span>Diskrétnost {review.discretion}/5</span>
+                      <div className="apt-review-score-bar">
+                        <div className="apt-review-score-fill" style={{ width: `${(review.discretion / 5) * 100}%` }} />
+                      </div>
+                    </div>
+                  )}
+                  {review.comfort != null && (
+                    <div className="apt-review-score-item">
+                      <span>Komfort {review.comfort}/5</span>
+                      <div className="apt-review-score-bar">
+                        <div className="apt-review-score-fill" style={{ width: `${(review.comfort / 5) * 100}%` }} />
+                      </div>
+                    </div>
+                  )}
                 </div>
+              )}
+
+              {/* Actions */}
+              <div className="apt-review-actions">
+                {review.status === 'pending' && (
+                  <>
+                    <form action={approveApartmentReview} style={{ display: 'inline' }}>
+                      <input type="hidden" name="id" value={review.id} />
+                      <button type="submit" className="apt-review-btn approve">Schválit</button>
+                    </form>
+                    <form action={rejectApartmentReview} style={{ display: 'inline' }}>
+                      <input type="hidden" name="id" value={review.id} />
+                      <button type="submit" className="apt-review-btn reject">Zamítnout</button>
+                    </form>
+                  </>
+                )}
+                <form action={deleteApartmentReview} style={{ display: 'inline' }}>
+                  <input type="hidden" name="id" value={review.id} />
+                  <button type="submit" className="apt-review-btn delete">Smazat</button>
+                </form>
               </div>
             </div>
           ))}

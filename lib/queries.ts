@@ -2510,15 +2510,30 @@ export interface PendingApartmentReview {
   createdAt: string;
 }
 
-export async function getPendingApartmentReviews(): Promise<PendingApartmentReview[]> {
-  const result = await db.execute(`
-    SELECT ar.id, ar.location_id, ar.author_name, ar.rating, ar.content,
-           ar.cleanliness, ar.discretion, ar.comfort, ar.status, ar.created_at,
-           l.display_name AS location_name
-    FROM apartment_reviews ar
-    LEFT JOIN locations l ON l.id = ar.location_id
-    ORDER BY CASE ar.status WHEN 'pending' THEN 0 ELSE 1 END, ar.created_at DESC
-  `);
+export async function getPendingApartmentReviews(statusFilter?: string): Promise<PendingApartmentReview[]> {
+  const validStatuses = ['pending', 'approved', 'rejected'];
+  const filterByStatus = statusFilter && validStatuses.includes(statusFilter);
+
+  const result = filterByStatus
+    ? await db.execute({
+        sql: `SELECT ar.id, ar.location_id, ar.author_name, ar.rating, ar.content,
+               ar.cleanliness, ar.discretion, ar.comfort, ar.status, ar.created_at,
+               l.display_name AS location_name
+          FROM apartment_reviews ar
+          LEFT JOIN locations l ON l.id = ar.location_id
+          WHERE ar.status = ?
+          ORDER BY ar.created_at DESC`,
+        args: [statusFilter],
+      })
+    : await db.execute(`
+        SELECT ar.id, ar.location_id, ar.author_name, ar.rating, ar.content,
+               ar.cleanliness, ar.discretion, ar.comfort, ar.status, ar.created_at,
+               l.display_name AS location_name
+        FROM apartment_reviews ar
+        LEFT JOIN locations l ON l.id = ar.location_id
+        ORDER BY CASE ar.status WHEN 'pending' THEN 0 ELSE 1 END, ar.created_at DESC
+      `);
+
   return result.rows.map((r) => {
     const row = r as Record<string, unknown>;
     return {
