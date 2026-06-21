@@ -7,17 +7,20 @@ interface Props {
 
 const STORIES_STYLES = `
 .sr-section {
-  padding: 32px 0 28px;
+  padding: 32px 0 32px;
 }
 .sr-inner {
   max-width: 1240px;
   margin: 0 auto;
   padding: 0 24px;
+  text-align: center;
 }
 .sr-head {
-  display: flex; align-items: baseline; justify-content: space-between;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   margin-bottom: 18px;
-  gap: 16px;
 }
 .sr-h2 {
   font-family: var(--font-display);
@@ -95,7 +98,7 @@ const STORIES_STYLES = `
 }
 .sr-ring-wrap { position: relative; }
 @media (max-width: 640px) {
-  .sr-section { padding: 20px 0 20px; }
+  .sr-section { padding: 20px 0 24px; }
   .sr-inner { padding: 0 16px; }
   .sr-item { width: 72px; }
   .sr-ring { width: 64px; height: 64px; }
@@ -107,11 +110,11 @@ export default async function StoriesRow({ locale }: Props) {
   const stories = await getPublicStories();
   if (stories.length === 0) return null;
 
-  const headingMap: Record<string, { title: string; sub: string; followUs: string }> = {
-    cs: { title: 'Stories', sub: 'Aktuálně', followUs: 'Sleduj nás' },
-    en: { title: 'Stories', sub: 'Live now', followUs: 'Follow us' },
-    de: { title: 'Stories', sub: 'Aktuell', followUs: 'Folge uns' },
-    uk: { title: 'Stories', sub: 'Зараз', followUs: 'Стеж за нами' },
+  const headingMap: Record<string, { title: string; sub: string }> = {
+    cs: { title: 'Stories', sub: 'Aktuálně' },
+    en: { title: 'Stories', sub: 'Live now' },
+    de: { title: 'Stories', sub: 'Aktuell' },
+    uk: { title: 'Stories', sub: 'Зараз' },
   };
   const L = headingMap[locale] ?? headingMap.en;
 
