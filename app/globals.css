@@ -1173,7 +1173,7 @@ footer::before {
 /* ===== HERO ===== */
 .hero {
   position: relative;
-  padding: 80px 0 100px;
+  padding: 80px 0 48px;
   overflow: hidden;
 }
 .hero-inner {
@@ -1263,7 +1263,7 @@ footer::before {
 
 /* ===== FEATURED NEW ===== */
 .featured-new {
-  margin: -40px auto 80px;
+  margin: 0 auto 80px;
   max-width: 720px;
   padding: 0 24px;
   position: relative;
