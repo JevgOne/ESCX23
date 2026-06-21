@@ -4074,9 +4074,8 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 
 .profile-name-block {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
+  gap: 4px;
   margin-bottom: 12px;
 }
 

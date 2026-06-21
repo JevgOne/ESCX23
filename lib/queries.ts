@@ -1299,23 +1299,21 @@ export async function getPublicStories(): Promise<PublicStory[]> {
   const res = await db.execute(`
     SELECT
       s.id, s.girl_id, s.media_url, s.media_type, s.created_at,
-      g.name AS girl_name, g.slug AS girl_slug,
+      COALESCE(g.name, 'LovelyGirls') AS girl_name,
+      COALESCE(g.slug, '') AS girl_slug,
       (SELECT url FROM girl_photos WHERE girl_id=g.id ORDER BY is_primary DESC, id ASC LIMIT 1) AS girl_photo
     FROM stories s
-    INNER JOIN girls g ON g.id = s.girl_id
+    LEFT JOIN girls g ON g.id = s.girl_id AND g.status = 'active'
     WHERE s.is_active = 1
       AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)
-      AND s.girl_id > 0
-      AND g.status = 'active'
-    GROUP BY s.girl_id
-    HAVING s.created_at = MAX(s.created_at)
+      AND (s.girl_id = 0 OR g.id IS NOT NULL)
     ORDER BY s.created_at DESC
     LIMIT 20
   `);
   return res.rows.map((r) => ({
     id: Number(r.id),
     girlId: Number(r.girl_id),
-    girlName: String(r.girl_name ?? ''),
+    girlName: String(r.girl_name ?? 'LovelyGirls'),
     girlSlug: String(r.girl_slug ?? ''),
     girlPhoto: r.girl_photo ? String(r.girl_photo) : null,
     mediaUrl: String(r.media_url),
@@ -1334,21 +1332,21 @@ export async function getAllPublicStories(): Promise<PublicStory[]> {
   const res = await db.execute(`
     SELECT
       s.id, s.girl_id, s.media_url, s.media_type, s.created_at,
-      g.name AS girl_name, g.slug AS girl_slug,
+      COALESCE(g.name, 'LovelyGirls') AS girl_name,
+      COALESCE(g.slug, '') AS girl_slug,
       (SELECT url FROM girl_photos WHERE girl_id=g.id ORDER BY is_primary DESC, id ASC LIMIT 1) AS girl_photo
     FROM stories s
-    INNER JOIN girls g ON g.id = s.girl_id
+    LEFT JOIN girls g ON g.id = s.girl_id AND g.status = 'active'
     WHERE s.is_active = 1
       AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)
-      AND s.girl_id > 0
-      AND g.status = 'active'
+      AND (s.girl_id = 0 OR g.id IS NOT NULL)
     ORDER BY s.created_at DESC
     LIMIT 100
   `);
   return res.rows.map((r) => ({
     id: Number(r.id),
     girlId: Number(r.girl_id),
-    girlName: String(r.girl_name ?? ''),
+    girlName: String(r.girl_name ?? 'LovelyGirls'),
     girlSlug: String(r.girl_slug ?? ''),
     girlPhoto: r.girl_photo ? String(r.girl_photo) : null,
     mediaUrl: String(r.media_url),
@@ -1366,15 +1364,15 @@ export async function getStoryById(id: number): Promise<PublicStory | null> {
     sql: `
       SELECT
         s.id, s.girl_id, s.media_url, s.media_type, s.created_at,
-        g.name AS girl_name, g.slug AS girl_slug,
+        COALESCE(g.name, 'LovelyGirls') AS girl_name,
+        COALESCE(g.slug, '') AS girl_slug,
         (SELECT url FROM girl_photos WHERE girl_id=g.id ORDER BY is_primary DESC, id ASC LIMIT 1) AS girl_photo
       FROM stories s
-      INNER JOIN girls g ON g.id = s.girl_id
+      LEFT JOIN girls g ON g.id = s.girl_id AND g.status = 'active'
       WHERE s.id = ?
         AND s.is_active = 1
         AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)
-        AND s.girl_id > 0
-        AND g.status = 'active'
+        AND (s.girl_id = 0 OR g.id IS NOT NULL)
       LIMIT 1
     `,
     args: [id],
@@ -1384,7 +1382,7 @@ export async function getStoryById(id: number): Promise<PublicStory | null> {
   return {
     id: Number(r.id),
     girlId: Number(r.girl_id),
-    girlName: String(r.girl_name ?? ''),
+    girlName: String(r.girl_name ?? 'LovelyGirls'),
     girlSlug: String(r.girl_slug ?? ''),
     girlPhoto: r.girl_photo ? String(r.girl_photo) : null,
     mediaUrl: String(r.media_url),

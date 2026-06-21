@@ -68,10 +68,10 @@ export default async function StoryViewerPage({ params }: Props) {
   const prevStory = currentIndex > 0 ? allStories[currentIndex - 1] : null;
   const nextStory = currentIndex < allStories.length - 1 ? allStories[currentIndex + 1] : null;
 
-  const profileHref = `/${locale}/profil/${story.girlSlug}`;
+  const closeHref = `/${locale}`;
+  const profileHref = story.girlSlug ? `/${locale}/profil/${story.girlSlug}` : closeHref;
   const prevHref = prevStory ? `/${locale}/stories/${prevStory.id}` : null;
   const nextHref = nextStory ? `/${locale}/stories/${nextStory.id}` : null;
-  const closeHref = `/${locale}`;
   const timeAgo = timeAgoLocalized(story.createdAt, locale);
 
   return (
