@@ -71,19 +71,19 @@ function formatDate(dateStr: string, locale: string): string {
   }
 }
 
-function relativeTime(dateStr: string): string {
+function smartTime(dateStr: string, locale: string): string {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
   const diffMs = now - then;
   const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return 'now';
+  if (diffMin < 1) return locale === 'cs' ? 'teď' : locale === 'de' ? 'jetzt' : locale === 'uk' ? 'зараз' : 'now';
   if (diffMin < 60) return `${diffMin}m`;
   const diffH = Math.floor(diffMin / 60);
   if (diffH < 24) return `${diffH}h`;
   const diffD = Math.floor(diffH / 24);
-  if (diffD < 7) return `${diffD}d`;
-  const diffW = Math.floor(diffD / 7);
-  return `${diffW}w`;
+  if (diffD <= 6) return `${diffD}d`;
+  // Older than a week — show full date
+  return formatDate(dateStr, locale);
 }
 
 export default async function NovinkyPage({ params, searchParams }: Props) {
@@ -161,7 +161,7 @@ export default async function NovinkyPage({ params, searchParams }: Props) {
                       <div className="news-card-header">
                         <strong className="news-card-name">{isApt ? (item.locationName ?? '') : item.girlName}</strong>
                         <span className="news-card-time" title={formatDate(item.when, locale)}>
-                          {relativeTime(item.when)}
+                          {smartTime(item.when, locale)}
                         </span>
                       </div>
                       <p className="news-card-text">
