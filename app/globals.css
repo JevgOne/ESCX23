@@ -10180,9 +10180,11 @@ body {
 .profile-video-embed {
   position: relative;
   width: 100%;
-  padding-bottom: 56.25%; /* 16:9 */
+  padding-bottom: 133%; /* ~3:4 vertical-ish ratio for phone videos */
+  max-height: 70vh;
   overflow: hidden;
   background: #000;
+  border-radius: 12px;
 }
 .profile-video-embed iframe {
   position: absolute;
@@ -10194,7 +10196,7 @@ body {
 }
 @media (min-width: 768px) {
   .profile-videos-grid {
-    grid-template-columns: repeat(2, 1fr);
+    max-width: 640px;
   }
 }
 
