@@ -36,7 +36,9 @@ export default function StoryVideoPlayer({ src, nextUrl }: Props) {
       router.push(nextUrl);
     };
 
-    // Try to play
+    // Force mute and play
+    video.muted = true;
+    video.volume = 0;
     video.play().catch(() => {
       // Autoplay blocked — user will need to tap
     });
