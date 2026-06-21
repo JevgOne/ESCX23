@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation';
 
 interface Props {
   src: string;
-  nextUrl: string; // next story or close URL
+  nextUrl: string;
 }
 
-/**
- * Client component that auto-plays a story video muted,
- * shows progress, and auto-advances when the video ends.
- */
+function guessVideoType(url: string): string {
+  const ext = url.split('.').pop()?.split('?')[0]?.toLowerCase();
+  if (ext === 'webm') return 'video/webm';
+  if (ext === 'mov') return 'video/mp4'; // Chrome can play H.264 mov if served as mp4
+  return 'video/mp4';
+}
+
 export default function StoryVideoPlayer({ src, nextUrl }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const router = useRouter();
@@ -20,7 +23,6 @@ export default function StoryVideoPlayer({ src, nextUrl }: Props) {
     const video = videoRef.current;
     if (!video) return;
 
-    // Update progress bar based on video time
     const onTimeUpdate = () => {
       if (!video.duration) return;
       const pct = (video.currentTime / video.duration) * 100;
@@ -31,36 +33,43 @@ export default function StoryVideoPlayer({ src, nextUrl }: Props) {
       }
     };
 
-    // Auto-advance when video ends
     const onEnded = () => {
       router.push(nextUrl);
     };
 
-    // Force mute and play
+    const onError = () => {
+      // Video can't play (unsupported codec) — skip to next
+      router.push(nextUrl);
+    };
+
     video.muted = true;
     video.volume = 0;
-    video.play().catch(() => {
-      // Autoplay blocked — user will need to tap
-    });
+    video.play().catch(() => {});
 
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('ended', onEnded);
+    video.addEventListener('error', onError);
 
     return () => {
       video.removeEventListener('timeupdate', onTimeUpdate);
       video.removeEventListener('ended', onEnded);
+      video.removeEventListener('error', onError);
     };
   }, [src, nextUrl, router]);
+
+  const mimeType = guessVideoType(src);
 
   return (
     <video
       ref={videoRef}
       className="story-media story-video"
-      src={src}
       autoPlay
       muted
       playsInline
       preload="auto"
-    />
+      crossOrigin="anonymous"
+    >
+      <source src={src} type={mimeType} />
+    </video>
   );
 }
