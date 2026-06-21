@@ -1,5 +1,5 @@
 import { getPublicStories } from '@/lib/queries';
-import { Link } from '@/i18n/navigation';
+import NextLink from 'next/link';
 
 interface Props {
   locale: string;
@@ -124,9 +124,9 @@ export default async function StoriesRow({ locale }: Props) {
         </div>
         <div className="sr-scroll" role="list">
           {stories.map((story) => (
-            <Link
+            <NextLink
               key={story.id}
-              href={{ pathname: '/profil/[slug]' as never, params: { slug: story.girlSlug } }}
+              href={`/${locale}/stories/${story.id}`}
               className="sr-item"
               role="listitem"
               aria-label={`Story ${story.girlName}`}
@@ -146,7 +146,7 @@ export default async function StoriesRow({ locale }: Props) {
                 )}
               </div>
               <span className="sr-name">{story.girlName}</span>
-            </Link>
+            </NextLink>
           ))}
         </div>
       </div>

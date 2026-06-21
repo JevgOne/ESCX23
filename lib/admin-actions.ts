@@ -959,6 +959,13 @@ export async function createCategoryStory(formData: FormData) {
   await adminRedirect('/admin/stories');
 }
 
+export async function incrementStoryViews(storyId: number) {
+  await db.execute({
+    sql: `UPDATE stories SET views_count = views_count + 1 WHERE id = ?`,
+    args: [storyId],
+  });
+}
+
 // ─── SCHEDULES ───────────────────────────────────────────────────────────────
 
 const PRESET_TIMES: Record<string, [string, string]> = {

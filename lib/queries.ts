@@ -1325,6 +1325,75 @@ export async function getPublicStories(): Promise<PublicStory[]> {
   }));
 }
 
+/**
+ * Returns ALL active (live, not expired) stories, ordered by created_at DESC.
+ * Includes girl info (name, slug, photo). Used by the fullscreen story viewer
+ * to navigate between stories.
+ */
+export async function getAllPublicStories(): Promise<PublicStory[]> {
+  const res = await db.execute(`
+    SELECT
+      s.id, s.girl_id, s.media_url, s.media_type, s.created_at,
+      g.name AS girl_name, g.slug AS girl_slug,
+      (SELECT url FROM girl_photos WHERE girl_id=g.id ORDER BY is_primary DESC, id ASC LIMIT 1) AS girl_photo
+    FROM stories s
+    INNER JOIN girls g ON g.id = s.girl_id
+    WHERE s.is_active = 1
+      AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)
+      AND s.girl_id > 0
+      AND g.status = 'active'
+    ORDER BY s.created_at DESC
+    LIMIT 100
+  `);
+  return res.rows.map((r) => ({
+    id: Number(r.id),
+    girlId: Number(r.girl_id),
+    girlName: String(r.girl_name ?? ''),
+    girlSlug: String(r.girl_slug ?? ''),
+    girlPhoto: r.girl_photo ? String(r.girl_photo) : null,
+    mediaUrl: String(r.media_url),
+    mediaType: (String(r.media_type) === 'video' ? 'video' : 'image') as 'image' | 'video',
+    caption: null,
+    createdAt: String(r.created_at),
+  }));
+}
+
+/**
+ * Returns a single active story by ID with girl info, or null if not found / expired.
+ */
+export async function getStoryById(id: number): Promise<PublicStory | null> {
+  const res = await db.execute({
+    sql: `
+      SELECT
+        s.id, s.girl_id, s.media_url, s.media_type, s.created_at,
+        g.name AS girl_name, g.slug AS girl_slug,
+        (SELECT url FROM girl_photos WHERE girl_id=g.id ORDER BY is_primary DESC, id ASC LIMIT 1) AS girl_photo
+      FROM stories s
+      INNER JOIN girls g ON g.id = s.girl_id
+      WHERE s.id = ?
+        AND s.is_active = 1
+        AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)
+        AND s.girl_id > 0
+        AND g.status = 'active'
+      LIMIT 1
+    `,
+    args: [id],
+  });
+  const r = res.rows[0];
+  if (!r) return null;
+  return {
+    id: Number(r.id),
+    girlId: Number(r.girl_id),
+    girlName: String(r.girl_name ?? ''),
+    girlSlug: String(r.girl_slug ?? ''),
+    girlPhoto: r.girl_photo ? String(r.girl_photo) : null,
+    mediaUrl: String(r.media_url),
+    mediaType: (String(r.media_type) === 'video' ? 'video' : 'image') as 'image' | 'video',
+    caption: null,
+    createdAt: String(r.created_at),
+  };
+}
+
 // ─── BOOKINGS ────────────────────────────────────────────────────────────────
 
 export interface AdminBookingRow {
