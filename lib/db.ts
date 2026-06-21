@@ -38,6 +38,7 @@ async function runMigrations(client: Client) {
     'ALTER TABLE girl_applications ADD COLUMN tattoo_percentage INTEGER DEFAULT 0',
     'ALTER TABLE girl_applications ADD COLUMN nationality TEXT',
     'ALTER TABLE girl_photos ADD COLUMN is_secondary INTEGER DEFAULT 0',
+    'ALTER TABLE girls ADD COLUMN ethnicity TEXT DEFAULT NULL',
   ];
 
   for (const sql of migrations) {
