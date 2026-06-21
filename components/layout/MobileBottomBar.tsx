@@ -1,3 +1,6 @@
+import { getActiveLocations } from '@/lib/queries';
+import { pragueDateISO } from '@/lib/utils';
+
 const LABELS: Record<string, { call: string; whatsapp: string; telegram: string; branches: string }> = {
   en: { call: 'Call', whatsapp: 'WhatsApp', telegram: 'Telegram', branches: 'Branches' },
   cs: { call: 'Zavolat', whatsapp: 'WhatsApp', telegram: 'Telegram', branches: 'Pobočky' },
@@ -9,8 +12,11 @@ interface MobileBottomBarProps {
   locale: string;
 }
 
-export default function MobileBottomBar({ locale }: MobileBottomBarProps) {
+export default async function MobileBottomBar({ locale }: MobileBottomBarProps) {
   const l = LABELS[locale] ?? LABELS.en;
+  const today = pragueDateISO();
+  const allLocations = await getActiveLocations().catch(() => []);
+  const locations = allLocations.filter((loc) => !loc.openingDate || loc.openingDate <= today);
 
   return (
     <nav className="mobile-bottom-bar" aria-label="Quick actions">
@@ -32,13 +38,30 @@ export default function MobileBottomBar({ locale }: MobileBottomBarProps) {
         </svg>
         <span className="mbb-label">{l.telegram}</span>
       </a>
-      <a href="#footer" className="mbb-item">
-        <svg className="mbb-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-        <span className="mbb-label">{l.branches}</span>
-      </a>
+      <details className="mbb-item mbb-branches">
+        <summary>
+          <svg className="mbb-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          <span className="mbb-label">{l.branches}</span>
+        </summary>
+        <div className="mbb-dropdown">
+          {locations.map((loc) => (
+            <a
+              key={loc.id}
+              href={`/${locale}/pobocka/${loc.name}`}
+              className="mbb-dropdown-item"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span>{loc.displayName}{loc.district ? `, ${loc.district}` : ''}</span>
+            </a>
+          ))}
+        </div>
+      </details>
     </nav>
   );
 }

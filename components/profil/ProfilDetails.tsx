@@ -277,15 +277,15 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
       </div>
 
       <div className="profile-meta-line profile-desktop-only">
-        <span>📍 {scheduleAddress ?? (district ? `${cityName(locale)} · ${district}` : cityName(locale))}</span>
         {shiftFrom && shiftTo && (
           <>
-            <span className="profile-meta-sep">·</span>
             <span className="profile-meta-live">
               {`${TODAY_LABEL[locale] ?? 'Today'} ${shiftFrom}–${shiftTo}`}
             </span>
+            <span className="profile-meta-sep">·</span>
           </>
         )}
+        <span>📍 {scheduleAddress ?? (district ? `${cityName(locale)} · ${district}` : cityName(locale))}</span>
       </div>
 
       {/* Stat hero — big numbers (same as mobile) */}

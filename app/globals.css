@@ -15192,6 +15192,54 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
     letter-spacing: 0.01em;
     line-height: 1;
   }
+  /* Branches dropdown */
+  .mbb-branches {
+    position: relative;
+    cursor: pointer;
+    list-style: none;
+  }
+  .mbb-branches summary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    list-style: none;
+  }
+  .mbb-branches summary::-webkit-details-marker { display: none; }
+  .mbb-branches summary::marker { display: none; content: ''; }
+  .mbb-dropdown {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: -8px;
+    min-width: 200px;
+    background: rgba(24, 20, 30, 0.97);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+    padding: 6px 0;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+    z-index: 80;
+  }
+  .mbb-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 13.5px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .mbb-dropdown-item:hover,
+  .mbb-dropdown-item:active {
+    color: var(--color-coral);
+    background: rgba(242, 125, 141, 0.08);
+  }
+  .mbb-dropdown-item svg {
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
   /* Push body content above the bar */
   body {
     padding-bottom: calc(72px + env(safe-area-inset-bottom));

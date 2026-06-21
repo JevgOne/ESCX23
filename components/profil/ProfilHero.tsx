@@ -221,6 +221,12 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
             <span className="ig-name">{name}</span>
           </div>
           {subtitle && <div className="ig-subtitle">{subtitle}</div>}
+          {statusText && (
+            <div className="ig-status">
+              <span className="ig-status-dot" />
+              <span>{statusText}</span>
+            </div>
+          )}
           <div className="ig-loc">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -228,12 +234,6 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
             </svg>
             <span>{scheduleAddress ?? locText}</span>
           </div>
-          {statusText && (
-            <div className="ig-status">
-              <span className="ig-status-dot" />
-              <span>{statusText}</span>
-            </div>
-          )}
           <div className="ig-meters">
             {photos.length > 0 && <span><strong>{photos.length}</strong> {photosLbl}</span>}
             <span><strong>{videoCount}</strong> {videosLbl}</span>
