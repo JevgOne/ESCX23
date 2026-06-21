@@ -9,6 +9,8 @@ import SiteHeader from '@/components/layout/SiteHeader';
 import SiteFooter from '@/components/layout/SiteFooter';
 import MobileBottomBar from '@/components/layout/MobileBottomBar';
 import AgeGate from '@/components/AgeGate';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
+import { Suspense } from 'react';
 import '../globals.css';
 
 const inter = Inter({
@@ -72,6 +74,9 @@ export const metadata: Metadata = {
     alternateLocale: ['cs_CZ', 'de_DE', 'uk_UA'],
     images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'LovelyGirls Prague' }],
   },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
 };
 
 export default async function LocaleLayout({
@@ -97,6 +102,9 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${inter.variable} ${playfair.variable}`}>
       <head />
       <body>
+        <Suspense fallback={null}>
+          <GoogleAnalytics />
+        </Suspense>
         <NextIntlClientProvider>
           {!isProtectedArea && <AgeGate />}
           <SiteHeader locale={locale} />
