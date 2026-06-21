@@ -27,23 +27,11 @@ const ALT_NOUN: Record<string, string> = {
 };
 const NEW_LABEL: Record<string, string> = { cs: 'NOVÁ', en: 'NEW', de: 'NEU', uk: 'НОВА' };
 
-const ETHNICITY_CONFIG: Record<string, { label: Record<string, string>; css: string }> = {
-  asian: {
-    label: { cs: 'Asiatka', en: 'Asian', de: 'Asiatin', uk: 'Азіатка' },
-    css: 'ethnicity-asian',
-  },
-  ebony: {
-    label: { cs: 'Ebony', en: 'Ebony', de: 'Ebony', uk: 'Ebony' },
-    css: 'ethnicity-ebony',
-  },
-  mulatto: {
-    label: { cs: 'Mulatka', en: 'Mixed', de: 'Mulattin', uk: 'Мулатка' },
-    css: 'ethnicity-mulatto',
-  },
-  latina: {
-    label: { cs: 'Latina', en: 'Latina', de: 'Latina', uk: 'Латина' },
-    css: 'ethnicity-latina',
-  },
+const ETHNICITY_CONFIG: Record<string, Record<string, string>> = {
+  asian: { cs: 'Asiatka', en: 'Asian', de: 'Asiatin', uk: 'Азіатка' },
+  ebony: { cs: 'Ebony', en: 'Ebony', de: 'Ebony', uk: 'Ebony' },
+  mulatto: { cs: 'Mulatka', en: 'Mixed', de: 'Mulattin', uk: 'Мулатка' },
+  latina: { cs: 'Latina', en: 'Latina', de: 'Latina', uk: 'Латина' },
 };
 
 const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string }> = {
@@ -103,8 +91,8 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
           <span className="girl-tag-pill new">{NEW_LABEL[locale] ?? NEW_LABEL.en}</span>
         )}
         {girl.ethnicity && ETHNICITY_CONFIG[girl.ethnicity] && (
-          <span className={`girl-ethnicity-pill ${ETHNICITY_CONFIG[girl.ethnicity].css}`}>
-            {ETHNICITY_CONFIG[girl.ethnicity].label[locale] ?? ETHNICITY_CONFIG[girl.ethnicity].label.en}
+          <span className="girl-ethnicity-pill">
+            {ETHNICITY_CONFIG[girl.ethnicity][locale] ?? ETHNICITY_CONFIG[girl.ethnicity].en}
           </span>
         )}
         {girl.isPaused && (

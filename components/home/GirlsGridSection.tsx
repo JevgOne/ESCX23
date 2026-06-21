@@ -13,7 +13,7 @@ export default async function GirlsGridSection({ locale }: GirlsGridSectionProps
     getGirlsWithToday(),
     getAllGirlsForAdmin(undefined, 'active').catch(() => []),
   ]);
-  const shown = girls.slice(0, 8);
+  const shown = girls.filter((g) => !g.isPaused).slice(0, 8);
   // "Show all N companions" — use total active count, not just today's working count
   const totalCount = allActive.length || girls.length;
 

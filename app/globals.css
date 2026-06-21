@@ -453,18 +453,18 @@ nav.main-nav a:hover {
   position: absolute;
   bottom: 12px;
   left: 12px;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
-  padding: 4px 10px;
+  text-transform: uppercase;
+  padding: 5px 12px;
   border-radius: 8px;
   z-index: 2;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
-.ethnicity-asian { background: rgba(251,191,36,0.2); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
-.ethnicity-ebony { background: rgba(168,85,247,0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
-.ethnicity-mulatto { background: rgba(251,146,60,0.2); color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
-.ethnicity-latina { background: rgba(244,63,94,0.2); color: #fb7185; border: 1px solid rgba(244,63,94,0.3); }
 
 .girl-media-pills {
   position: absolute;
