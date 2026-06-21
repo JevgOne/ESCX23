@@ -601,7 +601,7 @@ export default async function AdminSchedulesPage({
                   <div className="sched-loc-row">
                     {locations.map((loc) => (
                       <label key={loc.id} className="sched-loc-opt">
-                        <input type="radio" name="location_id" value={loc.id} />
+                        <input type="radio" name="location_id" value={loc.id} required />
                         <span className="sched-loc-chip">{loc.displayName}</span>
                       </label>
                     ))}
@@ -621,6 +621,19 @@ export default async function AdminSchedulesPage({
                         </span>
                       </label>
                     ))}
+                  </div>
+                </div>
+
+                {/* Step 3b: Effective from */}
+                <div className="sched-section">
+                  <div className="sched-section-label">Platí od (volitelné)</div>
+                  <div className="sched-time-field">
+                    <label style={{ fontSize: '11px', color: 'var(--color-text-dim)' }}>Nechat prázdné = platí hned</label>
+                    <input type="date" name="effective_from" style={{
+                      background: 'rgba(0,0,0,0.3)', border: '1px solid var(--color-line-mid)',
+                      borderRadius: '10px', padding: '10px 14px', color: 'var(--color-text)',
+                      fontSize: '14px', maxWidth: '220px',
+                    }} />
                   </div>
                 </div>
 

@@ -1009,6 +1009,7 @@ export async function addGirlSchedule(formData: FormData) {
   if (!girlId) await adminRedirect('/admin/schedules?error=missing_girl');
 
   const locationId = formData.get('location_id') ? Number(formData.get('location_id')) : null;
+  const effectiveFrom = formData.get('effective_from') ? String(formData.get('effective_from')).trim() : null;
 
   // Global preset + Od/Do (applied to all selected days)
   const globalPreset = String(formData.get('preset') ?? 'ranni');
@@ -1048,9 +1049,9 @@ export async function addGirlSchedule(formData: FormData) {
       args: [girlId, i],
     });
     await db.execute({
-      sql: `INSERT INTO girl_schedules (girl_id, day_of_week, start_time, end_time, location_id, is_active, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      args: [girlId, i, startTime, endTime, locationId],
+      sql: `INSERT INTO girl_schedules (girl_id, day_of_week, start_time, end_time, location_id, is_active, effective_from, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, 1, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      args: [girlId, i, startTime, endTime, locationId, effectiveFrom],
     });
   }
 

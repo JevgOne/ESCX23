@@ -42,6 +42,7 @@ async function fetchScheduleData(girlIds: number[]): Promise<{
       sql: `SELECT girl_id, day_of_week, start_time, end_time
             FROM girl_schedules
             WHERE girl_id IN (${placeholders}) AND is_active = 1
+              AND (effective_from IS NULL OR effective_from <= date('now'))
             ORDER BY girl_id, day_of_week`,
       args: girlIds,
     }),

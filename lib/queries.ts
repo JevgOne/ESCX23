@@ -84,13 +84,14 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
       INNER JOIN services svc ON svc.id = gsvc.service_id AND svc.slug = ?
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
+        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status IN ('active', 'inactive') AND (g.vip = 0 OR g.vip IS NULL)
         AND gsvc.is_included != 0
       ORDER BY g.name
     `,
-    args: [serviceSlug, dayOfWeek, today],
+    args: [serviceSlug, dayOfWeek, today, today],
   });
 
   return result.rows
@@ -192,6 +193,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       FROM girls g
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
+        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       LEFT JOIN girl_schedules gs2 ON gs2.girl_id = g.id
@@ -201,7 +203,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
       WHERE g.status IN ('active', 'inactive') AND (g.vip = 0 OR g.vip IS NULL)
       ORDER BY g.name
     `,
-    args: [dayOfWeek, today, tomorrowDow, tomorrowDate],
+    args: [dayOfWeek, today, today, tomorrowDow, tomorrowDate],
   });
 
   return result.rows
@@ -763,12 +765,13 @@ export async function getGirlsForDay(
       FROM girls g
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
+        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
       ORDER BY g.name
     `,
-    args: [dayOfWeek, date],
+    args: [dayOfWeek, date, date],
   });
 
   return result.rows
@@ -1603,12 +1606,13 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
       FROM girls g
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
+        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.id = ?
       LIMIT 1
     `,
-    args: [dayOfWeek, today, girlId],
+    args: [dayOfWeek, today, today, girlId],
   });
 
   const r = result.rows[0];
@@ -2026,6 +2030,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
       FROM girls g
       LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
         AND gs.day_of_week = ? AND gs.is_active = 1
+        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
@@ -2034,7 +2039,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         AND g.hashtags != ''
       ORDER BY g.name
     `,
-    args: [dayOfWeek, today],
+    args: [dayOfWeek, today, today],
   });
 
   return result.rows
@@ -2104,6 +2109,7 @@ export interface ScheduleEntry {
   start_time: string;
   end_time: string;
   location_name: string | null;
+  effective_from: string | null;
 }
 
 export interface GirlScheduleGroup {
@@ -2126,7 +2132,7 @@ export async function getAllSchedulesGrouped(): Promise<GirlScheduleGroup[]> {
 
   const schedRes = await db.execute({
     sql: `SELECT gs.id, gs.girl_id, gs.day_of_week, gs.start_time, gs.end_time,
-                 l.display_name AS location_name
+                 l.display_name AS location_name, gs.effective_from
           FROM girl_schedules gs
           LEFT JOIN locations l ON l.id = gs.location_id
           WHERE gs.girl_id IN (${girlIds.map(() => '?').join(',')})
@@ -2154,6 +2160,7 @@ export async function getAllSchedulesGrouped(): Promise<GirlScheduleGroup[]> {
       start_time: String(r.start_time ?? ''),
       end_time: String(r.end_time ?? ''),
       location_name: r.location_name ? String(r.location_name) : null,
+      effective_from: r.effective_from ? String(r.effective_from) : null,
     });
   }
 
