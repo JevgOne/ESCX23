@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { redirect } from 'next/navigation';
 import { getGirlsForDay, getActiveLocations } from '@/lib/queries';
-import { pragueDateISO } from '@/lib/utils';
+import { pragueDateISO, pragueDayOfWeek } from '@/lib/utils';
 import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
 import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
@@ -54,23 +54,37 @@ const TODAY_LABEL: Record<string, string> = {
   cs: 'Dnes', en: 'Today', de: 'Heute', uk: 'Сьогодні',
 };
 
-function generate7Days(today: string, locale: string) {
+/**
+ * Returns the Monday of the current week based on Prague timezone.
+ * pragueDayOfWeek: Mon=0, Tue=1, ... Sun=6
+ */
+function getMondayOfWeek(todayISO: string): string {
+  const todayDate = new Date(todayISO + 'T12:00:00Z');
+  const dow = pragueDayOfWeek(todayDate); // Mon=0 .. Sun=6
+  const monday = new Date(todayDate);
+  monday.setUTCDate(monday.getUTCDate() - dow);
+  return monday.toISOString().slice(0, 10);
+}
+
+function generateWeekDays(today: string, locale: string) {
   const names = DAY_NAMES_SHORT[locale] ?? DAY_NAMES_SHORT.cs;
   const todayLabel = TODAY_LABEL[locale] ?? 'Dnes';
+  const mondayISO = getMondayOfWeek(today);
   const result = [];
   for (let i = 0; i < 7; i++) {
-    const d = new Date(today + 'T12:00:00Z');
+    const d = new Date(mondayISO + 'T12:00:00Z');
     d.setUTCDate(d.getUTCDate() + i);
     const iso = d.toISOString().slice(0, 10);
-    const jsDay = new Date(d.toLocaleString('en-US', { timeZone: 'Europe/Prague' })).getDay();
-    const dayIdx = jsDay === 0 ? 6 : jsDay - 1;
     const day = d.toLocaleString('cs-CZ', { timeZone: 'Europe/Prague', day: 'numeric' });
     const month = d.toLocaleString('cs-CZ', { timeZone: 'Europe/Prague', month: 'numeric' });
+    const isToday = iso === today;
+    const isPast = iso < today;
     result.push({
       iso,
-      labelShort: i === 0 ? todayLabel : names[dayIdx] ?? names[0],
+      labelShort: isToday ? todayLabel : names[i] ?? names[0],
       dayNum: `${day}.${month}.`,
-      isToday: i === 0,
+      isToday,
+      isPast,
     });
   }
   return result;
@@ -119,9 +133,15 @@ export default async function RozvrhPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const today = pragueDateISO();
+  const mondayISO = getMondayOfWeek(today);
+  const sundayDate = new Date(mondayISO + 'T12:00:00Z');
+  sundayDate.setUTCDate(sundayDate.getUTCDate() + 6);
+  const sundayISO = sundayDate.toISOString().slice(0, 10);
+
   const requestedDay = sp.day ?? today;
 
-  if (requestedDay < today) {
+  // Redirect if requested day is outside the current Mon-Sun week
+  if (requestedDay < mondayISO || requestedDay > sundayISO) {
     redirect(`/${locale}${CANONICAL_PATH[locale] ?? '/rozvrh'}`);
   }
 
@@ -132,7 +152,7 @@ export default async function RozvrhPage({ params, searchParams }: Props) {
     getActiveLocations().catch(() => []),
   ]);
 
-  const days = generate7Days(today, locale);
+  const days = generateWeekDays(today, locale);
 
   const allLabel = locale === 'en' ? 'All locations' : locale === 'de' ? 'Alle Standorte' : locale === 'uk' ? 'Всі локації' : 'Všechny pobočky';
   const openLocations = dbLocations.filter((l) => !l.openingDate || l.openingDate <= today);

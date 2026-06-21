@@ -5332,6 +5332,16 @@ html.lightbox-active .profile-sticky-bar-desktop {
 }
 .rozvrh-day.active::before { opacity: 1; }
 
+.rozvrh-day.past {
+  opacity: 0.4;
+}
+.rozvrh-day.past:hover {
+  opacity: 0.65;
+}
+.rozvrh-day.past.active {
+  opacity: 0.7;
+}
+
 .rozvrh-day-name {
   font-size: 10px;
   letter-spacing: 0.18em;

@@ -3,6 +3,7 @@ interface DayInfo {
   labelShort: string;
   dayNum: string;
   isToday: boolean;
+  isPast: boolean;
 }
 
 interface DayTabsProps {
@@ -21,11 +22,17 @@ export default function DayTabs({ days, activeDay, location, basePath }: DayTabs
         if (location && location !== 'all') params.set('location', location);
         const href = `${basePath}?${params.toString()}`;
 
+        const classes = [
+          'rozvrh-day',
+          d.iso === activeDay ? 'active' : '',
+          d.isPast ? 'past' : '',
+        ].filter(Boolean).join(' ');
+
         return (
           <a
             key={d.iso}
             href={href}
-            className={`rozvrh-day${d.iso === activeDay ? ' active' : ''}`}
+            className={classes}
           >
             <span className="rozvrh-day-name">{d.labelShort}</span>
             <span className="rozvrh-day-num">{d.dayNum}</span>
