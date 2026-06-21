@@ -614,147 +614,155 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
       {/* Apartment Reviews Section */}
       <section className="apt-section">
         <div className="container">
-          {/* Hero stat strip */}
+          {/* Divider heading */}
+          <div className="apt-divider">
+            <div className="apt-divider-line" />
+            <h2>{L.reviewsH}</h2>
+            <div className="apt-divider-line" />
+          </div>
+
+          {/* Big centered score */}
           {ratingStats.totalReviews > 0 && (
-            <div className="apt-vibe-strip">
-              <div className="apt-vibe-score">
-                <span className="apt-vibe-emoji">{ratingStats.avgRating >= 4.5 ? '🔥' : ratingStats.avgRating >= 3.5 ? '💎' : '👍'}</span>
-                <span className="apt-vibe-num">{ratingStats.avgRating}</span>
-                <span className="apt-vibe-slash">/5</span>
+            <div className="apt-score-hero">
+              <div className="apt-score-big">
+                {ratingStats.avgRating}<span className="apt-score-slash">/5</span>
               </div>
-              <div className="apt-vibe-cats">
+              <div className="apt-score-label">{L.reviewsCount(ratingStats.totalReviews)}</div>
+              <div className="apt-score-bars">
                 {ratingStats.avgCleanliness != null && (
-                  <div className="apt-vibe-cat">
-                    <span className="apt-vibe-cat-emoji">✨</span>
-                    <span className="apt-vibe-cat-label">{L.cleanlinessLbl}</span>
-                    <span className="apt-vibe-cat-val">{ratingStats.avgCleanliness}</span>
+                  <div className="apt-score-bar">
+                    <span className="apt-score-bar-label">✨ {L.cleanlinessLbl}</span>
+                    <div className="apt-score-bar-track">
+                      <div className="apt-score-bar-fill" style={{ width: `${(ratingStats.avgCleanliness / 5) * 100}%` }} />
+                    </div>
+                    <span className="apt-score-bar-val">{ratingStats.avgCleanliness}</span>
                   </div>
                 )}
                 {ratingStats.avgDiscretion != null && (
-                  <div className="apt-vibe-cat">
-                    <span className="apt-vibe-cat-emoji">🤫</span>
-                    <span className="apt-vibe-cat-label">{L.discretionLbl}</span>
-                    <span className="apt-vibe-cat-val">{ratingStats.avgDiscretion}</span>
+                  <div className="apt-score-bar">
+                    <span className="apt-score-bar-label">🤫 {L.discretionLbl}</span>
+                    <div className="apt-score-bar-track">
+                      <div className="apt-score-bar-fill" style={{ width: `${(ratingStats.avgDiscretion / 5) * 100}%` }} />
+                    </div>
+                    <span className="apt-score-bar-val">{ratingStats.avgDiscretion}</span>
                   </div>
                 )}
                 {ratingStats.avgComfort != null && (
-                  <div className="apt-vibe-cat">
-                    <span className="apt-vibe-cat-emoji">🛋️</span>
-                    <span className="apt-vibe-cat-label">{L.comfortLbl}</span>
-                    <span className="apt-vibe-cat-val">{ratingStats.avgComfort}</span>
+                  <div className="apt-score-bar">
+                    <span className="apt-score-bar-label">🛋️ {L.comfortLbl}</span>
+                    <div className="apt-score-bar-track">
+                      <div className="apt-score-bar-fill" style={{ width: `${(ratingStats.avgComfort / 5) * 100}%` }} />
+                    </div>
+                    <span className="apt-score-bar-val">{ratingStats.avgComfort}</span>
                   </div>
                 )}
               </div>
-              <div className="apt-vibe-count">{L.reviewsCount(ratingStats.totalReviews)}</div>
             </div>
           )}
 
-          <h2 className="apt-vibe-h2">💬 {L.reviewsH}</h2>
-
           {/* Success / Error messages */}
           {sp.sent === 'ok' && (
-            <div className="apt-review-msg apt-review-msg-ok">✅ {L.reviewSent}</div>
+            <div className="apt-review-msg apt-review-msg-ok">{L.reviewSent}</div>
           )}
           {sp.error === 'validation' && (
-            <div className="apt-review-msg apt-review-msg-err">⚠️ {L.reviewValidation}</div>
+            <div className="apt-review-msg apt-review-msg-err">{L.reviewValidation}</div>
           )}
           {sp.error === 'ratelimit' && (
-            <div className="apt-review-msg apt-review-msg-err">🚫 {L.reviewRateLimit}</div>
+            <div className="apt-review-msg apt-review-msg-err">{L.reviewRateLimit}</div>
           )}
 
-          {/* Reviews — quote cards */}
+          {/* Review cards — bento grid */}
           {reviews.length > 0 && (
-            <div className="apt-quotes">
-              {reviews.map((r) => (
-                <div key={r.id} className="apt-quote">
-                  <div className="apt-quote-mark">"</div>
-                  <p className="apt-quote-text">{r.content}</p>
-                  <div className="apt-quote-footer">
-                    <div className="apt-quote-avatar">{r.authorName.charAt(0).toUpperCase()}</div>
-                    <div className="apt-quote-meta">
-                      <span className="apt-quote-name">{r.authorName}</span>
-                      <span className="apt-quote-date">{new Date(r.createdAt).toLocaleDateString(locale === 'cs' ? 'cs-CZ' : locale === 'de' ? 'de-DE' : locale === 'uk' ? 'uk-UA' : 'en-GB')}</span>
-                    </div>
-                    <div className="apt-quote-pill">
-                      {r.rating >= 5 ? '🔥 Perfect' : r.rating >= 4 ? '💎 Great' : r.rating >= 3 ? '👌 Good' : '👍'}
+            <div className="apt-reviews-grid">
+              {reviews.map((r) => {
+                const vibe = r.rating >= 5 ? 'fire' : r.rating >= 4 ? 'gem' : r.rating >= 3 ? 'ok' : 'meh';
+                const vibeEmoji = r.rating >= 5 ? '🔥' : r.rating >= 4 ? '💎' : r.rating >= 3 ? '👌' : '😐';
+                const vibeText = r.rating >= 5 ? 'Perfect' : r.rating >= 4 ? 'Great' : r.rating >= 3 ? 'Good' : 'Meh';
+                return (
+                  <div key={r.id} className="apt-rcard">
+                    <div className="apt-rcard-sentiment">{vibeEmoji}</div>
+                    <p className="apt-rcard-text">{r.content}</p>
+                    <div className="apt-rcard-bottom">
+                      <div className="apt-rcard-avatar">{r.authorName.charAt(0).toUpperCase()}</div>
+                      <div className="apt-rcard-info">
+                        <div className="apt-rcard-name">{r.authorName}</div>
+                        <div className="apt-rcard-date">{new Date(r.createdAt).toLocaleDateString(locale === 'cs' ? 'cs-CZ' : locale === 'de' ? 'de-DE' : locale === 'uk' ? 'uk-UA' : 'en-GB')}</div>
+                      </div>
+                      <span className="apt-rcard-badge" data-vibe={vibe}>{vibeText}</span>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
           {/* Review form */}
           {!isUpcoming && (
-            <div className="apt-form-wrap">
-              <h3 className="apt-form-title">✍️ {L.reviewFormH}</h3>
-              <form action={submitApartmentReview} className="apt-review-form">
+            <div className="apt-form-card">
+              <h3 className="apt-form-title">{L.reviewFormH}</h3>
+              <form action={submitApartmentReview} className="apt-form">
                 <input type="hidden" name="location_id" value={loc.id} />
                 <input type="hidden" name="location_slug" value={slug} />
                 <div style={{ position: 'absolute', left: '-9999px' }} aria-hidden="true">
                   <input type="text" name="website" tabIndex={-1} autoComplete="off" />
                 </div>
 
-                <div className="apt-form-row">
-                  <div className="apt-review-field">
-                    <label htmlFor="author_name">{L.reviewNameLbl}</label>
-                    <input id="author_name" name="author_name" type="text" required placeholder={L.reviewNamePh} className="apt-input" />
-                  </div>
-                  <div className="apt-review-field">
-                    <label htmlFor="rating">{L.reviewRatingLbl}</label>
-                    <select id="rating" name="rating" required className="apt-input">
-                      <option value="">—</option>
-                      <option value="5">🔥 Perfect (5)</option>
-                      <option value="4">💎 Great (4)</option>
-                      <option value="3">👌 Good (3)</option>
-                      <option value="2">😐 Meh (2)</option>
-                      <option value="1">👎 Bad (1)</option>
-                    </select>
+                {/* Name field */}
+                <div className="apt-field">
+                  <label className="apt-field-label" htmlFor="author_name">{L.reviewNameLbl}</label>
+                  <input id="author_name" name="author_name" type="text" required placeholder={L.reviewNamePh} className="apt-input" />
+                </div>
+
+                {/* Emoji rating picker */}
+                <div className="apt-field">
+                  <label className="apt-field-label">{L.reviewRatingLbl}</label>
+                  <div className="apt-emoji-picker">
+                    {[
+                      { val: '5', icon: '🔥', text: 'Perfect' },
+                      { val: '4', icon: '💎', text: 'Great' },
+                      { val: '3', icon: '👌', text: 'Good' },
+                      { val: '2', icon: '😐', text: 'Meh' },
+                      { val: '1', icon: '👎', text: 'Bad' },
+                    ].map((opt) => (
+                      <div key={opt.val} className="apt-emoji-opt">
+                        <input type="radio" name="rating" id={`rating-${opt.val}`} value={opt.val} required />
+                        <label htmlFor={`rating-${opt.val}`} className="apt-emoji-label">
+                          <span className="apt-emoji-label-icon">{opt.icon}</span>
+                          <span className="apt-emoji-label-text">{opt.text}</span>
+                        </label>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                <div className="apt-review-subratings">
-                  <div className="apt-review-field">
-                    <label htmlFor="cleanliness">✨ {L.cleanlinessLbl}</label>
-                    <select id="cleanliness" name="cleanliness" className="apt-input">
-                      <option value="">—</option>
-                      <option value="5">🔥 5</option>
-                      <option value="4">💎 4</option>
-                      <option value="3">👌 3</option>
-                      <option value="2">😐 2</option>
-                      <option value="1">👎 1</option>
-                    </select>
-                  </div>
-                  <div className="apt-review-field">
-                    <label htmlFor="discretion">🤫 {L.discretionLbl}</label>
-                    <select id="discretion" name="discretion" className="apt-input">
-                      <option value="">—</option>
-                      <option value="5">🔥 5</option>
-                      <option value="4">💎 4</option>
-                      <option value="3">👌 3</option>
-                      <option value="2">😐 2</option>
-                      <option value="1">👎 1</option>
-                    </select>
-                  </div>
-                  <div className="apt-review-field">
-                    <label htmlFor="comfort">🛋️ {L.comfortLbl}</label>
-                    <select id="comfort" name="comfort" className="apt-input">
-                      <option value="">—</option>
-                      <option value="5">🔥 5</option>
-                      <option value="4">💎 4</option>
-                      <option value="3">👌 3</option>
-                      <option value="2">😐 2</option>
-                      <option value="1">👎 1</option>
-                    </select>
-                  </div>
+                {/* Sub-ratings — pill selectors */}
+                <div className="apt-sub-ratings">
+                  {[
+                    { name: 'cleanliness', emoji: '✨', label: L.cleanlinessLbl },
+                    { name: 'discretion', emoji: '🤫', label: L.discretionLbl },
+                    { name: 'comfort', emoji: '🛋️', label: L.comfortLbl },
+                  ].map((cat) => (
+                    <div key={cat.name} className="apt-sub-rating-group">
+                      <label className="apt-field-label">{cat.emoji} {cat.label}</label>
+                      <div className="apt-sub-pills">
+                        {['1', '2', '3', '4', '5'].map((v) => (
+                          <div key={v} className="apt-sub-pill">
+                            <input type="radio" name={cat.name} id={`${cat.name}-${v}`} value={v} />
+                            <label htmlFor={`${cat.name}-${v}`} className="apt-sub-pill-label">{v}</label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
-                <div className="apt-review-field">
-                  <label htmlFor="content">{L.reviewCommentLbl}</label>
+                {/* Comment */}
+                <div className="apt-field">
+                  <label className="apt-field-label" htmlFor="content">{L.reviewCommentLbl}</label>
                   <textarea id="content" name="content" required minLength={10} rows={4} placeholder={L.reviewCommentPh} className="apt-input" />
                 </div>
 
-                <button type="submit" className="apt-submit">{L.reviewSubmit} →</button>
+                <button type="submit" className="apt-submit">{L.reviewSubmit}</button>
               </form>
             </div>
           )}
