@@ -34,6 +34,7 @@ const STORIES_STYLES = `
 }
 .sr-scroll {
   display: flex;
+  justify-content: center;
   gap: 18px;
   overflow-x: auto;
   scroll-behavior: smooth;

@@ -6,6 +6,7 @@ import { getStoryById, getAllPublicStories } from '@/lib/queries';
 import { incrementStoryViews } from '@/lib/admin-actions';
 import { photoUrl } from '@/lib/photoUrl';
 import StoryAutoAdvance from '@/components/stories/StoryAutoAdvance';
+import StoryVideoPlayer from '@/components/stories/StoryVideoPlayer';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -84,12 +85,10 @@ export default async function StoryViewerPage({ params }: Props) {
         </svg>
       </NextLink>
 
-      {/* Progress bar (visual only for no-JS; auto-advance for JS) */}
+      {/* Progress bar */}
       <div className="story-progress-bar">
         <div className="story-progress-track">
-          {story.mediaType === 'image' && (
-            <div className="story-progress-fill" />
-          )}
+          <div className="story-progress-fill" />
         </div>
       </div>
 
@@ -112,14 +111,9 @@ export default async function StoryViewerPage({ params }: Props) {
       {/* Media container */}
       <div className="story-media-wrap">
         {story.mediaType === 'video' ? (
-          <video
-            className="story-media story-video"
+          <StoryVideoPlayer
             src={story.mediaUrl}
-            controls
-            autoPlay
-            muted
-            playsInline
-            preload="metadata"
+            nextUrl={nextHref ?? closeHref}
           />
         ) : (
           /* eslint-disable-next-line @next/next/no-img-element */
@@ -157,9 +151,9 @@ export default async function StoryViewerPage({ params }: Props) {
         )}
       </div>
 
-      {/* Client component for auto-advance (image stories only) */}
-      {story.mediaType === 'image' && nextHref && (
-        <StoryAutoAdvance nextUrl={nextHref} durationMs={5000} />
+      {/* Client component for auto-advance (image stories only — video uses StoryVideoPlayer) */}
+      {story.mediaType === 'image' && (
+        <StoryAutoAdvance nextUrl={nextHref ?? closeHref} durationMs={5000} />
       )}
     </div>
   );
