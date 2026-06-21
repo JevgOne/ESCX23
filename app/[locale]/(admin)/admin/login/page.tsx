@@ -280,6 +280,12 @@ export default async function AdminLoginPage({
             <span>Nesprávný email nebo heslo.</span>
           </div>
         )}
+        {error === 'ratelimit' && (
+          <div className="escx-login-error">
+            <span className="escx-login-error-icon">⛔</span>
+            <span>Příliš mnoho pokusů. Zkuste to znovu za 15 minut.</span>
+          </div>
+        )}
 
         <form action={loginAdmin} className="escx-login-form">
           <div className="escx-login-field">

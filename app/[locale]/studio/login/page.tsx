@@ -22,6 +22,9 @@ export default async function StudioLoginPage({
         {error === 'invalid' && (
           <p className="login-error">Nesprávný email nebo heslo.</p>
         )}
+        {error === 'ratelimit' && (
+          <p className="login-error">Příliš mnoho pokusů. Zkuste to za 15 minut.</p>
+        )}
         <form action={loginGirl}>
           <input name="email" type="email" required placeholder="Email" autoComplete="email" />
           <input name="password" type="password" required placeholder="Heslo" autoComplete="current-password" />

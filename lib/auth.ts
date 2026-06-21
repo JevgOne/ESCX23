@@ -13,11 +13,32 @@ async function getLocale(): Promise<string> {
 
 const SESSION_COOKIE = 'escx23_session';
 const SESSION_MAX_AGE_SECONDS: Record<string, number> = {
-  admin: 8 * 60 * 60,      // 8 hours
-  manager: 8 * 60 * 60,    // 8 hours
+  admin: 20 * 60,           // 20 minutes inactivity
+  manager: 20 * 60,         // 20 minutes inactivity
   girl: 72 * 60 * 60,      // 72 hours (3 days)
 };
 const REMEMBER_ME_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
+
+// Rate limiting — in-memory store (resets on deploy, good enough for Vercel)
+const loginAttempts = new Map<string, { count: number; firstAttempt: number }>();
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+export function checkLoginRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || now - entry.firstAttempt > LOGIN_WINDOW_MS) {
+    loginAttempts.set(ip, { count: 1, firstAttempt: now });
+    return true;
+  }
+  if (entry.count >= MAX_LOGIN_ATTEMPTS) return false;
+  entry.count++;
+  return true;
+}
+
+export function resetLoginAttempts(ip: string) {
+  loginAttempts.delete(ip);
+}
 
 export interface AuthUser {
   id: number;
@@ -101,10 +122,28 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   if (result.rows.length === 0) return null;
 
   const row = result.rows[0] as Record<string, unknown>;
+  const role = row.role as 'admin' | 'manager' | 'girl';
+
+  // Sliding window: refresh session on each request (admin/manager only)
+  if (role === 'admin' || role === 'manager') {
+    const maxAge = SESSION_MAX_AGE_SECONDS[role] ?? 20 * 60;
+    const newToken = createToken(Number(row.id), role, maxAge);
+    try {
+      cookieStore.set(SESSION_COOKIE, newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+      });
+    } catch {
+      // Cookie setting may fail in some contexts (e.g. static generation)
+    }
+  }
+
   return {
     id: Number(row.id),
     email: String(row.email),
-    role: row.role as 'admin' | 'manager' | 'girl',
+    role,
     girl_id: row.girl_id != null ? Number(row.girl_id) : null,
   };
 }
