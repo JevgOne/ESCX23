@@ -350,6 +350,12 @@ export default async function ProfilPage({ params, searchParams }: Props) {
                 const key = `name_${locale}` as keyof typeof s;
                 return { name: String(s[key] ?? s.name_en ?? s.slug ?? ''), category: String(s.category ?? 'basic') };
               }).filter((s) => s.name)}
+              subtitle={(() => {
+                const g = girl as unknown as Record<string, unknown>;
+                const key = `subtitle_${locale}`;
+                const val = g[key] ?? g.subtitle_en ?? null;
+                return val ? String(val) : null;
+              })()}
               bio={(() => {
                 const g = girl as unknown as Record<string, unknown>;
                 if (locale === 'cs') return String(g.description_cs ?? g.bio ?? '');

@@ -117,6 +117,7 @@ interface ProfilHeroProps {
   videos?: VideoItem[];
   activeMedia?: 'photo' | 'video';
   slug?: string;
+  subtitle?: string | null;
 }
 
 const NEW_LABEL: Record<string, string> = { cs: 'NOVÁ', en: 'NEW', de: 'NEU', uk: 'НОВА' };
@@ -140,7 +141,7 @@ const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string 
   },
 };
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '' }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '', subtitle }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -219,6 +220,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           <div className="ig-name-row">
             <span className="ig-name">{name}</span>
           </div>
+          {subtitle && <div className="ig-subtitle">{subtitle}</div>}
           <div className="ig-loc">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />

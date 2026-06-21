@@ -3092,6 +3092,13 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     color: var(--color-text);
     line-height: 1;
   }
+  .ig-subtitle {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
   .verified-strip { display: none !important; }
   .profile-ig-cta { display: none !important; }
   .ig-age {
