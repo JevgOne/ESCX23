@@ -117,6 +117,7 @@ export default async function StoryViewerPage({ params }: Props) {
             src={story.mediaUrl}
             controls
             autoPlay
+            muted
             playsInline
             preload="metadata"
           />
