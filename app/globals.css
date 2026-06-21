@@ -14610,11 +14610,130 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
     display: none;
   }
 }
+/* ----- Admin mobile content (≤768px) ----- */
+@media (max-width: 768px) {
+  .admin-main {
+    padding: 16px 12px;
+  }
+  .admin-topbar {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+  .admin-topbar-user {
+    gap: 6px;
+  }
+  .admin-topbar-logout {
+    font-size: 11px;
+    padding: 4px 8px;
+    background: var(--color-bg-elev);
+    border-radius: 6px;
+  }
+
+  /* Stat cards — 2 columns on tablet, 1 on narrow */
+  .stat-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    padding: 14px;
+  }
+  .stat-card .stat-value {
+    font-size: 28px;
+  }
+
+  /* Quick action cards */
+  .admin-quick-card {
+    padding: 14px !important;
+  }
+
+  /* Tables — horizontal scroll wrapper */
+  .data-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .data-table thead th,
+  .data-table tbody td {
+    padding: 10px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .data-table .thumb {
+    width: 32px;
+    height: 40px;
+  }
+
+  /* Admin action buttons — smaller on mobile */
+  .admin-action-btn {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+
+  /* Search + filter bar — stack vertically */
+  .admin-search {
+    min-width: 0 !important;
+    font-size: 13px;
+  }
+  .admin-filter-pill {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  /* Admin inline tables (stories etc.) — scrollable */
+  .admin-main table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-main table th,
+  .admin-main table td {
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  /* Admin forms — full width inputs */
+  .admin-main form {
+    max-width: 100% !important;
+  }
+  .admin-main input[type="text"],
+  .admin-main input[type="search"],
+  .admin-main input[type="email"],
+  .admin-main input[type="number"],
+  .admin-main input[type="url"],
+  .admin-main input[type="datetime-local"],
+  .admin-main select,
+  .admin-main textarea {
+    width: 100% !important;
+    box-sizing: border-box;
+    font-size: 16px !important; /* prevent iOS zoom */
+  }
+
+  /* Hide mobile bottom bar in admin */
+  .mobile-bottom-bar {
+    display: none !important;
+  }
+}
 /* ----- Extra mobile tweaks (≤480px) ----- */
 @media (max-width: 480px) {
   .admin-topbar h1 { font-size: 17px; }
   .admin-sidebar { width: 85vw; max-width: 280px; }
   .admin-sidebar-logo { padding-bottom: 16px; }
+
+  /* Single column stat cards */
+  .stat-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .stat-card .stat-value {
+    font-size: 24px;
+  }
+
+  /* Stories / admin page header flex → column */
+  .admin-main > div:first-of-type {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
 }
 
 @media (min-width: 901px) {
