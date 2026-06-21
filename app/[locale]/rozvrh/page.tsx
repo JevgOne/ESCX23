@@ -140,8 +140,8 @@ export default async function RozvrhPage({ params, searchParams }: Props) {
 
   const requestedDay = sp.day ?? today;
 
-  // Redirect if requested day is outside the current Mon-Sun week
-  if (requestedDay < mondayISO || requestedDay > sundayISO) {
+  // Redirect if requested day is in the past or outside the current Mon-Sun week
+  if (requestedDay < today || requestedDay > sundayISO) {
     redirect(`/${locale}${CANONICAL_PATH[locale] ?? '/rozvrh'}`);
   }
 
@@ -152,7 +152,7 @@ export default async function RozvrhPage({ params, searchParams }: Props) {
     getActiveLocations().catch(() => []),
   ]);
 
-  const days = generateWeekDays(today, locale);
+  const days = generateWeekDays(today, locale).filter((d) => !d.isPast);
 
   const allLabel = locale === 'en' ? 'All locations' : locale === 'de' ? 'Alle Standorte' : locale === 'uk' ? 'Всі локації' : 'Všechny pobočky';
   const openLocations = dbLocations.filter((l) => !l.openingDate || l.openingDate <= today);
