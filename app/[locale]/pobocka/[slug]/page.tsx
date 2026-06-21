@@ -612,32 +612,50 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
       )}
 
       {/* Apartment Reviews Section */}
-      <section className="pobocka-section">
+      <section className="apt-section">
         <div className="container">
-          <h2 className="pobocka-card-h2">{L.reviewsH}</h2>
+          <div className="apt-section-header">
+            <div className="apt-section-icon">💬</div>
+            <h2 className="apt-section-title">{L.reviewsH}</h2>
+            {ratingStats.totalReviews > 0 && (
+              <div className="apt-section-badge">
+                <span className="apt-section-badge-star">★</span> {ratingStats.avgRating}
+                <span className="apt-section-badge-count">({ratingStats.totalReviews})</span>
+              </div>
+            )}
+          </div>
 
           {/* Success / Error messages */}
           {sp.sent === 'ok' && (
-            <div className="apt-review-msg apt-review-msg-ok">{L.reviewSent}</div>
+            <div className="apt-review-msg apt-review-msg-ok">
+              <span className="apt-msg-icon">✓</span> {L.reviewSent}
+            </div>
           )}
           {sp.error === 'validation' && (
-            <div className="apt-review-msg apt-review-msg-err">{L.reviewValidation}</div>
+            <div className="apt-review-msg apt-review-msg-err">
+              <span className="apt-msg-icon">!</span> {L.reviewValidation}
+            </div>
           )}
           {sp.error === 'ratelimit' && (
-            <div className="apt-review-msg apt-review-msg-err">{L.reviewRateLimit}</div>
+            <div className="apt-review-msg apt-review-msg-err">
+              <span className="apt-msg-icon">!</span> {L.reviewRateLimit}
+            </div>
           )}
 
           {/* Rating overview */}
           {ratingStats.totalReviews > 0 && (
             <div className="apt-rating-overview">
               <div className="apt-rating-big">
-                <span className="apt-rating-value">{ratingStats.avgRating}</span>
+                <div className="apt-rating-ring">
+                  <span className="apt-rating-value">{ratingStats.avgRating}</span>
+                </div>
                 <span className="apt-rating-of">{L.reviewsOf}</span>
                 <span className="apt-rating-count">{L.reviewsCount(ratingStats.totalReviews)}</span>
               </div>
               <div className="apt-rating-bars">
                 {ratingStats.avgCleanliness != null && (
                   <div className="apt-rating-bar-row">
+                    <span className="apt-rating-bar-icon">✨</span>
                     <span className="apt-rating-bar-label">{L.cleanlinessLbl}</span>
                     <div className="apt-rating-bar"><div className="apt-rating-bar-fill" style={{ width: `${(ratingStats.avgCleanliness / 5) * 100}%` }} /></div>
                     <span className="apt-rating-bar-val">{ratingStats.avgCleanliness}</span>
@@ -645,6 +663,7 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
                 )}
                 {ratingStats.avgDiscretion != null && (
                   <div className="apt-rating-bar-row">
+                    <span className="apt-rating-bar-icon">🔒</span>
                     <span className="apt-rating-bar-label">{L.discretionLbl}</span>
                     <div className="apt-rating-bar"><div className="apt-rating-bar-fill" style={{ width: `${(ratingStats.avgDiscretion / 5) * 100}%` }} /></div>
                     <span className="apt-rating-bar-val">{ratingStats.avgDiscretion}</span>
@@ -652,6 +671,7 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
                 )}
                 {ratingStats.avgComfort != null && (
                   <div className="apt-rating-bar-row">
+                    <span className="apt-rating-bar-icon">🛋️</span>
                     <span className="apt-rating-bar-label">{L.comfortLbl}</span>
                     <div className="apt-rating-bar"><div className="apt-rating-bar-fill" style={{ width: `${(ratingStats.avgComfort / 5) * 100}%` }} /></div>
                     <span className="apt-rating-bar-val">{ratingStats.avgComfort}</span>
@@ -666,12 +686,21 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
             <div className="apt-reviews-list">
               {reviews.map((r) => (
                 <div key={r.id} className="apt-review-card">
-                  <div className="apt-review-header">
-                    <span className="apt-review-stars">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
-                    <span className="apt-review-author">{r.authorName}</span>
-                    <span className="apt-review-date">{new Date(r.createdAt).toLocaleDateString(locale === 'cs' ? 'cs-CZ' : locale === 'de' ? 'de-DE' : locale === 'uk' ? 'uk-UA' : 'en-GB')}</span>
+                  <div className="apt-review-avatar">
+                    {r.authorName.charAt(0).toUpperCase()}
                   </div>
-                  <p className="apt-review-text">{r.content}</p>
+                  <div className="apt-review-body">
+                    <div className="apt-review-header">
+                      <span className="apt-review-author">{r.authorName}</span>
+                      <span className="apt-review-date">{new Date(r.createdAt).toLocaleDateString(locale === 'cs' ? 'cs-CZ' : locale === 'de' ? 'de-DE' : locale === 'uk' ? 'uk-UA' : 'en-GB')}</span>
+                    </div>
+                    <div className="apt-review-stars">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <span key={s} className={`apt-star ${s <= r.rating ? 'apt-star-filled' : 'apt-star-empty'}`}>★</span>
+                      ))}
+                    </div>
+                    <p className="apt-review-text">{r.content}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -680,7 +709,10 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
           {/* Review form */}
           {!isUpcoming && (
             <div className="apt-review-form-wrap">
-              <h3 className="apt-review-form-h">{L.reviewFormH}</h3>
+              <div className="apt-form-header">
+                <span className="apt-form-icon">✍️</span>
+                <h3 className="apt-review-form-h">{L.reviewFormH}</h3>
+              </div>
               <form action={submitApartmentReview} className="apt-review-form">
                 <input type="hidden" name="location_id" value={loc.id} />
                 <input type="hidden" name="location_slug" value={slug} />
@@ -689,46 +721,47 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
                   <input type="text" name="website" tabIndex={-1} autoComplete="off" />
                 </div>
 
-                <div className="apt-review-field">
-                  <label htmlFor="author_name">{L.reviewNameLbl} *</label>
-                  <input id="author_name" name="author_name" type="text" required placeholder={L.reviewNamePh} className="apt-review-input" />
-                </div>
-
-                <div className="apt-review-field">
-                  <label htmlFor="rating">{L.reviewRatingLbl} *</label>
-                  <select id="rating" name="rating" required className="apt-review-input">
-                    <option value="">—</option>
-                    {[5, 4, 3, 2, 1].map((v) => (
-                      <option key={v} value={v}>{L.starLabels[v - 1]}</option>
-                    ))}
-                  </select>
+                <div className="apt-form-row">
+                  <div className="apt-review-field">
+                    <label htmlFor="author_name">{L.reviewNameLbl} *</label>
+                    <input id="author_name" name="author_name" type="text" required placeholder={L.reviewNamePh} className="apt-review-input" />
+                  </div>
+                  <div className="apt-review-field">
+                    <label htmlFor="rating">{L.reviewRatingLbl} *</label>
+                    <select id="rating" name="rating" required className="apt-review-input">
+                      <option value="">—</option>
+                      {[5, 4, 3, 2, 1].map((v) => (
+                        <option key={v} value={v}>{L.starLabels[v - 1]}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="apt-review-subratings">
                   <div className="apt-review-field">
-                    <label htmlFor="cleanliness">{L.cleanlinessLbl}</label>
+                    <label htmlFor="cleanliness">✨ {L.cleanlinessLbl}</label>
                     <select id="cleanliness" name="cleanliness" className="apt-review-input">
                       <option value="">—</option>
                       {[5, 4, 3, 2, 1].map((v) => (
-                        <option key={v} value={v}>{v}</option>
+                        <option key={v} value={v}>{L.starLabels[v - 1]}</option>
                       ))}
                     </select>
                   </div>
                   <div className="apt-review-field">
-                    <label htmlFor="discretion">{L.discretionLbl}</label>
+                    <label htmlFor="discretion">🔒 {L.discretionLbl}</label>
                     <select id="discretion" name="discretion" className="apt-review-input">
                       <option value="">—</option>
                       {[5, 4, 3, 2, 1].map((v) => (
-                        <option key={v} value={v}>{v}</option>
+                        <option key={v} value={v}>{L.starLabels[v - 1]}</option>
                       ))}
                     </select>
                   </div>
                   <div className="apt-review-field">
-                    <label htmlFor="comfort">{L.comfortLbl}</label>
+                    <label htmlFor="comfort">🛋️ {L.comfortLbl}</label>
                     <select id="comfort" name="comfort" className="apt-review-input">
                       <option value="">—</option>
                       {[5, 4, 3, 2, 1].map((v) => (
-                        <option key={v} value={v}>{v}</option>
+                        <option key={v} value={v}>{L.starLabels[v - 1]}</option>
                       ))}
                     </select>
                   </div>
