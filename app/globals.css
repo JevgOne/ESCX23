@@ -4320,6 +4320,7 @@ html.lightbox-active .profile-sticky-bar-desktop {
   justify-content: center;
   animation: lightbox-fade-in 0.2s ease;
   isolation: isolate;
+  touch-action: none;
 }
 @keyframes lightbox-fade-in {
   from { opacity: 0; }

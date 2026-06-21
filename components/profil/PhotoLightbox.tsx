@@ -27,13 +27,32 @@ export default function PhotoLightbox({ photos, girlName }: PhotoLightboxProps) 
       if (e.key === 'ArrowLeft') prev();
       if (e.key === 'ArrowRight') next();
     };
+    // Swipe support for mobile
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) next();
+        else prev();
+      }
+    };
     document.body.style.overflow = 'hidden';
     document.documentElement.classList.add('lightbox-active');
     window.addEventListener('keydown', handler);
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
     return () => {
       document.body.style.overflow = '';
       document.documentElement.classList.remove('lightbox-active');
       window.removeEventListener('keydown', handler);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
     };
   }, [open, close, prev, next]);
 
