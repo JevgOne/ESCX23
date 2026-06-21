@@ -210,6 +210,9 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
             src={photoUrl(primaryPhoto?.url ? String(primaryPhoto.url) : null)}
             alt={altBase}
             loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            sizes="60px"
           />
         </div>
         <div className="ig-info">

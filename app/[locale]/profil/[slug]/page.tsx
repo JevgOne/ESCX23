@@ -298,6 +298,11 @@ export default async function ProfilPage({ params, searchParams }: Props) {
 
   return (
     <main>
+      {(() => {
+        const pp = photos.find((p: Record<string, unknown>) => p.is_primary) ?? photos[0];
+        const ppUrl = pp?.url ? photoUrl(String(pp.url)) : null;
+        return ppUrl ? <link rel="preload" as="image" href={ppUrl} fetchPriority="high" /> : null;
+      })()}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
