@@ -407,6 +407,12 @@ export default async function ProfilPage({ params, searchParams }: Props) {
                 const g = girl as unknown as Record<string, unknown>;
                 return g.style_wardrobe ? String(g.style_wardrobe) : null;
               })()}
+              subtitle={(() => {
+                const g = girl as unknown as Record<string, unknown>;
+                const key = `subtitle_${locale}`;
+                const val = g[key] ?? g.subtitle_en ?? null;
+                return val ? String(val) : null;
+              })()}
             />
           </div>
         </div>

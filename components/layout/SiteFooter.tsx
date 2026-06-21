@@ -51,7 +51,7 @@ export default async function SiteFooter() {
   const localePrefix = locale === 'en' ? '' : `/${locale}`;
 
   return (
-    <footer>
+    <footer id="footer">
       <div className="container">
         {/* Trust strip — real numbers from DB */}
         <div className="footer-trust">

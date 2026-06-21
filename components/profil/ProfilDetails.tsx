@@ -101,6 +101,7 @@ interface ProfilDetailsProps {
   personalMessage?: string | null;
   voiceUrl?: string | null;
   styleWardrobe?: string | null;
+  subtitle?: string | null;
 }
 
 const FLAG_MAP: Record<string, string> = {
@@ -201,7 +202,7 @@ function parseList(raw: unknown): string[] {
   return s.split(',').map((l) => l.trim()).filter(Boolean);
 }
 
-export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, services = [], plans = [], altDistricts = [], scheduleLocation, scheduleAddress, primaryPhotoUrl, personalMessage, voiceUrl, styleWardrobe }: ProfilDetailsProps) {
+export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, services = [], plans = [], altDistricts = [], scheduleLocation, scheduleAddress, primaryPhotoUrl, personalMessage, voiceUrl, styleWardrobe, subtitle }: ProfilDetailsProps) {
   const name = String(girl.name ?? '');
   const age = Number(girl.age ?? 0);
   const rating = Number(girl.rating ?? 0);
@@ -272,6 +273,7 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
 
       <div className="profile-name-block profile-desktop-only">
         <h1 className="profile-h1">{name}</h1>
+        {subtitle && <div className="profile-subtitle">{subtitle}</div>}
       </div>
 
       <div className="profile-meta-line profile-desktop-only">

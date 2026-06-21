@@ -1,5 +1,3 @@
-import { Link } from '@/i18n/navigation';
-
 const LABELS: Record<string, { call: string; whatsapp: string; telegram: string; branches: string }> = {
   en: { call: 'Call', whatsapp: 'WhatsApp', telegram: 'Telegram', branches: 'Branches' },
   cs: { call: 'Zavolat', whatsapp: 'WhatsApp', telegram: 'Telegram', branches: 'Pobočky' },
@@ -34,13 +32,13 @@ export default function MobileBottomBar({ locale }: MobileBottomBarProps) {
         </svg>
         <span className="mbb-label">{l.telegram}</span>
       </a>
-      <Link href="/divky" className="mbb-item">
+      <a href="#footer" className="mbb-item">
         <svg className="mbb-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
           <circle cx="12" cy="10" r="3" />
         </svg>
         <span className="mbb-label">{l.branches}</span>
-      </Link>
+      </a>
     </nav>
   );
 }

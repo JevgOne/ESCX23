@@ -3449,6 +3449,21 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     border-color: transparent;
   }
 }
+.ig-subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.profile-subtitle {
+  font-size: 15px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: -2px;
+  margin-bottom: 2px;
+  line-height: 1.4;
+}
 .profile-thumbs {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
