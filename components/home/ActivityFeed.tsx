@@ -25,6 +25,7 @@ export default async function ActivityFeed({ locale }: ActivityFeedProps) {
         {items.length === 0 ? (
           <p style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>{t('no_recent')}</p>
         ) : (
+          <>
           <div className="activity-list">
             {items.map((item, i) => {
               if (item.kind === 'apartment_review') {
@@ -67,6 +68,12 @@ export default async function ActivityFeed({ locale }: ActivityFeedProps) {
               );
             })}
           </div>
+          <div className="show-all-row">
+            <Link href="/novinky" className="show-all-btn">
+              {t('show_all')} →
+            </Link>
+          </div>
+          </>
         )}
       </div>
     </section>

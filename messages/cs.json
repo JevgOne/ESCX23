@@ -89,7 +89,8 @@
       "added_videos": "přidala {count} nová videa",
       "updated_profile": "aktualizovala svůj profil",
       "apartment_review": "nová recenze apartmánu {location}",
-      "no_recent": "Zatím žádné nedávné aktualizace."
+      "no_recent": "Zatím žádné nedávné aktualizace.",
+      "show_all": "Zobrazit vše"
     },
     "trust": {
       "verified": {
@@ -415,5 +416,22 @@
       "title": "Přihláška odeslána",
       "body": "Děkujeme! Váš profil bude zaindexován do 24 hodin."
     }
+  },
+  "novinky": {
+    "h1": "Co je nového",
+    "lead": "Přehled všech novinek, nových fotek, recenzí a změn profilů našich společnic.",
+    "filter_all": "Vše",
+    "filter_photo": "Fotky",
+    "filter_video": "Videa",
+    "filter_review": "Recenze",
+    "filter_apartment_review": "Apartmány",
+    "filter_profile_update": "Profily",
+    "empty": "V této kategorii zatím žádné novinky.",
+    "photo_text": "přidala {count, plural, one {novou fotografii} other {# nových fotografií}}",
+    "video_text": "přidala {count, plural, one {nové video} other {# nových videí}}",
+    "review_text": "obdržela recenzi {rating}★",
+    "profile_text": "aktualizovala svůj profil",
+    "apartment_text": "Nová recenze apartmánu {location}",
+    "show_all": "Zobrazit všech {count} →"
   }
 }

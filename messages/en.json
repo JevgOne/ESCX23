@@ -89,7 +89,8 @@
       "added_videos": "added {count} new videos",
       "updated_profile": "updated her profile",
       "apartment_review": "new review for {location} apartment",
-      "no_recent": "No recent updates."
+      "no_recent": "No recent updates.",
+      "show_all": "Show all"
     },
     "trust": {
       "verified": {
@@ -415,5 +416,22 @@
       "title": "Application sent",
       "body": "Thank you! Your profile will be indexed within 24 hours."
     }
+  },
+  "novinky": {
+    "h1": "What's New",
+    "lead": "All the latest updates — new photos, reviews, and profile changes from our companions.",
+    "filter_all": "All",
+    "filter_photo": "Photos",
+    "filter_video": "Videos",
+    "filter_review": "Reviews",
+    "filter_apartment_review": "Apartments",
+    "filter_profile_update": "Profiles",
+    "empty": "No updates in this category yet.",
+    "photo_text": "added {count, plural, one {a new photo} other {# new photos}}",
+    "video_text": "added {count, plural, one {a new video} other {# new videos}}",
+    "review_text": "received a {rating}★ review",
+    "profile_text": "updated her profile",
+    "apartment_text": "New review for {location} apartment",
+    "show_all": "Show all {count} →"
   }
 }

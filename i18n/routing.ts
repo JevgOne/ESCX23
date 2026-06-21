@@ -93,6 +93,12 @@ export const routing = defineRouting({
       de: '/leistung/[slug]',
       uk: '/posluha/[slug]',
     },
+    '/novinky': {
+      cs: '/novinky',
+      en: '/whats-new',
+      de: '/neuigkeiten',
+      uk: '/novynky',
+    },
     '/blog': '/blog',
     '/blog/[slug]': '/blog/[slug]',
     '/podminky': {

@@ -89,7 +89,8 @@
       "added_videos": "hat {count} neue Videos hinzugefügt",
       "updated_profile": "hat ihr Profil aktualisiert",
       "apartment_review": "neue Bewertung für Apartment {location}",
-      "no_recent": "Noch keine Updates."
+      "no_recent": "Noch keine Updates.",
+      "show_all": "Alle anzeigen"
     },
     "trust": {
       "verified": {
@@ -415,5 +416,22 @@
       "title": "Bewerbung gesendet",
       "body": "Vielen Dank! Ihr Profil wird innerhalb von 24 Stunden indexiert."
     }
+  },
+  "novinky": {
+    "h1": "Neuigkeiten",
+    "lead": "Alle aktuellen Updates — neue Fotos, Bewertungen und Profiländerungen unserer Begleiterinnen.",
+    "filter_all": "Alle",
+    "filter_photo": "Fotos",
+    "filter_video": "Videos",
+    "filter_review": "Bewertungen",
+    "filter_apartment_review": "Apartments",
+    "filter_profile_update": "Profile",
+    "empty": "Keine Updates in dieser Kategorie.",
+    "photo_text": "hat {count, plural, one {ein neues Foto} other {# neue Fotos}} hinzugefügt",
+    "video_text": "hat {count, plural, one {ein neues Video} other {# neue Videos}} hinzugefügt",
+    "review_text": "erhielt eine {rating}★ Bewertung",
+    "profile_text": "hat ihr Profil aktualisiert",
+    "apartment_text": "Neue Bewertung für Apartment {location}",
+    "show_all": "Alle {count} anzeigen →"
   }
 }

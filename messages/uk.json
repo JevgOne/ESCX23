@@ -89,7 +89,8 @@
       "added_videos": "додала {count} нових відео",
       "updated_profile": "оновила свій профіль",
       "apartment_review": "новий відгук про апартамент {location}",
-      "no_recent": "Нових оновлень поки немає."
+      "no_recent": "Нових оновлень поки немає.",
+      "show_all": "Показати все"
     },
     "trust": {
       "verified": {
@@ -415,5 +416,22 @@
       "title": "Заявку надіслано",
       "body": "Дякуємо! Ваш профіль буде проіндексований протягом 24 годин."
     }
+  },
+  "novinky": {
+    "h1": "Що нового",
+    "lead": "Усі останні оновлення — нові фото, відгуки та зміни профілів наших супутниць.",
+    "filter_all": "Усе",
+    "filter_photo": "Фото",
+    "filter_video": "Відео",
+    "filter_review": "Відгуки",
+    "filter_apartment_review": "Апартаменти",
+    "filter_profile_update": "Профілі",
+    "empty": "У цій категорії поки немає оновлень.",
+    "photo_text": "додала {count, plural, one {нове фото} other {# нових фото}}",
+    "video_text": "додала {count, plural, one {нове відео} other {# нових відео}}",
+    "review_text": "отримала відгук {rating}★",
+    "profile_text": "оновила свій профіль",
+    "apartment_text": "Новий відгук на апартамент {location}",
+    "show_all": "Показати всі {count} →"
   }
 }
