@@ -416,6 +416,7 @@ export default async function AdminGirlEditPage({
     og_description_de: gr.og_description_de ? String(gr.og_description_de) : '',
     og_description_uk: gr.og_description_uk ? String(gr.og_description_uk) : '',
     badge_type: gr.badge_type ? String(gr.badge_type) : '',
+    ethnicity: gr.ethnicity ? String(gr.ethnicity) : '',
     vip: Boolean(gr.vip),
     is_featured: Boolean(gr.is_featured),
     is_top: Boolean(gr.is_top),
@@ -889,6 +890,18 @@ export default async function AdminGirlEditPage({
               ))}
             </select>
             <div className="gf2-hint">Zobrazí se jako štítek na fotce v seznamu dívek</div>
+          </div>
+
+          <div className="gf2-field" style={{ maxWidth: '240px' }}>
+            <label className="gf2-label" htmlFor="ethnicity">Etnicita (badge)</label>
+            <select id="ethnicity" name="ethnicity" defaultValue={g.ethnicity}>
+              <option value="">— žádný —</option>
+              <option value="asian">Asiatka</option>
+              <option value="ebony">Ebony</option>
+              <option value="mulatto">Mulatka</option>
+              <option value="latina">Latina</option>
+            </select>
+            <div className="gf2-hint">Zobrazí se jako barevný badge vlevo dole na kartě</div>
           </div>
 
           <div className="gf2-checks-row">

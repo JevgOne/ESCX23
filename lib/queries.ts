@@ -51,6 +51,7 @@ export interface GirlCard {
   isPaused: boolean;
   isNew: boolean;
   badgeType: string | null;
+  ethnicity: string | null;
   languages: string[];
   rating: number;
   reviewsCount: number;
@@ -67,7 +68,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.is_new, g.badge_type, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
@@ -142,6 +143,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
         isPaused,
         isNew,
         badgeType: r.badge_type ? String(r.badge_type) : null,
+        ethnicity: r.ethnicity ? String(r.ethnicity) : null,
         languages: parseLangs(r.languages),
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
@@ -173,7 +175,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.is_new, g.badge_type, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
@@ -264,6 +266,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         isPaused,
         isNew,
         badgeType: r.badge_type ? String(r.badge_type) : null,
+        ethnicity: r.ethnicity ? String(r.ethnicity) : null,
         languages: parseLangs(r.languages),
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
@@ -746,7 +749,7 @@ export async function getGirlsForDay(
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.is_new, g.badge_type, g.languages, g.rating, g.reviews_count,
+        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.rating, g.reviews_count,
         gs.start_time AS shift_from, gs.end_time AS shift_to, gs.is_active AS gs_active,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location, l.district AS schedule_district,
@@ -840,6 +843,7 @@ export async function getGirlsForDay(
         isPaused: false,
         isNew,
         badgeType: r.badge_type ? String(r.badge_type) : null,
+        ethnicity: r.ethnicity ? String(r.ethnicity) : null,
         languages: parseLangs(r.languages),
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
@@ -987,6 +991,7 @@ export interface GirlUpdateData {
   status: string;
   online: number;
   badge_type: string | null;
+  ethnicity: string | null;
   location: string | null;
   nationality: string | null;
   telegram: string | null;
@@ -1031,7 +1036,7 @@ export async function updateGirlById(id: number, data: GirlUpdateData): Promise<
     sql: `UPDATE girls SET
       name=?, slug=?, age=?, height=?, weight=?, bust=?, bust_natural=?, waist=?, hips=?,
       eyes=?, hair=?, tattoo_percentage=?, tattoo_description=?, piercing=?, piercing_description=?,
-      bio=?, status=?, online=?, badge_type=?, location=?, nationality=?,
+      bio=?, status=?, online=?, badge_type=?, ethnicity=?, location=?, nationality=?,
       telegram=?, email=?, phone=?, languages=?,
       is_new=?, is_top=?, is_featured=?, verified=?, hashtags=?, vip=?,
       description_cs=?, description_en=?, description_de=?, description_uk=?,
@@ -1046,7 +1051,7 @@ export async function updateGirlById(id: number, data: GirlUpdateData): Promise<
     args: [
       data.name, data.slug, data.age, data.height, data.weight, data.bust, data.bust_natural, data.waist, data.hips,
       data.eyes, data.hair, data.tattoo_percentage, data.tattoo_description, data.piercing, data.piercing_description,
-      data.bio, data.status, data.online, data.badge_type, data.location, data.nationality,
+      data.bio, data.status, data.online, data.badge_type, data.ethnicity ?? null, data.location, data.nationality,
       data.telegram, data.email, data.phone, data.languages,
       data.is_new, data.is_top, data.is_featured, data.verified, data.hashtags, data.vip,
       data.description_cs ?? null, data.description_en ?? null, data.description_de ?? null, data.description_uk ?? null,
@@ -1921,6 +1926,7 @@ export async function getGirlsForListing(
         isPaused,
         isNew,
         badgeType: r.badge_type ? String(r.badge_type) : null,
+        ethnicity: r.ethnicity ? String(r.ethnicity) : null,
         languages: parseLangs(r.languages),
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
@@ -2011,6 +2017,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         isPaused: false,
         isNew,
         badgeType: r.badge_type ? String(r.badge_type) : null,
+        ethnicity: r.ethnicity ? String(r.ethnicity) : null,
         languages: parseLangs(r.languages),
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
@@ -2114,7 +2121,7 @@ export interface NewGirl {
 /** Get the first active girl with is_new=1 (or newest within 30 days). No schedule filter. */
 export async function getNewGirl(): Promise<NewGirl | null> {
   const res = await db.execute(
-    `SELECT g.slug, g.name, g.age, g.height, g.weight, g.bust, g.is_new, g.badge_type, g.created_at,
+    `SELECT g.slug, g.name, g.age, g.height, g.weight, g.bust, g.is_new, g.badge_type, g.ethnicity, g.created_at,
             (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo
      FROM girls g
      WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
@@ -2163,7 +2170,7 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust,
-        g.created_at, g.is_new, g.badge_type, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         COALESCE(
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
@@ -2203,6 +2210,7 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
       isPaused: false,
       isNew: computeIsNew(r.is_new, r.created_at, r.badge_type),
       badgeType: r.badge_type ? String(r.badge_type) : null,
+        ethnicity: r.ethnicity ? String(r.ethnicity) : null,
       languages: parseLangs(r.languages),
       rating: r.rating != null ? Number(r.rating) : 0,
       reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
