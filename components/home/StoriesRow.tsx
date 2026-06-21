@@ -7,7 +7,7 @@ interface Props {
 
 const STORIES_STYLES = `
 .sr-section {
-  padding: 32px 0 32px;
+  padding: 8px 0 24px;
 }
 .sr-inner {
   max-width: 1240px;
@@ -98,7 +98,7 @@ const STORIES_STYLES = `
 }
 .sr-ring-wrap { position: relative; }
 @media (max-width: 640px) {
-  .sr-section { padding: 20px 0 24px; }
+  .sr-section { padding: 4px 0 20px; }
   .sr-inner { padding: 0 16px; }
   .sr-item { width: 72px; }
   .sr-ring { width: 64px; height: 64px; }
