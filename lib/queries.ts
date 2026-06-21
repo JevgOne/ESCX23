@@ -430,7 +430,7 @@ export async function getHomepageStats(): Promise<HomepageStats> {
 }
 
 export interface ActivityItem {
-  kind: 'photo' | 'review' | 'video' | 'profile_update';
+  kind: 'photo' | 'review' | 'video' | 'profile_update' | 'apartment_review';
   girlSlug: string;
   girlName: string;
   girlPhoto: string | null;
@@ -438,10 +438,12 @@ export interface ActivityItem {
   photoCount?: number;
   videoCount?: number;
   rating?: number;
+  locationSlug?: string;
+  locationName?: string;
 }
 
 export async function getRecentActivity(limit = 5): Promise<ActivityItem[]> {
-  const [photoRes, reviewRes, videoRes, profileRes] = await Promise.all([
+  const [photoRes, reviewRes, videoRes, profileRes, aptReviewRes] = await Promise.all([
     db.execute({
       sql: `SELECT
               g.slug, g.name,
@@ -505,6 +507,17 @@ export async function getRecentActivity(limit = 5): Promise<ActivityItem[]> {
             LIMIT ?`,
       args: [limit],
     }),
+    db.execute({
+      sql: `SELECT
+              ar.author_name, ar.rating, ar.created_at,
+              l.name AS loc_slug, l.display_name AS loc_name
+            FROM apartment_reviews ar
+            JOIN locations l ON l.id = ar.location_id
+            WHERE ar.status = 'approved'
+            ORDER BY ar.created_at DESC
+            LIMIT ?`,
+      args: [limit],
+    }),
   ]);
 
   const photos: ActivityItem[] = photoRes.rows.map((r) => ({
@@ -542,7 +555,18 @@ export async function getRecentActivity(limit = 5): Promise<ActivityItem[]> {
     when: String(r.updated_at),
   }));
 
-  return [...photos, ...reviews, ...videos, ...profileUpdates]
+  const aptReviews: ActivityItem[] = aptReviewRes.rows.map((r) => ({
+    kind: 'apartment_review' as const,
+    girlSlug: '',
+    girlName: String(r.author_name),
+    girlPhoto: null,
+    when: String(r.created_at),
+    rating: r.rating != null ? Number(r.rating) : undefined,
+    locationSlug: String(r.loc_slug),
+    locationName: String(r.loc_name),
+  }));
+
+  return [...photos, ...reviews, ...videos, ...profileUpdates, ...aptReviews]
     .sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime())
     .slice(0, limit);
 }

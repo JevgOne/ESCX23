@@ -88,6 +88,7 @@
       "added_video": "hat ein neues Video hinzugefügt",
       "added_videos": "hat {count} neue Videos hinzugefügt",
       "updated_profile": "hat ihr Profil aktualisiert",
+      "apartment_review": "neue Bewertung für Apartment {location}",
       "no_recent": "Noch keine Updates."
     },
     "trust": {

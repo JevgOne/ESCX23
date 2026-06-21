@@ -88,6 +88,7 @@
       "added_video": "přidala nové video",
       "added_videos": "přidala {count} nová videa",
       "updated_profile": "aktualizovala svůj profil",
+      "apartment_review": "nová recenze apartmánu {location}",
       "no_recent": "Zatím žádné nedávné aktualizace."
     },
     "trust": {

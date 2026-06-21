@@ -88,6 +88,7 @@
       "added_video": "додала нове відео",
       "added_videos": "додала {count} нових відео",
       "updated_profile": "оновила свій профіль",
+      "apartment_review": "новий відгук про апартамент {location}",
       "no_recent": "Нових оновлень поки немає."
     },
     "trust": {
