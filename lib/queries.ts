@@ -238,8 +238,8 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         tmrwTo = null;
       }
 
-      // Skip girls that have no today shift AND no tomorrow shift (unless paused)
-      if (status === 'off' && !isPaused && !tmrwFrom) return null;
+      // Skip girls that have no today shift (unless paused)
+      if (status === 'off' && !isPaused) return null;
 
       const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
 
