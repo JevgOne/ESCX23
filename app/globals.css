@@ -12573,8 +12573,7 @@ body {
   filter: grayscale(0.8);
   opacity: 0.7;
 }
-.girl-card-paused .girl-photo-wrap::after {
-  content: 'Dočasně nedostupná';
+.girl-paused-badge {
   position: absolute;
   bottom: 10px;
   left: 10px;

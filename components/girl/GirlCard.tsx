@@ -10,6 +10,7 @@ const FLAG_MAP: Record<string, string> = {
 };
 
 const CITY: Record<string, string> = { en: 'Prague', de: 'Prag', uk: 'Прага', cs: 'Praha' };
+const PAUSED_LABEL: Record<string, string> = { cs: 'Dočasně nedostupná', en: 'Temporarily unavailable', de: 'Vorübergehend nicht verfügbar', uk: 'Тимчасово недоступна' };
 const LATER_LABEL: Record<string, string> = { cs: 'Později', en: 'Later', de: 'Später', uk: 'Пізніше' };
 const TMRW_LABEL: Record<string, string> = { cs: 'Zítra', en: 'Tmrw', de: 'Morgen', uk: 'Завтра' };
 const STAT_LABELS: Record<string, { height: string; breasts: string; weight: string; age: string }> = {
@@ -80,6 +81,9 @@ export default async function GirlCard({ girl }: GirlCardProps) {
         )}
         {!girl.isVip && !girl.badgeType && girl.isNew && (
           <span className="girl-tag-pill new">{NEW_LABEL[locale] ?? NEW_LABEL.en}</span>
+        )}
+        {girl.isPaused && (
+          <span className="girl-paused-badge">{PAUSED_LABEL[locale] ?? PAUSED_LABEL.en}</span>
         )}
 
         <div className="girl-media-pills">
