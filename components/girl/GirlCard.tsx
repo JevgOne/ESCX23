@@ -13,6 +13,7 @@ const CITY: Record<string, string> = { en: 'Prague', de: 'Prag', uk: 'Прага
 const PAUSED_LABEL: Record<string, string> = { cs: 'Dočasně nedostupná', en: 'Temporarily unavailable', de: 'Vorübergehend nicht verfügbar', uk: 'Тимчасово недоступна' };
 const LATER_LABEL: Record<string, string> = { cs: 'Později', en: 'Later', de: 'Später', uk: 'Пізніше' };
 const TMRW_LABEL: Record<string, string> = { cs: 'Zítra', en: 'Tmrw', de: 'Morgen', uk: 'Завтра' };
+const TODAY_LABEL: Record<string, string> = { cs: 'Dnes', en: 'Today', de: 'Heute', uk: 'Сьогодні' };
 const STAT_LABELS: Record<string, { height: string; breasts: string; weight: string; age: string }> = {
   cs: { height: 'Výška', breasts: 'Prsa', weight: 'Váha', age: 'Věk' },
   en: { height: 'Height', breasts: 'Breasts', weight: 'Weight', age: 'Age' },
@@ -71,6 +72,7 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
   const locale = await getLocale();
   const city = CITY[locale] ?? 'Prague';
   const laterLabel = LATER_LABEL[locale] ?? LATER_LABEL.en;
+  const todayLabel = TODAY_LABEL[locale] ?? TODAY_LABEL.en;
   const labels = STAT_LABELS[locale] ?? STAT_LABELS.en;
   const altNoun = ALT_NOUN[locale] ?? ALT_NOUN.en;
   const altText = `${girl.name}, ${girl.age}, ${city} ${altNoun}`;
@@ -126,7 +128,7 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
         {girl.status === 'working' && girl.shiftFrom && girl.shiftTo && (
           <span className="girl-photo-time">
             <span className="girl-photo-dot" />
-            {girl.shiftFrom} — {girl.shiftTo}
+            {todayLabel} {girl.shiftFrom} — {girl.shiftTo}
           </span>
         )}
         {girl.status === 'later' && girl.shiftFrom && (

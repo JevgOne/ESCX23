@@ -216,7 +216,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       alternates[l] = l === 'en' ? `${BASE}/blog/${bp.slug}` : `${BASE}/${l}/blog/${bp.slug}`;
     }
     alternates['x-default'] = `${BASE}/blog/${bp.slug}`;
-    for (const l of LOCALES) {
+    // Only CS + EN in sitemap (DE/UK are untranslated duplicates of CS)
+    for (const l of ['en', 'cs'] as const) {
       pages.push({
         url: l === 'en' ? `${BASE}/blog/${bp.slug}` : `${BASE}/${l}/blog/${bp.slug}`,
         lastModified: lastmod,

@@ -130,6 +130,12 @@ export default async function BlogDetailPage({ params }: Props) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
+  // DE/UK blog has no translations — redirect to CS version
+  if (locale === 'de' || locale === 'uk') {
+    const { redirect } = await import('next/navigation');
+    redirect(`/cs/blog/${slug}`);
+  }
+
   const t = await getTranslations({ locale, namespace: 'blog' });
   const post = await getBlogPostBySlug(slug, locale);
   if (!post) notFound();
