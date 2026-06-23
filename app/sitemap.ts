@@ -87,15 +87,11 @@ function buildHomeAlternates(): Record<string, string> {
 }
 
 // Static homepage tag dictionary — mirror TAG_NAMES in app/[locale]/hashtag/[slug]/page.tsx
+// Only hashtags with unique HASHTAG_CONTENT (intro + FAQ) in sitemap.
+// Other hashtag pages still work, just not submitted to Google.
 const HASHTAG_SLUGS = [
   'blondynky-praha', 'brunetky-praha', 'cernovlasky-praha', 'gfe-praha',
-  'girlfriend-experience', 'prirodni-poprsi', 'mlade-holky', 'studentky-praha',
-  'holky-praha', 'spolecnice-praha', 'ceske-holky', 'ruske-holky',
-  'ukrajinske-holky', 'tetovani', 'piercing-holky', 'plne-rty', 'dlouhe-nohy',
-  'fit-holky', 'stihla-postava', 'krivky', 'velka-prsa', 'kratke-vlasy',
-  'dlouhe-vlasy', 'milf-praha', 'modre-oci', 'exoticke-krasky',
-  'luxusni-sluzby', 'elegantni-holky', 'sexy-holky', 'krasne-holky',
-  'hot-holky-praha', 'dokonale-telo',
+  'studentky-praha', 'spolecnice-praha', 'prirodni-poprsi', 'tetovani',
 ];
 
 const STATIC_KEYS: Array<{ key: string; freq: 'daily' | 'hourly' | 'weekly' | 'monthly'; priority: number }> = [
@@ -239,7 +235,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: url(l, resolvePath('/hashtag/[slug]', l, slug)),
         lastModified: now,
         changeFrequency: 'weekly',
-        priority: 0.5,
+        priority: 0.4,
         alternates: { languages: alternates },
       });
     }
