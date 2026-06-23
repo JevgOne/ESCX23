@@ -55,3 +55,4 @@ pull-lovelygirls.mjs
 .env.production
 .env.prod-real
 profile_ig_shots.mjs
+.env*.local

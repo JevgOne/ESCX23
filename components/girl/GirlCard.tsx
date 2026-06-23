@@ -141,6 +141,12 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
             {(TMRW_LABEL[locale] ?? TMRW_LABEL.en)} {girl.tomorrowFrom}–{girl.tomorrowTo}
           </span>
         )}
+        {girl.status === 'off' && !girl.isPaused && !girl.tomorrowFrom && girl.shiftFrom && girl.shiftTo && (
+          <span className="girl-photo-time girl-photo-time-future">
+            <span className="girl-photo-dot" />
+            {girl.shiftFrom} — {girl.shiftTo}
+          </span>
+        )}
       </div>
 
       <div className="girl-info">

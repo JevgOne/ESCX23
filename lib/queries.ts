@@ -818,10 +818,8 @@ export async function getGirlsForDay(
         cardFrom = null;
         cardTo = null;
       } else {
-        // 2+ days out: no status badge, just show the girl
+        // 2+ days out: show shift times but no status badge
         status = 'off';
-        cardFrom = null;
-        cardTo = null;
       }
 
       return {
