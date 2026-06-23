@@ -9640,10 +9640,13 @@ body {
   font-weight: 700;
 }
 
-/* Visible hashtags on profile details */
+/* Visible hashtags on profile details — hidden on mobile (shown in ProfilHero instead) */
 .profile-hashtags-visible {
   display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; padding-top: 16px;
   border-top: 1px solid rgba(255,255,255,0.06);
+}
+@media (max-width: 768px) {
+  .profile-hashtags-visible { display: none; }
 }
 .profile-hashtag-link {
   display: inline-flex; align-items: center;
