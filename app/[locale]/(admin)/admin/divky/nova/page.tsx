@@ -256,6 +256,57 @@ export default async function AdminNovaDivkaPage({
           </div>
         </div>
 
+        <div className="gf2-new-card">
+          <h3>Styl &amp; Šatník</h3>
+          <div className="gf2-new-field">
+            <label>Běžný styl oblékání</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {[
+                { id: 'elegant', label: 'Elegantní' },
+                { id: 'casual', label: 'Casual / ležérní' },
+                { id: 'sporty', label: 'Sportovní' },
+                { id: 'glamour', label: 'Glamour / okázalý' },
+                { id: 'minimalist', label: 'Minimalistický' },
+                { id: 'romantic', label: 'Romantický / ženský' },
+                { id: 'streetwear', label: 'Streetwear / moderní' },
+                { id: 'business', label: 'Business / formální' },
+                { id: 'bohemian', label: 'Bohémský / artsy' },
+              ].map((s) => (
+                <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', color: 'rgba(255,255,255,0.78)', fontSize: '13px', cursor: 'pointer' }}>
+                  <input type="checkbox" name="style_types" value={s.id} style={{ accentColor: '#f27d8d' }} />
+                  {s.label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="gf2-new-field">
+            <label>Sexy outfity na vyžádání</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {[
+                { id: 'lingerie', label: 'Sexy lingerie' },
+                { id: 'stockings', label: 'Punčochy & podvazky' },
+                { id: 'high_heels', label: 'Vysoké podpatky' },
+                { id: 'boots', label: 'Kozačky / overknee' },
+                { id: 'latex', label: 'Latex / vinyl' },
+                { id: 'leather', label: 'Kůže / kožené doplňky' },
+                { id: 'corset', label: 'Korzet' },
+                { id: 'bodystocking', label: 'Bodystocking / catsuit' },
+                { id: 'costume', label: 'Kostým / role-play outfit' },
+                { id: 'nurse', label: 'Zdravotní sestřička' },
+                { id: 'schoolgirl', label: 'Školačka' },
+                { id: 'maid', label: 'Pokojská' },
+                { id: 'secretary', label: 'Sekretářka' },
+                { id: 'swimwear', label: 'Plavky / bikiny' },
+              ].map((s) => (
+                <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', color: 'rgba(255,255,255,0.78)', fontSize: '13px', cursor: 'pointer' }}>
+                  <input type="checkbox" name="wardrobe_items" value={s.id} style={{ accentColor: '#f27d8d' }} />
+                  {s.label}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {(defaults.description_cs || defaults.description_en) && (
           <div className="gf2-new-card">
             <h3>Bio</h3>

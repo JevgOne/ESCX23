@@ -106,8 +106,6 @@ const STATIC_KEYS: Array<{ key: string; freq: 'daily' | 'hourly' | 'weekly' | 'm
   { key: '/recenze', freq: 'daily', priority: 0.6 },
   { key: '/o-nas', freq: 'monthly', priority: 0.5 },
   { key: '/kontakt', freq: 'monthly', priority: 0.5 },
-  { key: '/podminky', freq: 'yearly' as 'monthly', priority: 0.3 },
-  { key: '/soukromi', freq: 'yearly' as 'monthly', priority: 0.3 },
   { key: '/blog', freq: 'daily', priority: 0.8 },
 ];
 

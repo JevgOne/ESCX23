@@ -100,6 +100,13 @@ export async function updateGirl(formData: FormData) {
     og_description_de: getStr('og_description_de'),
     og_description_uk: getStr('og_description_uk'),
     calendar_embed_url: getStr('calendar_embed_url'),
+    style_wardrobe: (() => {
+      const styleTypes = formData.getAll('style_types').map(String).filter(Boolean);
+      const wardrobeItems = formData.getAll('wardrobe_items').map(String).filter(Boolean);
+      return (styleTypes.length > 0 || wardrobeItems.length > 0)
+        ? JSON.stringify({ style: styleTypes, wardrobe: wardrobeItems })
+        : null;
+    })(),
   });
 
   const serviceIds = formData.getAll('service_ids').map(Number).filter((n) => n > 0);
@@ -168,6 +175,7 @@ export async function createGirl(formData: FormData) {
       og_title_cs, og_title_en, og_title_de, og_title_uk,
       og_description_cs, og_description_en, og_description_de, og_description_uk,
       calendar_embed_url,
+      style_wardrobe,
       created_at, updated_at
     ) VALUES (
       ?, ?, ?, ?, ?, ?,
@@ -183,6 +191,7 @@ export async function createGirl(formData: FormData) {
       ?, ?, ?, ?,
       ?, ?, ?, ?,
       ?, ?, ?, ?,
+      ?,
       ?,
       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
     )`,
@@ -210,6 +219,13 @@ export async function createGirl(formData: FormData) {
       getStr('og_title_cs'), getStr('og_title_en'), getStr('og_title_de'), getStr('og_title_uk'),
       getStr('og_description_cs'), getStr('og_description_en'), getStr('og_description_de'), getStr('og_description_uk'),
       getStr('calendar_embed_url'),
+      (() => {
+        const styleTypes = formData.getAll('style_types').map(String).filter(Boolean);
+        const wardrobeItems = formData.getAll('wardrobe_items').map(String).filter(Boolean);
+        return (styleTypes.length > 0 || wardrobeItems.length > 0)
+          ? JSON.stringify({ style: styleTypes, wardrobe: wardrobeItems })
+          : null;
+      })(),
     ],
   });
   } catch (err) {
@@ -320,6 +336,7 @@ export async function createGirlFromApplication(formData: FormData) {
   const languages = app.languages != null ? String(app.languages).trim() || null : null;
   const bioCs = app.bio_cs != null ? String(app.bio_cs) : null;
   const bioEn = app.bio_en != null ? String(app.bio_en) : null;
+  const styleWardrobe = app.style_wardrobe != null ? String(app.style_wardrobe) : null;
 
   const insertRes = await db.execute({
     sql: `INSERT INTO girls (
@@ -329,6 +346,7 @@ export async function createGirlFromApplication(formData: FormData) {
       piercing, piercing_description,
       nationality, languages,
       description_cs, description_en,
+      style_wardrobe,
       created_at, updated_at
     ) VALUES (
       ?, ?, ?, ?, ?, 'pending',
@@ -337,6 +355,7 @@ export async function createGirlFromApplication(formData: FormData) {
       ?, ?,
       ?, ?,
       ?, ?,
+      ?,
       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
     )`,
     args: [
@@ -346,6 +365,7 @@ export async function createGirlFromApplication(formData: FormData) {
       piercing, piercingDesc,
       nationality, languages,
       bioCs, bioEn,
+      styleWardrobe,
     ],
   });
   const newId = Number(insertRes.lastInsertRowid);

@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return applyDBOverride(`/${locale}/podminky`, {
     title,
     description: t('lead'),
-    robots: { index: false, follow: false },
+    robots: { index: false, follow: true },
     alternates: {
       canonical,
       languages: getAlternates('/podminky'),

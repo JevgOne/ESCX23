@@ -426,6 +426,45 @@ export default async function AdminGirlEditPage({
     calendar_embed_url: gr.calendar_embed_url ? String(gr.calendar_embed_url) : '',
   };
 
+  const styleWardrobeRaw = gr.style_wardrobe ? String(gr.style_wardrobe) : null;
+  let activeStyles = new Set<string>();
+  let activeWardrobe = new Set<string>();
+  if (styleWardrobeRaw) {
+    try {
+      const parsed = JSON.parse(styleWardrobeRaw);
+      activeStyles = new Set(Array.isArray(parsed.style) ? parsed.style : []);
+      activeWardrobe = new Set(Array.isArray(parsed.wardrobe) ? parsed.wardrobe : []);
+    } catch { /* invalid JSON — ignore */ }
+  }
+
+  const STYLE_OPTIONS = [
+    { id: 'elegant', label: 'Elegantní' },
+    { id: 'casual', label: 'Casual / ležérní' },
+    { id: 'sporty', label: 'Sportovní' },
+    { id: 'glamour', label: 'Glamour / okázalý' },
+    { id: 'minimalist', label: 'Minimalistický' },
+    { id: 'romantic', label: 'Romantický / ženský' },
+    { id: 'streetwear', label: 'Streetwear / moderní' },
+    { id: 'business', label: 'Business / formální' },
+    { id: 'bohemian', label: 'Bohémský / artsy' },
+  ];
+  const WARDROBE_OPTIONS = [
+    { id: 'lingerie', label: 'Sexy lingerie' },
+    { id: 'stockings', label: 'Punčochy & podvazky' },
+    { id: 'high_heels', label: 'Vysoké podpatky' },
+    { id: 'boots', label: 'Kozačky / overknee' },
+    { id: 'latex', label: 'Latex / vinyl' },
+    { id: 'leather', label: 'Kůže / kožené doplňky' },
+    { id: 'corset', label: 'Korzet' },
+    { id: 'bodystocking', label: 'Bodystocking / catsuit' },
+    { id: 'costume', label: 'Kostým / role-play outfit' },
+    { id: 'nurse', label: 'Zdravotní sestřička' },
+    { id: 'schoolgirl', label: 'Školačka' },
+    { id: 'maid', label: 'Pokojská' },
+    { id: 'secretary', label: 'Sekretářka' },
+    { id: 'swimwear', label: 'Plavky / bikiny' },
+  ];
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: GF2_STYLES }} />
@@ -650,10 +689,40 @@ export default async function AdminGirlEditPage({
           </div>
         </div>
 
-        {/* SEKCE 6: Služby */}
+        {/* SEKCE 6: Styl & Šatník */}
         <div className="gf2-section">
           <div className="gf2-section-head">
             <div className="gf2-step-badge">6</div>
+            <div className="gf2-section-title">Styl &amp; Šatník</div>
+          </div>
+          <div className="gf2-field">
+            <label className="gf2-label">Běžný styl oblékání</label>
+            <div className="gf2-chips-wrap">
+              {STYLE_OPTIONS.map((s) => (
+                <label key={s.id} className="gf2-chip-label">
+                  <input type="checkbox" name="style_types" value={s.id} defaultChecked={activeStyles.has(s.id)} />
+                  <span className="gf2-chip-span">{s.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="gf2-field" style={{ marginTop: 16 }}>
+            <label className="gf2-label">Sexy outfity na vyžádání</label>
+            <div className="gf2-chips-wrap">
+              {WARDROBE_OPTIONS.map((s) => (
+                <label key={s.id} className="gf2-chip-label">
+                  <input type="checkbox" name="wardrobe_items" value={s.id} defaultChecked={activeWardrobe.has(s.id)} />
+                  <span className="gf2-chip-span">{s.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* SEKCE 7: Služby */}
+        <div className="gf2-section">
+          <div className="gf2-section-head">
+            <div className="gf2-step-badge">7</div>
             <div className="gf2-section-title">Služby</div>
           </div>
 
@@ -706,10 +775,10 @@ export default async function AdminGirlEditPage({
           </div>
         </div>
 
-        {/* SEKCE 7: Hashtagy */}
+        {/* SEKCE 8: Hashtagy */}
         <div className="gf2-section">
           <div className="gf2-section-head">
-            <div className="gf2-step-badge">7</div>
+            <div className="gf2-step-badge">8</div>
             <div className="gf2-section-title">Hashtagy</div>
           </div>
 
@@ -728,10 +797,10 @@ export default async function AdminGirlEditPage({
           </div>
         </div>
 
-        {/* SEKCE 8: Bio (multi-lang) */}
+        {/* SEKCE 9: Bio (multi-lang) */}
         <div className="gf2-section">
           <div className="gf2-section-head">
-            <div className="gf2-step-badge">8</div>
+            <div className="gf2-step-badge">9</div>
             <div className="gf2-section-title">Bio (vícejazyčný)</div>
           </div>
 
@@ -771,10 +840,10 @@ export default async function AdminGirlEditPage({
           ))}
         </div>
 
-        {/* SEKCE 9: SEO (multi-lang) */}
+        {/* SEKCE 10: SEO (multi-lang) */}
         <div className="gf2-section">
           <div className="gf2-section-head">
-            <div className="gf2-step-badge">9</div>
+            <div className="gf2-step-badge">10</div>
             <div className="gf2-section-title">SEO (vícejazyčný)</div>
           </div>
 
@@ -849,10 +918,10 @@ export default async function AdminGirlEditPage({
           ))}
         </div>
 
-        {/* SEKCE 10: Fotky (link) */}
+        {/* SEKCE 11: Fotky (link) */}
         <div className="gf2-section">
           <div className="gf2-section-head">
-            <div className="gf2-step-badge">10</div>
+            <div className="gf2-step-badge">11</div>
             <div className="gf2-section-title">Fotky</div>
           </div>
           <div className="gf2-media-links">
@@ -862,10 +931,10 @@ export default async function AdminGirlEditPage({
           </div>
         </div>
 
-        {/* SEKCE 11: Videa (link) */}
+        {/* SEKCE 12: Videa (link) */}
         <div className="gf2-section">
           <div className="gf2-section-head">
-            <div className="gf2-step-badge">11</div>
+            <div className="gf2-step-badge">12</div>
             <div className="gf2-section-title">Videa</div>
           </div>
           <div className="gf2-media-links">
@@ -875,10 +944,10 @@ export default async function AdminGirlEditPage({
           </div>
         </div>
 
-        {/* SEKCE 12: Zvýraznění */}
+        {/* SEKCE 13: Zvýraznění */}
         <div className="gf2-section">
           <div className="gf2-section-head">
-            <div className="gf2-step-badge">12</div>
+            <div className="gf2-step-badge">13</div>
             <div className="gf2-section-title">Zvýraznění profilu</div>
           </div>
 
