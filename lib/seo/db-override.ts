@@ -10,7 +10,12 @@ export async function applyDBOverride(
   pagePath: string,
   inlineMetadata: Metadata,
 ): Promise<Metadata> {
-  const dbSeo = await getSEOMetadata(pagePath);
+  let dbSeo;
+  try {
+    dbSeo = await getSEOMetadata(pagePath);
+  } catch {
+    return inlineMetadata;
+  }
   if (!dbSeo || (!dbSeo.meta_title && !dbSeo.meta_description)) {
     return inlineMetadata;
   }
