@@ -16,7 +16,6 @@ import {
   homepageLocalBusiness,
   organizationJsonLd,
   websiteJsonLd,
-  aggregateRatingJsonLd,
 } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import { getHomepageStats } from '@/lib/queries';
@@ -82,16 +81,18 @@ export default async function HomePage({
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: 'geo' });
-  const localBusinessSchema = homepageLocalBusiness(locale);
-  const orgSchema = organizationJsonLd();
-  const websiteSchema = websiteJsonLd(locale);
   const stats = await getHomepageStats().catch(() => ({
     totalLive: 0,
     workingNow: 0,
     totalReviews: 0,
     avgRating: 0,
   }));
-  const ratingSchema = aggregateRatingJsonLd(stats.avgRating, stats.totalReviews);
+  const localBusinessSchema = homepageLocalBusiness(locale, {
+    avg: stats.avgRating,
+    count: stats.totalReviews,
+  });
+  const orgSchema = organizationJsonLd();
+  const websiteSchema = websiteJsonLd(locale);
 
   return (
     <main>
@@ -107,12 +108,6 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
-      {ratingSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(ratingSchema) }}
-        />
-      )}
       <p data-geo-lead className="sr-only">{t('home_lead')}</p>
       <Hero locale={locale} />
       <StoriesRow locale={locale} />

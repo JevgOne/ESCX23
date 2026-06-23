@@ -1,7 +1,7 @@
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
 
-export function homepageLocalBusiness(locale: string) {
-  return {
+export function homepageLocalBusiness(locale: string, rating?: { avg: number; count: number }) {
+  const base: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': ['LocalBusiness', 'ProfessionalService'],
     '@id': `${BASE}/#business`,
@@ -34,6 +34,16 @@ export function homepageLocalBusiness(locale: string) {
     inLanguage: locale,
     areaServed: { '@type': 'City', name: 'Prague' },
   };
+  if (rating && rating.count > 0 && rating.avg > 0) {
+    base.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: Number(rating.avg).toFixed(1),
+      reviewCount: rating.count,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+  return base;
 }
 
 export function organizationJsonLd() {
@@ -78,19 +88,6 @@ export function websiteJsonLd(locale = 'en') {
       },
       'query-input': 'required name=search_term_string',
     },
-  };
-}
-
-export function aggregateRatingJsonLd(avg: number, count: number) {
-  if (!count || !avg) return null;
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'AggregateRating',
-    itemReviewed: { '@id': `${BASE}/#business` },
-    ratingValue: Number(avg).toFixed(1),
-    reviewCount: count,
-    bestRating: 5,
-    worstRating: 1,
   };
 }
 
@@ -155,7 +152,7 @@ export function profilePersonJsonLd(
   const ratingValue = g.rating != null ? Number(g.rating) : null;
   const reviewCount = g.reviews_count != null ? Number(g.reviews_count) : 0;
 
-  return {
+  const person: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Person',
     '@id': `${BASE}/profil/${slug}#person`,
@@ -173,17 +170,27 @@ export function profilePersonJsonLd(
       qualifications: verifiedAt ? `Verified in person on ${verifiedAt}` : 'Verified in person',
     },
     worksFor: { '@id': `${BASE}/#business` },
-    aggregateRating:
-      reviewCount > 0 && ratingValue != null
-        ? {
-            '@type': 'AggregateRating',
-            ratingValue: ratingValue.toFixed(1),
-            reviewCount,
-            bestRating: 5,
-            worstRating: 1,
-          }
-        : undefined,
   };
+
+  // Google only supports review/aggregateRating on specific types.
+  // Emit individual Review objects linked to Person instead of AggregateRating.
+  const reviewObjects = reviews.slice(0, 5).map((r) => ({
+    '@type': 'Review',
+    author: { '@type': 'Person', name: String(r.author_name ?? 'Anonymous') },
+    reviewRating: {
+      '@type': 'Rating',
+      ratingValue: Number(r.rating),
+      bestRating: 5,
+      worstRating: 1,
+    },
+    reviewBody: String(r.content ?? '').slice(0, 300),
+    datePublished: String(r.created_at ?? '').slice(0, 10),
+  }));
+  if (reviewObjects.length > 0) {
+    person.review = reviewObjects;
+  }
+
+  return person;
 }
 
 export function faqPageJsonLd(
