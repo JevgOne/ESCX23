@@ -363,6 +363,10 @@ export function getHashtagContent(slug: string): LandingContent | null {
   return HASHTAG_CONTENT[slug] ?? null;
 }
 
+const LOCATION_SLUG_ALIASES: Record<string, string> = {
+  'praha-2': 'vinohrady',
+};
+
 export function getLocationContent(slug: string): LocationContent | null {
-  return LOCATION_CONTENT[slug] ?? null;
+  return LOCATION_CONTENT[slug] ?? LOCATION_CONTENT[LOCATION_SLUG_ALIASES[slug]] ?? null;
 }
