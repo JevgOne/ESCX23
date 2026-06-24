@@ -107,6 +107,7 @@ interface ProfilHeroProps {
   personalMessage?: string | null;
   voiceUrl?: string | null;
   scheduleLocation?: string | null;
+  scheduleLocationSlug?: string | null;
   scheduleAddress?: string | null;
   stylH?: string;
   stylSub?: string;
@@ -142,7 +143,7 @@ const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string 
   },
 };
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '', subtitle }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleLocationSlug, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '', subtitle }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -233,7 +234,11 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span>{scheduleAddress ?? locText}</span>
+            {scheduleLocationSlug ? (
+              <a href={`/${locale}/pobocka/${scheduleLocationSlug}`}>{scheduleAddress ?? locText}</a>
+            ) : (
+              <span>{scheduleAddress ?? locText}</span>
+            )}
           </div>
           <div className="ig-meters">
             {photos.length > 0 && <span><strong>{photos.length}</strong> {photosLbl}</span>}
@@ -331,12 +336,16 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
             ★ {locale === 'cs' ? 'Služby' : locale === 'de' ? 'Leistungen' : locale === 'uk' ? 'Послуги' : 'Services'}
           </div>
           <div className="ig-services-list">
-            {topServices.filter(s => s.category === 'basic').map((s, i) => (
-              <a key={i} href={`/${locale}/hashtag/${s.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`} className="ig-service-chip ig-service-chip-top">✓ {s.name}</a>
-            ))}
-            {topServices.filter(s => s.category !== 'basic').map((s, i) => (
-              <a key={`e-${i}`} href={`/${locale}/hashtag/${s.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`} className="ig-service-chip ig-service-chip-extra">💬 {s.name}</a>
-            ))}
+            {topServices.filter(s => s.category === 'basic').map((s, i) => {
+              const svcSlug = s.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+              const prefix = locale === 'en' ? '' : `/${locale}`;
+              return <a key={i} href={`${prefix}/sluzba/${svcSlug}`} className="ig-service-chip ig-service-chip-top">✓ {s.name}</a>;
+            })}
+            {topServices.filter(s => s.category !== 'basic').map((s, i) => {
+              const svcSlug = s.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+              const prefix = locale === 'en' ? '' : `/${locale}`;
+              return <a key={`e-${i}`} href={`${prefix}/sluzba/${svcSlug}`} className="ig-service-chip ig-service-chip-extra">💬 {s.name}</a>;
+            })}
           </div>
         </div>
       )}
@@ -397,11 +406,17 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
               <>
                 <div className="profile-mini-label">{stylLabel}</div>
                 <div className="ig-services-list" style={{ marginBottom: wardrobe.length > 0 ? '10px' : 0 }}>
-                  {styles.map((s) => (
-                    <span key={s} className="ig-styl-chip ig-styl-chip-style">
-                      {STYLE_LABELS[s]?.[locale] ?? STYLE_LABELS[s]?.en ?? s}
-                    </span>
-                  ))}
+                  {styles.map((s) => {
+                    const label = STYLE_LABELS[s]?.[locale] ?? STYLE_LABELS[s]?.en ?? s;
+                    const prefix = locale === 'en' ? '' : `/${locale}`;
+                    const STYLE_SLUG: Record<string, string> = { elegant: 'elegantni-holky', sporty: 'fit-holky', glamour: 'sexy-holky', romantic: 'krasne-holky' };
+                    const href = STYLE_SLUG[s] ? `${prefix}/hashtag/${STYLE_SLUG[s]}` : `${prefix}/divky`;
+                    return (
+                      <a key={s} href={href} className="ig-styl-chip ig-styl-chip-style">
+                        {label}
+                      </a>
+                    );
+                  })}
                 </div>
               </>
             )}
@@ -409,11 +424,17 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
               <>
                 <div className="profile-mini-label">{wardrobeLabel}</div>
                 <div className="ig-services-list">
-                  {wardrobe.map((w) => (
-                    <span key={w} className="ig-styl-chip ig-styl-chip-wardrobe">
-                      {WARDROBE_LABELS[w]?.[locale] ?? WARDROBE_LABELS[w]?.en ?? w}
-                    </span>
-                  ))}
+                  {wardrobe.map((w) => {
+                    const label = WARDROBE_LABELS[w]?.[locale] ?? WARDROBE_LABELS[w]?.en ?? w;
+                    const prefix = locale === 'en' ? '' : `/${locale}`;
+                    const WARDROBE_SLUG: Record<string, string> = { lingerie: 'sexy-holky', latex: 'sexy-holky', leather: 'sexy-holky' };
+                    const href = WARDROBE_SLUG[w] ? `${prefix}/hashtag/${WARDROBE_SLUG[w]}` : `${prefix}/divky`;
+                    return (
+                      <a key={w} href={href} className="ig-styl-chip ig-styl-chip-wardrobe">
+                        {label}
+                      </a>
+                    );
+                  })}
                 </div>
               </>
             )}

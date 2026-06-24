@@ -96,6 +96,7 @@ interface ProfilDetailsProps {
   plans?: { id: unknown; duration: unknown; price: unknown }[];
   altDistricts?: string[];
   scheduleLocation?: string | null;
+  scheduleLocationSlug?: string | null;
   scheduleAddress?: string | null;
   primaryPhotoUrl?: string | null;
   personalMessage?: string | null;
@@ -202,7 +203,7 @@ function parseList(raw: unknown): string[] {
   return s.split(',').map((l) => l.trim()).filter(Boolean);
 }
 
-export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, services = [], plans = [], altDistricts = [], scheduleLocation, scheduleAddress, primaryPhotoUrl, personalMessage, voiceUrl, styleWardrobe, subtitle }: ProfilDetailsProps) {
+export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, services = [], plans = [], altDistricts = [], scheduleLocation, scheduleLocationSlug, scheduleAddress, primaryPhotoUrl, personalMessage, voiceUrl, styleWardrobe, subtitle }: ProfilDetailsProps) {
   const name = String(girl.name ?? '');
   const age = Number(girl.age ?? 0);
   const rating = Number(girl.rating ?? 0);
@@ -285,7 +286,11 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
             <span className="profile-meta-sep">·</span>
           </>
         )}
-        <span>📍 {scheduleAddress ?? (district ? `${cityName(locale)} · ${district}` : cityName(locale))}</span>
+        {scheduleLocationSlug ? (
+          <a href={`/${locale}/pobocka/${scheduleLocationSlug}`}>📍 {scheduleAddress ?? (district ? `${cityName(locale)} · ${district}` : cityName(locale))}</a>
+        ) : (
+          <span>📍 {scheduleAddress ?? (district ? `${cityName(locale)} · ${district}` : cityName(locale))}</span>
+        )}
       </div>
 
       {/* Stat hero — big numbers (same as mobile) */}
@@ -424,12 +429,18 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
               <>
                 <div className="profile-mini-label">{stylLabel}</div>
                 <div className="profile-mini-chips" style={{ marginBottom: wardrobe.length > 0 ? '12px' : 0 }}>
-                  {styles.map((s) => (
-                    <span key={s} className="mini-chip mini-chip-style">
-                      <span className="mini-chip-dot">♦</span>
-                      {STYLE_LABELS[s]?.[locale] ?? STYLE_LABELS[s]?.en ?? s}
-                    </span>
-                  ))}
+                  {styles.map((s) => {
+                    const label = STYLE_LABELS[s]?.[locale] ?? STYLE_LABELS[s]?.en ?? s;
+                    const prefix = locale === 'en' ? '' : `/${locale}`;
+                    const STYLE_SLUG: Record<string, string> = { elegant: 'elegantni-holky', sporty: 'fit-holky', glamour: 'sexy-holky', romantic: 'krasne-holky' };
+                    const href = STYLE_SLUG[s] ? `${prefix}/hashtag/${STYLE_SLUG[s]}` : `${prefix}/divky`;
+                    return (
+                      <a key={s} href={href} className="mini-chip mini-chip-style">
+                        <span className="mini-chip-dot">♦</span>
+                        {label}
+                      </a>
+                    );
+                  })}
                 </div>
               </>
             )}
@@ -437,12 +448,18 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
               <>
                 <div className="profile-mini-label">{wardrobeLabel}</div>
                 <div className="profile-mini-chips">
-                  {wardrobe.map((w) => (
-                    <span key={w} className="mini-chip mini-chip-wardrobe">
-                      <span className="mini-chip-dot">♠</span>
-                      {WARDROBE_LABELS[w]?.[locale] ?? WARDROBE_LABELS[w]?.en ?? w}
-                    </span>
-                  ))}
+                  {wardrobe.map((w) => {
+                    const label = WARDROBE_LABELS[w]?.[locale] ?? WARDROBE_LABELS[w]?.en ?? w;
+                    const prefix = locale === 'en' ? '' : `/${locale}`;
+                    const WARDROBE_SLUG: Record<string, string> = { lingerie: 'sexy-holky', latex: 'sexy-holky', leather: 'sexy-holky' };
+                    const href = WARDROBE_SLUG[w] ? `${prefix}/hashtag/${WARDROBE_SLUG[w]}` : `${prefix}/divky`;
+                    return (
+                      <a key={w} href={href} className="mini-chip mini-chip-wardrobe">
+                        <span className="mini-chip-dot">♠</span>
+                        {label}
+                      </a>
+                    );
+                  })}
                 </div>
               </>
             )}

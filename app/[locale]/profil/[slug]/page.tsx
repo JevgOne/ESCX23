@@ -163,7 +163,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
     getActivePricingPlans().catch(() => []),
     getAllServices().catch(() => []),
     girlRaw ? getGirlServices(Number(girlRaw.id)).catch(() => [] as number[]) : Promise.resolve([] as number[]),
-    girlRaw ? getGirlScheduleForToday(Number(girlRaw.id)).catch(() => ({ shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleAddress: null })) : Promise.resolve({ shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleAddress: null }),
+    girlRaw ? getGirlScheduleForToday(Number(girlRaw.id)).catch(() => ({ shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleLocationSlug: null, scheduleAddress: null })) : Promise.resolve({ shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleLocationSlug: null, scheduleAddress: null }),
     girlRaw ? getGirlVideos(Number(girlRaw.id)).catch(() => []) : Promise.resolve([]),
   ]);
   // Only show services the girl actually offers (basic auto-included + extras she checked)
@@ -342,6 +342,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
               shiftFrom={todaySchedule.shiftFrom}
               shiftTo={todaySchedule.shiftTo}
               scheduleLocation={todaySchedule.scheduleLocation}
+              scheduleLocationSlug={todaySchedule.scheduleLocationSlug}
               scheduleAddress={todaySchedule.scheduleAddress}
               isNew={girlIsNew}
               isVip={girlVip}
@@ -390,6 +391,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
               plans={planTyped as { id: unknown; duration: unknown; price: unknown }[]}
               altDistricts={[]}
               scheduleLocation={todaySchedule.scheduleLocation}
+              scheduleLocationSlug={todaySchedule.scheduleLocationSlug}
               scheduleAddress={todaySchedule.scheduleAddress}
               primaryPhotoUrl={(() => {
                 const primary = photoTyped.find((p) => p.is_primary) ?? photoTyped[0];
