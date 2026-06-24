@@ -14742,9 +14742,6 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
     font-size: 20px;
     flex: 1;
     min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   .admin-topbar-pill {
     display: none;
@@ -14753,7 +14750,7 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
 /* ----- Admin mobile content (≤768px) ----- */
 @media (max-width: 768px) {
   .admin-main {
-    padding: 16px 12px;
+    padding: 16px 16px;
   }
   .admin-topbar {
     margin-bottom: 20px;
@@ -16676,9 +16673,9 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
 
 /* ----- 480px: narrow phone ----- */
 @media (max-width: 480px) {
-  /* Admin main — tighter padding on narrow */
+  /* Admin main — reasonable padding on narrow */
   .admin-main {
-    padding: 12px 8px;
+    padding: 14px 16px;
   }
 
   /* Tables — card layout on narrow phone */
