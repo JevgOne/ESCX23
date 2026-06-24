@@ -60,6 +60,11 @@ export default async function BlogPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
+  if (locale === 'de' || locale === 'uk') {
+    const { redirect } = await import('next/navigation');
+    redirect('/cs/blog');
+  }
+
   const t = await getTranslations({ locale, namespace: 'blog' });
   const tNav = await getTranslations({ locale, namespace: 'nav' });
   const posts = await getBlogPosts(locale, 20, 0);
