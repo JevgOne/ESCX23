@@ -212,7 +212,7 @@ export default async function HashtagPage({ params }: Props) {
 
         {girls.length > 0 ? (
           <section className="lp-grid-section">
-            <GirlCardGrid girls={girls} />
+            <GirlCardGrid girls={girls} priorityCount={4} />
             <div className="lp-cta-row">
               <Link href="/divky" className="lp-btn lp-btn-ghost">{ctaLabel} →</Link>
               <Link href="/rozvrh" className="lp-btn lp-btn-primary">{scheduleLabel} →</Link>

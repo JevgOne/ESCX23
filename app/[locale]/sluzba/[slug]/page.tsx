@@ -8,6 +8,7 @@ import { getServiceBySlug, getRelatedServices, getGirlsForService } from '@/lib/
 import { Link } from '@/i18n/navigation';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
+import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -123,8 +124,44 @@ export default async function ServicePage({ params }: Props) {
 
   const servicesLabel = locale === 'cs' ? 'Služby' : locale === 'de' ? 'Leistungen' : locale === 'uk' ? 'Послуги' : 'Services';
 
+  const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
+  const canonical = getCanonicalUrl(locale, `/sluzba/${slug}`);
+
+  const breadcrumbSchema = breadcrumbListJsonLd([
+    { name: servicesLabel, url: getCanonicalUrl(locale, '/cenik') },
+    { name, url: canonical },
+  ]);
+
+  const serviceSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name,
+    description: description || undefined,
+    url: canonical,
+    provider: { '@id': `${BASE}/#business` },
+    areaServed: { '@type': 'City', name: 'Prague' },
+    ...(allGirls.length > 0 ? {
+      offers: {
+        '@type': 'Offer',
+        availability: 'https://schema.org/InStock',
+        itemOffered: {
+          '@type': 'Service',
+          name,
+        },
+      },
+    } : {}),
+  };
+
   return (
     <main className="service-page">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
+      />
       <Breadcrumbs
         items={[
           { label: servicesLabel, href: `/${locale}/cenik` },
@@ -152,7 +189,7 @@ export default async function ServicePage({ params }: Props) {
             <div className="section-eyebrow">— {girlsLabel}</div>
             <h2 className="section-h2">{allGirls.length} {companionsWord}</h2>
           </div>
-          <GirlCardGrid girls={allGirls} />
+          <GirlCardGrid girls={allGirls} priorityCount={4} />
         </div>
       </section>
 

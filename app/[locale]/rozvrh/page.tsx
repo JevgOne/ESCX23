@@ -221,7 +221,7 @@ export default async function RozvrhPage({ params, searchParams }: Props) {
           />
 
           {girls.length > 0 ? (
-            <GirlCardGrid girls={girls} />
+            <GirlCardGrid girls={girls} priorityCount={4} />
           ) : (
             <EmptyState message={NO_ONE[locale] ?? NO_ONE.cs} />
           )}

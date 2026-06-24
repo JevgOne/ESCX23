@@ -312,9 +312,12 @@ export default async function BlogDetailPage({ params }: Props) {
         <div className="blog-detail-hero-inner">
           {post.tags.length > 0 && (
             <div className="blog-detail-tags">
-              {post.tags.map((tag) => (
-                <span key={tag.slug} className="blog-tag blog-tag-hero">{tag.name}</span>
-              ))}
+              {post.tags.map((tag) => {
+                const tagPrefix = locale === 'en' ? '' : `/${locale}`;
+                return (
+                  <a key={tag.slug} href={`${tagPrefix}/hashtag/${tag.slug}`} className="blog-tag blog-tag-hero">{tag.name}</a>
+                );
+              })}
             </div>
           )}
           <h1 className="blog-detail-h1">{post.title}</h1>

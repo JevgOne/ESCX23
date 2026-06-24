@@ -140,7 +140,7 @@ export default async function DivkyPage({ params, searchParams }: Props) {
         {girls.length === 0 ? (
           <p className="no-results">{t('no_results')}</p>
         ) : (
-          <GirlCardGrid girls={girls} />
+          <GirlCardGrid girls={girls} priorityCount={4} />
         )}
         {/* All girls shown on single page */}
       </div>

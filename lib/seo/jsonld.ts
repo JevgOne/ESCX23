@@ -173,8 +173,16 @@ export function profilePersonJsonLd(
     worksFor: { '@id': `${BASE}/#business` },
   };
 
-  // Google only supports review/aggregateRating on specific types.
-  // Emit individual Review objects linked to Person instead of AggregateRating.
+  if (ratingValue != null && ratingValue > 0 && reviewCount > 0) {
+    person.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: Number(ratingValue).toFixed(1),
+      reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+
   const reviewObjects = reviews.slice(0, 5).map((r) => ({
     '@type': 'Review',
     author: { '@type': 'Person', name: String(r.author_name ?? 'Anonymous') },
