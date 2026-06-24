@@ -14907,11 +14907,13 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
     align-items: center !important;
     flex-wrap: nowrap !important;
     gap: 10px !important;
+    padding-left: 0 !important;
   }
   .admin-topbar h1 {
     flex: 1;
     min-width: 0;
     font-size: 18px;
+    padding-left: 2px;
   }
 }
 
