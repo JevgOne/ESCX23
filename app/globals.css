@@ -14688,8 +14688,13 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
 /* ----- Admin sidebar hamburger (≤900px — mobile + tablet) ----- */
 @media (max-width: 900px) {
   .admin-shell {
-    overflow-x: hidden;
-    max-width: 100vw;
+    overflow-x: clip;
+    max-width: 100%;
+    width: 100%;
+  }
+  .admin-main {
+    max-width: 100%;
+    overflow-x: clip;
   }
   #admin-sidebar-toggle {
     display: none;
