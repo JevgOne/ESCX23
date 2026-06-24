@@ -24,7 +24,7 @@ export async function applyDBOverride(
 
   return {
     ...inlineMetadata,
-    ...(dbSeo.meta_title ? { title: dbSeo.meta_title } : {}),
+    ...(dbSeo.meta_title ? { title: { absolute: dbSeo.meta_title } } : {}),
     ...(dbSeo.meta_description ? { description: dbSeo.meta_description } : {}),
     ...(dbSeo.meta_keywords ? { keywords: dbSeo.meta_keywords } : {}),
     openGraph: {

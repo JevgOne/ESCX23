@@ -64,11 +64,11 @@ export default async function DivkyPage({ params, searchParams }: Props) {
   const tGeo = await getTranslations({ locale, namespace: 'geo' });
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
-  const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
   const collectionSchema = collectionPageJsonLd(
     t('h1'),
-    `${BASE}/divky`,
-    girls.map((g) => g.slug)
+    getCanonicalUrl(locale, '/divky'),
+    girls.map((g) => g.slug),
+    locale
   );
 
   const breadcrumbSchema = breadcrumbListJsonLd([

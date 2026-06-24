@@ -72,6 +72,7 @@ export function organizationJsonLd() {
 }
 
 export function websiteJsonLd(locale = 'en') {
+  const searchPath = locale === 'en' ? '/girls' : `/${locale}/divky`;
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -84,7 +85,7 @@ export function websiteJsonLd(locale = 'en') {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${BASE}/divky?q={search_term_string}`,
+        urlTemplate: `${BASE}${searchPath}?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },
@@ -282,8 +283,10 @@ export function discountOffersJsonLd(
 export function collectionPageJsonLd(
   name: string,
   url: string,
-  slugs: string[]
+  slugs: string[],
+  locale = 'en'
 ) {
+  const profilePrefix = locale === 'en' ? `${BASE}/profile` : `${BASE}/${locale}/profil`;
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -291,7 +294,7 @@ export function collectionPageJsonLd(
     url,
     hasPart: slugs.map((slug) => ({
       '@type': 'WebPage',
-      url: `${BASE}/profil/${slug}`,
+      url: `${profilePrefix}/${slug}`,
     })),
   };
 }

@@ -80,7 +80,9 @@ const config: NextConfig = {
       { source: '/cz/blog', destination: '/cs/blog', permanent: true },
       { source: '/cz/faq', destination: '/cs/faq', permanent: true },
 
-      // === E) WordPress-era URLs ===
+      // === E) WordPress-era / bare URLs ===
+      { source: '/escort-praha', destination: '/cs/divky', permanent: true },
+      { source: '/escort-prague', destination: '/girls', permanent: true },
       { source: '/bdsm', destination: '/cs/blog', permanent: true },
       { source: '/author/:slug', destination: '/cs/', permanent: true },
 

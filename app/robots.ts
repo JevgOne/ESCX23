@@ -56,7 +56,6 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
 
       // Training-only scrapers — BLOCK
       { userAgent: 'CCBot', disallow: '/' },
-      { userAgent: 'anthropic-ai', disallow: '/' },
       { userAgent: 'Bytespider', disallow: '/' },
       { userAgent: 'Diffbot', disallow: '/' },
       { userAgent: 'cohere-ai', disallow: '/' },
