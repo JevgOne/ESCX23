@@ -14894,11 +14894,24 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
     font-size: 11px;
   }
 
-  /* Stories / admin page header flex → column */
-  .admin-main > div:first-of-type {
+  /* Stories / admin page header flex → column (but NOT the topbar) */
+  .admin-main > div:first-of-type:not(.admin-topbar) {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 10px !important;
+  }
+
+  /* Topbar — ensure row layout on narrow phones */
+  .admin-topbar {
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+  }
+  .admin-topbar h1 {
+    flex: 1;
+    min-width: 0;
+    font-size: 18px;
   }
 }
 
