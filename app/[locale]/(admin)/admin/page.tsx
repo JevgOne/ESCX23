@@ -22,34 +22,40 @@ export default async function AdminDashboardPage({
 
       <div className="stat-cards-grid">
         <StatCard
+          icon="👩"
           title="Aktivní dívky"
           value={stats.activeGirls}
           subtitle={stats.newGirls > 0 ? `+${stats.newGirls} nové za 30 dní` : undefined}
           tone="default"
         />
         <StatCard
+          icon="⭐"
           title="Pending recenze"
           value={stats.pendingReviews}
           subtitle={`Celkem ${stats.totalReviews} recenzí`}
           tone={stats.pendingReviews > 0 ? 'warn' : 'good'}
         />
         <StatCard
+          icon="📋"
           title="Member applications"
           value={stats.pendingApplications}
           subtitle="Čekají na schválení"
           tone={stats.pendingApplications > 0 ? 'warn' : 'default'}
         />
         <StatCard
+          icon="👥"
           title="Celkem dívek"
           value={stats.totalGirls}
           subtitle="Všechny statusy"
         />
         <StatCard
+          icon="📷"
           title="Celkem fotek"
           value={stats.totalPhotos}
           subtitle="Ve všech galeriích"
         />
         <StatCard
+          icon="💬"
           title="Celkem recenzí"
           value={stats.totalReviews}
           subtitle="Schválené i pending"
