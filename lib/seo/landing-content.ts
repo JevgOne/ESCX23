@@ -324,6 +324,66 @@ export const LOCATION_CONTENT: Record<string, LocationContent> = {
     relatedHashtags: ['spolecnice-praha', 'brunetky-praha', 'gfe-praha', 'cernovlasky-praha'],
   },
 
+  'praha-1': {
+    metaDesc: {
+      cs: 'Escort Staré Město Praha 1 — ověřené společnice v centru. Diskrétní apartmán u Staroměstského náměstí, soukromý vchod, denně 10–22:30.',
+      en: 'Escort Old Town Prague 1 — verified companions in the center. Discreet apartment near Old Town Square, private entrance, daily 10–22:30.',
+      de: 'Escort Altstadt Prag 1 — verifizierte Begleiterinnen im Zentrum. Diskretes Apartment am Altstädter Ring, privater Eingang, täglich 10–22:30.',
+      uk: 'Ескорт Старе Місто Прага 1 — перевірені супутниці у центрі. Дискретний апартамент біля Староміської площі, приватний вхід, щодня 10–22:30.',
+    },
+    intro: {
+      cs: 'Apartmán LovelyGirls v Praze 1 (Staré Město) se nachází v samém srdci Prahy — pár minut od Staroměstského náměstí a Karlova mostu. Ideální pro návštěvníky centra, kteří hledají diskrétní setkání bez nutnosti cestovat. Soukromý vchod z tiché uličky, plně vybavený byt se sprchou a Wi-Fi. Metro Staroměstská (linka A) i Můstek (linky A+B) jsou do 5 minut pěšky.',
+      en: 'The LovelyGirls Prague 1 apartment (Old Town) is in the heart of Prague — minutes from Old Town Square and Charles Bridge. Perfect for visitors to the center seeking a discreet encounter without traveling. Private entrance from a quiet side street, fully equipped flat with shower and Wi-Fi. Metro Staroměstská (line A) and Můstek (lines A+B) are within 5 minutes on foot.',
+      de: 'Das LovelyGirls Apartment in Prag 1 (Altstadt) liegt im Herzen Prags — wenige Minuten vom Altstädter Ring und der Karlsbrücke entfernt. Ideal für Besucher des Zentrums. Privater Eingang, voll ausgestattete Wohnung mit Dusche und WLAN. Metro Staroměstská (Linie A) und Můstek (Linien A+B) in 5 Minuten zu Fuß.',
+      uk: 'Апартамент LovelyGirls у Празі 1 (Старе Місто) розташований у самому серці Праги — кілька хвилин від Староміської площі та Карлового мосту. Ідеально для відвідувачів центру, які шукають дискретну зустріч. Приватний вхід з тихої вулички, повністю обладнана квартира з душем та Wi-Fi.',
+    },
+    faq: [
+      {
+        q: { cs: 'Kde přesně v Praze 1 se apartmán nachází?', en: 'Where exactly in Prague 1 is the apartment?', de: 'Wo genau in Prag 1 befindet sich das Apartment?', uk: 'Де саме у Празі 1 знаходиться апартамент?' },
+        a: { cs: 'V klidné uličce nedaleko Staroměstského náměstí. Přesnou adresu sdílíme po potvrzení rezervace — plná diskrétnost.', en: 'On a quiet side street near Old Town Square. Exact address shared after booking confirmation — full discretion.', de: 'In einer ruhigen Seitenstraße nahe dem Altstädter Ring. Adresse nach Buchungsbestätigung.', uk: 'У тихій вулиці біля Староміської площі. Точну адресу надаємо після підтвердження бронювання.' },
+      },
+      {
+        q: { cs: 'Jak se dostanu do apartmánu v Praze 1?', en: 'How do I get to the Prague 1 apartment?', de: 'Wie komme ich zum Apartment in Prag 1?', uk: 'Як дістатися до апартаменту у Празі 1?' },
+        a: { cs: 'Metro A — Staroměstská (3 min pěšky), metro A+B — Můstek (5 min). Tramvaje na Národní třídě i Revoluční ulici. Taxi z hlavního nádraží do 8 minut.', en: 'Metro A — Staroměstská (3 min walk), metro A+B — Můstek (5 min). Trams on Národní and Revoluční streets. Taxi from main station under 8 minutes.', de: 'Metro A — Staroměstská (3 Min.), Metro A+B — Můstek (5 Min.). Taxi vom Hauptbahnhof unter 8 Minuten.', uk: 'Метро A — Staroměstská (3 хв пішки), метро A+B — Můstek (5 хв). Таксі з головного вокзалу до 8 хвилин.' },
+      },
+      {
+        q: { cs: 'Je v centru Prahy snadné zaparkovat?', en: 'Is parking easy in Prague center?', de: 'Gibt es Parkmöglichkeiten im Zentrum?', uk: 'Чи є паркування у центрі Праги?' },
+        a: { cs: 'Parkování v Praze 1 je omezené — doporučujeme MHD nebo taxi. Nejbližší placený parking je v Palladiu nebo na Náměstí Republiky.', en: 'Parking in Prague 1 is limited — we recommend public transport or taxi. Nearest paid parking at Palladium or Náměstí Republiky.', de: 'Parken in Prag 1 ist begrenzt — wir empfehlen ÖPNV oder Taxi.', uk: 'Паркування у Празі 1 обмежене — рекомендуємо МГТ або таксі.' },
+      },
+    ],
+    relatedHashtags: ['spolecnice-praha', 'blondynky-praha', 'gfe-praha', 'elegantni-holky'],
+  },
+
+  'nove-mesto': {
+    metaDesc: {
+      cs: 'Escort Nové Město Praha — ověřené společnice u Václavského náměstí. Diskrétní apartmán, soukromý vchod, denně 10–22:30.',
+      en: 'Escort New Town Prague — verified companions near Wenceslas Square. Discreet apartment, private entrance, daily 10–22:30.',
+      de: 'Escort Neustadt Prag — verifizierte Begleiterinnen am Wenzelsplatz. Diskretes Apartment, privater Eingang, täglich 10–22:30.',
+      uk: 'Ескорт Нове Місто Прага — перевірені супутниці біля Вацлавської площі. Дискретний апартамент, приватний вхід, щодня 10–22:30.',
+    },
+    intro: {
+      cs: 'Apartmán LovelyGirls v Novém Městě je situovaný v klidné části nedaleko Václavského náměstí — obchodního a společenského centra Prahy. Vynikající dopravní dostupnost díky stanicím metra Můstek, Muzeum a I. P. Pavlova. Moderní byt s vlastním vchodem, sprchou a plným vybavením. Nové Město nabízí nejlepší kompromis mezi centrem a klidnou lokalitou.',
+      en: 'The LovelyGirls New Town apartment is situated in a quiet area near Wenceslas Square — Prague\'s commercial and social center. Excellent transport thanks to metro stations Můstek, Muzeum, and I. P. Pavlova. Modern flat with private entrance, shower, and full amenities. New Town offers the best compromise between central location and quiet surroundings.',
+      de: 'Das LovelyGirls Apartment in der Neustadt liegt in ruhiger Lage nahe dem Wenzelsplatz. Hervorragende Anbindung durch die Metrostationen Můstek, Muzeum und I. P. Pavlova. Moderne Wohnung mit privatem Eingang.',
+      uk: 'Апартамент LovelyGirls у Новому Місті розташований у тихій частині біля Вацлавської площі — комерційного центру Праги. Відмінне транспортне сполучення завдяки станціям метро Můstek, Muzeum та I. P. Pavlova. Сучасна квартира з приватним входом.',
+    },
+    faq: [
+      {
+        q: { cs: 'Jak daleko je apartmán od Václavského náměstí?', en: 'How far is the apartment from Wenceslas Square?', de: 'Wie weit ist es vom Wenzelsplatz?', uk: 'Як далеко від Вацлавської площі?' },
+        a: { cs: 'Do 5 minut pěšky. Přesnou adresu obdržíte po potvrzení rezervace.', en: 'Within 5 minutes on foot. Exact address after booking confirmation.', de: 'Innerhalb von 5 Gehminuten. Adresse nach Buchungsbestätigung.', uk: 'До 5 хвилин пішки. Точну адресу надаємо після підтвердження.' },
+      },
+      {
+        q: { cs: 'Jaké metro je nejblíže?', en: 'Which metro station is closest?', de: 'Welche Metrostation ist am nächsten?', uk: 'Яка станція метро найближча?' },
+        a: { cs: 'Muzeum (linky A+C) nebo I. P. Pavlova (linka C) — obě do 4 minut pěšky. Můstek (A+B) do 7 minut.', en: 'Muzeum (lines A+C) or I. P. Pavlova (line C) — both within 4 min walk. Můstek (A+B) within 7 min.', de: 'Muzeum (A+C) oder I. P. Pavlova (C) — jeweils 4 Min. zu Fuß.', uk: 'Muzeum (лінії A+C) або I. P. Pavlova (лінія C) — обидві до 4 хв пішки.' },
+      },
+      {
+        q: { cs: 'Je v Novém Městě parkování?', en: 'Is there parking in New Town?', de: 'Gibt es Parkmöglichkeiten in der Neustadt?', uk: 'Чи є паркування у Новому Місті?' },
+        a: { cs: 'Modré a oranžové zóny v okolních ulicích. Podzemní garáže u Národního muzea a v OC Quadrio (do 5 minut).', en: 'Blue and orange zones in nearby streets. Underground garages at National Museum and Quadrio shopping center (within 5 min).', de: 'Blaue und orange Zonen. Tiefgaragen am Nationalmuseum und im Quadrio (5 Min.).', uk: 'Сині та помаранчеві зони. Підземні гаражі біля Національного музею та ТЦ Quadrio (до 5 хв).' },
+      },
+    ],
+    relatedHashtags: ['spolecnice-praha', 'gfe-praha', 'blondynky-praha', 'brunetky-praha'],
+  },
+
   'vinohrady': {
     metaDesc: {
       cs: 'Apartmán Vinohrady Praha 2 — ověřené společnice, diskrétní privátní byt. Metro a tramvaj minutu pěšky, hotovostní platba.',
@@ -365,6 +425,8 @@ export function getHashtagContent(slug: string): LandingContent | null {
 
 const LOCATION_SLUG_ALIASES: Record<string, string> = {
   'praha-2': 'vinohrady',
+  'stare-mesto': 'praha-1',
+  'smichov': 'praha-5',
 };
 
 export function getLocationContent(slug: string): LocationContent | null {
