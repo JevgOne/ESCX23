@@ -3,8 +3,9 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { Link } from '@/i18n/navigation';
-import { getBlogPostBySlug, getRelatedBlogPosts } from '@/lib/queries';
+import { getBlogPostBySlug, getRelatedBlogPosts, getActiveGirlCards } from '@/lib/queries';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
+import GirlCardGrid from '@/components/girl/GirlCardGrid';
 
 export const revalidate = 3600;
 
@@ -140,7 +141,10 @@ export default async function BlogDetailPage({ params }: Props) {
   const post = await getBlogPostBySlug(slug, locale);
   if (!post) notFound();
 
-  const related = await getRelatedBlogPosts(post.id, locale, 3);
+  const [related, profileGirls] = await Promise.all([
+    getRelatedBlogPosts(post.id, locale, 3),
+    getActiveGirlCards(undefined, 4).catch(() => []),
+  ]);
   const brand = BRAND[locale] ?? BRAND.en;
 
   const processedContent = post.content ? injectHeadingIds(post.content) : '';
@@ -394,6 +398,16 @@ export default async function BlogDetailPage({ params }: Props) {
             </div>
           )}
         </article>
+
+        {/* Profiles widget */}
+        {profileGirls.length > 0 && (
+          <div className="blog-profiles-widget">
+            <div className="section-head">
+              <h2 className="section-h2">{locale === 'cs' ? 'Naše společnice' : locale === 'de' ? 'Unsere Begleiterinnen' : locale === 'uk' ? 'Наші супутниці' : 'Our companions'}</h2>
+            </div>
+            <GirlCardGrid girls={profileGirls} priorityCount={0} />
+          </div>
+        )}
       </div>
     </main>
   );

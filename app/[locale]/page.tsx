@@ -12,6 +12,7 @@ import HashtagCloud from '@/components/home/HashtagCloud';
 import LocationsRow from '@/components/home/LocationsRow';
 import ContactSteps from '@/components/home/ContactSteps';
 import FinalCta from '@/components/home/FinalCta';
+import QuickLinks from '@/components/home/QuickLinks';
 import {
   homepageLocalBusiness,
   organizationJsonLd,
@@ -118,6 +119,7 @@ export default async function HomePage({
       <ReviewsStrip locale={locale} />
       <HashtagCloud locale={locale} />
       <LocationsRow locale={locale} />
+      <QuickLinks locale={locale} />
       <ContactSteps locale={locale} />
       <FinalCta locale={locale} />
     </main>
