@@ -173,6 +173,8 @@ export function profilePersonJsonLd(
     worksFor: { '@id': `${BASE}/#business` },
   };
 
+  // Compute aggregateRating from DB value or from review data
+  let hasAggregate = false;
   if (ratingValue != null && ratingValue > 0 && reviewCount > 0) {
     person.aggregateRating = {
       '@type': 'AggregateRating',
@@ -181,22 +183,40 @@ export function profilePersonJsonLd(
       bestRating: 5,
       worstRating: 1,
     };
+    hasAggregate = true;
+  } else if (reviews.length > 0) {
+    // Fallback: compute from review data so Google always sees aggregateRating with reviews
+    const ratings = reviews.map((r) => Number(r.rating)).filter((v) => v > 0);
+    if (ratings.length > 0) {
+      const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+      person.aggregateRating = {
+        '@type': 'AggregateRating',
+        ratingValue: avg.toFixed(1),
+        reviewCount: ratings.length,
+        bestRating: 5,
+        worstRating: 1,
+      };
+      hasAggregate = true;
+    }
   }
 
-  const reviewObjects = reviews.slice(0, 5).map((r) => ({
-    '@type': 'Review',
-    author: { '@type': 'Person', name: String(r.author_name ?? 'Anonymous') },
-    reviewRating: {
-      '@type': 'Rating',
-      ratingValue: Number(r.rating),
-      bestRating: 5,
-      worstRating: 1,
-    },
-    reviewBody: String(r.content ?? '').slice(0, 300),
-    datePublished: String(r.created_at ?? '').slice(0, 10),
-  }));
-  if (reviewObjects.length > 0) {
-    person.review = reviewObjects;
+  // Only include Review objects when aggregateRating is present (Google requirement)
+  if (hasAggregate) {
+    const reviewObjects = reviews.slice(0, 5).map((r) => ({
+      '@type': 'Review',
+      author: { '@type': 'Person', name: String(r.author_name ?? 'Anonymous') },
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: Number(r.rating),
+        bestRating: 5,
+        worstRating: 1,
+      },
+      reviewBody: String(r.content ?? '').slice(0, 300),
+      datePublished: String(r.created_at ?? '').slice(0, 10),
+    }));
+    if (reviewObjects.length > 0) {
+      person.review = reviewObjects;
+    }
   }
 
   return person;
