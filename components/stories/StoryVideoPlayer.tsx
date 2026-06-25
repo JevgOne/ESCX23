@@ -67,7 +67,6 @@ export default function StoryVideoPlayer({ src, nextUrl }: Props) {
       muted
       playsInline
       preload="auto"
-      crossOrigin="anonymous"
     >
       <source src={src} type={mimeType} />
     </video>

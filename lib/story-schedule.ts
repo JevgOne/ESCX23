@@ -232,6 +232,7 @@ export async function getPublicStoriesFiltered(): Promise<PublicStoryFiltered[]>
     FROM stories s
     LEFT JOIN girls g ON g.id = s.girl_id AND g.status = 'active'
     WHERE s.is_active = 1
+      AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)
       AND (s.girl_id = 0 OR g.id IS NOT NULL)
     ORDER BY s.created_at DESC
     LIMIT 50

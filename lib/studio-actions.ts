@@ -243,7 +243,7 @@ export async function addStory(formData: FormData) {
 
   await db.execute({
     sql: `INSERT INTO stories (girl_id, media_url, media_type, expires_at)
-          VALUES (?, ?, ?, datetime('now', '+24 hours'))`,
+          VALUES (?, ?, ?, datetime('now', '+7 days'))`,
     args: [girlId, mediaUrl, mediaType],
   });
 
