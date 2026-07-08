@@ -359,7 +359,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
             ))}
           </div>
           <div className="ig-services-legend">
-            <span>✓ {locale === 'cs' ? 'V ceně' : locale === 'de' ? 'Inklusive' : locale === 'uk' ? 'Включено' : 'Included'}</span>
+            <span><span style={{ color: 'var(--color-green)', fontWeight: 700 }}>✓</span> {locale === 'cs' ? 'V ceně' : locale === 'de' ? 'Inklusive' : locale === 'uk' ? 'Включено' : 'Included'}</span>
             <span>💬 {locale === 'cs' ? 'Extra dle domluvy' : locale === 'de' ? 'Extra nach Absprache' : locale === 'uk' ? 'Додатково за домовленістю' : 'Extra by arrangement'}</span>
           </div>
         </div>

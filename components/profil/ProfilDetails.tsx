@@ -395,7 +395,7 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
             ))}
           </div>
           <div className="ig-services-legend" style={{ marginTop: '8px' }}>
-            <span>✓ {locale === 'cs' ? 'V ceně' : locale === 'de' ? 'Inklusive' : locale === 'uk' ? 'Включено' : 'Included'}</span>
+            <span><span style={{ color: 'var(--color-green)', fontWeight: 700 }}>✓</span> {locale === 'cs' ? 'V ceně' : locale === 'de' ? 'Inklusive' : locale === 'uk' ? 'Включено' : 'Included'}</span>
             <span>💬 {locale === 'cs' ? 'Extra dle domluvy' : locale === 'de' ? 'Extra nach Absprache' : locale === 'uk' ? 'Додатково за домовленістю' : 'Extra by arrangement'}</span>
           </div>
         </div>
