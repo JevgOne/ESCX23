@@ -82,9 +82,11 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
       FROM girls g
       INNER JOIN girl_services gsvc ON gsvc.girl_id = g.id
       INNER JOIN services svc ON svc.id = gsvc.service_id AND svc.slug = ?
-      LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
-        AND gs.day_of_week = ? AND gs.is_active = 1
-        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
+      LEFT JOIN (
+        SELECT *, ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+        FROM girl_schedules WHERE day_of_week = ? AND is_active = 1
+          AND (effective_from IS NULL OR effective_from <= ?)
+      ) gs ON gs.girl_id = g.id AND gs.rn = 1
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status IN ('active', 'inactive') AND (g.vip = 0 OR g.vip IS NULL)
@@ -167,10 +169,10 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
   const today = pragueDateISO();
   const now = formatPragueTime();
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowDow = pragueDayOfWeek(tomorrow);
-  const tomorrowDate = pragueDateISO(tomorrow);
+  const tomorrowD = new Date(today + 'T12:00:00Z');
+  tomorrowD.setUTCDate(tomorrowD.getUTCDate() + 1);
+  const tomorrowDow = pragueDayOfWeek(tomorrowD);
+  const tomorrowDate = tomorrowD.toISOString().slice(0, 10);
 
   const result = await db.execute({
     sql: `
@@ -191,19 +193,28 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
-      LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
-        AND gs.day_of_week = ? AND gs.is_active = 1
-        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
+      LEFT JOIN (
+        SELECT girl_id, start_time, end_time, is_active, location_id,
+               ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+        FROM girl_schedules
+        WHERE day_of_week = ? AND is_active = 1
+          AND (effective_from IS NULL OR effective_from <= ?)
+      ) gs ON gs.girl_id = g.id AND gs.rn = 1
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
-      LEFT JOIN girl_schedules gs2 ON gs2.girl_id = g.id
-        AND gs2.day_of_week = ? AND gs2.is_active = 1
+      LEFT JOIN (
+        SELECT girl_id, start_time, end_time, is_active, location_id,
+               ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+        FROM girl_schedules
+        WHERE day_of_week = ? AND is_active = 1
+          AND (effective_from IS NULL OR effective_from <= ?)
+      ) gs2 ON gs2.girl_id = g.id AND gs2.rn = 1
       LEFT JOIN locations l2 ON l2.id = gs2.location_id
       LEFT JOIN schedule_exceptions se2 ON se2.girl_id = g.id AND se2.date = ?
       WHERE g.status IN ('active', 'inactive') AND (g.vip = 0 OR g.vip IS NULL)
       ORDER BY g.name
     `,
-    args: [dayOfWeek, today, today, tomorrowDow, tomorrowDate],
+    args: [dayOfWeek, today, today, tomorrowDow, tomorrowDate, tomorrowDate],
   });
 
   return result.rows
@@ -400,6 +411,7 @@ export interface HomepageStats {
 export async function getHomepageStats(): Promise<HomepageStats> {
   const dayOfWeek = (await import('./utils')).pragueDayOfWeek();
   const now = (await import('./utils')).formatPragueTime();
+  const today = (await import('./utils')).pragueDateISO();
 
   const [liveRes, reviewsRes] = await Promise.all([
     db.execute({
@@ -412,10 +424,13 @@ export async function getHomepageStats(): Promise<HomepageStats> {
                 THEN 1 ELSE 0
               END) AS working_now
             FROM girls g
-            LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
-              AND gs.day_of_week = ? AND gs.is_active = 1
+            LEFT JOIN (
+              SELECT *, ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+              FROM girl_schedules WHERE day_of_week = ? AND is_active = 1
+                AND (effective_from IS NULL OR effective_from <= ?)
+            ) gs ON gs.girl_id = g.id AND gs.rn = 1
             WHERE g.status = 'active'`,
-      args: [now, now, dayOfWeek],
+      args: [now, now, dayOfWeek, today],
     }),
     db.execute(
       `SELECT COUNT(*) AS total, AVG(rating) AS avg_rating
@@ -740,9 +755,9 @@ export async function getGirlsForDay(
   const today = pragueDateISO();
   const isToday = date === today;
   const tomorrowDate = (() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return pragueDateISO(d);
+    const d = new Date(today + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10);
   })();
   const isTomorrow = date === tomorrowDate;
   const now = isToday ? formatPragueTime() : null;
@@ -763,9 +778,16 @@ export async function getGirlsForDay(
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
-      LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
-        AND gs.day_of_week = ? AND gs.is_active = 1
-        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
+      LEFT JOIN (
+        SELECT girl_id, start_time, end_time, is_active, location_id,
+               ROW_NUMBER() OVER (
+                 PARTITION BY girl_id
+                 ORDER BY effective_from DESC NULLS LAST
+               ) AS rn
+        FROM girl_schedules
+        WHERE day_of_week = ? AND is_active = 1
+          AND (effective_from IS NULL OR effective_from <= ?)
+      ) gs ON gs.girl_id = g.id AND gs.rn = 1
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
@@ -1607,9 +1629,11 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
         l.name AS schedule_location_slug,
         l.display_name AS schedule_address
       FROM girls g
-      LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
-        AND gs.day_of_week = ? AND gs.is_active = 1
-        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
+      LEFT JOIN (
+        SELECT *, ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+        FROM girl_schedules WHERE day_of_week = ? AND is_active = 1
+          AND (effective_from IS NULL OR effective_from <= ?)
+      ) gs ON gs.girl_id = g.id AND gs.rn = 1
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.id = ?
@@ -1860,10 +1884,10 @@ export async function getGirlsForListing(
   const dayOfWeek = pragueDayOfWeek();
   const today = pragueDateISO();
   const now = formatPragueTime();
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowDow = pragueDayOfWeek(tomorrow);
-  const tomorrowDate = pragueDateISO(tomorrow);
+  const tomorrowD = new Date(today + 'T12:00:00Z');
+  tomorrowD.setUTCDate(tomorrowD.getUTCDate() + 1);
+  const tomorrowDow = pragueDayOfWeek(tomorrowD);
+  const tomorrowDate = tomorrowD.toISOString().slice(0, 10);
   const pageSize = f.pageSize ?? 12;
   const page = f.page ?? 1;
   const offset = (page - 1) * pageSize;
@@ -1927,17 +1951,27 @@ export async function getGirlsForListing(
         ELSE 4
       END AS status_rank
     FROM girls g
-    LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
-      AND gs.day_of_week = ? AND gs.is_active = 1
+    LEFT JOIN (
+      SELECT girl_id, start_time, end_time, is_active, location_id,
+             ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+      FROM girl_schedules
+      WHERE day_of_week = ? AND is_active = 1
+        AND (effective_from IS NULL OR effective_from <= ?)
+    ) gs ON gs.girl_id = g.id AND gs.rn = 1
     LEFT JOIN locations l ON l.id = gs.location_id
     LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
-    LEFT JOIN girl_schedules gs2 ON gs2.girl_id = g.id
-      AND gs2.day_of_week = ? AND gs2.is_active = 1
+    LEFT JOIN (
+      SELECT girl_id, start_time, end_time, is_active, location_id,
+             ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+      FROM girl_schedules
+      WHERE day_of_week = ? AND is_active = 1
+        AND (effective_from IS NULL OR effective_from <= ?)
+    ) gs2 ON gs2.girl_id = g.id AND gs2.rn = 1
     LEFT JOIN schedule_exceptions se2 ON se2.girl_id = g.id AND se2.date = ?
     WHERE ${whereSQL}
   `;
 
-  const allArgs = [now, now, now, now, now, ...args.slice(0, 2), tomorrowDow, tomorrowDate, ...args.slice(2)];
+  const allArgs = [now, now, now, now, now, ...args.slice(0, 2), today, tomorrowDow, tomorrowDate, tomorrowDate, ...args.slice(2)];
 
   const countResult = await db.execute({
     sql: `SELECT COUNT(*) AS cnt FROM (${baseSql}) sub`,
@@ -2032,9 +2066,13 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
-      LEFT JOIN girl_schedules gs ON gs.girl_id = g.id
-        AND gs.day_of_week = ? AND gs.is_active = 1
-        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
+      LEFT JOIN (
+        SELECT girl_id, start_time, end_time, is_active, location_id,
+               ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+        FROM girl_schedules
+        WHERE day_of_week = ? AND is_active = 1
+          AND (effective_from IS NULL OR effective_from <= ?)
+      ) gs ON gs.girl_id = g.id AND gs.rn = 1
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)

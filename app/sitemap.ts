@@ -53,6 +53,8 @@ const PATHS: Record<string, Record<Locale, string>> = {
   '/podminky': { en: '/terms', cs: '/podminky', de: '/agb', uk: '/umovy' },
   '/soukromi': { en: '/privacy', cs: '/soukromi', de: '/datenschutz', uk: '/konfidentsiinist' },
   '/blog': { en: '/blog', cs: '/blog', de: '/blog', uk: '/blog' },
+  '/join': { en: '/join', cs: '/pridat-se', de: '/bewerben', uk: '/dodaty-sia' },
+  '/novinky': { en: '/whats-new', cs: '/novinky', de: '/neuigkeiten', uk: '/novynky' },
 };
 
 function resolvePath(routeKey: string, locale: Locale, slug?: string): string {
@@ -102,6 +104,10 @@ const STATIC_KEYS: Array<{ key: string; freq: 'daily' | 'hourly' | 'weekly' | 'm
   { key: '/recenze', freq: 'daily', priority: 0.6 },
   { key: '/o-nas', freq: 'monthly', priority: 0.5 },
   { key: '/kontakt', freq: 'monthly', priority: 0.5 },
+  { key: '/podminky', freq: 'monthly', priority: 0.3 },
+  { key: '/soukromi', freq: 'monthly', priority: 0.3 },
+  { key: '/novinky', freq: 'daily', priority: 0.5 },
+  { key: '/join', freq: 'monthly', priority: 0.4 },
   { key: '/blog', freq: 'daily', priority: 0.8 },
 ];
 
@@ -208,15 +214,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // Blog posts (per post × all locales)
+  // Blog posts (per post × CS + EN only — DE/UK are untranslated duplicates)
   for (const bp of blogSlugs) {
     const lastmod = bp.updatedAt ? new Date(bp.updatedAt) : now;
-    const alternates: Record<string, string> = {};
-    for (const l of LOCALES) {
-      alternates[l] = l === 'en' ? `${BASE}/blog/${bp.slug}` : `${BASE}/${l}/blog/${bp.slug}`;
-    }
-    alternates['x-default'] = `${BASE}/blog/${bp.slug}`;
-    // Only CS + EN in sitemap (DE/UK are untranslated duplicates of CS)
+    const alternates: Record<string, string> = {
+      en: `${BASE}/blog/${bp.slug}`,
+      cs: `${BASE}/cs/blog/${bp.slug}`,
+      'x-default': `${BASE}/blog/${bp.slug}`,
+    };
     for (const l of ['en', 'cs'] as const) {
       pages.push({
         url: l === 'en' ? `${BASE}/blog/${bp.slug}` : `${BASE}/${l}/blog/${bp.slug}`,

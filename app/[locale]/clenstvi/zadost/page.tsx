@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
+import { getCanonicalUrl, getAlternates } from '@/lib/seo/meta';
 import { submitMemberApplication } from './actions';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
@@ -108,8 +109,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const M = META[locale] ?? META.en;
-  return applyDBOverride(`/${locale}/clenstvi/zadost`, { title: M.title, description: M.description });
-
+  return applyDBOverride(`/${locale}/clenstvi/zadost`, {
+    title: M.title,
+    description: M.description,
+    alternates: {
+      canonical: getCanonicalUrl(locale, '/clenstvi/zadost'),
+      languages: getAlternates('/clenstvi/zadost'),
+    },
+  });
 }
 
 export default async function ClenstviZadostPage({

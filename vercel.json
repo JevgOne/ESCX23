@@ -2,6 +2,7 @@
   "crons": [
     { "path": "/api/cron/expire-stories", "schedule": "0 * * * *" },
     { "path": "/api/cron/cleanup-old-overrides", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/cleanup-daily-overrides", "schedule": "31 21 * * *" },
     { "path": "/api/cron/recalc-stats", "schedule": "0 1 * * *" },
     { "path": "/api/cron/expire-loyalty-discounts", "schedule": "0 3 * * *" }
   ]

@@ -82,7 +82,7 @@ const config: NextConfig = {
 
       // === E) WordPress-era / bare URLs ===
       { source: '/escort-praha', destination: '/cs/divky', permanent: true },
-      { source: '/escort-prague', destination: '/girls', permanent: true },
+      { source: '/escort-prague', destination: '/en/girls', permanent: true },
       { source: '/bdsm', destination: '/cs/blog', permanent: true },
       { source: '/author/:slug', destination: '/cs/', permanent: true },
 

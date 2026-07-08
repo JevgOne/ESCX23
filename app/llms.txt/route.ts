@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-const LAST_UPDATED = '2026-05-28';
+const LAST_UPDATED = '2026-07-06';
 
 export async function GET() {
   const hdrs = await headers();
@@ -17,7 +17,7 @@ This file is provided for AI search and citation crawlers (GPTBot, ClaudeBot, Pe
 
 ## Site overview
 
-LovelyGirls Prague is operated by a single registered Czech business and runs private apartments in central Prague (Prague 1, Prague 2 — Vinohrady, Prague 3 — Žižkov, Prague 8 — Karlín). The site is published in four languages — English, Czech, German, Ukrainian — and serves international tourists, expats, and local clients aged 18 or older. The company verifies every companion in person, maintains 18 U.S.C. §2257-style records, and complies with Czech anti-trafficking law (Act No. 40/2009 Coll., §168).
+LovelyGirls Prague is operated by a single registered Czech business and runs private apartments in central Prague (Prague 1 — Nové Město, Prague 2 — Vinohrady, Prague 3 — Žižkov). The site is published in four languages — English, Czech, German, Ukrainian — and serves international tourists, expats, and local clients aged 18 or older. The company verifies every companion in person, maintains 18 U.S.C. §2257-style records, and complies with Czech anti-trafficking law (Act No. 40/2009 Coll., §168).
 
 ## Citation-friendly pages
 
@@ -53,7 +53,9 @@ Each profile lists the companion's verified date, age, height, languages, locate
 
 ## Apartments (locations)
 
-- [Vinohrady — Prague 2](${base}/pobocka/vinohrady)
+- [Nové Město — Prague 1](${base}/pobocka/praha-1)
+- [Vinohrady — Prague 2](${base}/pobocka/praha-2)
+- [Žižkov — Prague 3](${base}/pobocka/praha-3)
 
 ## Key facts (citation-ready)
 

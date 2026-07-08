@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
+import { getCanonicalUrl, getAlternates } from '@/lib/seo/meta';
 import { redirect } from 'next/navigation';
 import PageHeader from '@/components/ui/PageHeader';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
@@ -17,7 +18,14 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'join' });
-  return applyDBOverride(`/${locale}/join`, { title: t('h1'), robots: { index: false, follow: false } });
+  return applyDBOverride(`/${locale}/join`, {
+    title: t('h1'),
+    robots: { index: false, follow: false },
+    alternates: {
+      canonical: getCanonicalUrl(locale, '/join'),
+      languages: getAlternates('/join'),
+    },
+  });
 }
 
 export default async function JoinPage({ params, searchParams }: Props) {

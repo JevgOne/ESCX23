@@ -41,6 +41,14 @@ export const metadata: Metadata = {
   description:
     'LovelyGirls Prague: 13 verified companions, 4 private apartments in Prague 2, 8, 1 and 3, open daily 10:00–22:30. Fast WhatsApp/Telegram contact.',
   applicationName: 'LovelyGirls Prague',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
   referrer: 'strict-origin-when-cross-origin',
   robots: {
     index: true,

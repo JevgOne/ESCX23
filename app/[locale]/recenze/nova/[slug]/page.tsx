@@ -5,16 +5,23 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { photoUrl } from '@/lib/photoUrl';
 import { createAdminNotification } from '@/lib/admin-notifications';
+import { getCanonicalUrl } from '@/lib/seo/meta';
 
 export const dynamic = 'force-dynamic';
-
-export const metadata: Metadata = {
-  robots: { index: false, follow: false },
-};
 
 interface Props {
   params: Promise<{ locale: string; slug: string }>;
   searchParams: Promise<{ sent?: string; error?: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale, slug } = await params;
+  return {
+    robots: { index: false, follow: false },
+    alternates: {
+      canonical: getCanonicalUrl(locale, `/recenze/nova/${slug}`),
+    },
+  };
 }
 
 const MOODS = [

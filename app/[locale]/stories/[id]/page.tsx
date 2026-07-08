@@ -2,6 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import NextLink from 'next/link';
+import { getCanonicalUrl } from '@/lib/seo/meta';
 import { getStoryById } from '@/lib/queries';
 import { getPublicStoriesFiltered, isStoryViewable } from '@/lib/story-schedule';
 import { incrementStoryViews } from '@/lib/admin-actions';
@@ -45,6 +46,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `Story — ${story.girlName}`,
     robots: { index: false, follow: false },
+    alternates: {
+      canonical: getCanonicalUrl(locale, `/stories/${id}`),
+    },
   };
 }
 

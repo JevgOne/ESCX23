@@ -6,40 +6,6 @@
 
 ---
 
-## TASK-010: Admin panel nefunguje na nové doméně
-Priorita: 1
-Stav: čeká
-Projekt: /Users/zen/Projects/ESCX23
-
-### Kompletní zadání:
-Admin panel nefunguje na www.lovelygirls.cz. Uživatel říká "nefunguje ted admin atd atd" a "admin panel nefunguje třeba". Web byl migrován z escx23.vercel.app na www.lovelygirls.cz. Ověřit že admin login, přihlášení, a všechny admin stránky fungují na nové doméně. Zkontrolovat session cookies, Server Actions, redirecty.
-
-### Kontext:
-- Doména: www.lovelygirls.cz (nová), escx23.vercel.app (stará → redirect 301)
-- Auth: lib/auth.ts, lib/auth-actions.ts (Server Actions pro login)
-- Session cookie: 'escx23_session', httpOnly, secure, sameSite: lax, path: /
-- Admin login: admin@lovelygirls.cz / Admin2026!
-- Studio login: anetta@lovelygirls.cz / Anetta2026!
-- Redirecty v lib/auth.ts už opraveny na /cs/admin/login, /cs/studio/login
-
----
-
-## TASK-011: Profil detail — Věk/Váha/Výška box
-Priorita: 1
-Stav: čeká
-Projekt: /Users/zen/Projects/ESCX23
-
-### Kompletní zadání:
-Uživatel říká: "máš špatně ten profile detail Věk, Váha a výška má být v takovém boxu jako je na mobilu". Na desktop verzi profilu (např. /cs/profil/anetta) jsou Věk, Výška, Váha zobrazeny jako pill badges v řadě (třída .profile-stat-details.profile-desktop-only). Na mobilu je jiný layout. Uživatel chce aby na desktopu byly tyto údaje v boxu/kartě — podobně jako mobilní layout.
-
-### Kontext:
-- Komponenta: components/profil/ProfilDetails.tsx (řádky 289-351, .profile-stat-details)
-- Styly: app/globals.css (hledat .profile-stat-details, .psd-pill)
-- Mobilní verze je v ProfilHero.tsx
-- URL: https://www.lovelygirls.cz/cs/profil/anetta
-
----
-
 ## TASK-012: Kompletní audit webu na nové doméně
 Priorita: 2
 Stav: čeká
@@ -62,5 +28,19 @@ Kompletní kontrola celého webu na www.lovelygirls.cz. Uživatel říká "udele
 - robots.txt Host/Sitemap už ukazuje www.lovelygirls.cz ✓
 - Sitemap URL potvrzeno www.lovelygirls.cz ✓
 - Hreflang potvrzeno www.lovelygirls.cz ✓
+
+---
+
+## TASK-017: Blog — 12 článků, předepsat drafty
+Priorita: 3
+Stav: čeká
+Projekt: /Users/zen/Projects/ESCX23
+
+### Kompletní zadání:
+Naplánovat 12 blogových článků (3 měsíce, 1/týden). Předepsat jako drafty do DB. Témata relevantní pro escort agenturu v Praze.
+
+### Kontext:
+- Blog: app/[locale]/blog/, DB: blog_posts tabulka
+- Copywriter agenti: copywriter-cs, copywriter-en, copywriter-de, copywriter-uk
 
 ---
