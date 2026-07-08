@@ -480,28 +480,28 @@ export async function adminUploadVoice(formData: FormData) {
       args: [girlId],
     });
     revalidatePath(`/cs/admin/divky/${girlId}/edit`);
-    await adminRedirect(`/admin/divky/${girlId}/edit`);
+    return adminRedirect(`/admin/divky/${girlId}/edit`);
   }
 
   const file = formData.get('voice') as File | null;
   if (!file || file.size === 0) {
-    await adminRedirect(`/admin/divky/${girlId}/edit?error=${encodeURIComponent('Nebyl vybrán žádný soubor')}`);
+    return adminRedirect(`/admin/divky/${girlId}/edit?error=${encodeURIComponent('Nebyl vybrán žádný soubor')}`);
   }
 
-  const ext = (file!.name.split('.').pop() ?? '').toLowerCase();
+  const ext = (file.name.split('.').pop() ?? '').toLowerCase();
   const allowed = new Set(['mp3', 'wav', 'ogg', 'webm', 'm4a', 'aac']);
   if (!allowed.has(ext)) {
-    await adminRedirect(`/admin/divky/${girlId}/edit?error=${encodeURIComponent('Nepodporovaný formát. Povol: MP3, WAV, OGG, M4A.')}`);
+    return adminRedirect(`/admin/divky/${girlId}/edit?error=${encodeURIComponent('Nepodporovaný formát. Povol: MP3, WAV, OGG, M4A.')}`);
   }
 
-  if (file!.size > 5 * 1024 * 1024) {
-    await adminRedirect(`/admin/divky/${girlId}/edit?error=${encodeURIComponent('Soubor je příliš velký (max 5 MB).')}`);
+  if (file.size > 5 * 1024 * 1024) {
+    return adminRedirect(`/admin/divky/${girlId}/edit?error=${encodeURIComponent('Soubor je příliš velký (max 5 MB).')}`);
   }
 
   const filename = `voices/${girlId}/${Date.now()}.${ext}`;
-  const blob = await put(filename, file!, {
+  const blob = await put(filename, file, {
     access: 'public',
-    contentType: file!.type || `audio/${ext}`,
+    contentType: file.type || `audio/${ext}`,
     addRandomSuffix: false,
   });
 
