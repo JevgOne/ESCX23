@@ -124,15 +124,14 @@ export async function updateGirlServices(formData: FormData) {
 
   const serviceIds = formData.getAll('services').map(Number).filter(Boolean);
 
-  // Delete all existing, then insert selected
-  await db.execute({ sql: `DELETE FROM girl_services WHERE girl_id = ?`, args: [girlId] });
-
-  for (const sid of serviceIds) {
-    await db.execute({
+  // Delete all existing, then insert selected — batched for speed
+  await db.batch([
+    { sql: `DELETE FROM girl_services WHERE girl_id = ?`, args: [girlId] },
+    ...serviceIds.map((sid) => ({
       sql: `INSERT INTO girl_services (girl_id, service_id) VALUES (?, ?)`,
       args: [girlId, sid],
-    });
-  }
+    })),
+  ]);
 
   revalidatePath('/cs/studio/sluzby');
   await studioRedirect('/studio/sluzby?saved=1');
