@@ -945,53 +945,10 @@ export default async function AdminGirlEditPage({
           </div>
         </div>
 
-        {/* SEKCE 13: Hlasová zpráva */}
+        {/* SEKCE 13: Zvýraznění */}
         <div className="gf2-section">
           <div className="gf2-section-head">
             <div className="gf2-step-badge">13</div>
-            <div className="gf2-section-title">Hlasová zpráva</div>
-          </div>
-
-          {g.voice_url ? (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Aktuální nahrávka:</div>
-              <audio controls preload="metadata" style={{ width: '100%', maxWidth: 400 }}>
-                <source src={g.voice_url} />
-              </audio>
-              <form action={adminUploadVoice} style={{ marginTop: 8 }}>
-                <input type="hidden" name="girl_id" value={g.id} />
-                <input type="hidden" name="delete" value="1" />
-                <button type="submit" className="gf2-danger-btn" style={{ fontSize: 11, padding: '5px 12px' }}>
-                  Smazat nahrávku
-                </button>
-              </form>
-            </div>
-          ) : (
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 12 }}>Žádná hlasová zpráva</p>
-          )}
-
-          <form action={adminUploadVoice} encType="multipart/form-data">
-            <input type="hidden" name="girl_id" value={g.id} />
-            <div className="gf2-field">
-              <label className="gf2-label">{g.voice_url ? 'Nahrát novou' : 'Nahrát hlasovou zprávu'}</label>
-              <input
-                type="file"
-                name="voice"
-                accept=".mp3,.wav,.ogg,.webm,.m4a,.aac,audio/*"
-                style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}
-              />
-              <div className="gf2-hint">Max 5 MB, formáty: MP3, WAV, OGG, M4A (max 15 sekund)</div>
-            </div>
-            <button type="submit" className="gf2-btn-submit" style={{ padding: '9px 20px', fontSize: 13, marginTop: 8 }}>
-              Nahrát
-            </button>
-          </form>
-        </div>
-
-        {/* SEKCE 14: Zvýraznění */}
-        <div className="gf2-section">
-          <div className="gf2-section-head">
-            <div className="gf2-step-badge">14</div>
             <div className="gf2-section-title">Zvýraznění profilu</div>
           </div>
 
@@ -1044,6 +1001,49 @@ export default async function AdminGirlEditPage({
           <a href={`/cs/admin/divky/${g.id}`} className="gf2-btn-cancel">Zrušit</a>
         </div>
       </form>
+
+      {/* Hlasová zpráva — MUSÍ být mimo hlavní <form> */}
+      <div className="gf2-section" style={{ marginBottom: 16 }}>
+        <div className="gf2-section-head">
+          <div className="gf2-step-badge">🎙️</div>
+          <div className="gf2-section-title">Hlasová zpráva</div>
+        </div>
+
+        {g.voice_url ? (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Aktuální nahrávka:</div>
+            <audio controls preload="metadata" style={{ width: '100%', maxWidth: 400 }}>
+              <source src={g.voice_url} />
+            </audio>
+            <form action={adminUploadVoice} style={{ marginTop: 8 }}>
+              <input type="hidden" name="girl_id" value={g.id} />
+              <input type="hidden" name="delete" value="1" />
+              <button type="submit" className="gf2-danger-btn" style={{ fontSize: 11, padding: '5px 12px' }}>
+                Smazat nahrávku
+              </button>
+            </form>
+          </div>
+        ) : (
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 12 }}>Žádná hlasová zpráva</p>
+        )}
+
+        <form action={adminUploadVoice} encType="multipart/form-data">
+          <input type="hidden" name="girl_id" value={g.id} />
+          <div className="gf2-field">
+            <label className="gf2-label">{g.voice_url ? 'Nahrát novou' : 'Nahrát hlasovou zprávu'}</label>
+            <input
+              type="file"
+              name="voice"
+              accept=".mp3,.wav,.ogg,.webm,.m4a,.aac,audio/*"
+              style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}
+            />
+            <div className="gf2-hint">Max 5 MB, formáty: MP3, WAV, OGG, M4A (max 15 sekund)</div>
+          </div>
+          <button type="submit" className="gf2-btn-submit" style={{ padding: '9px 20px', fontSize: 13, marginTop: 8 }}>
+            Nahrát
+          </button>
+        </form>
+      </div>
 
       <div className="gf2-danger-zone">
         <div className="gf2-danger-title">Správa profilu</div>
