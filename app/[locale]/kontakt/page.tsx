@@ -4,6 +4,7 @@ import { applyDBOverride } from '@/lib/seo/db-override';
 import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import { buildOgImages } from '@/lib/seo/og';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
+import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 
 export const revalidate = 86400;
 
@@ -47,8 +48,16 @@ export default async function KontaktPage({ params }: Props) {
   const tgUrl = `https://t.me/${PHONE.replace(/\s+/g, '')}`;
   const telUrl = `tel:${PHONE}`;
 
+  const breadcrumbSchema = breadcrumbListJsonLd([
+    { name: tNav('contact'), url: getCanonicalUrl(locale, '/kontakt') },
+  ]);
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Breadcrumbs items={[{ label: tNav('contact') }]} locale={locale} />
       <div className="container">
         <div className="static-page">

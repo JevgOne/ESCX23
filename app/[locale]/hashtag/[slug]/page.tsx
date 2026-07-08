@@ -213,16 +213,19 @@ export default async function HashtagPage({ params }: Props) {
         {girls.length > 0 ? (
           <section className="lp-grid-section">
             <GirlCardGrid girls={girls} priorityCount={4} />
-            <div className="lp-cta-row">
-              <Link href="/divky" className="lp-btn lp-btn-ghost">{ctaLabel} →</Link>
-              <Link href="/rozvrh" className="lp-btn lp-btn-primary">{scheduleLabel} →</Link>
-            </div>
           </section>
         ) : (
-          <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', padding: '48px 0' }}>
-            {noResultsLabel}
-          </p>
+          <section className="lp-grid-section" style={{ textAlign: 'center', padding: '48px 0' }}>
+            <p style={{ color: 'var(--color-text-muted)', marginBottom: '8px' }}>
+              {noResultsLabel}
+            </p>
+          </section>
         )}
+
+        <div className="lp-cta-row">
+          <Link href="/divky" className="lp-btn lp-btn-ghost">{ctaLabel} →</Link>
+          <Link href="/rozvrh" className="lp-btn lp-btn-primary">{scheduleLabel} →</Link>
+        </div>
 
         {/* Related hashtags */}
         {content && content.related.length > 0 && (

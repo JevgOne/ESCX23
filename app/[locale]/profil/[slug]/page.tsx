@@ -349,7 +349,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
               badgeType={badgeType || null}
               topServices={servicesTyped.map((s) => {
                 const key = `name_${locale}` as keyof typeof s;
-                return { name: String(s[key] ?? s.name_en ?? s.slug ?? ''), category: String(s.category ?? 'basic') };
+                return { name: String(s[key] ?? s.name_en ?? s.slug ?? ''), category: String(s.category ?? 'basic'), slug: String(s.slug ?? '') };
               }).filter((s) => s.name)}
               subtitle={(() => {
                 const g = girl as unknown as Record<string, unknown>;

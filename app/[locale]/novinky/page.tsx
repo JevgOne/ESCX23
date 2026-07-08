@@ -5,6 +5,7 @@ import NextLink from 'next/link';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import { buildOgImages } from '@/lib/seo/og';
+import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { getRecentActivity } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
@@ -103,8 +104,16 @@ export default async function NovinkyPage({ params, searchParams }: Props) {
 
   const basePath = `/${locale}/novinky`;
 
+  const breadcrumbSchema = breadcrumbListJsonLd([
+    { name: t('h1'), url: getCanonicalUrl(locale, '/novinky') },
+  ]);
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Breadcrumbs
         items={[{ label: t('h1') }]}
         locale={locale}

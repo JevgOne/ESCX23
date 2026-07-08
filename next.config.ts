@@ -92,6 +92,24 @@ const config: NextConfig = {
       { source: '/wp-sitemap.xml', destination: '/sitemap.xml', permanent: true },
       { source: '/sitemap_index.xml', destination: '/sitemap.xml', permanent: true },
 
+      // === G) Legacy English service slugs → DB Czech slugs ===
+      // Covers all locale path variants: /sluzba/, /service/, /leistung/, /posluha/
+      ...[
+        ['classic', 'klasicky-sex'],
+        ['massage', 'eroticka-masaz'],
+        ['deepthroat', 'hluboky-oral'],
+        ['cim', 'strikani-do-ust'],
+        ['light_sm', 'bdsm-lehke'],
+        ['cuddling', 'klasicky-sex'],
+        ['licking', 'oral-bez-ochrany'],
+        ['shared_shower', 'klasicky-sex'],
+      ].flatMap(([from, to]) => [
+        { source: `/cs/sluzba/${from}`, destination: `/cs/sluzba/${to}`, permanent: true },
+        { source: `/service/${from}`, destination: `/service/${to}`, permanent: true },
+        { source: `/de/leistung/${from}`, destination: `/de/leistung/${to}`, permanent: true },
+        { source: `/uk/posluha/${from}`, destination: `/uk/posluha/${to}`, permanent: true },
+      ]),
+
       // === Wildcard /cz → /cs (MUST be last) ===
       { source: '/cz/:path*', destination: '/cs/:path*', permanent: true },
     ];

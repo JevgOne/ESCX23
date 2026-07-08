@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
+import NextLink from 'next/link';
 import type { ServiceRow } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
 import { translateLocation } from '@/lib/utils';
@@ -370,12 +371,12 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
           <div className="profile-mini-label">★ {locale === 'cs' ? 'Služby' : locale === 'de' ? 'Leistungen' : locale === 'uk' ? 'Послуги' : 'Services'}</div>
           <div className="profile-mini-chips">
             {includedServices.map((svc) => (
-              <Link key={`i-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-included">
+              <Link key={`i-${svc.id}`} href={{ pathname: '/sluzba/[slug]', params: { slug: svc.slug ?? '' } }} className="mini-chip mini-chip-included">
                 <span className="mini-chip-dot">✓</span>{localizedServiceName(svc, locale)}
               </Link>
             ))}
             {extraServices.map((svc) => (
-              <Link key={`e-${svc.id}`} href={`/${locale}/sluzba/${svc.slug}`} className="mini-chip mini-chip-extra">
+              <Link key={`e-${svc.id}`} href={{ pathname: '/sluzba/[slug]', params: { slug: svc.slug ?? '' } }} className="mini-chip mini-chip-extra">
                 <span className="mini-chip-dot">💬</span>{localizedServiceName(svc, locale)}
               </Link>
             ))}
@@ -470,9 +471,9 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
       {hashtags.length > 0 && (
         <div className="profile-hashtags-visible">
           {hashtags.map((tag) => (
-            <Link key={tag} href={`${hashtagPath}/${tag}`} className="profile-hashtag-link">
+            <NextLink key={tag} href={`${hashtagPath}/${tag}`} className="profile-hashtag-link">
               #{tag}
-            </Link>
+            </NextLink>
           ))}
         </div>
       )}

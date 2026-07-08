@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { getRecentApprovedReviews, getReviewPageData } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
 import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
+import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { relativeTime } from '@/lib/utils';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import TranslateButton from '@/components/ui/TranslateButton';
@@ -163,8 +164,16 @@ export default async function RecenzePage({
     ? reviews.filter((r) => r.girlSlug === activeGirl)
     : reviews;
 
+  const breadcrumbSchema = breadcrumbListJsonLd([
+    { name: t.breadcrumb, url: getCanonicalUrl(locale, '/recenze') },
+  ]);
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Breadcrumbs items={[{ label: t.breadcrumb }]} locale={locale} />
 
       <section className="page-header">

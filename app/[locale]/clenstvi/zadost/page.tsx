@@ -2,6 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getCanonicalUrl, getAlternates } from '@/lib/seo/meta';
+import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { submitMemberApplication } from './actions';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
@@ -133,8 +134,17 @@ export default async function ClenstviZadostPage({
   const L = T[locale] ?? T.en;
   const hasError = sp.error === 'validation';
 
+  const breadcrumbSchema = breadcrumbListJsonLd([
+    { name: L.bcMembership, url: getCanonicalUrl(locale, '/clenstvi/zadost') },
+    { name: L.bcApply },
+  ]);
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Breadcrumbs
         items={[
           { label: L.bcMembership, href: `/${locale}/clenstvi/zadost` },

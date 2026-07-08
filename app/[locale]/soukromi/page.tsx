@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import { buildOgImages } from '@/lib/seo/og';
+import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
 export const revalidate = 86400;
@@ -44,8 +45,16 @@ export default async function SoukromiPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'soukromi' });
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
+  const breadcrumbSchema = breadcrumbListJsonLd([
+    { name: tNav('privacy'), url: getCanonicalUrl(locale, '/soukromi') },
+  ]);
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Breadcrumbs items={[{ label: tNav('privacy') }]} locale={locale} />
       <div className="container">
         <div className="static-page">

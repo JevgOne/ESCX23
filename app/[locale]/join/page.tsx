@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getCanonicalUrl, getAlternates } from '@/lib/seo/meta';
+import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { redirect } from 'next/navigation';
 import PageHeader from '@/components/ui/PageHeader';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
@@ -182,8 +183,16 @@ export default async function JoinPage({ params, searchParams }: Props) {
     { code: 'en', label: 'English', flag: '🇬🇧' },
   ];
 
+  const breadcrumbSchema = breadcrumbListJsonLd([
+    { name: tNav('join'), url: getCanonicalUrl(locale, '/join') },
+  ]);
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Breadcrumbs items={[{ label: tNav('join') }]} locale={locale} />
       <PageHeader title={t('h1')} subtitle={t('sub')} />
       <div className="container">

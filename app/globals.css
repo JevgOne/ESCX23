@@ -757,10 +757,11 @@ nav.main-nav a:hover {
   .girl-stat-cell .num { font-size: 13px; }
   .girl-stat-cell .label { font-size: 12px; }
   .girl-statline { column-gap: 10px; row-gap: 3px; }
-  .girl-tag-pill { padding: 4px 9px; font-size: 9.5px; top: 8px; left: 8px; }
+  .girl-tag-pill { padding: 4px 8px; font-size: 8.5px; top: 8px; left: 8px; letter-spacing: 0.04em; max-width: calc(100% - 80px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .girl-photo-time { padding: 5px 11px; font-size: 11px; }
   .girl-media-pill { font-size: 9.5px; padding: 3px 7px; }
-  .girl-media-pills { top: 8px; right: 8px; gap: 4px; }
+  .girl-media-pill svg { width: 11px; height: 11px; }
+  .girl-media-pills { top: 8px; right: 8px; gap: 3px; }
   .girl-bottom-row { display: none; }
 }
 

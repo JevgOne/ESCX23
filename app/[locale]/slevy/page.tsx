@@ -2,7 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getActiveDiscounts } from '@/lib/queries';
-import { discountOffersJsonLd } from '@/lib/seo/jsonld';
+import { discountOffersJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import DiscountsGrid from '@/components/slevy/DiscountsGrid';
 import LoyaltyExplainer from '@/components/slevy/LoyaltyExplainer';
@@ -87,6 +87,10 @@ export default async function SlevyPage({
     }))
   );
   const geoLead = GEO_LEADS[locale] ?? GEO_LEADS.cs;
+  const bcLabel = locale === 'en' ? 'Discounts' : locale === 'de' ? 'Rabatte' : locale === 'uk' ? 'Знижки' : 'Slevy';
+  const breadcrumbSchema = breadcrumbListJsonLd([
+    { name: bcLabel, url: getCanonicalUrl(locale, '/slevy') },
+  ]);
 
   return (
     <main>
@@ -94,9 +98,13 @@ export default async function SlevyPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
 
       <Breadcrumbs
-        items={[{ label: locale === 'en' ? 'Discounts' : locale === 'de' ? 'Rabatte' : locale === 'uk' ? 'Знижки' : 'Slevy' }]}
+        items={[{ label: bcLabel }]}
         locale={locale}
       />
 

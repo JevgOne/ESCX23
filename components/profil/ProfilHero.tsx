@@ -1,5 +1,6 @@
 import { photoUrl } from '@/lib/photoUrl';
 import { translateLocation } from '@/lib/utils';
+import { Link } from '@/i18n/navigation';
 import PhotoLightbox from './PhotoLightbox';
 import VoicePlayer from './VoicePlayer';
 
@@ -87,7 +88,7 @@ const PIERCING_VAL: Record<string, Record<string, string>> = {
   intimate: { cs: 'intimní', en: 'intimate', de: 'intim', uk: 'інтимний' },
 };
 
-interface TopService { name: string; category?: string }
+interface TopService { name: string; category?: string; slug?: string }
 
 interface VideoItem {
   id: number;
@@ -336,16 +337,12 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
             ★ {locale === 'cs' ? 'Služby' : locale === 'de' ? 'Leistungen' : locale === 'uk' ? 'Послуги' : 'Services'}
           </div>
           <div className="ig-services-list">
-            {topServices.filter(s => s.category === 'basic').map((s, i) => {
-              const svcSlug = s.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-              const prefix = locale === 'en' ? '' : `/${locale}`;
-              return <a key={i} href={`${prefix}/sluzba/${svcSlug}`} className="ig-service-chip ig-service-chip-top">✓ {s.name}</a>;
-            })}
-            {topServices.filter(s => s.category !== 'basic').map((s, i) => {
-              const svcSlug = s.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-              const prefix = locale === 'en' ? '' : `/${locale}`;
-              return <a key={`e-${i}`} href={`${prefix}/sluzba/${svcSlug}`} className="ig-service-chip ig-service-chip-extra">💬 {s.name}</a>;
-            })}
+            {topServices.filter(s => s.category === 'basic').map((s, i) => (
+              <Link key={i} href={{ pathname: '/sluzba/[slug]', params: { slug: s.slug || '' } }} className="ig-service-chip ig-service-chip-top">✓ {s.name}</Link>
+            ))}
+            {topServices.filter(s => s.category !== 'basic').map((s, i) => (
+              <Link key={`e-${i}`} href={{ pathname: '/sluzba/[slug]', params: { slug: s.slug || '' } }} className="ig-service-chip ig-service-chip-extra">💬 {s.name}</Link>
+            ))}
           </div>
         </div>
       )}
