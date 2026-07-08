@@ -149,28 +149,41 @@ function getLangName(code: string, locale: string): string {
   return map[code] ?? code.toUpperCase();
 }
 
-const EYES_MAP: Record<string, Record<string, string>> = {
-  'Zelené':  { en: 'Green',  de: 'Grün',     uk: 'Зелені' },
-  'Modré':   { en: 'Blue',   de: 'Blau',     uk: 'Блакитні' },
-  'Hnědé':   { en: 'Brown',  de: 'Braun',    uk: 'Карі' },
-  'Šedé':    { en: 'Grey',   de: 'Grau',     uk: 'Сірі' },
-  'Lískové': { en: 'Hazel',  de: 'Haselnuss',uk: 'Горіхові' },
-  'Černé':   { en: 'Black',  de: 'Schwarz',  uk: 'Чорні' },
+const EYES_MAP: Record<string, { en: string; de: string; uk: string; color: string; emoji: string }> = {
+  'Zelené':  { en: 'Green',  de: 'Grün',     uk: 'Зелені',   color: '#4CAF50', emoji: '👁️' },
+  'Modré':   { en: 'Blue',   de: 'Blau',     uk: 'Блакитні',  color: '#2196F3', emoji: '👁️' },
+  'Hnědé':   { en: 'Brown',  de: 'Braun',    uk: 'Карі',      color: '#8D6E63', emoji: '👁️' },
+  'Šedé':    { en: 'Grey',   de: 'Grau',     uk: 'Сірі',      color: '#9E9E9E', emoji: '👁️' },
+  'Lískové': { en: 'Hazel',  de: 'Haselnuss',uk: 'Горіхові',  color: '#A1887F', emoji: '👁️' },
+  'Černé':   { en: 'Black',  de: 'Schwarz',  uk: 'Чорні',     color: '#fff',    emoji: '👁️' },
 };
-const HAIR_MAP: Record<string, Record<string, string>> = {
-  'Blond':   { en: 'Blonde',    de: 'Blond',     uk: 'Світло-русі' },
-  'Hnědé':   { en: 'Brunette',  de: 'Brünett',   uk: 'Каштанові' },
-  'Černé':   { en: 'Black',     de: 'Schwarz',   uk: 'Чорні' },
-  'Zrzavé':  { en: 'Red',       de: 'Rot',       uk: 'Руді' },
-  'Rusé':    { en: 'Auburn',    de: 'Rotbraun',  uk: 'Руді' },
-  'Červené': { en: 'Red',       de: 'Rot',       uk: 'Руді' },
-  'Šedé':    { en: 'Grey',      de: 'Grau',      uk: 'Сиві' },
+const HAIR_MAP: Record<string, { en: string; de: string; uk: string; color: string; emoji: string }> = {
+  'Blond':   { en: 'Blonde',    de: 'Blond',     uk: 'Світло-русі', color: '#FFD54F', emoji: '💇' },
+  'Hnědé':   { en: 'Brunette',  de: 'Brünett',   uk: 'Каштанові',   color: '#8D6E63', emoji: '💇' },
+  'Černé':   { en: 'Black',     de: 'Schwarz',   uk: 'Чорні',       color: '#fff',    emoji: '💇' },
+  'Zrzavé':  { en: 'Red',       de: 'Rot',       uk: 'Руді',        color: '#FF7043', emoji: '💇' },
+  'Rusé':    { en: 'Auburn',    de: 'Rotbraun',  uk: 'Руді',        color: '#D4845B', emoji: '💇' },
+  'Červené': { en: 'Red',       de: 'Rot',       uk: 'Руді',        color: '#EF5350', emoji: '💇' },
+  'Šedé':    { en: 'Grey',      de: 'Grau',      uk: 'Сиві',        color: '#BDBDBD', emoji: '💇' },
 };
 
-function localizeValue(value: string, map: Record<string, Record<string, string>>, locale: string): string {
-  if (locale === 'cs' || !value) return value;
-  const entry = map[value];
-  return entry?.[locale] ?? value;
+type TraitMap = Record<string, { en: string; de: string; uk: string; color: string; emoji: string }>;
+
+function localizeValue(value: string, map: TraitMap, locale: string): string {
+  if (!value) return value;
+  const trimmed = value.trim();
+  const entry = map[trimmed];
+  if (!entry) return trimmed;
+  if (locale === 'cs') return trimmed;
+  return entry[locale as 'en' | 'de' | 'uk'] ?? trimmed;
+}
+
+function traitColor(value: string, map: TraitMap): string | undefined {
+  return map[value.trim()]?.color;
+}
+
+function traitEmoji(value: string, map: TraitMap): string {
+  return map[value.trim()]?.emoji ?? '';
 }
 
 const CITY_MAP: Record<string, string> = { en: 'Prague', de: 'Prag', uk: 'Прага', cs: 'Praha' };
@@ -321,27 +334,27 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
       {/* Pill badges (same as mobile) */}
       <div className="profile-stat-details profile-desktop-only">
         {girl.bust != null && (
-          <span className="psd-pill">
+          <a href={`/${locale}/divky?bust=${String(girl.bust)}`} className="psd-pill psd-pill-link">
             <span className="psd-label">{locale === 'cs' ? 'Prsa' : locale === 'de' ? 'Brust' : locale === 'uk' ? 'Груди' : 'Bust'}</span>
             <span className="psd-value">{String(girl.bust)}</span>
-          </span>
+          </a>
         )}
         {girl.eyes != null && String(girl.eyes).trim() !== '' && (
-          <span className="psd-pill">
-            <span className="psd-label">{locale === 'cs' ? 'Oči' : locale === 'de' ? 'Augen' : locale === 'uk' ? 'Очі' : 'Eyes'}</span>
-            <span className="psd-value">{localizeValue(String(girl.eyes), EYES_MAP, locale)}</span>
-          </span>
+          <a href={`/${locale}/divky?eyes=${encodeURIComponent(String(girl.eyes))}`} className="psd-pill psd-pill-link">
+            <span className="psd-label">{traitEmoji(String(girl.eyes), EYES_MAP)} {locale === 'cs' ? 'Oči' : locale === 'de' ? 'Augen' : locale === 'uk' ? 'Очі' : 'Eyes'}</span>
+            <span className="psd-value" style={traitColor(String(girl.eyes), EYES_MAP) ? { color: traitColor(String(girl.eyes), EYES_MAP) } : undefined}>{localizeValue(String(girl.eyes), EYES_MAP, locale)}</span>
+          </a>
         )}
         {girl.hair != null && String(girl.hair).trim() !== '' && (
-          <span className="psd-pill">
-            <span className="psd-label">{locale === 'cs' ? 'Vlasy' : locale === 'de' ? 'Haare' : locale === 'uk' ? 'Волосся' : 'Hair'}</span>
-            <span className="psd-value">{localizeValue(String(girl.hair), HAIR_MAP, locale)}</span>
-          </span>
+          <a href={`/${locale}/divky?hair=${encodeURIComponent(String(girl.hair))}`} className="psd-pill psd-pill-link">
+            <span className="psd-label">{traitEmoji(String(girl.hair), HAIR_MAP)} {locale === 'cs' ? 'Vlasy' : locale === 'de' ? 'Haare' : locale === 'uk' ? 'Волосся' : 'Hair'}</span>
+            <span className="psd-value" style={traitColor(String(girl.hair), HAIR_MAP) ? { color: traitColor(String(girl.hair), HAIR_MAP) } : undefined}>{localizeValue(String(girl.hair), HAIR_MAP, locale)}</span>
+          </a>
         )}
         {languages.map((lang) => (
           <span key={lang} className="psd-pill lang">
             <span className="psd-flag" aria-hidden>{FLAG_MAP[lang] ?? '🌐'}</span>
-            <span className="psd-value">{lang}</span>
+            <span className="psd-value">{getLangName(lang, locale)}</span>
           </span>
         ))}
       </div>
@@ -380,6 +393,10 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
                 <span className="mini-chip-dot">💬</span>{localizedServiceName(svc, locale)}
               </Link>
             ))}
+          </div>
+          <div className="ig-services-legend" style={{ marginTop: '8px' }}>
+            <span>✓ {locale === 'cs' ? 'V ceně' : locale === 'de' ? 'Inklusive' : locale === 'uk' ? 'Включено' : 'Included'}</span>
+            <span>💬 {locale === 'cs' ? 'Extra dle domluvy' : locale === 'de' ? 'Extra nach Absprache' : locale === 'uk' ? 'Додатково за домовленістю' : 'Extra by arrangement'}</span>
           </div>
         </div>
       )}

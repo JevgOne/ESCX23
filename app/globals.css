@@ -3583,6 +3583,13 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     flex-wrap: wrap;
     gap: 6px;
   }
+  .ig-services-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--color-text-dim);
+  }
   .ig-service-chip {
     display: inline-flex;
     align-items: center;
@@ -3692,8 +3699,8 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   }
   .profile-ig-bio p {
     color: var(--color-text-muted);
-    font-family: var(--font-display);
-    font-style: italic;
+    font-family: var(--font-sans);
+    font-style: normal;
     font-size: 14px;
     line-height: 1.7;
     margin: 0;
@@ -10199,6 +10206,8 @@ body {
 }
 .psd-pill.lang { background: rgba(242, 125, 141, 0.05); border-color: rgba(242,125,141,0.18); }
 .psd-pill.lang .psd-flag { font-size: 13px; }
+a.psd-pill-link { text-decoration: none; color: inherit; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+a.psd-pill-link:hover { border-color: var(--color-coral); background: rgba(242,125,141,0.08); }
 
 /* Desktop stat hero + pills (same style as mobile) */
 

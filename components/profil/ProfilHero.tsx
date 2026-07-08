@@ -53,22 +53,32 @@ const FLAG_MAP: Record<string, string> = {
   cs: '🇨🇿', en: '🇬🇧', de: '🇩🇪', uk: '🇺🇦', fr: '🇫🇷',
   it: '🇮🇹', es: '🇪🇸', ru: '🇷🇺', pl: '🇵🇱', sk: '🇸🇰',
 };
+const LANG_NAME: Record<string, string> = {
+  cs: 'Čeština', en: 'English', de: 'Deutsch', uk: 'Українська', fr: 'Français',
+  it: 'Italiano', es: 'Español', ru: 'Русский', pl: 'Polski', sk: 'Slovenčina',
+};
 
 const SPEAKS_LBL: Record<string, string> = { cs: 'Mluví', en: 'Speaks', de: 'Spricht', uk: 'Розмовляє' };
 const EYES_LBL: Record<string, string> = { cs: 'Oči', en: 'Eyes', de: 'Augen', uk: 'Очі' };
 const HAIR_LBL: Record<string, string> = { cs: 'Vlasy', en: 'Hair', de: 'Haare', uk: 'Волосся' };
 
-const EYES_MAP: Record<string, Record<string, string>> = {
-  cs: { blue: 'modré', brown: 'hnědé', green: 'zelené', hazel: 'oříškové', gray: 'šedé', black: 'černé' },
-  en: { blue: 'blue', brown: 'brown', green: 'green', hazel: 'hazel', gray: 'gray', black: 'black' },
-  de: { blue: 'blau', brown: 'braun', green: 'grün', hazel: 'haselnuss', gray: 'grau', black: 'schwarz' },
-  uk: { blue: 'блакитні', brown: 'карі', green: 'зелені', hazel: 'горіхові', gray: 'сірі', black: 'чорні' },
+// Keys = Czech DB values (lowercase), values = localized translations + visual styling
+const EYES_DATA: Record<string, { cs: string; en: string; de: string; uk: string; color: string }> = {
+  'zelené':  { cs: 'Zelené',  en: 'Green',  de: 'Grün',      uk: 'Зелені',   color: '#4CAF50' },
+  'modré':   { cs: 'Modré',   en: 'Blue',   de: 'Blau',      uk: 'Блакитні',  color: '#2196F3' },
+  'hnědé':   { cs: 'Hnědé',   en: 'Brown',  de: 'Braun',     uk: 'Карі',      color: '#8D6E63' },
+  'šedé':    { cs: 'Šedé',    en: 'Grey',   de: 'Grau',      uk: 'Сірі',      color: '#9E9E9E' },
+  'lískové': { cs: 'Lískové', en: 'Hazel',  de: 'Haselnuss', uk: 'Горіхові',  color: '#A1887F' },
+  'černé':   { cs: 'Černé',   en: 'Black',  de: 'Schwarz',   uk: 'Чорні',     color: '#fff' },
 };
-const HAIR_MAP: Record<string, Record<string, string>> = {
-  cs: { blonde: 'blond', brunette: 'hnědé', black: 'černé', red: 'rudé', auburn: 'kaštanové' },
-  en: { blonde: 'blonde', brunette: 'brunette', black: 'black', red: 'red', auburn: 'auburn' },
-  de: { blonde: 'blond', brunette: 'brünett', black: 'schwarz', red: 'rot', auburn: 'kastanienbraun' },
-  uk: { blonde: 'блондинка', brunette: 'брюнетка', black: 'чорне', red: 'руде', auburn: 'каштанове' },
+const HAIR_DATA: Record<string, { cs: string; en: string; de: string; uk: string; color: string }> = {
+  'blond':   { cs: 'Blond',   en: 'Blonde',   de: 'Blond',      uk: 'Світло-русі', color: '#FFD54F' },
+  'hnědé':   { cs: 'Hnědé',   en: 'Brunette', de: 'Brünett',    uk: 'Каштанові',   color: '#8D6E63' },
+  'černé':   { cs: 'Černé',   en: 'Black',    de: 'Schwarz',    uk: 'Чорні',       color: '#fff' },
+  'zrzavé':  { cs: 'Zrzavé',  en: 'Red',      de: 'Rot',        uk: 'Руді',        color: '#FF7043' },
+  'rusé':    { cs: 'Rusé',    en: 'Auburn',   de: 'Rotbraun',   uk: 'Руді',        color: '#D4845B' },
+  'červené': { cs: 'Červené', en: 'Red',      de: 'Rot',        uk: 'Руді',        color: '#EF5350' },
+  'šedé':    { cs: 'Šedé',    en: 'Grey',     de: 'Grau',       uk: 'Сиві',        color: '#BDBDBD' },
 };
 
 const TATTOO_LBL: Record<string, string> = { cs: 'Tetování', en: 'Tattoo', de: 'Tattoo', uk: 'Татуювання' };
@@ -177,10 +187,14 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
   };
   const languages = parseJson(girl.languages);
   const hashtags = parseJson(girl.hashtags);
-  const eyesRaw = girl.eyes ? String(girl.eyes).toLowerCase() : null;
-  const hairRaw = girl.hair ? String(girl.hair).toLowerCase() : null;
-  const eyesText = eyesRaw ? (EYES_MAP[locale]?.[eyesRaw] ?? eyesRaw) : null;
-  const hairText = hairRaw ? (HAIR_MAP[locale]?.[hairRaw] ?? hairRaw) : null;
+  const eyesRaw = girl.eyes ? String(girl.eyes).trim().toLowerCase() : null;
+  const hairRaw = girl.hair ? String(girl.hair).trim().toLowerCase() : null;
+  const eyesEntry = eyesRaw ? EYES_DATA[eyesRaw] : null;
+  const hairEntry = hairRaw ? HAIR_DATA[hairRaw] : null;
+  const eyesText = eyesEntry ? (eyesEntry[locale as keyof typeof eyesEntry] as string ?? eyesEntry.cs) : eyesRaw;
+  const hairText = hairEntry ? (hairEntry[locale as keyof typeof hairEntry] as string ?? hairEntry.cs) : hairRaw;
+  const eyesColor = eyesEntry?.color;
+  const hairColor = hairEntry?.color;
   const speaksLbl = SPEAKS_LBL[locale] ?? SPEAKS_LBL.en;
   const eyesLbl = EYES_LBL[locale] ?? EYES_LBL.en;
   const hairLbl = HAIR_LBL[locale] ?? HAIR_LBL.en;
@@ -287,22 +301,22 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
       {(bust || eyesText || hairText || tattooText || piercingText || languages.length > 0) && (
         <div className="profile-stat-details ig-stat-details">
           {bust && (
-            <span className="psd-pill">
+            <a href={`/${locale}/divky?bust=${bust}`} className="psd-pill psd-pill-link">
               <span className="psd-label">{locale === 'cs' ? 'Prsa' : locale === 'de' ? 'Brust' : locale === 'uk' ? 'Груди' : 'Bust'}</span>
               <span className="psd-value">{bust}</span>
-            </span>
+            </a>
           )}
           {eyesText && (
-            <span className="psd-pill">
-              <span className="psd-label">{eyesLbl}</span>
-              <span className="psd-value">{eyesText}</span>
-            </span>
+            <a href={`/${locale}/divky?eyes=${encodeURIComponent(String(girl.eyes))}`} className="psd-pill psd-pill-link">
+              <span className="psd-label">👁️ {eyesLbl}</span>
+              <span className="psd-value" style={eyesColor ? { color: eyesColor } : undefined}>{eyesText}</span>
+            </a>
           )}
           {hairText && (
-            <span className="psd-pill">
-              <span className="psd-label">{hairLbl}</span>
-              <span className="psd-value">{hairText}</span>
-            </span>
+            <a href={`/${locale}/divky?hair=${encodeURIComponent(String(girl.hair))}`} className="psd-pill psd-pill-link">
+              <span className="psd-label">💇 {hairLbl}</span>
+              <span className="psd-value" style={hairColor ? { color: hairColor } : undefined}>{hairText}</span>
+            </a>
           )}
           {tattooText && (
             <span className="psd-pill">
@@ -319,7 +333,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           {languages.map((lang) => (
             <span key={lang} className="psd-pill lang">
               <span className="psd-flag" aria-hidden>{FLAG_MAP[lang.toLowerCase()] ?? '🏳️'}</span>
-              <span className="psd-value">{lang}</span>
+              <span className="psd-value">{LANG_NAME[lang.toLowerCase()] ?? lang}</span>
             </span>
           ))}
         </div>
@@ -327,7 +341,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
 
       {bio && (
         <div className="profile-ig-bio">
-          <p>{bio.length > 200 ? bio.slice(0, 200) + '…' : bio}</p>
+          <p>{bio}</p>
         </div>
       )}
 
@@ -343,6 +357,10 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
             {topServices.filter(s => s.category !== 'basic').map((s, i) => (
               <Link key={`e-${i}`} href={{ pathname: '/sluzba/[slug]', params: { slug: s.slug || '' } }} className="ig-service-chip ig-service-chip-extra">💬 {s.name}</Link>
             ))}
+          </div>
+          <div className="ig-services-legend">
+            <span>✓ {locale === 'cs' ? 'V ceně' : locale === 'de' ? 'Inklusive' : locale === 'uk' ? 'Включено' : 'Included'}</span>
+            <span>💬 {locale === 'cs' ? 'Extra dle domluvy' : locale === 'de' ? 'Extra nach Absprache' : locale === 'uk' ? 'Додатково за домовленістю' : 'Extra by arrangement'}</span>
           </div>
         </div>
       )}
