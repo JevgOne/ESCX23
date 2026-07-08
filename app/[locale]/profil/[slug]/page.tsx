@@ -416,28 +416,25 @@ export default async function ProfilPage({ params, searchParams }: Props) {
                 return val ? String(val) : null;
               })()}
             />
+            <div className="profile-right-extra">
+              <ProfilReviews
+                reviews={reviewTyped}
+                totalCount={totalReviews}
+                girlSlug={slug}
+                heading={t('reviews.h2')}
+                showAllLabel={t('reviews.show_all', { count: totalReviews })}
+                locale={locale}
+                avgRating={Number(girl.rating ?? 0)}
+                girlName={String(girl.name ?? '')}
+                girlPhoto={(() => {
+                  const primary = photoTyped.find((p) => p.is_primary) ?? photoTyped[0];
+                  return primary?.url ? String(primary.url) : null;
+                })()}
+              />
+              <SimilarGirls currentSlug={slug} locale={locale} />
+            </div>
           </div>
         </div>
-
-        <div className="container" style={{ marginTop: '48px' }}>
-          {/* Services are now shown inline in ProfilDetails chips — full section removed */}
-          <ProfilReviews
-            reviews={reviewTyped}
-            totalCount={totalReviews}
-            girlSlug={slug}
-            heading={t('reviews.h2')}
-            showAllLabel={t('reviews.show_all', { count: totalReviews })}
-            locale={locale}
-            avgRating={Number(girl.rating ?? 0)}
-            girlName={String(girl.name ?? '')}
-            girlPhoto={(() => {
-              const primary = photoTyped.find((p) => p.is_primary) ?? photoTyped[0];
-              return primary?.url ? String(primary.url) : null;
-            })()}
-          />
-        </div>
-
-        <SimilarGirls currentSlug={slug} locale={locale} />
       </div>
 
       {/* Sticky CTA bar removed — info already in header */}
