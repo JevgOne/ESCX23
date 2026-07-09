@@ -168,6 +168,9 @@ export default async function SiteFooter() {
               {t('age_disclaimer')}
             </span>
           </div>
+          <a href="https://eroguide.cz/lovely-girls" target="_blank" rel="noopener noreferrer" className="footer-partner-badge">
+            <img src="https://eroguide.cz/api/media/file/163x48.webp" alt="Lovely Girls - Eroguide.cz" title="Lovely Girls - Eroguide.cz" width={163} height={48} loading="lazy" />
+          </a>
         </div>
       </div>
     </footer>

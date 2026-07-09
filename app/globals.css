@@ -1098,6 +1098,14 @@ footer::before {
   letter-spacing: 0.06em;
   box-shadow: 0 2px 8px -2px rgba(242,125,141,0.45);
 }
+.footer-partner-badge {
+  display: inline-block;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.footer-partner-badge:hover { opacity: 1; }
+.footer-partner-badge img { display: block; height: 32px; width: auto; }
+
 .footer-langs {
   display: flex;
   gap: 14px;
