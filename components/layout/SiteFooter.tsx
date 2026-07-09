@@ -152,6 +152,10 @@ export default async function SiteFooter() {
 
         <p className="footer-disclaimer">{t('disclaimer')}</p>
 
+        <a href="https://eroguide.cz/lovely-girls" target="_blank" rel="noopener noreferrer" className="footer-partner-badge">
+          <img src="https://eroguide.cz/api/media/file/163x48.webp" alt="Lovely Girls - Eroguide.cz" title="Lovely Girls - Eroguide.cz" width={163} height={48} loading="lazy" />
+        </a>
+
         <div className="footer-bottom">
           <div className="footer-bottom-left">
             <span className="footer-copy">{t('brand_copy', { year: '2026' })}</span>
@@ -168,9 +172,6 @@ export default async function SiteFooter() {
               {t('age_disclaimer')}
             </span>
           </div>
-          <a href="https://eroguide.cz/lovely-girls" target="_blank" rel="noopener noreferrer" className="footer-partner-badge">
-            <img src="https://eroguide.cz/api/media/file/163x48.webp" alt="Lovely Girls - Eroguide.cz" title="Lovely Girls - Eroguide.cz" width={163} height={48} loading="lazy" />
-          </a>
         </div>
       </div>
     </footer>
