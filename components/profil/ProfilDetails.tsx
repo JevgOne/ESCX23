@@ -93,6 +93,7 @@ interface ProfilDetailsProps {
   labels: ProfilDetailsLabels;
   shiftFrom: string | null;
   shiftTo: string | null;
+  shiftStatus?: 'working' | 'later' | 'off';
   services?: ServiceRow[];
   plans?: { id: unknown; duration: unknown; price: unknown }[];
   altDistricts?: string[];
@@ -217,7 +218,9 @@ function parseList(raw: unknown): string[] {
   return s.split(',').map((l) => l.trim()).filter(Boolean);
 }
 
-export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, services = [], plans = [], altDistricts = [], scheduleLocation, scheduleLocationSlug, scheduleAddress, primaryPhotoUrl, personalMessage, voiceUrl, styleWardrobe, subtitle }: ProfilDetailsProps) {
+const LATER_LBL: Record<string, string> = { cs: 'Později', en: 'Later', de: 'Später', uk: 'Пізніше' };
+
+export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, shiftStatus = 'off', services = [], plans = [], altDistricts = [], scheduleLocation, scheduleLocationSlug, scheduleAddress, primaryPhotoUrl, personalMessage, voiceUrl, styleWardrobe, subtitle }: ProfilDetailsProps) {
   const name = String(girl.name ?? '');
   const age = Number(girl.age ?? 0);
   const rating = Number(girl.rating ?? 0);
@@ -292,10 +295,18 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
       </div>
 
       <div className="profile-meta-line profile-desktop-only">
-        {shiftFrom && shiftTo && (
+        {shiftStatus === 'working' && shiftFrom && shiftTo && (
           <>
             <span className="profile-meta-live">
               {`${TODAY_LABEL[locale] ?? 'Today'} ${shiftFrom}–${shiftTo}`}
+            </span>
+            <span className="profile-meta-sep">·</span>
+          </>
+        )}
+        {shiftStatus === 'later' && shiftFrom && (
+          <>
+            <span className="profile-meta-live profile-meta-later">
+              {`${LATER_LBL[locale] ?? 'Later'} ${shiftFrom}`}
             </span>
             <span className="profile-meta-sep">·</span>
           </>

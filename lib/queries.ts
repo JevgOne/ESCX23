@@ -1611,6 +1611,7 @@ export async function getRelatedServices(currentSlug: string, category: string, 
 export interface GirlTodaySchedule {
   shiftFrom: string | null;
   shiftTo: string | null;
+  status: GirlStatus;
   scheduleLocation: string | null;
   scheduleLocationSlug: string | null;
   scheduleAddress: string | null;
@@ -1643,8 +1644,9 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
   });
 
   const r = result.rows[0];
-  if (!r) return { shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleLocationSlug: null, scheduleAddress: null };
-  if (r.exception_type === 'unavailable') return { shiftFrom: null, shiftTo: null, scheduleLocation: null, scheduleLocationSlug: null, scheduleAddress: null };
+  const empty: GirlTodaySchedule = { shiftFrom: null, shiftTo: null, status: 'off', scheduleLocation: null, scheduleLocationSlug: null, scheduleAddress: null };
+  if (!r) return empty;
+  if (r.exception_type === 'unavailable') return empty;
 
   let from: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
   let to: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
@@ -1654,11 +1656,20 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
     to = r.ex_to ? String(r.ex_to).substring(0, 5) : to;
   }
 
+  // Compute status the same way as GirlCard
+  let status: GirlStatus = 'off';
+  if (from && to) {
+    const now = formatPragueTime();
+    if (now >= from && now <= to) status = 'working';
+    else if (now < from) status = 'later';
+    else status = 'off';
+  }
+
   const scheduleLocation = r.schedule_location ? String(r.schedule_location) : null;
   const scheduleLocationSlug = r.schedule_location_slug ? String(r.schedule_location_slug) : null;
   const scheduleAddress = r.schedule_address ? String(r.schedule_address) : null;
 
-  return { shiftFrom: from, shiftTo: to, scheduleLocation, scheduleLocationSlug, scheduleAddress };
+  return { shiftFrom: from, shiftTo: to, status, scheduleLocation, scheduleLocationSlug, scheduleAddress };
 }
 
 /* =========================================================

@@ -14,18 +14,19 @@ interface ProfilStickyCtaProps {
   };
   shiftFrom?: string | null;
   shiftTo?: string | null;
+  shiftStatus?: 'working' | 'later' | 'off';
   locale?: string;
   scheduleLocation?: string | null;
 }
 
-const STICKY_LABELS: Record<string, { today: string; appt: string }> = {
-  cs: { today: 'Dnes', appt: 'Dnes — domluva' },
-  en: { today: 'Today', appt: 'Today — by appointment' },
-  de: { today: 'Heute', appt: 'Heute — nach Absprache' },
-  uk: { today: 'Сьогодні', appt: 'Сьогодні — за домовленістю' },
+const STICKY_LABELS: Record<string, { today: string; later: string; appt: string }> = {
+  cs: { today: 'Dnes', later: 'Později', appt: 'Dnes — domluva' },
+  en: { today: 'Today', later: 'Later', appt: 'Today — by appointment' },
+  de: { today: 'Heute', later: 'Später', appt: 'Heute — nach Absprache' },
+  uk: { today: 'Сьогодні', later: 'Пізніше', appt: 'Сьогодні — за домовленістю' },
 };
 
-export default function ProfilStickyCta({ girl, labels, shiftFrom, shiftTo, locale = 'cs', scheduleLocation }: ProfilStickyCtaProps) {
+export default function ProfilStickyCta({ girl, labels, shiftFrom, shiftTo, shiftStatus = 'off', locale = 'cs', scheduleLocation }: ProfilStickyCtaProps) {
   const name = String(girl.name ?? '');
   const age = String(girl.age ?? '');
   const phone = girl.phone ? String(girl.phone) : null;
@@ -58,7 +59,9 @@ export default function ProfilStickyCta({ girl, labels, shiftFrom, shiftTo, loca
           {district && <><span>{district}</span><span>·</span></>}
           <span>{(() => {
             const L = STICKY_LABELS[locale] ?? STICKY_LABELS.en;
-            return shiftFrom && shiftTo ? `${L.today} ${shiftFrom}–${shiftTo}` : L.appt;
+            if (shiftStatus === 'working' && shiftFrom && shiftTo) return `${L.today} ${shiftFrom}–${shiftTo}`;
+            if (shiftStatus === 'later' && shiftFrom) return `${L.later} ${shiftFrom}`;
+            return L.appt;
           })()}</span>
         </div>
         <div className="profile-sticky-actions">

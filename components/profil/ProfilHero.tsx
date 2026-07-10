@@ -39,6 +39,7 @@ const ALT_NOUN: Record<string, string> = {
 };
 const CITY: Record<string, string> = { en: 'Prague', de: 'Prag', uk: 'Прага', cs: 'Praha' };
 const TODAY_LBL: Record<string, string> = { cs: 'Dnes', en: 'Today', de: 'Heute', uk: 'Сьогодні' };
+const LATER_LBL: Record<string, string> = { cs: 'Později', en: 'Later', de: 'Später', uk: 'Пізніше' };
 const REVIEWS_LBL: Record<string, string> = { cs: 'recenzí', en: 'reviews', de: 'Bewertungen', uk: 'відгуків' };
 const PHOTOS_LBL: Record<string, string> = { cs: 'fotek', en: 'photos', de: 'Fotos', uk: 'фото' };
 const VIDEOS_LBL: Record<string, string> = { cs: 'videí', en: 'videos', de: 'Videos', uk: 'відео' };
@@ -113,6 +114,7 @@ interface ProfilHeroProps {
   locale?: string;
   shiftFrom?: string | null;
   shiftTo?: string | null;
+  shiftStatus?: 'working' | 'later' | 'off';
   topServices?: TopService[];
   bio?: string;
   personalMessage?: string | null;
@@ -154,7 +156,7 @@ const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string 
   },
 };
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleLocationSlug, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '', subtitle }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, shiftStatus = 'off', topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleLocationSlug, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '', subtitle }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -166,7 +168,12 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
     : `${name}, ${city} ${altNoun}`;
   const locText = translateLocation(scheduleLocation ?? null, locale) ?? city;
   const todayLbl = TODAY_LBL[locale] ?? TODAY_LBL.en;
-  const statusText = shiftFrom && shiftTo ? `${todayLbl} ${shiftFrom}–${shiftTo}` : null;
+  const laterLbl = LATER_LBL[locale] ?? LATER_LBL.en;
+  const statusText = shiftStatus === 'working' && shiftFrom && shiftTo
+    ? `${todayLbl} ${shiftFrom}–${shiftTo}`
+    : shiftStatus === 'later' && shiftFrom
+      ? `${laterLbl} ${shiftFrom}`
+      : null;
   const rating = girl.rating != null ? Number(girl.rating) : 0;
   const reviewsCount = girl.reviews_count != null ? Number(girl.reviews_count) : 0;
   const reviewsLbl = REVIEWS_LBL[locale] ?? REVIEWS_LBL.en;
