@@ -28,15 +28,6 @@ export default function DayTabs({ days, activeDay, location, basePath }: DayTabs
           d.isPast ? 'past' : '',
         ].filter(Boolean).join(' ');
 
-        if (d.isPast) {
-          return (
-            <span key={d.iso} className={classes} aria-disabled="true">
-              <span className="rozvrh-day-name">{d.labelShort}</span>
-              <span className="rozvrh-day-num">{d.dayNum}</span>
-            </span>
-          );
-        }
-
         return (
           <a
             key={d.iso}

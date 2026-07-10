@@ -78,12 +78,14 @@ function generateWeekDays(today: string, locale: string) {
     const day = d.toLocaleString('cs-CZ', { timeZone: 'Europe/Prague', day: 'numeric' });
     const month = d.toLocaleString('cs-CZ', { timeZone: 'Europe/Prague', month: 'numeric' });
     const isToday = iso === today;
+    // Skip past days — only show today and future days within the week
+    if (iso < today) continue;
     result.push({
       iso,
       labelShort: isToday ? todayLabel : names[dayDow] ?? names[0],
       dayNum: `${day}.${month}.`,
       isToday,
-      isPast: iso < today,
+      isPast: false,
     });
   }
   return result;
