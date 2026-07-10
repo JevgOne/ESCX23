@@ -3434,6 +3434,16 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
     flex-shrink: 0;
     animation: pulse-green 2s infinite;
   }
+  .ig-status.ig-status-later {
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.22);
+  }
+  .ig-status.ig-status-later .ig-status-dot {
+    background: #f59e0b;
+    box-shadow: 0 0 6px #f59e0b;
+    animation: pulse-pill-dot-later 1.5s infinite;
+  }
   .ig-meters {
     display: flex;
     gap: 14px;
@@ -4266,6 +4276,16 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   box-shadow: 0 0 8px var(--color-green);
   animation: pulse-green 2s infinite;
   flex-shrink: 0;
+}
+.profile-meta-live.profile-meta-later {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+.profile-meta-live.profile-meta-later::before {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  animation: pulse-pill-dot-later 1.5s infinite;
 }
 
 .profile-facts {

@@ -246,7 +246,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           </div>
           {subtitle && <div className="ig-subtitle">{subtitle}</div>}
           {statusText && (
-            <div className="ig-status">
+            <div className={`ig-status${shiftStatus === 'later' ? ' ig-status-later' : ''}`}>
               <span className="ig-status-dot" />
               <span>{statusText}</span>
             </div>
