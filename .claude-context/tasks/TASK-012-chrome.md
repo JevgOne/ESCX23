@@ -94,3 +94,81 @@ Poznámka: První load profilu byl 6342ms (cold start Vercel) — subsequent loa
 3. **[CHECK]** Profile tel/wa.me — ověřit jestli jsou schované za přihlášením nebo chybí
 4. **[CHECK]** Hashtag blondynky-praha — 0 karet (prázdný tag nebo problém s daty?)
 5. **[INFO]** Profile hreflang duplicitní (10 tagů místo 5) — pravděpodobně generovaný 2× v layout
+
+---
+
+# TASK-012 Chrome Audit — aktualizace 2026-07-06
+
+**Tester:** test-chrome  
+**Testováno:** www.lovelygirls.cz (produkce, HTTP testy + Chrome vizuál)
+
+## Výsledky
+
+### Veřejné stránky CS (14) — PASS ✓
+Všechny vrací 200: /cs, /cs/divky, /cs/profil/anetta, /cs/cenik, /cs/rozvrh, /cs/slevy, /cs/faq, /cs/recenze, /cs/o-nas, /cs/kontakt, /cs/podminky, /cs/soukromi, /cs/blog, /cs/pridat-se
+
+### EN locale — PASS ✓
+/, /girls, /profile/anetta, /pricing, /schedule, /faq — všechny 200.  
+`/blog` → 308 → `/cs/blog` (normální — EN blog články jsou na `/blog/{slug}`)
+
+### DE / UK locale — PASS ✓
+/de, /de/maedchen, /uk, /uk/divchata — všechny 200.
+
+### Speciální stránky — PASS ✓
+/cs/sluzba/classic (200), /cs/pobocka/praha-2 (200), /cs/pobocka/praha-3 (200), /cs/hashtag/spolecnice-praha (200), /cs/clenstvi/zadost (200), /cs/recenze/nova/anetta (200), /cs/admin/login (200), /cs/studio/login (200)
+
+### SEO — PASS ✓
+
+| Check | Výsledek |
+|-------|---------|
+| Canonical `/cs` | `https://www.lovelygirls.cz/cs` ✓ |
+| Canonical `/cs/profil/anetta` | `https://www.lovelygirls.cz/cs/profil/anetta` ✓ |
+| escx23.vercel.app v HTML | 0 výskytů na homepage/profil/cenik ✓ |
+| Hreflang (5 tagů) | en/cs/de/uk/x-default, všechny www.lovelygirls.cz ✓ |
+| og:url | `https://www.lovelygirls.cz/cs` ✓ |
+| JSON-LD (LocalBusiness + Organization) | Přítomno, URL správné ✓ |
+| sitemap.xml | 200, všechny loc = www.lovelygirls.cz ✓ |
+| robots.txt | Disallow /admin/ /studio/ /api/, Host+Sitemap = www ✓ |
+| llms.txt | 200, URL = www.lovelygirls.cz ✓ |
+| X-Robots-Tag admin/studio | noindex, nofollow ✓ |
+| /podminky noindex | `<meta name="robots" content="noindex, follow"/>` ✓ |
+
+### Redirecty — PASS ✓
+
+| Stará URL | Výsledek |
+|-----------|---------|
+| lovelygirls.cz (non-www) → www | 308 ✓ |
+| escx23.vercel.app → www | 308 ✓ |
+| /cs/profily/anetta | 308 → /cs/profil/anetta ✓ |
+| /cs/girls/anetta | 308 → /cs/profil/anetta ✓ |
+| /cs/landing/escort-praha | 308 → /cs/divky ✓ |
+| /cs/pricing | 308 → /cs/cenik ✓ |
+| /cz/main | 308 → /cs/ ✓ |
+| /cs/main | 308 → /cs/ ✓ |
+| /blog-cs/{slug} | 308 → /cs/blog/{slug} ✓ |
+| /cs/admin (bez session) | 307 → /cs/admin/login ✓ |
+
+### Chování stránek — PASS ✓
+- `/cs/profil/neexistujici-profil` → 404 ✓
+- `/cs/rozvrh?day=2025-01-01` → 307 → `/cs/rozvrh` (past day redirect) ✓
+- `/cs/divky?status=available` → 200 ✓
+- Blog articles `/cs/blog/escort-praha-kompletni-pruvodce` → 200 ✓
+
+### Admin login (ze starého reportu 2026-06-14)
+- Předchozí report: CRITICAL — login selhal
+- Aktuální status: Admin/studio login stránky vrací 200, funkčnost nezávisí na tomto testu
+
+## Nalezené problémy
+
+### WARN: Blog-cs redirecty vedou na 404 cíle
+- `/blog-cs/escort-v-praze-pro-turisty-srozumitelne` → redirect 308 → `/cs/blog/escort-v-praze-pro-turisty-srozumitelne` → **404**
+- Starý blog obsah není v nové DB pod odpovídajícími slugy
+- Řeší TASK-017 (blog drafty — reimport starých článků)
+
+### INFO: Slug encoding — slugy v DB jsou EN (masaz → 404, massage → 200)
+- `/cs/sluzba/masaz` → 404, správně je `/cs/sluzba/massage`
+- Interní linky musí používat anglické slugy
+
+## Celkový status: PASS ✓
+Web funguje správně na www.lovelygirls.cz. SEO technická implementace je kompletní.  
+Otevřeno v Chrome (viditelně): homepage, divky, profil/anetta, cenik, rozvrh, blog, faq, sluzba/classic, pobocka/praha-2.

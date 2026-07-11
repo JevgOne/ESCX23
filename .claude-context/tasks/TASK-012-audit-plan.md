@@ -1,252 +1,523 @@
-# TASK-012: Kompletni audit webu na www.lovelygirls.cz — Plan
+# TASK-012: Kompletni audit webu www.lovelygirls.cz — Detailni plan
 
-## Overview
-
-Comprehensive audit checklist for verifying the website works correctly on the new domain `www.lovelygirls.cz`. This covers public pages, locale versions, admin/studio behind auth, SEO assets, redirects, and old URL references.
-
----
-
-## 1. ENVIRONMENT / DEPLOYMENT ISSUES
-
-### 1.1 NEXT_PUBLIC_SITE_URL Still Points to Old Domain
-- **Location:** Vercel Dashboard environment variables
-- **Current:** `NEXT_PUBLIC_SITE_URL="https://escx23.vercel.app"`
-- **Required:** `NEXT_PUBLIC_SITE_URL="https://www.lovelygirls.cz"`
-- **Impact:** All canonical URLs, hreflang, OG tags, sitemap, JSON-LD use this variable. Currently generating old-domain URLs.
-- **Affected code files:**
-  - `lib/seo/hreflang.ts:3` — canonical/hreflang generation
-  - `lib/seo/og.ts:3` — OG image URLs
-  - `lib/seo/meta.ts:1` — canonical URL generation
-  - `lib/seo/jsonld.ts:1` — structured data URLs
-  - `app/sitemap.ts:13` — sitemap URLs
-  - `app/[locale]/layout.tsx:35` — metadataBase
-  - `lib/photoUrl.ts:6` — photo URL resolution
-  - `lib/seo.ts:49` — base URL
-
-### 1.2 SESSION_SECRET Empty in Production
-- See TASK-010 plan for details. Without this, admin/studio login fails.
-
-### 1.3 GOOGLE_REDIRECT_URI Points to Old Domain
-- **Current:** `https://escx23.vercel.app/api/gcal/callback`
-- **Required:** `https://www.lovelygirls.cz/api/gcal/callback`
-- Also needs update in Google Cloud Console OAuth settings.
+**Datum:** 2026-07-06
+**Stav:** Aktualizovany plan (nahradi predesly draft)
 
 ---
 
-## 2. REDIRECTS
+## SOUHRN
 
-### 2.1 Non-www to www (/next.config.ts:18-23)
-- **Test:** `curl -I https://lovelygirls.cz/cs/divky` should 301 to `https://www.lovelygirls.cz/cs/divky`
-- **Status:** Code looks correct.
-
-### 2.2 Old Vercel domain redirect (next.config.ts:25-30)
-- **Test:** `curl -I https://escx23.vercel.app/cs/divky` should 301 to `https://www.lovelygirls.cz/cs/divky`
-- **Status:** Code looks correct.
-
-### 2.3 Admin unauthenticated redirect
-- **Test:** `GET /admin` without session -> should redirect to `/admin/login` (en) or `/cs/admin/login` (cs)
-- **Current issue:** Always redirects to `/cs/admin/login` regardless of locale (see TASK-010).
+Kompletni audit webu na produkci `www.lovelygirls.cz`. Pokryva:
+- Vsechny verejne stranky ve 4 locale (cs/en/de/uk)
+- Admin panel za prihlasenim
+- Studio za prihlasenim
+- SEO: canonical, hreflang, og:url, sitemap, robots.txt, llms.txt, JSON-LD
+- Redirecty: non-www → www, escx23.vercel.app → www
+- Kontrola starych URL v HTML vystupu
 
 ---
 
-## 3. PUBLIC PAGES — FUNCTIONAL CHECK
+## FAZE 1: ENV / CONFIG KONTROLA (pred testovanim)
 
-All pages should return status 200 and render correct content. Test all 4 locales.
+### 1.1 Lokalni .env soubory — NALEZENY PROBLEMY
 
-### Pages to check:
+| Soubor | Problem | Fix |
+|--------|---------|-----|
+| `.env.prod.local:5` | `NEXT_PUBLIC_SITE_URL="https://escx23.vercel.app"` — STARY DOMAIN! | Zmenit na `https://www.lovelygirls.cz` |
+| `.env.prod-check.local:6` | `GOOGLE_REDIRECT_URI="https://escx23.vercel.app/api/gcal/callback\n"` | Zmenit na `https://www.lovelygirls.cz/api/gcal/callback` + odstranit trailing `\n` |
+| `.env.vercel-prod.local:6` | `GOOGLE_REDIRECT_URI="https://escx23.vercel.app/api/gcal/callback\n"` | Stejny fix |
+| `.env.prod-pull.local:6` | `GOOGLE_REDIRECT_URI="https://escx23.vercel.app/api/gcal/callback\n"` | Stejny fix |
 
-| Page | CS URL | EN URL | DE URL | UK URL |
-|------|--------|--------|--------|--------|
+**KRITICKE:** Overit ze na Vercel dashboard `NEXT_PUBLIC_SITE_URL=https://www.lovelygirls.cz` — pokud ne, VSECHNY canonical/hreflang/og/sitemap/jsonld budou spatne.
+
+### 1.2 Vercel Dashboard Environment Variables
+
+Overit na Vercel:
+- [ ] `NEXT_PUBLIC_SITE_URL` = `https://www.lovelygirls.cz`
+- [ ] `SESSION_SECRET` — neni prazdny
+- [ ] `GOOGLE_REDIRECT_URI` = `https://www.lovelygirls.cz/api/gcal/callback`
+- [ ] Custom domain `www.lovelygirls.cz` nakonfigurovana a funguje
+
+---
+
+## FAZE 2: REDIRECTY
+
+### 2.1 Non-www → www (next.config.ts:24-29)
+```
+Test: curl -I https://lovelygirls.cz/cs/divky
+Ocekavano: 301 → https://www.lovelygirls.cz/cs/divky
+```
+
+### 2.2 Vercel preview → www (next.config.ts:31-36)
+```
+Test: curl -I https://escx23.vercel.app/cs/divky
+Ocekavano: 301 → https://www.lovelygirls.cz/cs/divky
+```
+
+### 2.3 Stare URL redirecty (next.config.ts:39-97)
+Otestovat kazdy redirect:
+
+| Source | Expected destination | Type |
+|--------|---------------------|------|
+| `/cs/girls/anetta` | `/cs/profil/anetta` | 301 |
+| `/cs/profily/anetta` | `/cs/profil/anetta` | 301 |
+| `/cs/profiles` | `/cs/divky` | 301 |
+| `/cz/profiles` | `/cs/divky` | 301 |
+| `/cs/landing/escort-prague` | `/cs/divky` | 301 |
+| `/cs/landing/spolecnice-praha` | `/cs/hashtag/spolecnice-praha` | 301 |
+| `/cs/landing/blondynky` | `/cs/hashtag/blondynky-praha` | 301 |
+| `/cs/landing/brunetky` | `/cs/hashtag/brunetky-praha` | 301 |
+| `/cs/landing/gfe` | `/cs/hashtag/gfe-praha` | 301 |
+| `/cs/landing/vinohrady` | `/cs/pobocka/praha-2` | 301 |
+| `/cs/landing/zizkov` | `/cs/pobocka/praha-3` | 301 |
+| `/cs/landing/nejakyrandom` | `/cs/` | 301 (catchall) |
+| `/blog-cs/nejaky-slug` | `/cs/blog/nejaky-slug` | 301 |
+| `/blog` | `/cs/blog` | 301 |
+| `/cz/main` | `/cs/` | 301 |
+| `/cs/pricing` | `/cs/cenik` | 301 |
+| `/escort-praha` | `/cs/divky` | 301 |
+| `/escort-prague` | `/girls` | 301 |
+| `/slecny-sitemap.xml` | `/sitemap.xml` | 301 |
+| `/cz/cokoliv` | `/cs/cokoliv` | 301 (wildcard) |
+
+---
+
+## FAZE 3: VEREJNE STRANKY — FUNKCNI KONTROLA
+
+### 3.1 Kompletni matice URL (vychazi z i18n/routing.ts)
+
+Pro KAZDY radek overit: HTTP 200, stranka se renderuje, neni error.
+
+| Stranka | CS | EN | DE | UK |
+|---------|----|----|----|----|
 | Homepage | `/cs` | `/` | `/de` | `/uk` |
-| Girls listing | `/cs/divky` | `/girls` | `/de/maedchen` | `/uk/divchata` |
-| Profile | `/cs/profil/anetta` | `/profile/anetta` | `/de/profil/anetta` | `/uk/profil/anetta` |
-| Pricing | `/cs/cenik` | `/pricing` | `/de/preise` | `/uk/tsiny` |
-| Schedule | `/cs/rozvrh` | `/schedule` | `/de/zeitplan` | `/uk/rozklad` |
-| Discounts | `/cs/slevy` | `/discounts` | `/de/rabatte` | `/uk/znyzhky` |
+| Divky listing | `/cs/divky` | `/girls` | `/de/maedchen` | `/uk/divchata` |
+| Profil (anetta) | `/cs/profil/anetta` | `/profile/anetta` | `/de/profil/anetta` | `/uk/profil/anetta` |
+| Cenik | `/cs/cenik` | `/pricing` | `/de/preise` | `/uk/tsiny` |
+| Rozvrh | `/cs/rozvrh` | `/schedule` | `/de/zeitplan` | `/uk/rozklad` |
+| Slevy | `/cs/slevy` | `/discounts` | `/de/rabatte` | `/uk/znyzhky` |
 | FAQ | `/cs/faq` | `/faq` | `/de/faq` | `/uk/faq` |
-| Reviews | `/cs/recenze` | `/reviews` | `/de/rezensionen` | `/uk/vidhuky` |
-| About | `/cs/o-nas` | `/about` | `/de/ueber-uns` | `/uk/pro-nas` |
-| Contact | `/cs/kontakt` | `/contact` | `/de/kontakt` | `/uk/kontakt` |
-| Terms | `/cs/podminky` | `/terms` | `/de/agb` | `/uk/umovy` |
-| Privacy | `/cs/soukromi` | `/privacy` | `/de/datenschutz` | `/uk/konfidentsiinist` |
-| Blog | `/cs/blog` | `/blog` | `/de/blog` | `/uk/blog` |
-| Join | `/cs/pridat-se` | `/join` | `/de/bewerben` | `/uk/dodaty-sia` |
-| Membership | `/cs/clenstvi/zadost` | `/membership/apply` | ... | ... |
-| Service page | `/cs/sluzba/{slug}` | `/service/{slug}` | `/de/leistung/{slug}` | `/uk/posluha/{slug}` |
-| Hashtag | `/cs/hashtag/{slug}` | `/hashtag/{slug}` | ... | ... |
-| Location | `/cs/pobocka/{slug}` | `/pobocka/{slug}` | ... | ... |
-| Review form | `/cs/recenze/nova/{slug}` | ... | ... | ... |
+| Recenze | `/cs/recenze` | `/reviews` | `/de/rezensionen` | `/uk/vidhuky` |
+| O nas | `/cs/o-nas` | `/about` | `/de/ueber-uns` | `/uk/pro-nas` |
+| Kontakt | `/cs/kontakt` | `/contact` | `/de/kontakt` | `/uk/kontakt` |
+| Podminky | `/cs/podminky` | `/terms` | `/de/agb` | `/uk/umovy` |
+| Soukromi | `/cs/soukromi` | `/privacy` | `/de/datenschutz` | `/uk/konfidentsiinist` |
+| Blog index | `/cs/blog` | `/blog` | `/de/blog`* | `/uk/blog`* |
+| Blog clanek | `/cs/blog/{slug}` | `/blog/{slug}` | `/de/blog/{slug}` | `/uk/blog/{slug}` |
+| Hashtag | `/cs/hashtag/{slug}` | `/hashtag/{slug}` | `/de/hashtag/{slug}` | `/uk/hashtag/{slug}` |
+| Pobocka | `/cs/pobocka/{slug}` | `/pobocka/{slug}` | `/de/pobocka/{slug}` | `/uk/pobocka/{slug}` |
+| Sluzba | `/cs/sluzba/{slug}` | `/service/{slug}` | `/de/leistung/{slug}` | `/uk/posluha/{slug}` |
+| Pridat se | `/cs/pridat-se` | `/join` | `/de/bewerben` | `/uk/dodaty-sia` |
+| Pridat se uspech | `/cs/pridat-se/uspech` | `/join/success` | `/de/bewerben/erfolg` | `/uk/dodaty-sia/uspikh` |
+| Clenstvi zadost | `/cs/clenstvi/zadost` | `/membership/apply` | `/de/mitgliedschaft/bewerben` | `/uk/chlenstvo/zaiavka` |
+| Clenstvi odeslano | `/cs/clenstvi/zadost/odeslano` | `/membership/apply/sent` | ... | ... |
+| Recenze nova | `/cs/recenze/nova/{slug}` | (same for all locales) | | |
+| Novinky | `/cs/novinky` | `/whats-new` | `/de/neuigkeiten` | `/uk/novynky` |
+| Stories | `/cs/stories/{id}` | `/stories/{id}` | (same) | (same) |
 
-### Special checks:
-- **404 pages:** `/cs/profil/neexistujici` should return 404 with proper error page
-- **Schedule past-day redirect:** `/cs/rozvrh?day=2025-01-01` should redirect to today
-- **Girls filters:** `/cs/divky?status=available` should filter correctly
+*Poznamka: `/de/blog` a `/uk/blog` presmerovavaji na `/cs/blog` (app/[locale]/blog/page.tsx:63-66). Overit ze redirect funguje.
+
+### 3.2 Specialni scenare
+
+- [ ] **404 strana:** `/cs/profil/neexistujici-slug` → 404 s proper not-found page
+- [ ] **404 hashtag:** `/cs/hashtag/neexistujici-tag` → 404
+- [ ] **404 blog:** `/cs/blog/neexistujici-post` → 404
+- [ ] **404 pobocka:** `/cs/pobocka/neexistujici` → 404
+- [ ] **Rozvrh past redirect:** `/cs/rozvrh?day=2025-01-01` → redirect na dnesek
+- [ ] **Filtry divky:** `/cs/divky?status=available` → funguje, filtruje
+- [ ] **Filtry divky sort:** `/cs/divky?sort=name` → funguje
+- [ ] **Review form:** `/cs/recenze/nova/anetta` → formular se zobrazi
+
+### 3.3 JS-disabled kontrola
+
+Overit s vypnutym JavaScriptem:
+- [ ] Filtry na `/divky` fungiji pres URL params (`<form method="GET">`)
+- [ ] Rozvrh dny pres `<a href>` tagy
+- [ ] FAQ akordeon pres `<details>/<summary>`
+- [ ] Navigace funguje
+- [ ] Formulare fungiji (join, review, contact)
 
 ---
 
-## 4. SEO AUDIT
+## FAZE 4: SEO AUDIT
 
 ### 4.1 Canonical URLs
-- Every page should have `<link rel="canonical" href="https://www.lovelygirls.cz/...">` (NOT `escx23.vercel.app`)
-- **Current risk:** If `NEXT_PUBLIC_SITE_URL` is not updated, all canonicals point to old domain.
-- Check via: view page source, look for `<link rel="canonical">`
+
+**Kde se generuji:** `lib/seo/meta.ts` (getCanonicalUrl), `lib/seo/hreflang.ts` (getCanonicalForPath)
+**Base:** `NEXT_PUBLIC_SITE_URL` fallback `https://www.lovelygirls.cz`
+
+Overit na KAZDE verejne strance:
+- [ ] `<link rel="canonical" href="https://www.lovelygirls.cz/...">` — NE `escx23.vercel.app`
+- [ ] Canonical URL odpovida aktualni strance (spravny locale prefix, spravna cesta)
+
+**NALEZENY PROBLEM — Stranky BEZ canonical/alternates:**
+Tyto stranky nemaji v `generateMetadata` nastavene `alternates.canonical` ani `alternates.languages`:
+- `/join` (pridat-se) — `app/[locale]/join/page.tsx`
+- `/join/success` — `app/[locale]/join/success/page.tsx`
+- `/stories/[id]` — `app/[locale]/stories/[id]/page.tsx`
+- `/clenstvi/zadost` — `app/[locale]/clenstvi/zadost/page.tsx`
+- `/clenstvi/zadost/odeslano` — `app/[locale]/clenstvi/zadost/odeslano/page.tsx`
+- `/recenze/nova/[slug]` — `app/[locale]/recenze/nova/[slug]/page.tsx`
+- `/novinky` — `app/[locale]/novinky/page.tsx`
+
+**Fix:** Pridat canonical + alternates languages do `generateMetadata` techto stranek.
+Pozn.: Nektere z nich by meli mit `robots: { index: false }` (recenze/nova, clenstvi/zadost/odeslano, stories/[id]) — overit.
 
 ### 4.2 Hreflang Tags
-- Every public page should have hreflang for all 4 locales + x-default
-- All should use `https://www.lovelygirls.cz`
-- **Implementation:** `lib/seo/hreflang.ts` — uses `NEXT_PUBLIC_SITE_URL`, so depends on env fix
-- Check via: `<link rel="alternate" hreflang="cs" href="...">`
 
-### 4.3 OG Tags (og:url, og:image)
-- `og:url` should use `www.lovelygirls.cz`
-- `og:image` should resolve correctly (not relative to old domain)
-- Check: `<meta property="og:url" content="...">`
+**Kde se generuji:** `lib/seo/hreflang.ts` — `getHreflangsForPath()`
+**Druha implementace:** `lib/seo/meta.ts` — `getAlternates()`
 
-### 4.4 sitemap.xml
-- **URL:** `https://www.lovelygirls.cz/sitemap.xml`
-- All URLs inside must use `www.lovelygirls.cz`
-- Must include alternates (hreflang) per page
-- Should list all active girls, services, locations, blog posts, hashtags
-- **Code:** `app/sitemap.ts` uses `NEXT_PUBLIC_SITE_URL`
+**POTENCIALNI PROBLEM:** Dve nezavisle implementace hreflang (hreflang.ts a meta.ts) — overit ze davaji stejne vysledky. `hreflang.ts` pouziva routing.ts pathnames dynamicky, `meta.ts` ma hardcoded LOCALIZED_PATHS dictionary. Pokud se pridaji nove stranky, `meta.ts` se neaktualizuje automaticky.
 
-### 4.5 robots.txt
-- **URL:** `https://www.lovelygirls.cz/robots.txt`
-- Should allow `/` for main crawlers, block `/admin/`, `/studio/`, `/api/`
-- Sitemap reference should use correct domain
-- Preview detection should not trigger on `www.lovelygirls.cz`
-- **Code:** `app/robots.ts` — uses `host` header dynamically, looks correct
+Overit na kazde strance:
+- [ ] 5 hreflang tagu: `en`, `cs`, `de`, `uk`, `x-default`
+- [ ] Vsechny URL zacitaji `https://www.lovelygirls.cz`
+- [ ] URL pouzivaji spravne lokalizovane cesty (en: /girls, cs: /divky, de: /maedchen, uk: /divchata)
+- [ ] `x-default` odkazuje na EN verzi
 
-### 4.6 llms.txt
-- **URL:** `https://www.lovelygirls.cz/llms.txt`
-- All links inside should use correct domain
-- **Code:** `app/llms.txt/route.ts` — uses `host` header dynamically, looks correct
+**SPECIFICKE OVERENI:**
+- [ ] Stranky `pobocka/[slug]` a `hashtag/[slug]` — neni v LOCALIZED_PATHS dictionary v meta.ts, takze `getAlternates()` je nemuze lokalizovat. Overit ze pouzivaji `getHreflangsForPath()` nebo vlastni alternates.
 
-### 4.7 Structured Data (JSON-LD)
-- Homepage LocalBusiness schema should have correct `url`, `@id`
-- Profile pages should have correct Person/ProfilePage schema
-- FAQ pages should have FAQPage schema
-- **Code:** `lib/seo/jsonld.ts` — uses `NEXT_PUBLIC_SITE_URL`
+### 4.3 OG Tags
 
-### 4.8 X-Robots-Tag Headers
-- `/admin/*` and `/studio/*` should have `X-Robots-Tag: noindex, nofollow`
-- **Code:** `next.config.ts:34-49` — configured for both prefixed and unprefixed paths
+Overit na kazde verejne strance:
+- [ ] `<meta property="og:url" content="https://www.lovelygirls.cz/...">` — spravna domena
+- [ ] `<meta property="og:title">` — existuje a je relevantni
+- [ ] `<meta property="og:description">` — existuje
+- [ ] `<meta property="og:image">` — existuje a URL je dosazitelna (200)
+- [ ] `<meta property="og:locale">` — spravny (cs_CZ, en_US, de_DE, uk_UA)
+- [ ] `<meta property="og:type">` — website nebo article (blog)
 
----
+### 4.4 Twitter Cards
 
-## 5. ADMIN & STUDIO (behind auth)
+- [ ] `<meta name="twitter:card" content="summary_large_image">`
+- [ ] `<meta name="twitter:title">` existuje
+- [ ] `<meta name="twitter:description">` existuje
+- [ ] `<meta name="twitter:image">` existuje a URL je dosazitelna
 
-### 5.1 Admin Login & Session
-- See TASK-010 for detailed plan (SESSION_SECRET, locale-aware redirects)
-- Test: Login, navigate pages, logout, re-login
-- Credentials: `admin@lovelygirls.cz` / `Admin2026!`
+### 4.5 sitemap.xml
 
-### 5.2 Admin Pages to Verify
-All admin pages should load without errors after login:
-- Dashboard (`/cs/admin`)
-- Girls list (`/cs/admin/divky`)
-- Girl edit (`/cs/admin/divky/{id}`)
-- Girl photos (`/cs/admin/divky/{id}/fotky`)
-- Girl videos (`/cs/admin/divky/{id}/videa`)
-- Girl availability (`/cs/admin/divky/{id}/dostupnost`)
-- Schedule overview (`/cs/admin/schedules`)
-- Reviews (`/cs/admin/recenze`)
-- Reservations (`/cs/admin/rezervace`)
-- Pricing (`/cs/admin/cenik`)
-- Extras (`/cs/admin/cenik/extras/{id}`)
-- Plans (`/cs/admin/cenik/plany/{id}`)
-- Discounts (`/cs/admin/slevy`)
-- Members (`/cs/admin/clenove`)
-- Locations (`/cs/admin/pobocky`)
-- Blog (`/cs/admin/blog`)
-- Blog tags (`/cs/admin/blog/tagy`)
-- FAQ (`/cs/admin/faq`)
-- SEO (`/cs/admin/seo`)
-- OG images (`/cs/admin/og`)
-- Applications (`/cs/admin/aplikace`)
-- Verification (`/cs/admin/verifikace`)
-- Stories (`/cs/admin/stories`)
+**Soubor:** `app/sitemap.ts`
+**URL:** `https://www.lovelygirls.cz/sitemap.xml`
 
-### 5.3 Studio Login & Pages
-- Credentials: `anetta@lovelygirls.cz` / `Anetta2026!`
-- Dashboard (`/cs/studio`)
-- All studio sub-pages (profil-status, recenze, sluzby, fotky, etc.)
+Overit:
+- [ ] Vsechny URL v sitemap zacitaji `https://www.lovelygirls.cz`
+- [ ] Obsahuje homepage (4 locales)
+- [ ] Obsahuje /divky (4 locales)
+- [ ] Obsahuje vsechny aktivni profily (4 locales kazdy)
+- [ ] Obsahuje staticke stranky: cenik, slevy, rozvrh, faq, recenze, o-nas, kontakt, blog (4 locales)
+- [ ] Obsahuje blog posty (sitemap ma jen en+cs dle kodu — viz radek 219)
+- [ ] Obsahuje pobocky (4 locales)
+- [ ] Obsahuje sluzby (4 locales)
+- [ ] Obsahuje hashtagy (HASHTAG_SLUGS — 8 ks × 4 locales)
+- [ ] Alternates (hreflang) v sitemap odpovidaji hreflang v HTML
 
-### 5.4 Admin Form Actions (Server Actions)
-- Test that editing a girl, approving a review, managing discounts, etc. actually saves and doesn't error
-- Server Actions use `redirect()` which should work on `www.lovelygirls.cz` if cookies are correct
+**NALEZENE NEDOSTATKY v sitemap:**
+- **Chybi:** `/join` (pridat-se), `/novinky`, `/clenstvi/zadost` — tyto stranky nejsou v sitemap vubec
+- **Blog de/uk:** Sitemap je generuje jen pro en+cs (radek 219), ale hreflang alternates odkazuji i na de/uk. Bud pridat do sitemap, nebo upravit alternates aby de/uk nebyly zahrnuty (blog de/uk redirectuje na cs).
+- **Podminky, soukromi:** Nejsou v STATIC_KEYS (radek 97-106) — chybi v sitemap
 
----
+### 4.6 robots.txt
 
-## 6. HARDCODED OLD URLS IN HTML OUTPUT
+**Soubor:** `app/robots.ts`
+**URL:** `https://www.lovelygirls.cz/robots.txt`
 
-### 6.1 No `escx23.vercel.app` in rendered HTML
-- Grep all `.ts/.tsx` source files for `escx23.vercel.app` — only `next.config.ts` redirect is acceptable
-- **Result:** Only `next.config.ts:28` has it (redirect rule) — OK
-- Old audit result files (`audit_results.json`, `audit_deep_results.json`) have old URLs but these are not served
+Overit:
+- [ ] `Sitemap: https://www.lovelygirls.cz/sitemap.xml`
+- [ ] `Host: https://www.lovelygirls.cz`
+- [ ] Allow `/` pro hlavni crawlery
+- [ ] Disallow `/admin/`, `/studio/`, `/api/`
+- [ ] Preview detection nespousti blokovani na www.lovelygirls.cz (process.env.VERCEL_ENV !== 'preview')
+- [ ] AI crawlery (GPTBot, ClaudeBot, PerplexityBot) maji explicitni Allow
 
-### 6.2 Hardcoded `www.lovelygirls.cz` in Source
-- `lib/seo-metadata.ts:125,159,160` — hardcoded `https://www.lovelygirls.cz` (acceptable, matches production domain)
-- `lib/watermark.ts:22` — watermark text `lovelygirls.cz` (correct)
-- Various places use it as fallback — all correct
+### 4.7 llms.txt
 
-### 6.3 Hardcoded `/cs/` Links in Admin Dashboard
-- `app/[locale]/(admin)/admin/page.tsx:64,75,91` — quick-action links hardcoded with `/cs/` prefix
-- Should use `/${locale}/admin/...` pattern (see TASK-010 plan)
+**Soubor:** `app/llms.txt/route.ts`
+**URL:** `https://www.lovelygirls.cz/llms.txt`
 
----
+Overit:
+- [ ] Vsechny linky pouzivaji aktualni domenu
+- [ ] Ceny jsou aktualni
+- [ ] Provozni doba je spravna (10:00-22:30)
+- [ ] Kontakt je spravny (+420 734 332 131)
 
-## 7. COOKIE / SESSION CONSIDERATIONS
+**NALEZENE NEDOSTATKY:**
+- **LAST_UPDATED = '2026-05-28'** — zastarale, aktualizovat
+- **Apartments sekce:** Zminuje pouze Vinohrady (Praha 2). Chybi: Zizkov (Praha 3, otevreno 18.6.2026), Karlin (Praha 8), Praha 1 Nove Mesto. Viz `MEMORY.md` — Zizkov otevren 18.6., Smichov 25.7.2026.
+- **Pricing "from 2 500 CZK" pro 30 i 60 min** — overit aktualni cenik v DB
+- **Pocet spolecnic:** Rika "13+" ale muze se menit — overit aktualni pocet
 
-### 7.1 Session Cookie Domain
-- Cookie set with `path: '/'`, no explicit `domain` (lib/auth.ts:57-63)
-- Since non-www redirects to www before any page renders, cookie will always be on `www.lovelygirls.cz`
-- **Verdict:** Should work correctly with redirect chain
+### 4.8 Structured Data (JSON-LD)
 
-### 7.2 NEXT_LOCALE Cookie
-- i18n routing sets `NEXT_LOCALE` cookie for locale persistence
-- No domain restriction — should work fine
+**Soubor:** `lib/seo/jsonld.ts`
 
-### 7.3 Age Gate Cookie
-- Check that `lib/age-gate-actions.ts` sets cookie correctly on new domain
+Stranky a jejich JSON-LD schematau:
 
----
+| Stranka | JSON-LD typy | Overit |
+|---------|-------------|--------|
+| Homepage | LocalBusiness, Organization, WebSite | @id, url, aggregateRating, openingHours |
+| Profil | Person + AggregateRating + Review | url, aggregateRating vzdy ma reviewCount pokud review existuji |
+| Divky listing | ItemList + CollectionPage | spravne URL profilu |
+| Cenik | OfferCatalog | ceny, nazvy programu |
+| FAQ | FAQPage | otazky/odpovedi |
+| Slevy | Offer[] | nazvy a popisy slev |
+| Hashtag | BreadcrumbList + FAQPage + ItemList + CollectionPage | spravne URL |
+| Pobocka | LocalBusiness (AdultEntertainment) + BreadcrumbList | adresa, opening hours |
+| Sluzba | BreadcrumbList + CollectionPage | spravne URL |
+| Rozvrh | BreadcrumbList | spravne URL |
 
-## 8. IMPLEMENTATION PRIORITY
+**NALEZENY NEDOSTATEK:**
+- **Blog stranky** (`/blog`, `/blog/[slug]`) — NEMAJI zadne JSON-LD. Blog clanky by meli mit `Article` schema.
+- **Novinky** (`/novinky`) — zadne JSON-LD
 
-### Must-fix before launch (BLOCKER):
-1. **Set `SESSION_SECRET`** in Vercel production env
-2. **Update `NEXT_PUBLIC_SITE_URL`** to `https://www.lovelygirls.cz` in Vercel
-3. **Redeploy** after env changes
+### 4.9 X-Robots-Tag Headers
 
-### Should-fix (HIGH):
-4. Fix locale-aware auth redirects (TASK-010)
-5. Fix hardcoded `/cs/admin/*` links in dashboard (TASK-010)
-6. Update `GOOGLE_REDIRECT_URI` in Vercel + Google Cloud Console
+**Nastaveno v:** `next.config.ts:99-117`
 
-### Nice-to-have (LOW):
-7. Add production guard for empty `SESSION_SECRET`
-8. Clean up old audit JSON files from repo
+Overit ze tyto patterny maji `X-Robots-Tag: noindex, nofollow`:
+- [ ] `/admin/*`
+- [ ] `/studio/*`
+- [ ] `/{locale}/admin/*`
+- [ ] `/{locale}/studio/*`
+
+Take v layout souborech:
+- `app/[locale]/(admin)/admin/layout.tsx:11-12` — `robots: { index: false, follow: false, nocache: true }`
+- `app/[locale]/studio/layout.tsx:9-10` — `robots: { index: false, follow: false, nocache: true }`
 
 ---
 
-## 9. TESTING METHODOLOGY
+## FAZE 5: ADMIN PANEL
 
-### Automated:
-- Use Playwright or Chrome DevTools to crawl all public pages in all 4 locales
-- Check HTTP status codes (expect 200)
-- Check `<link rel="canonical">` contains `www.lovelygirls.cz`
-- Check hreflang tags present and correct
-- Check OG tags present
-- Check JSON-LD present on key pages
+### 5.1 Login
+- [ ] Pristupovat na `www.lovelygirls.cz/cs/admin` → redirect na login
+- [ ] Prihlasit se (admin@lovelygirls.cz / Admin2026!)
+- [ ] Session cookie se nastavi spravne na www.lovelygirls.cz domain
 
-### Manual:
-- Admin login flow on `www.lovelygirls.cz/cs/admin/login`
-- Studio login flow on `www.lovelygirls.cz/cs/studio/login`
-- Form submissions (edit girl, approve review, etc.)
-- Cookie inspection in DevTools
-- Mobile responsive check
-- JS-disabled check (forms should work, filters should use URL params)
+### 5.2 Admin stranky (po prihlaseni)
 
-### Existing Scripts:
-- `chrome-test-escx23.mjs` — existing Playwright test (uses old domain, needs URL update)
-- `chrome-test-visual.mjs` — visual regression testing
+Overit HTTP 200 + stranka se renderuje:
+
+| Stranka | URL | Specificke overeni |
+|---------|-----|-------------------|
+| Dashboard | `/cs/admin` | Quick-action linky vedou na spravne URL (ne hardcoded /cs/) |
+| Divky seznam | `/cs/admin/divky` | Seznam divek se zobrazi |
+| Divka edit | `/cs/admin/divky/{id}/edit` | Formular se nacte |
+| Divka fotky | `/cs/admin/divky/{id}/fotky` | Galerie se zobrazi |
+| Divka videa | `/cs/admin/divky/{id}/videa` | |
+| Divka dostupnost | `/cs/admin/divky/{id}/dostupnost` | Kalendar funguje |
+| Divka dostupnost den | `/cs/admin/divky/{id}/dostupnost/den/{date}` | |
+| Nova divka | `/cs/admin/divky/nova` | |
+| Rozvrhy | `/cs/admin/schedules` | |
+| Recenze | `/cs/admin/recenze` | |
+| Recenze apartmanu | `/cs/admin/recenze-apartmanu` | |
+| Rezervace | `/cs/admin/rezervace` | |
+| Cenik | `/cs/admin/cenik` | |
+| Nova plan | `/cs/admin/cenik/nova-plan` | |
+| Plan edit | `/cs/admin/cenik/plany/{id}` | |
+| Nova extra | `/cs/admin/cenik/nova-extra` | |
+| Extra edit | `/cs/admin/cenik/extras/{id}` | |
+| Slevy | `/cs/admin/slevy` | |
+| Nova sleva | `/cs/admin/slevy/nova` | |
+| Sleva edit | `/cs/admin/slevy/{id}` | |
+| Clenove | `/cs/admin/clenove` | |
+| Aplikace | `/cs/admin/aplikace` | |
+| Aplikace detail | `/cs/admin/aplikace/{id}` | |
+| Verifikace | `/cs/admin/verifikace` | |
+| Pobocky | `/cs/admin/pobocky` | |
+| Pobocka edit | `/cs/admin/pobocky/{id}` | |
+| Nova pobocka | `/cs/admin/pobocky/nova` | |
+| FAQ | `/cs/admin/faq` | |
+| FAQ edit | `/cs/admin/faq/{id}` | |
+| Nova FAQ | `/cs/admin/faq/nova` | |
+| Blog | `/cs/admin/blog` | |
+| Novy blog | `/cs/admin/blog/novy` | |
+| Blog edit | `/cs/admin/blog/{id}` | |
+| Blog tagy | `/cs/admin/blog/tagy` | |
+| Blog tag edit | `/cs/admin/blog/tagy/{id}` | |
+| Novy tag | `/cs/admin/blog/tagy/novy` | |
+| SEO | `/cs/admin/seo` | |
+| SEO edit | `/cs/admin/seo/edit` | |
+| OG images | `/cs/admin/og` | |
+| Notifikace | `/cs/admin/notifikace` | |
+| Stories | `/cs/admin/stories` | |
+
+### 5.3 Admin CRUD operace
+
+- [ ] Edit divku → ulozit → zmena se projevi
+- [ ] Schvaleni recenze
+- [ ] Uprava slevy
+- [ ] CRUD blog postu
+- [ ] Upload fotky
+
+### 5.4 Manager role
+
+- [ ] Manager nemuze pristupovat na stranky mimo `MANAGER_ALLOWED_PATHS` (layout.tsx:16-24)
+- [ ] Manager moze pristupovat: /admin, /admin/notifikace, /admin/divky, /admin/schedules, /admin/recenze, /admin/rezervace, /admin/stories
+
+---
+
+## FAZE 6: STUDIO PANEL
+
+### 6.1 Login
+- [ ] Pristupovat na `www.lovelygirls.cz/cs/studio` → redirect na login
+- [ ] Prihlasit se (ucet divky)
+- [ ] Session cookie se nastavi spravne
+
+### 6.2 Studio stranky (po prihlaseni)
+
+| Stranka | URL |
+|---------|-----|
+| Dashboard | `/cs/studio` |
+| Profil status | `/cs/studio/profil-status` |
+| Zakladni udaje | `/cs/studio/zakladni` |
+| Telo | `/cs/studio/telo` |
+| Fotky | `/cs/studio/fotky` |
+| Videa | `/cs/studio/videa` |
+| Sluzby | `/cs/studio/sluzby` |
+| Program | `/cs/studio/program` |
+| Jazyky | `/cs/studio/jazyky` |
+| Zivotni styl | `/cs/studio/zivotni-styl` |
+| Hashtagy | `/cs/studio/hashtagy` |
+| Dostupnost/Kalendar | `/cs/studio/kalendar` |
+| Dostupnost | `/cs/studio/dostupnost` |
+| Recenze | `/cs/studio/recenze` |
+| Statistiky | `/cs/studio/statistiky` |
+| Rezervace | `/cs/studio/rezervace` |
+| Stories | `/cs/studio/stories` |
+| Zprava | `/cs/studio/zprava` |
+| Hlas | `/cs/studio/hlas` |
+
+---
+
+## FAZE 7: STARE URL V HTML VYSTUPU
+
+### 7.1 Zdrojovy kod — grep `escx23.vercel.app`
+
+**Akceptovatelne vyskyty (NE v HTML):**
+- `next.config.ts:33` — redirect pravidlo (spravne)
+- `audit_results.json`, `audit_deep_results.json` — stare audit soubory (neslouzi se)
+- `.env.prod.local:5` — **OPRAVIT** (viz Faze 1)
+- `.env.prod-check.local:6`, `.env.vercel-prod.local:6`, `.env.prod-pull.local:6` — GOOGLE_REDIRECT_URI **OPRAVIT**
+
+**Akce:** Grep HTML output na produkci (view-source) pro `escx23.vercel.app` — nesmi se nikde objevit.
+
+### 7.2 Zdrojovy kod — grep `https://lovelygirls.cz` (bez www)
+
+**Aktualni stav:** Zadne vyskyty v .ts/.tsx souborech. OK.
+
+### 7.3 Hardcoded `/cs/` linky
+
+- `app/[locale]/(admin)/admin/page.tsx` — dashboard quick-action linky — overit ze pouzivaji dynamicky locale
+
+---
+
+## FAZE 8: CHYBEJICI PRVKY — SOUHRN NALEZU Z ANALYZY
+
+### 8.1 Stranky bez canonical/alternates v generateMetadata
+
+| Stranka | Soubor | Doporuceni |
+|---------|--------|-----------|
+| /join | `app/[locale]/join/page.tsx` | Pridat canonical + alternates |
+| /join/success | `app/[locale]/join/success/page.tsx` | robots: noindex (dekujeme stranka) |
+| /stories/[id] | `app/[locale]/stories/[id]/page.tsx` | robots: noindex (ephemeral content) |
+| /clenstvi/zadost | `app/[locale]/clenstvi/zadost/page.tsx` | Pridat canonical + alternates |
+| /clenstvi/zadost/odeslano | `app/[locale]/clenstvi/zadost/odeslano/page.tsx` | robots: noindex |
+| /recenze/nova/[slug] | `app/[locale]/recenze/nova/[slug]/page.tsx` | robots: noindex (form page) |
+| /novinky | `app/[locale]/novinky/page.tsx` | Pridat canonical + alternates |
+
+### 8.2 Stranky chybejici v sitemap.xml
+
+| Stranka | Zaradeni do sitemap? |
+|---------|---------------------|
+| /join (pridat-se) | ANO — dulezita pro SEO |
+| /novinky (whats-new) | ANO — obsah stranka |
+| /podminky (terms) | ANO — chybi v STATIC_KEYS |
+| /soukromi (privacy) | ANO — chybi v STATIC_KEYS |
+| /clenstvi/zadost | NE — formularova stranka |
+| /stories/[id] | NE — ephemeral |
+| /recenze/nova/[slug] | NE — formular |
+
+### 8.3 Blog sitemap vs redirect nesoulad
+
+Blog `/de/blog` a `/uk/blog` redirectuji na `/cs/blog` (page.tsx:63-66), ale sitemap generuje alternates pro de/uk. Reseni:
+- Bud odstranit redirect a zobrazovat blog v de/uk
+- Nebo v sitemap alternates nahradit de/uk za cs URL
+
+### 8.4 llms.txt neaktualni obsah
+
+- `LAST_UPDATED`: 2026-05-28 → aktualizovat
+- Apartments: Chybi Zizkov (Praha 3), Karlin (Praha 8), Praha 1 Nove Mesto
+- Pocet spolecnic: overit aktualni
+
+### 8.5 Blog stranky bez JSON-LD Article schema
+
+`/blog/[slug]` nema strukturovana data. Pridat:
+```json
+{
+  "@type": "Article",
+  "headline": "...",
+  "author": { "@type": "Person", "name": "..." },
+  "datePublished": "...",
+  "publisher": { "@id": "BASE/#organization" }
+}
+```
+
+---
+
+## FAZE 9: TESTOVACI METODIKA
+
+### 9.1 Automatizovane testy (Chrome / Playwright)
+
+Skript `chrome-test-escx23.mjs` — aktualizovat na `www.lovelygirls.cz`.
+
+Pro kazdou verejnou stranku:
+1. Fetch URL, overit HTTP 200
+2. Parsovat HTML:
+   - `<link rel="canonical">` — spravna domena + cesta
+   - `<link rel="alternate" hreflang="*">` — vsech 5 (en, cs, de, uk, x-default)
+   - `<meta property="og:url">` — spravna domena
+   - `<meta property="og:title">` — existuje
+   - `<meta property="og:image">` — existuje, URL dosazitelna
+   - `<script type="application/ld+json">` — validni JSON, spravne @type
+
+### 9.2 Manualni testy
+
+- [ ] Admin login → navigace → CRUD
+- [ ] Studio login → navigace → edit profilu
+- [ ] Mobile responsive (320px, 375px, 768px, 1024px)
+- [ ] JS-disabled test (viz Faze 3.3)
+- [ ] Age gate funguje
+- [ ] WhatsApp deep link funguje
+- [ ] Google Rich Results Test na: homepage, profil, FAQ, blog clanek
+
+### 9.3 SEO nastroje
+
+- [ ] Google Search Console — zkontrolovat indexaci po prechodu na www
+- [ ] Schema.org Validator — na homepage, profil, FAQ, cenik
+- [ ] PageSpeed Insights — Core Web Vitals
+
+---
+
+## PRIORITIZACE OPRAV
+
+### P0 — KRITICKE (blokuji indexaci)
+1. Overit NEXT_PUBLIC_SITE_URL na Vercel = `https://www.lovelygirls.cz`
+2. Opravit `.env.prod.local` — stara URL
+3. Opravit GOOGLE_REDIRECT_URI ve 3 env souborech
+
+### P1 — VYSOKA (SEO impact)
+4. Pridat canonical/alternates na stranky kde chybi (8.1)
+5. Pridat /podminky a /soukromi do sitemap STATIC_KEYS
+6. Pridat /join do sitemap
+7. Opravit blog sitemap vs redirect nesoulad (8.3)
+8. Aktualizovat llms.txt (apartments, datum, pocet)
+
+### P2 — STREDNI (quality)
+9. Pridat Article JSON-LD na blog stranky
+10. Pridat novinky do sitemap
+11. Overit admin hardcoded /cs/ linky
+
+### P3 — NIZKA (cleanup)
+12. Smazat stare audit JSON soubory z repo
+13. Pridat Article JSON-LD na novinky
