@@ -154,19 +154,23 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
       <div className="girl-info">
         <div className="girl-name-row">
           <div className="girl-name-left">
-            <span
-              className={`girl-online-dot${
-                girl.isPaused
-                  ? ' girl-online-dot-paused'
-                  : girl.status === 'working'
-                    ? ' girl-online-dot-working'
-                    : girl.status === 'later'
-                      ? ' girl-online-dot-later'
-                      : girl.tomorrowFrom
-                        ? ' girl-online-dot-tomorrow'
-                        : ' girl-online-dot-off'
-              }`}
-            />
+            {(girl.shiftCategory === 'night' || girl.shiftCategory === 'allevening') && girl.status === 'working' ? (
+              <span className="girl-online-moon" aria-label="Night shift">&#127769;</span>
+            ) : (
+              <span
+                className={`girl-online-dot${
+                  girl.isPaused
+                    ? ' girl-online-dot-paused'
+                    : girl.status === 'working'
+                      ? ' girl-online-dot-working'
+                      : girl.status === 'later'
+                        ? ' girl-online-dot-later'
+                        : girl.tomorrowFrom
+                          ? ' girl-online-dot-tomorrow'
+                          : ' girl-online-dot-off'
+                }`}
+              />
+            )}
             <span className="girl-name">{girl.name}</span>
           </div>
         </div>

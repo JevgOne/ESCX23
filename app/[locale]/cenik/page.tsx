@@ -5,6 +5,7 @@ import { getActivePricingPlans } from '@/lib/queries';
 import { offerListJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import ProgramsGrid from '@/components/cenik/ProgramsGrid';
+import NightPricingNote from '@/components/cenik/NightPricingNote';
 import ExtrasGrid from '@/components/cenik/ExtrasGrid';
 import PricingNotes from '@/components/cenik/PricingNotes';
 import FaqTeaser from '@/components/cenik/FaqTeaser';
@@ -134,6 +135,7 @@ export default async function CenikPage({
           <p data-geo-lead className="sr-only">{geoLead}</p>
 
           <ProgramsGrid programs={programs} locale={locale} />
+          <NightPricingNote locale={locale} />
 
           <h2 className="section-h2" style={{ fontSize: '28px', margin: '48px 0 16px' }}>
             {locale === 'en' ? 'Extra services' : locale === 'de' ? 'Zusatzleistungen' : locale === 'uk' ? 'Додаткові послуги' : 'Extra služby'}

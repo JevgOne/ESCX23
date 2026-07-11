@@ -32,7 +32,78 @@ export function pragueDateISO(date: Date = new Date()): string {
 
 export function timeRange(from: string | null, to: string | null): string | null {
   if (!from || !to) return null;
-  return `${from.substring(0, 5)} — ${to.substring(0, 5)}`;
+  return `${displayTime(from)} — ${displayTime(to)}`;
+}
+
+// ── Night shift helpers (+24h convention) ──────────────────────────────────
+
+/** Convert +24h stored time to display format: "31:00" → "07:00" */
+export function displayTime(time: string): string {
+  const h = parseInt(time.split(':')[0]);
+  if (h >= 24) {
+    return `${String(h - 24).padStart(2, '0')}:${time.split(':')[1]}`;
+  }
+  return time.substring(0, 5);
+}
+
+/** Convert user input to +24h storage: detects cross-midnight. */
+export function toStorageTime(from: string, to: string): { from: string; to: string } {
+  if (to < from) {
+    const [h, m] = to.split(':').map(Number);
+    return { from, to: `${h + 24}:${String(m).padStart(2, '0')}` };
+  }
+  return { from, to };
+}
+
+/** Check if current time falls within a shift (handles +24h convention). */
+export function isWithinShift(now: string, from: string, to: string): boolean {
+  const toH = parseInt(to.split(':')[0]);
+  if (toH >= 24) {
+    const nowH = parseInt(now.split(':')[0]);
+    const adjustedNow = now < from
+      ? `${nowH + 24}:${now.split(':')[1]}`
+      : now;
+    return adjustedNow >= from && adjustedNow <= to;
+  }
+  return now >= from && now <= to;
+}
+
+/** Check if current time is before shift start. */
+export function isBeforeShift(now: string, from: string, to: string): boolean {
+  const toH = parseInt(to.split(':')[0]);
+  if (toH >= 24) {
+    // Cross-midnight: "before" means after the shift ended (morning) but before it starts again
+    const displayTo = displayTime(to);
+    return now > displayTo && now < from;
+  }
+  return now < from;
+}
+
+/** Check if shift has ended (for filtering out past shifts). */
+export function isShiftEnded(now: string, from: string, to: string): boolean {
+  const toH = parseInt(to.split(':')[0]);
+  if (toH >= 24) {
+    // Cross-midnight: ended only if we're in the gap between morning end and evening start
+    const displayTo = displayTime(to);
+    return now > displayTo && now < from;
+  }
+  return now > to;
+}
+
+export type ShiftCategory = 'morning' | 'afternoon' | 'allday' | 'allevening' | 'night';
+
+export function classifyShift(from: string, to: string): ShiftCategory {
+  const startH = parseInt(from.split(':')[0]);
+  const endH = parseInt(to.split(':')[0]);
+
+  // Cross-midnight: end_time >= 24 (stored as 24+)
+  if (endH >= 24) {
+    return startH >= 23 ? 'night' : 'allevening';
+  }
+  // Same-day shifts
+  if (startH < 12 && endH >= 20) return 'allday';
+  if (startH < 14) return 'morning';
+  return 'afternoon';
 }
 
 const DAY_NAMES_CS = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'];

@@ -1,5 +1,6 @@
 import { saveWeeklySchedule } from '@/app/[locale]/(admin)/admin/divky/[id]/dostupnost/actions';
 import { getSchedulesForGirl, getActiveLocations } from '@/lib/queries';
+import { displayTime } from '@/lib/utils';
 
 interface Props {
   girlId: number;
@@ -9,10 +10,12 @@ const DAY_LABELS = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'So
 const DAY_SHORT  = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
 
 const PRESETS = [
-  { value: 'morning',   label: 'Ranní',      sub: '10:00 – 16:00', from: '10:00', to: '16:00' },
-  { value: 'afternoon', label: 'Odpolední',  sub: '16:30 – 22:30', from: '16:30', to: '22:30' },
-  { value: 'fullday',   label: 'Celodenní',  sub: '10:00 – 22:00', from: '10:00', to: '22:00' },
-  { value: 'custom',    label: 'Vlastní',    sub: '',               from: '',      to: ''      },
+  { value: 'morning',    label: 'Ranní',       sub: '10:00 – 16:00', from: '10:00', to: '16:00' },
+  { value: 'afternoon',  label: 'Odpolední',   sub: '16:30 – 22:30', from: '16:30', to: '22:30' },
+  { value: 'fullday',    label: 'Celodenní',   sub: '10:00 – 22:00', from: '10:00', to: '22:00' },
+  { value: 'allevening', label: 'Celovečerní', sub: '16:30 – 07:00', from: '16:30', to: '31:00' },
+  { value: 'night',      label: 'Noční',       sub: '23:00 – 07:00', from: '23:00', to: '31:00' },
+  { value: 'custom',     label: 'Vlastní',     sub: '',               from: '',      to: ''      },
 ];
 
 function detectPreset(from: string | null, to: string | null): string {
@@ -22,6 +25,8 @@ function detectPreset(from: string | null, to: string | null): string {
   if (f === '10:00' && t === '16:00') return 'morning';
   if (f === '16:30' && t === '22:30') return 'afternoon';
   if (f === '10:00' && t === '22:00') return 'fullday';
+  if (f === '16:30' && t === '31:00') return 'allevening';
+  if (f === '23:00' && t === '31:00') return 'night';
   return 'custom';
 }
 
@@ -59,8 +64,8 @@ export default async function WeeklyScheduleForm({ girlId }: Props) {
             const currentPreset = isActive
               ? detectPreset(existing?.from ?? null, existing?.to ?? null)
               : 'fullday';
-            const currentFrom = existing?.from ?? '10:00';
-            const currentTo   = existing?.to   ?? '22:00';
+            const currentFrom = existing?.from ? displayTime(existing.from) : '10:00';
+            const currentTo   = existing?.to   ? displayTime(existing.to)   : '22:00';
 
             return (
               <div key={i} className={`day-row${isActive ? ' active' : ''}`}>

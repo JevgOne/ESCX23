@@ -18,6 +18,7 @@ import {
   updateGirlById,
   deleteGirlById,
 } from './queries';
+import { toStorageTime } from './utils';
 
 export async function updateGirl(formData: FormData) {
   await requireAdmin();
@@ -705,12 +706,16 @@ export async function updatePricingPlan(formData: FormData) {
   const id = Number(formData.get('id'));
   if (!id) throw new Error('Missing id');
 
+  const nightPriceRaw = formData.get('night_price');
+  const nightPrice = nightPriceRaw && String(nightPriceRaw).trim() !== '' ? Number(nightPriceRaw) : null;
+
   await db.execute({
-    sql: `UPDATE pricing_plans SET duration=?, price=?, is_popular=?, display_order=?, is_active=?,
+    sql: `UPDATE pricing_plans SET duration=?, price=?, night_price=?, is_popular=?, display_order=?, is_active=?,
           title_cs=?, title_en=?, title_de=?, title_uk=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
     args: [
       Number(formData.get('duration')),
       Number(formData.get('price')),
+      nightPrice,
       formData.get('is_popular') === 'on' ? 1 : 0,
       Number(formData.get('display_order') ?? 0),
       formData.get('is_active') === 'on' ? 1 : 0,
@@ -729,12 +734,16 @@ export async function updatePricingPlan(formData: FormData) {
 
 export async function createPricingPlan(formData: FormData) {
   await requireFullAdmin();
+  const nightPriceRaw = formData.get('night_price');
+  const nightPrice = nightPriceRaw && String(nightPriceRaw).trim() !== '' ? Number(nightPriceRaw) : null;
+
   await db.execute({
-    sql: `INSERT INTO pricing_plans (duration, price, is_popular, display_order, is_active, title_cs, title_en, title_de, title_uk)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO pricing_plans (duration, price, night_price, is_popular, display_order, is_active, title_cs, title_en, title_de, title_uk)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       Number(formData.get('duration')),
       Number(formData.get('price')),
+      nightPrice,
       formData.get('is_popular') === 'on' ? 1 : 0,
       Number(formData.get('display_order') ?? 0),
       formData.get('is_active') === 'on' ? 1 : 0,
@@ -1068,6 +1077,8 @@ const PRESET_TIMES: Record<string, [string, string]> = {
   ranni: ['10:00', '16:00'],
   odpoledni: ['16:30', '22:30'],
   celodenni: ['10:00', '22:00'],
+  celovecerni: ['16:30', '31:00'],
+  nocni: ['23:00', '31:00'],
 };
 
 export async function addGirlSchedule(formData: FormData) {
@@ -1101,8 +1112,9 @@ export async function addGirlSchedule(formData: FormData) {
     const pds = perDayStart ? String(perDayStart).trim() : '';
     const pde = perDayEnd ? String(perDayEnd).trim() : '';
     if (pds && pde) {
-      startTime = pds;
-      endTime = pde;
+      const converted = toStorageTime(pds, pde);
+      startTime = converted.from;
+      endTime = converted.to;
     } else if (PRESET_TIMES[preset]) {
       [startTime, endTime] = PRESET_TIMES[preset];
     } else {

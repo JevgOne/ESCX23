@@ -2,8 +2,8 @@ import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { redirect } from 'next/navigation';
-import { getGirlsForDay, getActiveLocations } from '@/lib/queries';
-import { pragueDateISO, pragueDayOfWeek } from '@/lib/utils';
+import { getGirlsForDay, getActiveLocations, type GirlCard } from '@/lib/queries';
+import { pragueDateISO, pragueDayOfWeek, type ShiftCategory } from '@/lib/utils';
 import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
 import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
@@ -228,13 +228,68 @@ export default async function RozvrhPage({ params, searchParams }: Props) {
           />
 
           {girls.length > 0 ? (
-            <GirlCardGrid girls={girls} priorityCount={4} />
+            <ShiftGroupedGrid girls={girls} locale={locale} />
           ) : (
             <EmptyState message={NO_ONE[locale] ?? NO_ONE.cs} />
           )}
         </div>
       </section>
     </main>
+  );
+}
+
+const GROUP_ORDER: ShiftCategory[] = ['morning', 'afternoon', 'allday', 'allevening', 'night'];
+
+const GROUP_LABELS: Record<ShiftCategory, Record<string, string>> = {
+  morning:    { cs: 'Ranní směna',       en: 'Morning shift',      de: 'Frühschicht',         uk: 'Ранкова зміна' },
+  afternoon:  { cs: 'Odpolední směna',   en: 'Afternoon shift',    de: 'Nachmittagsschicht',  uk: 'Денна зміна' },
+  allday:     { cs: 'Celodenní směna',   en: 'All-day shift',      de: 'Ganztagesschicht',    uk: 'Цілоденна зміна' },
+  allevening: { cs: 'Celovečerní směna', en: 'All-evening shift',  de: 'Ganzabendschicht',    uk: 'Вечірня зміна' },
+  night:      { cs: 'Noční směna',       en: 'Night shift',        de: 'Nachtschicht',        uk: 'Нічна зміна' },
+};
+
+function ShiftGroupedGrid({ girls, locale }: { girls: GirlCard[]; locale: string }) {
+  const groups = new Map<ShiftCategory, GirlCard[]>();
+  const ungrouped: GirlCard[] = [];
+  for (const cat of GROUP_ORDER) groups.set(cat, []);
+
+  for (const girl of girls) {
+    if (girl.shiftCategory) {
+      groups.get(girl.shiftCategory)!.push(girl);
+    } else {
+      ungrouped.push(girl);
+    }
+  }
+
+  // If only one group has girls, render flat (no headings)
+  const nonEmptyGroups = GROUP_ORDER.filter(cat => groups.get(cat)!.length > 0);
+  if (nonEmptyGroups.length <= 1 && ungrouped.length === 0) {
+    return <GirlCardGrid girls={girls} priorityCount={4} />;
+  }
+
+  let priorityRemaining = 4;
+  return (
+    <>
+      {GROUP_ORDER.map(cat => {
+        const catGirls = groups.get(cat)!;
+        if (catGirls.length === 0) return null;
+        const prio = priorityRemaining;
+        priorityRemaining = Math.max(0, priorityRemaining - catGirls.length);
+        return (
+          <section key={cat} className="rozvrh-shift-group">
+            <h2 className="rozvrh-group-heading">
+              {(cat === 'night' || cat === 'allevening') && <span className="rozvrh-moon" aria-hidden="true">&#127769;</span>}
+              {GROUP_LABELS[cat][locale] ?? GROUP_LABELS[cat].en}
+              <span className="rozvrh-group-count">{catGirls.length}</span>
+            </h2>
+            <GirlCardGrid girls={catGirls} priorityCount={prio} />
+          </section>
+        );
+      })}
+      {ungrouped.length > 0 && (
+        <GirlCardGrid girls={ungrouped} priorityCount={0} />
+      )}
+    </>
   );
 }
 

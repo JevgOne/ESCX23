@@ -12,6 +12,7 @@ interface PlanRow {
   id: number;
   duration: number;
   price: number;
+  night_price: number | null;
   is_popular: number;
   is_active: number;
   display_order: number;
@@ -58,6 +59,10 @@ export default async function AdminEditPlanPage({
             <div className="admin-form-field">
               <label htmlFor="price">Cena (Kč) *</label>
               <input id="price" name="price" type="number" required min={0} defaultValue={plan.price} />
+            </div>
+            <div className="admin-form-field">
+              <label htmlFor="night_price">Noční cena (Kč)</label>
+              <input id="night_price" name="night_price" type="number" min={0} defaultValue={plan.night_price ?? ''} placeholder="Prázdné = stejná jako denní" />
             </div>
             <div className="admin-form-field">
               <label htmlFor="display_order">Pořadí</label>

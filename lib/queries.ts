@@ -1,5 +1,5 @@
 import { db } from './db';
-import { pragueDateISO, pragueDayOfWeek, formatPragueTime } from './utils';
+import { pragueDateISO, pragueDayOfWeek, formatPragueTime, isWithinShift, isBeforeShift, isShiftEnded, displayTime, classifyShift, type ShiftCategory } from './utils';
 
 /* =========================================================
  *  Sprint 1 query helpers — čte přímo z importovaného Secretstory schema
@@ -56,6 +56,7 @@ export interface GirlCard {
   rating: number;
   reviewsCount: number;
   hashtags: string[];
+  shiftCategory: ShiftCategory | null;
 }
 
 /** Dívky nabízející konkrétní službu (pro /sluzba/[slug]). */
@@ -100,29 +101,30 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
     .map((r): GirlCard | null => {
       const isPaused = String(r.status ?? '') === 'inactive';
 
-      let from: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
-      let to: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
+      // Raw DB times (may be +24h for cross-midnight)
+      let rawFrom: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
+      let rawTo: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
       let status: GirlStatus = 'off';
 
       if (r.exception_type === 'unavailable') {
         if (!isPaused) return null;
       }
       if (r.exception_type === 'custom_hours') {
-        from = r.ex_from ? String(r.ex_from).substring(0, 5) : from;
-        to = r.ex_to ? String(r.ex_to).substring(0, 5) : to;
+        rawFrom = r.ex_from ? String(r.ex_from).substring(0, 5) : rawFrom;
+        rawTo = r.ex_to ? String(r.ex_to).substring(0, 5) : rawTo;
       }
 
-      if (from && to) {
-        if (now >= from && now <= to) status = 'working';
-        else if (now < from) status = 'later';
+      if (rawFrom && rawTo) {
+        if (isWithinShift(now, rawFrom, rawTo)) status = 'working';
+        else if (isBeforeShift(now, rawFrom, rawTo)) status = 'later';
         else status = 'off';
       }
 
       if (status === 'off' && !isPaused) return null;
 
       const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
-
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+      const category = rawFrom && rawTo ? classifyShift(rawFrom, rawTo) : null;
 
       return {
         id: Number(r.id),
@@ -138,8 +140,8 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
         photoCount: Number(r.photo_count),
         videoCount: Number(r.video_count),
         status: isPaused ? 'off' : status,
-        shiftFrom: from,
-        shiftTo: to,
+        shiftFrom: rawFrom ? displayTime(rawFrom) : null,
+        shiftTo: rawTo ? displayTime(rawTo) : null,
         tomorrowFrom: null,
         tomorrowTo: null,
         isVip: false,
@@ -151,6 +153,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
         hashtags: parseLangs(r.hashtags),
+        shiftCategory: category,
       };
     })
     .filter((g): g is GirlCard => g !== null)
@@ -221,23 +224,24 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
     .map((r): GirlCard | null => {
       const isPaused = String(r.status ?? '') === 'inactive';
 
-      let from: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
-      let to: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
+      // Raw DB times (may be +24h for cross-midnight)
+      let rawFrom: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
+      let rawTo: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
       let status: GirlStatus = 'off';
 
       // Today exceptions
       if (r.exception_type === 'unavailable') {
-        from = null;
-        to = null;
+        rawFrom = null;
+        rawTo = null;
       }
       if (r.exception_type === 'custom_hours') {
-        from = r.ex_from ? String(r.ex_from).substring(0, 5) : from;
-        to = r.ex_to ? String(r.ex_to).substring(0, 5) : to;
+        rawFrom = r.ex_from ? String(r.ex_from).substring(0, 5) : rawFrom;
+        rawTo = r.ex_to ? String(r.ex_to).substring(0, 5) : rawTo;
       }
 
-      if (from && to) {
-        if (now >= from && now <= to) status = 'working';
-        else if (now < from) status = 'later';
+      if (rawFrom && rawTo) {
+        if (isWithinShift(now, rawFrom, rawTo)) status = 'working';
+        else if (isBeforeShift(now, rawFrom, rawTo)) status = 'later';
         else status = 'off';
       }
 
@@ -256,6 +260,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
 
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
       const tmrwLoc = r.tmrw_location ? String(r.tmrw_location) : null;
+      const category = rawFrom && rawTo ? classifyShift(rawFrom, rawTo) : null;
 
       return {
         id: Number(r.id),
@@ -271,10 +276,10 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         photoCount: Number(r.photo_count),
         videoCount: Number(r.video_count),
         status: isPaused ? 'off' : status,
-        shiftFrom: from,
-        shiftTo: to,
-        tomorrowFrom: tmrwFrom,
-        tomorrowTo: tmrwTo,
+        shiftFrom: rawFrom ? displayTime(rawFrom) : null,
+        shiftTo: rawTo ? displayTime(rawTo) : null,
+        tomorrowFrom: tmrwFrom ? displayTime(tmrwFrom) : null,
+        tomorrowTo: tmrwTo ? displayTime(tmrwTo) : null,
         isVip: false,
         isPaused,
         isNew,
@@ -284,6 +289,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
         hashtags: parseLangs(r.hashtags),
+        shiftCategory: category,
       };
     })
     .filter((g): g is GirlCard => g !== null)
@@ -321,7 +327,7 @@ export async function getGirlBySlug(slug: string) {
 /** Aktivní pricing plans (programy 30/45/60/90/120 min). */
 export async function getActivePricingPlans() {
   const result = await db.execute(
-    `SELECT id, duration, price, is_popular, title_cs, title_en, title_de, title_uk
+    `SELECT id, duration, price, night_price, is_popular, title_cs, title_en, title_de, title_uk
      FROM pricing_plans WHERE is_active = 1
      ORDER BY duration ASC`
   );
@@ -419,8 +425,27 @@ export async function getHomepageStats(): Promise<HomepageStats> {
               COUNT(*) AS total_live,
               SUM(CASE
                 WHEN gs.start_time IS NOT NULL AND gs.end_time IS NOT NULL
-                  AND ? >= SUBSTR(gs.start_time,1,5)
-                  AND ? <= SUBSTR(gs.end_time,1,5)
+                  AND (
+                    CASE
+                      WHEN CAST(SUBSTR(gs.end_time,1,2) AS INTEGER) >= 24
+                      THEN (
+                        CASE
+                          WHEN ? < SUBSTR(gs.start_time,1,5)
+                          THEN PRINTF('%02d', CAST(SUBSTR(?,1,2) AS INTEGER) + 24) || SUBSTR(?,3)
+                          ELSE ?
+                        END
+                      ) >= SUBSTR(gs.start_time,1,5)
+                      AND (
+                        CASE
+                          WHEN ? < SUBSTR(gs.start_time,1,5)
+                          THEN PRINTF('%02d', CAST(SUBSTR(?,1,2) AS INTEGER) + 24) || SUBSTR(?,3)
+                          ELSE ?
+                        END
+                      ) <= SUBSTR(gs.end_time,1,5)
+                      ELSE ? >= SUBSTR(gs.start_time,1,5)
+                       AND ? <= SUBSTR(gs.end_time,1,5)
+                    END
+                  )
                 THEN 1 ELSE 0
               END) AS working_now
             FROM girls g
@@ -430,7 +455,7 @@ export async function getHomepageStats(): Promise<HomepageStats> {
                 AND (effective_from IS NULL OR effective_from <= ?)
             ) gs ON gs.girl_id = g.id AND gs.rn = 1
             WHERE g.status = 'active'`,
-      args: [now, now, dayOfWeek, today],
+      args: [now, now, now, now, now, now, now, now, now, now, dayOfWeek, today],
     }),
     db.execute(
       `SELECT COUNT(*) AS total, AVG(rating) AS avg_rating
@@ -752,6 +777,12 @@ export async function getGirlsForDay(
     const jsDay = new Date(d.toLocaleString('en-US', { timeZone: 'Europe/Prague' })).getDay();
     return jsDay === 0 ? 6 : jsDay - 1;
   })();
+  const prevDayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const prevDate = (() => {
+    const d = new Date(date + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  })();
   const today = pragueDateISO();
   const isToday = date === today;
   const tomorrowDate = (() => {
@@ -770,6 +801,8 @@ export async function getGirlsForDay(
         gs.start_time AS shift_from, gs.end_time AS shift_to, gs.is_active AS gs_active,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location, l.district AS schedule_district,
+        gs_prev.start_time AS prev_shift_from, gs_prev.end_time AS prev_shift_to,
+        l_prev.display_name AS prev_schedule_location,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         COALESCE(
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
@@ -790,27 +823,57 @@ export async function getGirlsForDay(
       ) gs ON gs.girl_id = g.id AND gs.rn = 1
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
+      LEFT JOIN (
+        SELECT girl_id, start_time, end_time, location_id,
+               ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+        FROM girl_schedules
+        WHERE day_of_week = ? AND is_active = 1
+          AND CAST(SUBSTR(end_time,1,2) AS INTEGER) >= 24
+          AND (effective_from IS NULL OR effective_from <= ?)
+      ) gs_prev ON gs_prev.girl_id = g.id AND gs_prev.rn = 1
+      LEFT JOIN locations l_prev ON l_prev.id = gs_prev.location_id
       WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
       ORDER BY g.name
     `,
-    args: [dayOfWeek, date, date],
+    args: [dayOfWeek, date, date, prevDayOfWeek, prevDate],
   });
 
   return result.rows
     .map((r): GirlCard | null => {
       if (r.exception_type === 'unavailable') return null;
 
-      let from: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
-      let to: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
+      // Raw DB times (may be +24h for cross-midnight)
+      let rawFrom: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
+      let rawTo: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
 
       if (r.exception_type === 'custom_hours') {
-        from = r.ex_from ? String(r.ex_from).substring(0, 5) : from;
-        to = r.ex_to ? String(r.ex_to).substring(0, 5) : to;
+        rawFrom = r.ex_from ? String(r.ex_from).substring(0, 5) : rawFrom;
+        rawTo = r.ex_to ? String(r.ex_to).substring(0, 5) : rawTo;
       }
 
-      if (!from || !to) return null;
+      // Check previous day's cross-midnight shift (morning portion on this day)
+      const prevFrom = r.prev_shift_from ? String(r.prev_shift_from).substring(0, 5) : null;
+      const prevTo = r.prev_shift_to ? String(r.prev_shift_to).substring(0, 5) : null;
+      let usePrevDay = false;
 
-      const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+      if (!rawFrom || !rawTo) {
+        // No same-day shift — check if prev day's cross-midnight extends into this day
+        if (prevFrom && prevTo && parseInt(prevTo.split(':')[0]) >= 24) {
+          // Use the morning portion: 00:00 to displayTime(prevTo)
+          const morningEnd = displayTime(prevTo);
+          if (!isToday || !now || now <= morningEnd) {
+            usePrevDay = true;
+          } else {
+            return null; // morning portion already ended
+          }
+        } else {
+          return null;
+        }
+      }
+
+      const scheduleLoc = usePrevDay
+        ? (r.prev_schedule_location ? String(r.prev_schedule_location) : null)
+        : (r.schedule_location ? String(r.schedule_location) : null);
       const loc = scheduleLoc;
       if (locationFilter && locationFilter !== 'all') {
         if (!loc) return null;
@@ -821,27 +884,52 @@ export async function getGirlsForDay(
       const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
 
       let status: GirlStatus = 'working';
-      let cardFrom: string | null = from;
-      let cardTo: string | null = to;
+      let cardFrom: string | null;
+      let cardTo: string | null;
+      let category: ShiftCategory;
       let tmrwFrom: string | null = null;
       let tmrwTo: string | null = null;
 
-      if (isToday) {
-        if (now && from && to) {
-          if (now >= from && now <= to) status = 'working';
-          else if (now < from) status = 'later';
-          else return null; // shift already ended today — don't show in schedule
+      if (usePrevDay) {
+        // Morning portion of prev day's cross-midnight shift
+        const morningEnd = displayTime(prevTo!);
+        cardFrom = '00:00';
+        cardTo = morningEnd;
+        category = classifyShift(prevFrom!, prevTo!);
+
+        if (isToday && now) {
+          if (now <= morningEnd) status = 'working';
+          else return null; // morning portion ended
+        } else if (isTomorrow) {
+          status = 'off';
+          tmrwFrom = cardFrom;
+          tmrwTo = cardTo;
+          cardFrom = null;
+          cardTo = null;
+        } else {
+          status = 'off';
         }
-      } else if (isTomorrow) {
-        // Tomorrow: show "Zítra" badge
-        status = 'off';
-        tmrwFrom = from;
-        tmrwTo = to;
-        cardFrom = null;
-        cardTo = null;
       } else {
-        // 2+ days out: show shift times but no status badge
-        status = 'off';
+        cardFrom = displayTime(rawFrom!);
+        cardTo = displayTime(rawTo!);
+        category = classifyShift(rawFrom!, rawTo!);
+
+        if (isToday) {
+          if (now && rawFrom && rawTo) {
+            if (isWithinShift(now, rawFrom, rawTo)) status = 'working';
+            else if (isBeforeShift(now, rawFrom, rawTo)) status = 'later';
+            else if (isShiftEnded(now, rawFrom, rawTo)) return null;
+            else return null;
+          }
+        } else if (isTomorrow) {
+          status = 'off';
+          tmrwFrom = cardFrom;
+          tmrwTo = cardTo;
+          cardFrom = null;
+          cardTo = null;
+        } else {
+          status = 'off';
+        }
       }
 
       return {
@@ -871,6 +959,7 @@ export async function getGirlsForDay(
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
         hashtags: parseLangs(r.hashtags),
+        shiftCategory: category,
       };
     })
     .filter((g): g is GirlCard => g !== null)
@@ -1648,20 +1737,20 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
   if (!r) return empty;
   if (r.exception_type === 'unavailable') return empty;
 
-  let from: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
-  let to: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
+  let rawFrom: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
+  let rawTo: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
 
   if (r.exception_type === 'custom_hours') {
-    from = r.ex_from ? String(r.ex_from).substring(0, 5) : from;
-    to = r.ex_to ? String(r.ex_to).substring(0, 5) : to;
+    rawFrom = r.ex_from ? String(r.ex_from).substring(0, 5) : rawFrom;
+    rawTo = r.ex_to ? String(r.ex_to).substring(0, 5) : rawTo;
   }
 
   // Compute status the same way as GirlCard
   let status: GirlStatus = 'off';
-  if (from && to) {
+  if (rawFrom && rawTo) {
     const now = formatPragueTime();
-    if (now >= from && now <= to) status = 'working';
-    else if (now < from) status = 'later';
+    if (isWithinShift(now, rawFrom, rawTo)) status = 'working';
+    else if (isBeforeShift(now, rawFrom, rawTo)) status = 'later';
     else status = 'off';
   }
 
@@ -1669,7 +1758,7 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
   const scheduleLocationSlug = r.schedule_location_slug ? String(r.schedule_location_slug) : null;
   const scheduleAddress = r.schedule_address ? String(r.schedule_address) : null;
 
-  return { shiftFrom: from, shiftTo: to, status, scheduleLocation, scheduleLocationSlug, scheduleAddress };
+  return { shiftFrom: rawFrom ? displayTime(rawFrom) : null, shiftTo: rawTo ? displayTime(rawTo) : null, status, scheduleLocation, scheduleLocationSlug, scheduleAddress };
 }
 
 /* =========================================================
@@ -1927,6 +2016,14 @@ export async function getGirlsForListing(
   else if (f.sort === 'name') orderSQL = 'g.name ASC';
   else if (f.sort === 'available_first') orderSQL = 'status_rank ASC, COALESCE(COALESCE(se.start_time, gs.start_time), gs2.start_time, \'ZZ\') ASC, g.name ASC';
 
+  // Helper SQL expression: adjust `now` for +24h cross-midnight shifts
+  // If end_time hour >= 24 and now < start_time, add 24 to now for comparison
+  const adjNowExpr = (startCol: string, endCol: string) =>
+    `CASE WHEN CAST(SUBSTR(${endCol},1,2) AS INTEGER) >= 24 AND ? < SUBSTR(${startCol},1,5) THEN PRINTF('%02d', CAST(SUBSTR(?,1,2) AS INTEGER) + 24) || SUBSTR(?,3) ELSE ? END`;
+  const effStart = `COALESCE(se.start_time, gs.start_time)`;
+  const effEnd = `COALESCE(se.end_time, gs.end_time)`;
+  const adjNow = adjNowExpr(effStart, effEnd);
+
   const baseSql = `
     SELECT
       g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
@@ -1941,21 +2038,21 @@ export async function getGirlsForListing(
       (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count,
       CASE
         WHEN se.exception_type = 'unavailable' THEN 0
-        WHEN (COALESCE(se.start_time, gs.start_time)) IS NOT NULL
-          AND ? >= SUBSTR(COALESCE(se.start_time, gs.start_time),1,5)
-          AND ? <= SUBSTR(COALESCE(se.end_time, gs.end_time),1,5)
+        WHEN (${effStart}) IS NOT NULL
+          AND (${adjNow}) >= SUBSTR(${effStart},1,5)
+          AND (${adjNow}) <= SUBSTR(${effEnd},1,5)
         THEN 1
         ELSE 0
       END AS working_now,
       CASE
         WHEN g.status = 'inactive' THEN 5
         WHEN se.exception_type = 'unavailable' THEN 4
-        WHEN (COALESCE(se.start_time, gs.start_time)) IS NOT NULL
-          AND ? >= SUBSTR(COALESCE(se.start_time, gs.start_time),1,5)
-          AND ? <= SUBSTR(COALESCE(se.end_time, gs.end_time),1,5)
+        WHEN (${effStart}) IS NOT NULL
+          AND (${adjNow}) >= SUBSTR(${effStart},1,5)
+          AND (${adjNow}) <= SUBSTR(${effEnd},1,5)
         THEN 1
-        WHEN (COALESCE(se.start_time, gs.start_time)) IS NOT NULL
-          AND ? < SUBSTR(COALESCE(se.start_time, gs.start_time),1,5)
+        WHEN (${effStart}) IS NOT NULL
+          AND (${adjNow}) < SUBSTR(${effStart},1,5)
         THEN 2
         WHEN gs2.start_time IS NOT NULL AND (se2.exception_type IS NULL OR se2.exception_type != 'unavailable')
         THEN 3
@@ -1982,7 +2079,18 @@ export async function getGirlsForListing(
     WHERE ${whereSQL}
   `;
 
-  const allArgs = [now, now, now, now, now, ...args.slice(0, 2), today, tomorrowDow, tomorrowDate, tomorrowDate, ...args.slice(2)];
+  // Each ${adjNow} expands to a CASE with 4 `?` params.
+  // working_now: 2x adjNow = 8 params
+  // status_rank: 3x adjNow = 12 params
+  // Total: 20 `now` params
+  const nowArgs = Array(20).fill(now);
+  const allArgs = [
+    ...nowArgs,
+    // JOINs
+    ...args.slice(0, 2), today, tomorrowDow, tomorrowDate, tomorrowDate,
+    // WHERE
+    ...args.slice(2),
+  ];
 
   const countResult = await db.execute({
     sql: `SELECT COUNT(*) AS cnt FROM (${baseSql}) sub`,
@@ -2006,16 +2114,16 @@ export async function getGirlsForListing(
     })
     .map((r): GirlCard => {
       const isPaused = String(r.status ?? '') === 'inactive';
-      let from: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
-      let to: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
+      let rawFrom: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
+      let rawTo: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
       if (r.exception_type === 'custom_hours') {
-        from = r.ex_from ? String(r.ex_from).substring(0, 5) : from;
-        to = r.ex_to ? String(r.ex_to).substring(0, 5) : to;
+        rawFrom = r.ex_from ? String(r.ex_from).substring(0, 5) : rawFrom;
+        rawTo = r.ex_to ? String(r.ex_to).substring(0, 5) : rawTo;
       }
       let status: GirlStatus = 'off';
-      if (from && to) {
-        if (now >= from && now <= to) status = 'working';
-        else if (now < from) status = 'later';
+      if (rawFrom && rawTo) {
+        if (isWithinShift(now, rawFrom, rawTo)) status = 'working';
+        else if (isBeforeShift(now, rawFrom, rawTo)) status = 'later';
       }
       // Tomorrow shift
       let tmrwFrom: string | null = r.tmrw_from ? String(r.tmrw_from).substring(0, 5) : null;
@@ -2024,6 +2132,7 @@ export async function getGirlsForListing(
 
       const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+      const category = rawFrom && rawTo ? classifyShift(rawFrom, rawTo) : null;
       return {
         id: Number(r.id),
         slug: String(r.slug),
@@ -2038,10 +2147,10 @@ export async function getGirlsForListing(
         photoCount: Number(r.photo_count),
         videoCount: Number(r.video_count),
         status: isPaused ? 'off' : status,
-        shiftFrom: from,
-        shiftTo: to,
-        tomorrowFrom: tmrwFrom,
-        tomorrowTo: tmrwTo,
+        shiftFrom: rawFrom ? displayTime(rawFrom) : null,
+        shiftTo: rawTo ? displayTime(rawTo) : null,
+        tomorrowFrom: tmrwFrom ? displayTime(tmrwFrom) : null,
+        tomorrowTo: tmrwTo ? displayTime(tmrwTo) : null,
         isVip: false,
         isPaused,
         isNew,
@@ -2051,6 +2160,7 @@ export async function getGirlsForListing(
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
         hashtags: parseLangs(r.hashtags),
+        shiftCategory: category,
       };
     });
 
@@ -2102,23 +2212,24 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
       const tags = parseLangs(r.hashtags);
       if (!tags.includes(slug)) return null;
 
-      let from: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
-      let to: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
+      let rawFrom: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
+      let rawTo: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;
 
       if (r.exception_type === 'custom_hours') {
-        from = r.ex_from ? String(r.ex_from).substring(0, 5) : from;
-        to = r.ex_to ? String(r.ex_to).substring(0, 5) : to;
+        rawFrom = r.ex_from ? String(r.ex_from).substring(0, 5) : rawFrom;
+        rawTo = r.ex_to ? String(r.ex_to).substring(0, 5) : rawTo;
       }
 
       let status: GirlStatus = 'off';
-      if (from && to) {
+      if (rawFrom && rawTo) {
         const now = formatPragueTime();
-        if (now >= from && now <= to) status = 'working';
-        else if (now < from) status = 'later';
+        if (isWithinShift(now, rawFrom, rawTo)) status = 'working';
+        else if (isBeforeShift(now, rawFrom, rawTo)) status = 'later';
       }
 
       const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+      const category = rawFrom && rawTo ? classifyShift(rawFrom, rawTo) : null;
 
       return {
         id: Number(r.id),
@@ -2134,8 +2245,8 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         photoCount: Number(r.photo_count),
         videoCount: Number(r.video_count),
         status,
-        shiftFrom: from,
-        shiftTo: to,
+        shiftFrom: rawFrom ? displayTime(rawFrom) : null,
+        shiftTo: rawTo ? displayTime(rawTo) : null,
         tomorrowFrom: null,
         tomorrowTo: null,
         isVip: false,
@@ -2147,6 +2258,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         rating: r.rating != null ? Number(r.rating) : 0,
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
         hashtags: tags,
+        shiftCategory: category,
       };
     })
     .filter((g): g is GirlCard => g !== null);
@@ -2342,6 +2454,7 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
       rating: r.rating != null ? Number(r.rating) : 0,
       reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
       hashtags: parseLangs(r.hashtags),
+      shiftCategory: null,
     }));
 }
 

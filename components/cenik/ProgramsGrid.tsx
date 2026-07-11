@@ -26,6 +26,9 @@ const CURRENCY_LABEL: Record<string, string> = {
 const PRICE_LOCALE: Record<string, string> = {
   cs: 'cs-CZ', en: 'en-GB', de: 'de-DE', uk: 'uk-UA',
 };
+const NIGHT_LABEL: Record<string, string> = {
+  cs: 'Noční', en: 'Night', de: 'Nacht', uk: 'Нічний',
+};
 
 function titleFor(p: Row, locale: string): string {
   const key = `title_${locale}` as keyof Row;
@@ -45,8 +48,10 @@ export default function ProgramsGrid({ programs, locale = 'cs' }: ProgramsGridPr
       {programs.map((p) => {
         const isPopular = Number(p.is_popular) === 1;
         const price = Number(p.price);
+        const nightPrice = p.night_price != null ? Number(p.night_price) : null;
         const duration = Number(p.duration);
         const title = titleFor(p, locale);
+        const nightLabel = NIGHT_LABEL[locale] ?? NIGHT_LABEL.en;
 
         return (
           <article key={String(p.id)} className={`program-card${isPopular ? ' program-card-popular' : ''}`}>
@@ -60,6 +65,15 @@ export default function ProgramsGrid({ programs, locale = 'cs' }: ProgramsGridPr
               <span className="program-card-price-num">{price.toLocaleString(priceLoc)}</span>
               <span className="program-card-price-cur">{currency}</span>
             </div>
+            {nightPrice != null && nightPrice !== price && (
+              <div className="program-card-night">
+                <span className="program-card-night-icon" aria-hidden="true">&#127769;</span>
+                <span className="program-card-night-label">{nightLabel}</span>
+                <span className="program-card-night-price">
+                  {nightPrice.toLocaleString(priceLoc)} {currency}
+                </span>
+              </div>
+            )}
             <div className="program-card-incl">✓ {incl}</div>
             <a href="#kontakt" className="program-card-cta">{book}</a>
           </article>

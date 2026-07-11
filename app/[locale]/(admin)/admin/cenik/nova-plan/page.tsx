@@ -38,6 +38,10 @@ export default async function AdminNovyPlanPage({
               <input id="price" name="price" type="number" required min={0} placeholder="3000" />
             </div>
             <div className="admin-form-field">
+              <label htmlFor="night_price">Noční cena (Kč)</label>
+              <input id="night_price" name="night_price" type="number" min={0} placeholder="Prázdné = stejná jako denní" />
+            </div>
+            <div className="admin-form-field">
               <label htmlFor="display_order">Pořadí</label>
               <input id="display_order" name="display_order" type="number" defaultValue={0} />
             </div>

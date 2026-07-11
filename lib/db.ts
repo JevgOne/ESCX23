@@ -41,6 +41,7 @@ async function runMigrations(client: Client) {
     'ALTER TABLE girls ADD COLUMN ethnicity TEXT DEFAULT NULL',
     'ALTER TABLE girl_schedules ADD COLUMN effective_from DATE DEFAULT NULL',
     'ALTER TABLE girls ADD COLUMN style_wardrobe TEXT DEFAULT NULL',
+    'ALTER TABLE pricing_plans ADD COLUMN night_price INTEGER DEFAULT NULL',
   ];
 
   for (const sql of migrations) {
@@ -48,6 +49,25 @@ async function runMigrations(client: Client) {
       await client.execute(sql);
     } catch {
       // Column already exists — OK
+    }
+  }
+
+  // Seed night prices for existing plans (idempotent — only updates NULL values)
+  const nightPrices: [number, number][] = [
+    [30, 2500],
+    [45, 2700],
+    [60, 3000],
+    [90, 4500],
+    [120, 5500],
+  ];
+  for (const [duration, nightPrice] of nightPrices) {
+    try {
+      await client.execute({
+        sql: 'UPDATE pricing_plans SET night_price = ? WHERE duration = ? AND night_price IS NULL',
+        args: [nightPrice, duration],
+      });
+    } catch {
+      // OK — table may not exist yet
     }
   }
 

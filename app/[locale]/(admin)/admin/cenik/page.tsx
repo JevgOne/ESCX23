@@ -13,6 +13,7 @@ interface PlanRow {
   id: number;
   duration: number;
   price: number;
+  night_price: number | null;
   is_popular: number;
   is_active: number;
   display_order: number;
@@ -36,6 +37,13 @@ const PLAN_COLS: DataTableColumn<PlanRow>[] = [
     key: 'price',
     label: 'Cena',
     render: (row) => <span>{row.price.toLocaleString('cs')} Kč</span>,
+  },
+  {
+    key: 'night_price',
+    label: 'Noční cena',
+    render: (row) => row.night_price != null
+      ? <span style={{ color: '#fbbf24' }}>&#127769; {row.night_price.toLocaleString('cs')} Kč</span>
+      : <span style={{ color: 'var(--color-text-dim)' }}>—</span>,
   },
   {
     key: 'is_popular',
@@ -107,7 +115,7 @@ export default async function AdminCenikPage({
   setRequestLocale(locale);
   await requireFullAdmin();
 
-  const plansResult = await db.execute('SELECT id, duration, price, is_popular, is_active, display_order, title_cs, title_en FROM pricing_plans ORDER BY display_order ASC, duration ASC');
+  const plansResult = await db.execute('SELECT id, duration, price, night_price, is_popular, is_active, display_order, title_cs, title_en FROM pricing_plans ORDER BY display_order ASC, duration ASC');
   const plans = plansResult.rows as unknown as PlanRow[];
 
   const extrasResult = await db.execute('SELECT id, price, display_order, is_active, name_cs, name_en FROM pricing_extras ORDER BY display_order ASC, id ASC');

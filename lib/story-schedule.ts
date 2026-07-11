@@ -9,7 +9,7 @@
  */
 
 import { db } from './db';
-import { pragueDayOfWeek, pragueDateISO, formatPragueTime } from './utils';
+import { pragueDayOfWeek, pragueDateISO, formatPragueTime, isWithinShift, displayTime } from './utils';
 
 interface ShiftEntry {
   dayOfWeek: number;
@@ -175,6 +175,32 @@ function calculateAccumulatedShiftMinutes(
       }
     }
 
+    // Check previous day's cross-midnight shift (morning portion on this day)
+    const prevDow = dow === 0 ? 6 : dow - 1;
+    const prevDate = new Date(dayDate);
+    prevDate.setDate(prevDate.getDate() - 1);
+    const prevDateISO = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}-${String(prevDate.getDate()).padStart(2, '0')}`;
+    const prevShift = getShiftForDate(prevDateISO, prevDow, schedule, exceptionsList);
+    if (prevShift && parseInt(prevShift.end.split(':')[0]) >= 24) {
+      // Previous day's shift extends into this day
+      const morningEndMin = parseTimeToMinutes(displayTime(prevShift.end));
+      let effectiveStart = 0; // midnight
+      let effectiveEnd = morningEndMin;
+
+      if (dateISO === startDateISO) {
+        const createdTimeMin = parseTimeToMinutes(formatPragueTime(createdAt));
+        effectiveStart = Math.max(effectiveStart, createdTimeMin);
+      }
+      if (dateISO === endDateISO) {
+        const nowTimeMin = parseTimeToMinutes(formatPragueTime(now));
+        effectiveEnd = Math.min(effectiveEnd, nowTimeMin);
+      }
+
+      if (effectiveEnd > effectiveStart) {
+        totalMinutes += (effectiveEnd - effectiveStart);
+      }
+    }
+
     dayDate.setDate(dayDate.getDate() + 1);
   }
 
@@ -196,10 +222,22 @@ function isCurrentlyOnShift(
   const now = new Date();
   const { dateISO, time, dow } = pragueComponents(now);
 
+  // Check today's shift
   const shift = getShiftForDate(dateISO, dow, schedule, exceptionsList);
-  if (!shift) return false;
+  if (shift && isWithinShift(time, shift.start, shift.end)) return true;
 
-  return time >= shift.start && time <= shift.end;
+  // Check previous day's cross-midnight shift (morning portion today)
+  const prevDow = dow === 0 ? 6 : dow - 1;
+  const prevDate = new Date(now);
+  prevDate.setDate(prevDate.getDate() - 1);
+  const prevDateISO = pragueDateISO(prevDate);
+  const prevShift = getShiftForDate(prevDateISO, prevDow, schedule, exceptionsList);
+  if (prevShift && parseInt(prevShift.end.split(':')[0]) >= 24) {
+    const morningEnd = displayTime(prevShift.end);
+    if (time <= morningEnd) return true;
+  }
+
+  return false;
 }
 
 export interface PublicStoryFiltered {

@@ -675,6 +675,20 @@ export default async function AdminSchedulesPage({
                               <span className="sched-preset-time">10:00 – 22:00</span>
                             </span>
                           </label>
+                          <label className="sched-preset-opt">
+                            <input type="radio" name={`preset_${i}`} value="celovecerni" />
+                            <span className="sched-preset-chip">
+                              <span className="sched-preset-name">Celovečerní</span>
+                              <span className="sched-preset-time">16:30 – 07:00</span>
+                            </span>
+                          </label>
+                          <label className="sched-preset-opt">
+                            <input type="radio" name={`preset_${i}`} value="nocni" />
+                            <span className="sched-preset-chip">
+                              <span className="sched-preset-name">Noční</span>
+                              <span className="sched-preset-time">23:00 – 07:00</span>
+                            </span>
+                          </label>
                         </div>
 
                         <div className="sched-custom-row">
@@ -700,7 +714,7 @@ export default async function AdminSchedulesPage({
             </div>
             <script dangerouslySetInnerHTML={{ __html: `
               (function(){
-                var P={ranni:['10:00','16:00'],odpoledni:['16:30','22:30'],celodenni:['10:00','22:00']};
+                var P={ranni:['10:00','16:00'],odpoledni:['16:30','22:30'],celodenni:['10:00','22:00'],celovecerni:['16:30','07:00'],nocni:['23:00','07:00']};
                 document.querySelector('.sched-form').addEventListener('change',function(e){
                   var t=e.target;
                   if(t.type==='radio'&&t.name.startsWith('preset_')){

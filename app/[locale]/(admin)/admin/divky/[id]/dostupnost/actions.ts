@@ -2,13 +2,15 @@
 
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
-import { pragueDateISO } from '@/lib/utils';
+import { pragueDateISO, toStorageTime } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
 
 const PRESETS: Record<string, { from: string; to: string }> = {
-  morning:   { from: '10:00', to: '16:00' },
-  afternoon: { from: '16:30', to: '22:30' },
-  fullday:   { from: '10:00', to: '22:00' },
+  morning:    { from: '10:00', to: '16:00' },
+  afternoon:  { from: '16:30', to: '22:30' },
+  fullday:    { from: '10:00', to: '22:00' },
+  allevening: { from: '16:30', to: '31:00' },
+  night:      { from: '23:00', to: '31:00' },
 };
 
 export async function saveWeeklySchedule(formData: FormData) {
@@ -42,7 +44,7 @@ export async function saveWeeklySchedule(formData: FormData) {
 
     if (active) {
       const times = preset === 'custom'
-        ? { from: customFrom, to: customTo }
+        ? toStorageTime(customFrom, customTo)
         : (PRESETS[preset] ?? PRESETS.fullday);
 
       const rawLoc = formData.get(`day_${day}_location`) as string | null;
