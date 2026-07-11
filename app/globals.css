@@ -5082,6 +5082,46 @@ html.lightbox-active .profile-sticky-bar-desktop {
 }
 .night-pricing-note p { margin: 0; line-height: 1.5; }
 
+/* Night price banner (top bar during 23:00–07:00) */
+.night-price-banner {
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  background: linear-gradient(90deg, #1a1030 0%, #2d1640 100%);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.25);
+}
+.night-price-banner-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+.night-price-banner-icon { font-size: 16px; flex-shrink: 0; }
+.night-price-banner-text { flex: 1; }
+.night-price-banner-link {
+  color: #fbbf24;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.night-price-banner-link:hover { text-decoration: underline; }
+.night-price-banner-close {
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 6px;
+  line-height: 1;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.night-price-banner-close:hover { color: var(--color-text); background: rgba(255,255,255,0.08); }
+
 /* Extras table */
 .extras-note-card {
   background: var(--color-bg-card);

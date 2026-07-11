@@ -9,6 +9,7 @@ import SiteHeader from '@/components/layout/SiteHeader';
 import SiteFooter from '@/components/layout/SiteFooter';
 import MobileBottomBar from '@/components/layout/MobileBottomBar';
 import AgeGate from '@/components/AgeGate';
+import NightPriceBanner from '@/components/NightPriceBanner';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { Suspense } from 'react';
 import '../globals.css';
@@ -106,6 +107,11 @@ export default async function LocaleLayout({
   const pathname = hdrs.get('x-pathname') ?? '';
   const isProtectedArea = pathname.includes('/admin') || pathname.includes('/studio');
 
+  const pragueHour = new Date(
+    new Date().toLocaleString('en-US', { timeZone: 'Europe/Prague' })
+  ).getHours();
+  const isNightHours = pragueHour >= 23 || pragueHour < 7;
+
   return (
     <html lang={locale} className={`${inter.variable} ${playfair.variable}`}>
       <head>
@@ -118,6 +124,7 @@ export default async function LocaleLayout({
         </Suspense>
         <NextIntlClientProvider>
           {!isProtectedArea && <AgeGate />}
+          {!isProtectedArea && isNightHours && <NightPriceBanner locale={locale} />}
           <SiteHeader locale={locale} />
           {children}
           <SiteFooter />
