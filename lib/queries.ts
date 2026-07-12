@@ -2113,6 +2113,11 @@ export async function getGirlsForListing(
       if (rawFrom && rawTo) {
         if (isWithinShift(now, rawFrom, rawTo)) status = 'working';
         else if (isBeforeShift(now, rawFrom, rawTo)) status = 'later';
+        else {
+          // Shift ended — clear times so no stale badge shows
+          rawFrom = null;
+          rawTo = null;
+        }
       }
       // Tomorrow shift
       let tmrwFrom: string | null = r.tmrw_from ? String(r.tmrw_from).substring(0, 5) : null;
