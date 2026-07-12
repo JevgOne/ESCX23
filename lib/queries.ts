@@ -900,12 +900,6 @@ export async function getGirlsForDay(
         if (isToday && now) {
           if (now <= morningEnd) status = 'working';
           else return null; // morning portion ended
-        } else if (isTomorrow) {
-          status = 'off';
-          tmrwFrom = cardFrom;
-          tmrwTo = cardTo;
-          cardFrom = null;
-          cardTo = null;
         } else {
           status = 'off';
         }
@@ -921,13 +915,8 @@ export async function getGirlsForDay(
             else if (isShiftEnded(now, rawFrom, rawTo)) return null;
             else return null;
           }
-        } else if (isTomorrow) {
-          status = 'off';
-          tmrwFrom = cardFrom;
-          tmrwTo = cardTo;
-          cardFrom = null;
-          cardTo = null;
         } else {
+          // Future day (tomorrow or later) — show shift times normally
           status = 'off';
         }
       }
