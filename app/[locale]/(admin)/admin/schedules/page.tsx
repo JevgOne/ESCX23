@@ -36,6 +36,14 @@ export default async function AdminSchedulesPage({
 
   const totalCount = allData.reduce((s, d) => s + d.schedules.length, 0);
 
+  // Default effective_from = next Monday (schedules are typically set on Sunday)
+  const nowPrague = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Prague' }));
+  const todayDow = nowPrague.getDay(); // 0=Sun, 1=Mon...
+  const daysUntilMonday = todayDow === 0 ? 1 : todayDow === 1 ? 0 : 8 - todayDow;
+  const nextMonday = new Date(nowPrague);
+  nextMonday.setDate(nextMonday.getDate() + daysUntilMonday);
+  const nextMondayISO = nextMonday.toISOString().slice(0, 10);
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -628,8 +636,8 @@ export default async function AdminSchedulesPage({
                 <div className="sched-section">
                   <div className="sched-section-label">Platí od (volitelné)</div>
                   <div className="sched-time-field">
-                    <label style={{ fontSize: '11px', color: 'var(--color-text-dim)' }}>Nechat prázdné = platí hned</label>
-                    <input type="date" name="effective_from" style={{
+                    <label style={{ fontSize: '11px', color: 'var(--color-text-dim)' }}>Automaticky další pondělí — změňte dle potřeby</label>
+                    <input type="date" name="effective_from" defaultValue={nextMondayISO} style={{
                       background: 'rgba(0,0,0,0.3)', border: '1px solid var(--color-line-mid)',
                       borderRadius: '10px', padding: '10px 14px', color: 'var(--color-text)',
                       fontSize: '14px', maxWidth: '220px',
