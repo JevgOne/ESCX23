@@ -137,18 +137,6 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
             {laterLabel} {girl.shiftFrom}
           </span>
         )}
-        {girl.status === 'off' && !girl.isPaused && girl.tomorrowFrom && girl.tomorrowTo && (
-          <span className="girl-photo-time girl-photo-time-tomorrow">
-            <span className="girl-photo-dot" />
-            {(TMRW_LABEL[locale] ?? TMRW_LABEL.en)} {girl.tomorrowFrom}–{girl.tomorrowTo}
-          </span>
-        )}
-        {girl.status === 'off' && !girl.isPaused && !girl.tomorrowFrom && girl.shiftFrom && girl.shiftTo && (
-          <span className="girl-photo-time girl-photo-time-future">
-            <span className="girl-photo-dot" />
-            {girl.shiftFrom} — {girl.shiftTo}
-          </span>
-        )}
       </div>
 
       <div className="girl-info">
@@ -165,9 +153,7 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
                       ? ' girl-online-dot-working'
                       : girl.status === 'later'
                         ? ' girl-online-dot-later'
-                        : girl.tomorrowFrom
-                          ? ' girl-online-dot-tomorrow'
-                          : ' girl-online-dot-off'
+                        : ' girl-online-dot-off'
                 }`}
               />
             )}
