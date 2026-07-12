@@ -2129,6 +2129,8 @@ export async function getGirlsForListing(
       const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
       const tmrwLoc = r.tmrw_schedule_location ? String(r.tmrw_schedule_location) : null;
+      // Only show today's location if still working or starting later
+      const todayLoc = (status === 'working' || status === 'later') ? scheduleLoc : null;
       const category = rawFrom && rawTo ? classifyShift(rawFrom, rawTo) : null;
       return {
         id: Number(r.id),
@@ -2138,7 +2140,7 @@ export async function getGirlsForListing(
         height: r.height != null ? Number(r.height) : null,
         weight: r.weight != null ? Number(r.weight) : null,
         bust: r.bust != null ? Number(r.bust) : null,
-        location: scheduleLoc ?? tmrwLoc,
+        location: todayLoc ?? tmrwLoc,
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
         secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
