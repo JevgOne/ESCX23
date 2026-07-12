@@ -2022,6 +2022,7 @@ export async function getGirlsForListing(
       l.display_name AS schedule_location,
       gs2.start_time AS tmrw_from, gs2.end_time AS tmrw_to,
       se2.exception_type AS tmrw_ex_type,
+      l2.display_name AS tmrw_schedule_location,
       (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
       (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
       (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count,
@@ -2064,6 +2065,7 @@ export async function getGirlsForListing(
       WHERE day_of_week = ? AND is_active = 1
         AND (effective_from IS NULL OR effective_from <= ?)
     ) gs2 ON gs2.girl_id = g.id AND gs2.rn = 1
+    LEFT JOIN locations l2 ON l2.id = gs2.location_id
     LEFT JOIN schedule_exceptions se2 ON se2.girl_id = g.id AND se2.date = ?
     WHERE ${whereSQL}
   `;
@@ -2126,6 +2128,7 @@ export async function getGirlsForListing(
 
       const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
       const scheduleLoc = r.schedule_location ? String(r.schedule_location) : null;
+      const tmrwLoc = r.tmrw_schedule_location ? String(r.tmrw_schedule_location) : null;
       const category = rawFrom && rawTo ? classifyShift(rawFrom, rawTo) : null;
       return {
         id: Number(r.id),
@@ -2135,7 +2138,7 @@ export async function getGirlsForListing(
         height: r.height != null ? Number(r.height) : null,
         weight: r.weight != null ? Number(r.weight) : null,
         bust: r.bust != null ? Number(r.bust) : null,
-        location: scheduleLoc,
+        location: scheduleLoc ?? tmrwLoc,
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
         secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),
