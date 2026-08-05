@@ -44,6 +44,13 @@ async function runMigrations(client: Client) {
     'ALTER TABLE pricing_plans ADD COLUMN night_price INTEGER DEFAULT NULL',
   ];
 
+  // One-time fix: clear future effective_from that hid schedules from public page
+  try {
+    await client.execute("UPDATE girl_schedules SET effective_from = NULL WHERE effective_from > date('now')");
+  } catch {
+    // OK
+  }
+
   for (const sql of migrations) {
     try {
       await client.execute(sql);

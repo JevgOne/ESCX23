@@ -137,6 +137,11 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
             {laterLabel} {girl.shiftFrom}
           </span>
         )}
+        {girl.status === 'off' && girl.shiftFrom && girl.shiftTo && (
+          <span className="girl-photo-time girl-photo-time-off">
+            {girl.shiftFrom} — {girl.shiftTo}
+          </span>
+        )}
       </div>
 
       <div className="girl-info">
