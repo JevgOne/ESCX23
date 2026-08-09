@@ -238,7 +238,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: url(l, resolvePath('/hashtag/[slug]', l, slug)),
         lastModified: now,
         changeFrequency: 'weekly',
-        priority: 0.4,
+        priority: 0.6,
         alternates: { languages: alternates },
       });
     }

@@ -56,6 +56,14 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
         q: { cs: 'Kde se s blondýnkou potkám?', en: 'Where do I meet the blonde companion?', de: 'Wo treffe ich die Begleiterin?', uk: 'Де я зустріну блондинку?' },
         a: { cs: 'V diskrétním privátním apartmánu v centru Prahy (Praha 1, 2, 3 nebo 8). Přesnou adresu obdržíte po potvrzení termínu.', en: 'In a discreet private apartment in central Prague (Prague 1, 2, 3 or 8). Exact address sent after booking confirmation.', de: 'In einem diskreten privaten Apartment im Zentrum von Prag.', uk: 'У дискретному приватному апартаменті у центрі Праги.' },
       },
+      {
+        q: { cs: 'Kolik stojí setkání s blondýnkou?', en: 'How much does a meeting with a blonde companion cost?', de: 'Was kostet ein Treffen mit einer Blondine?', uk: 'Скільки коштує зустріч з блондинкою?' },
+        a: { cs: 'Ceny jsou jednotné pro všechny společnice a začínají od 2 000 Kč za 30 minut. Kompletní ceník najdete na stránce Ceník.', en: 'Prices are the same for all companions, starting from 2,000 CZK for 30 minutes. Full pricing on our Pricing page.', de: 'Die Preise sind für alle Begleiterinnen gleich, ab 2.000 CZK für 30 Minuten.', uk: 'Ціни єдині для всіх супутниць, від 2 000 CZK за 30 хвилин.' },
+      },
+      {
+        q: { cs: 'Můžu si blondýnku objednat i na hotel?', en: 'Can I book a blonde companion to my hotel?', de: 'Kann ich eine Blondine ins Hotel bestellen?', uk: 'Чи можу замовити блондинку до готелю?' },
+        a: { cs: 'Setkání probíhají výhradně v našich privátních apartmánech v centru Prahy. Outcall služby nenabízíme — zajišťujeme tak maximální diskrétnost a bezpečnost pro všechny.', en: 'Meetings take place exclusively in our private apartments in central Prague. We don\'t offer outcall — this ensures maximum discretion and safety for everyone.', de: 'Treffen finden ausschließlich in unseren privaten Apartments statt. Kein Outcall.', uk: 'Зустрічі проходять виключно у наших приватних апартаментах. Виїзд не пропонуємо.' },
+      },
     ],
     related: ['cernovlasky-praha', 'brunetky-praha', 'studentky-praha', 'gfe-praha', 'modre-oci', 'dlouhe-vlasy'],
     relatedLocations: ['vinohrady'],
@@ -69,10 +77,10 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       uk: 'Брюнетки Прага — перевірені брюнет супутниці у центрі. Дискретні апартаменти, прозорі ціни. Щодня 10:00–22:30.',
     },
     intro: {
-      cs: 'Brunetky v Praze nabízejí elegantní a smyslné setkání v diskrétních privátních apartmánech. Každá brunetka v naší agentuře je osobně ověřená — fotografie odpovídají realitě, profily jsou aktuální. Brunetky často přitahují klienty pro klasickou ženskou eleganci, výrazné rysy a tmavé vlasy. Vyberte si z aktuálně dostupných brunetek, podívejte se na rozvrh a ozvěte se přes WhatsApp pro okamžitou domluvu.',
-      en: 'Brunette companions in Prague offer elegant and sensual encounters in discreet private apartments. Every brunette is personally verified — photos match reality. Brunettes appeal to clients seeking classical feminine elegance, striking features, and dark hair. Browse available brunettes, check the schedule, and contact via WhatsApp for instant booking.',
-      de: 'Brünette in Prag bieten elegante und sinnliche Begegnungen in diskreten privaten Apartments. Jede Brünette ist persönlich verifiziert. Schauen Sie sich verfügbare Brünette an und kontaktieren Sie uns via WhatsApp.',
-      uk: 'Брюнетки у Празі пропонують елегантні зустрічі у дискретних приватних апартаментах. Кожна брюнетка особисто перевірена.',
+      cs: 'Brunetky v Praze nabízejí elegantní a smyslné setkání v diskrétních privátních apartmánech v centru města. Každá brunetka v naší agentuře LovelyGirls je osobně ověřená — fotografie odpovídají realitě, profily jsou aktuální a pravidelně kontrolované. Brunetky často přitahují klienty pro klasickou ženskou eleganci, výrazné rysy a tmavé vlasy. Nabízíme brunetky různých typů — od štíhlých po dívky s křivkami, od sportovních po sofistikované. Všechny mluví minimálně česky a anglicky. Vyberte si z aktuálně dostupných brunetek v rozvrhu, prohlédněte si galerie fotek a ozvěte se přes WhatsApp nebo Telegram pro okamžitou domluvu termínu.',
+      en: 'Brunette companions in Prague offer elegant and sensual encounters in discreet private apartments in the city center. Every brunette at LovelyGirls is personally verified — photos match reality, profiles are current and regularly checked. Brunettes appeal to clients seeking classical feminine elegance, striking features, and dark hair. We offer brunettes of various types — from slim to curvy, athletic to sophisticated. All speak at least Czech and English. Browse available brunettes in the schedule, explore photo galleries, and contact via WhatsApp or Telegram for instant booking.',
+      de: 'Brünette in Prag bieten elegante und sinnliche Begegnungen in diskreten privaten Apartments im Stadtzentrum. Jede Brünette bei LovelyGirls ist persönlich verifiziert — Fotos entsprechen der Realität, Profile werden regelmäßig aktualisiert. Wir bieten Brünette verschiedener Typen — von schlank bis kurvig, sportlich bis elegant. Alle sprechen mindestens Tschechisch und Englisch. Schauen Sie sich den Zeitplan an und kontaktieren Sie uns via WhatsApp.',
+      uk: 'Брюнетки у Празі пропонують елегантні та чуттєві зустрічі у дискретних приватних апартаментах у центрі міста. Кожна брюнетка у LovelyGirls особисто перевірена — фотографії відповідають реальності, профілі регулярно оновлюються. Ми пропонуємо брюнеток різних типів — від стрункіх до пишних, спортивних до елегантних. Усі розмовляють щонайменше чеською та англійською. Перегляньте графік доступності та зв\'яжіться через WhatsApp або Telegram.',
     },
     faq: [
       {
@@ -82,6 +90,14 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       {
         q: { cs: 'Mohu si vybrat konkrétní brunetku?', en: 'Can I choose a specific brunette?', de: 'Kann ich eine bestimmte Brünette wählen?', uk: 'Чи можу обрати конкретну брюнетку?' },
         a: { cs: 'Ano, vyberte si z profilů, napište nám její jméno přes WhatsApp a my potvrdíme dostupnost.', en: 'Yes — pick from profiles, message her name via WhatsApp, we confirm availability.', de: 'Ja — wählen Sie aus den Profilen.', uk: 'Так — оберіть з профілів.' },
+      },
+      {
+        q: { cs: 'Jaké programy nabízejí brunetky?', en: 'What programs do brunettes offer?', de: 'Welche Programme bieten die Brünetten an?', uk: 'Які програми пропонують брюнетки?' },
+        a: { cs: 'Stejné programy jako všechny naše společnice — od 30 minut po 120 minut. Většina brunetek nabízí i GFE (Girlfriend Experience). Detaily v ceníku.', en: 'Same programs as all our companions — from 30 to 120 minutes. Most brunettes also offer GFE (Girlfriend Experience). Details in pricing.', de: 'Gleiche Programme wie alle Begleiterinnen — 30 bis 120 Minuten, die meisten auch GFE.', uk: 'Ті ж програми, що й усі супутниці — від 30 до 120 хвилин. Більшість брюнеток також пропонують GFE.' },
+      },
+      {
+        q: { cs: 'Jak rychle mohu domluvit setkání s brunetkou?', en: 'How quickly can I arrange a meeting with a brunette?', de: 'Wie schnell kann ich ein Treffen vereinbaren?', uk: 'Як швидко можу домовити зустріч з брюнеткою?' },
+        a: { cs: 'Obvykle do 30 minut od prvního kontaktu. Napište přes WhatsApp nebo Telegram, ověříme dostupnost a pošleme adresu apartmánu.', en: 'Usually within 30 minutes of first contact. Message via WhatsApp or Telegram, we verify availability and send the apartment address.', de: 'In der Regel innerhalb von 30 Minuten. Kontaktieren Sie uns via WhatsApp.', uk: 'Зазвичай протягом 30 хвилин від першого контакту. Напишіть через WhatsApp або Telegram.' },
       },
     ],
     related: ['cernovlasky-praha', 'blondynky-praha', 'gfe-praha', 'elegantni-holky'],
@@ -119,12 +135,20 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       uk: 'GFE Прага — Girlfriend Experience з перевіреними супутницями. Автентична зустріч як з дівчиною.',
     },
     intro: {
-      cs: 'GFE neboli Girlfriend Experience je nejoblíbenější styl setkání. Není to mechanická služba — společnice s vámi tráví čas jako s přítelkyní: ležérní povídání, polibky, dotyky, intimní propojení. Naše GFE společnice jsou ověřené, mluví několika jazyky a vědí, jak vytvořit autentický zážitek bez umělé hry. Programy 60+ minut jsou pro GFE doporučované — méně času znamená méně prostoru pro skutečné propojení.',
-      en: 'GFE — Girlfriend Experience — is our most popular service. It\'s not mechanical: the companion spends time with you like a girlfriend would — casual conversation, kissing, touching, genuine intimacy. Our GFE companions are verified, multilingual, and know how to create an authentic experience without artificial performance. 60+ minute programs are recommended for GFE — less time means less room for real connection.',
-      de: 'GFE ist unsere beliebteste Dienstleistung. Die Begleiterin verbringt Zeit mit Ihnen wie eine Freundin — Gespräche, Küsse, echte Intimität.',
-      uk: 'GFE — Girlfriend Experience — найпопулярніший формат. Супутниця проводить час як дівчина: розмови, поцілунки, справжня близькість.',
+      cs: 'GFE neboli Girlfriend Experience je nejoblíbenější styl setkání v LovelyGirls Praha. Není to mechanická služba — společnice s vámi tráví čas jako s přítelkyní: ležérní povídání, polibky, dotyky, intimní propojení a vzájemná chemie. Naše GFE společnice jsou osobně ověřené, mluví několika jazyky a vědí, jak vytvořit autentický zážitek bez umělé hry. GFE v Praze nabízí většina našich společnic a je součástí standardního programu. Programy 60+ minut jsou pro GFE doporučované — méně času znamená méně prostoru pro skutečné propojení. Setkání probíhají v diskrétních apartmánech v centru Prahy s vlastním vchodem a plným soukromím.',
+      en: 'GFE — Girlfriend Experience — is the most popular style of encounter at LovelyGirls Prague. It\'s not mechanical: the companion spends time with you like a girlfriend would — casual conversation, kissing, touching, genuine intimacy and mutual chemistry. Our GFE companions are personally verified, multilingual, and know how to create an authentic experience without artificial performance. GFE is offered by most of our companions and is part of the standard program. 60+ minute programs are recommended — less time means less room for real connection. Meetings take place in discreet apartments in central Prague with private entrance and full privacy.',
+      de: 'GFE — Girlfriend Experience — ist die beliebteste Art des Treffens bei LovelyGirls Prag. Die Begleiterin verbringt Zeit mit Ihnen wie eine Freundin — Gespräche, Küsse, Berührungen, echte Intimität und gegenseitige Chemie. Unsere GFE-Begleiterinnen sind persönlich verifiziert und mehrsprachig. GFE wird von den meisten unserer Begleiterinnen angeboten. Programme ab 60 Minuten empfohlen. Treffen in diskreten Apartments im Zentrum von Prag.',
+      uk: 'GFE — Girlfriend Experience — найпопулярніший формат зустрічі у LovelyGirls Прага. Супутниця проводить час як дівчина: розмови, поцілунки, дотики, справжня близькість та взаємна хімія. Наші GFE-супутниці особисто перевірені та розмовляють кількома мовами. GFE пропонує більшість наших супутниць. Програми від 60 хвилин рекомендовані. Зустрічі у дискретних апартаментах у центрі Праги.',
     },
     faq: [
+      {
+        q: { cs: 'Co je Girlfriend Experience (GFE)?', en: 'What is Girlfriend Experience (GFE)?', de: 'Was ist Girlfriend Experience (GFE)?', uk: 'Що таке Girlfriend Experience (GFE)?' },
+        a: { cs: 'GFE je styl setkání, kdy společnice vytváří atmosféru autentického rande — polibky, objímání, konverzace a vzájemná chemie. U LovelyGirls Praha nabízí GFE většina společnic.', en: 'GFE is a style of encounter where the companion creates the atmosphere of an authentic date — kissing, cuddling, conversation and mutual chemistry. At LovelyGirls Prague, most companions offer GFE.', de: 'GFE ist ein Treffensstil, bei dem die Begleiterin die Atmosphäre eines authentischen Dates schafft — Küsse, Umarmungen, Gespräche.', uk: 'GFE — стиль зустрічі, де супутниця створює атмосферу справжнього побачення — поцілунки, обійми, розмови та взаємна хімія.' },
+      },
+      {
+        q: { cs: 'Kolik stojí GFE v Praze?', en: 'How much does GFE cost in Prague?', de: 'Was kostet GFE in Prag?', uk: 'Скільки коштує GFE у Празі?' },
+        a: { cs: 'GFE je součástí standardního programu od 2 000 Kč za 30 minut. Konkrétní ceny najdete v našem ceníku.', en: 'GFE is part of the standard program starting from 2,000 CZK for 30 minutes. Specific prices on our pricing page.', de: 'GFE ist Teil des Standardprogramms ab 2.000 CZK für 30 Minuten. Preise auf unserer Preisseite.', uk: 'GFE є частиною стандартної програми від 2 000 CZK за 30 хвилин. Конкретні ціни у нашому прайсі.' },
+      },
       {
         q: { cs: 'Co všechno GFE zahrnuje?', en: 'What does GFE include?', de: 'Was beinhaltet GFE?', uk: 'Що включає GFE?' },
         a: { cs: 'Polibky, něžné dotyky, oboustranný orální styk (s ochranou), klasický pohlavní styk, intimitu na úrovni přítelkyně. Konkrétní detaily dohodněte předem s vybranou společnicí.', en: 'Kissing, gentle touching, mutual oral (with protection), classic intercourse, girlfriend-level intimacy. Specifics arranged in advance with chosen companion.', de: 'Küssen, sanfte Berührungen, gegenseitiger Oralverkehr (geschützt), klassischer Geschlechtsverkehr.', uk: 'Поцілунки, ніжні дотики, оральний секс (з захистом), класичний секс, інтимність як з дівчиною.' },
@@ -132,6 +156,10 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       {
         q: { cs: 'Jaké programy jsou pro GFE nejlepší?', en: 'Which programs are best for GFE?', de: 'Welche Programme eignen sich für GFE?', uk: 'Які програми найкращі для GFE?' },
         a: { cs: 'Doporučujeme 90 nebo 120 minut. Třicet minut na GFE nestačí — chybí prostor na pomalé propojení.', en: 'We recommend 90 or 120 minutes. Thirty minutes isn\'t enough for GFE — no time for slow connection.', de: 'Wir empfehlen 90 oder 120 Minuten.', uk: 'Рекомендуємо 90 або 120 хвилин.' },
+      },
+      {
+        q: { cs: 'Nabízí GFE všechny vaše společnice?', en: 'Do all your companions offer GFE?', de: 'Bieten alle Begleiterinnen GFE an?', uk: 'Чи пропонують GFE усі ваші супутниці?' },
+        a: { cs: 'Většina ano. V profilu každé společnice najdete seznam služeb, které nabízí. GFE je označeno jako „Girlfriend Experience" v sekci služby.', en: 'Most do. Each companion\'s profile lists their offered services. GFE is labeled as "Girlfriend Experience" in the services section.', de: 'Die meisten ja. Im Profil jeder Begleiterin finden Sie die Liste der angebotenen Dienste.', uk: 'Більшість так. У профілі кожної супутниці знайдете список послуг. GFE позначено як «Girlfriend Experience».' },
       },
     ],
     related: ['blondynky-praha', 'brunetky-praha', 'studentky-praha', 'luxusni-sluzby', 'elegantni-holky'],
@@ -146,10 +174,10 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       uk: 'Студентки Прага — молоді перевірені супутниці (18+), дискретні апартаменти.',
     },
     intro: {
-      cs: 'Mladé studentky v Praze — energické, otevřené a zvědavé společnice ve věku od 18+ let. Studují, pracují s námi mimo školu, a často mluví anglicky či jinými cizími jazyky. Každá je osobně ověřená — máme zkontrolovaný občanský průkaz a souhlas. Žádné nezletilé, žádné fake profily.',
-      en: 'Young student companions in Prague — energetic, open-minded, curious escorts aged 18+. They study, work with us outside class, often speak English or other languages. Every one personally verified — we check ID and consent. No underage, no fake profiles.',
-      de: 'Junge Studentinnen in Prag — energiegeladen, offen, neugierig, 18+. Studium nebenher, oft mehrsprachig.',
-      uk: 'Молоді студентки у Празі — енергійні, відкриті, 18+. Навчаються, працюють поза заняттями, часто говорять кількома мовами.',
+      cs: 'Mladé studentky v Praze — energické, otevřené a zvědavé společnice ve věku od 18+ let. Studují na pražských univerzitách, pracují s námi mimo školu a často mluví plynně anglicky či jinými cizími jazyky. Každá je osobně ověřená — máme zkontrolovaný občanský průkaz a písemný souhlas. Žádné nezletilé, žádné fake profily. Studentky jsou oblíbené pro svou přirozenost, bezprostřednost a hravou energii. Setkání probíhají v diskrétních apartmánech v centru Prahy. V profilu každé studentky najdete její věk, jazyky, fotogalerii a dostupné služby. Programy začínají od 30 minut.',
+      en: 'Young student companions in Prague — energetic, open-minded, curious escorts aged 18+. They study at Prague universities, work with us outside class, and often speak fluent English or other languages. Every one personally verified — we check ID and have written consent. No underage, no fake profiles. Students are popular for their natural personality, spontaneity, and playful energy. Meetings take place in discreet apartments in central Prague. Each student\'s profile shows her age, languages, photo gallery, and available services. Programs start from 30 minutes.',
+      de: 'Junge Studentinnen in Prag — energiegeladen, offen und neugierig, 18+. Sie studieren an Prager Universitäten und arbeiten nebenher mit uns. Jede ist persönlich verifiziert — Ausweis und schriftliche Zustimmung. Keine Minderjährigen, keine Fake-Profile. Studentinnen sind beliebt für ihre Natürlichkeit, Spontanität und verspielte Energie. Treffen in diskreten Apartments im Zentrum von Prag. Programme ab 30 Minuten.',
+      uk: 'Молоді студентки у Празі — енергійні, відкриті та допитливі супутниці від 18 років. Навчаються у празьких університетах, працюють з нами поза заняттями, часто вільно говорять англійською та іншими мовами. Кожна особисто перевірена — перевіряємо посвідчення та маємо письмову згоду. Жодних неповнолітніх, жодних фейкових профілів. Студентки популярні завдяки природності, безпосередності та грайливій енергії. Зустрічі у дискретних апартаментах у центрі Праги.',
     },
     faq: [
       {
@@ -159,6 +187,14 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       {
         q: { cs: 'Jak ověřujete věk?', en: 'How do you verify age?', de: 'Wie wird das Alter verifiziert?', uk: 'Як перевіряєте вік?' },
         a: { cs: 'Občanským průkazem osobně před zveřejněním profilu. Žádná dívka pod 18 let v naší agentuře není.', en: 'In-person ID check before profile publication. No under-18 in our agency.', de: 'Persönliche Ausweiskontrolle vor Profilveröffentlichung.', uk: 'Особиста перевірка ID перед публікацією профілю.' },
+      },
+      {
+        q: { cs: 'Kolik stojí setkání se studentkou?', en: 'How much does a meeting with a student companion cost?', de: 'Was kostet ein Treffen mit einer Studentin?', uk: 'Скільки коштує зустріч зі студенткою?' },
+        a: { cs: 'Ceny jsou jednotné pro všechny společnice — od 2 000 Kč za 30 minut. Studentky nemají vyšší ani nižší ceny. Kompletní ceník na stránce Ceník.', en: 'Prices are the same for all companions — from 2,000 CZK for 30 minutes. Students have no higher or lower prices. Full pricing on the Pricing page.', de: 'Preise sind für alle Begleiterinnen gleich — ab 2.000 CZK. Kein Aufpreis für Studentinnen.', uk: 'Ціни єдині для всіх супутниць — від 2 000 CZK за 30 хвилин. Студентки не мають інших цін.' },
+      },
+      {
+        q: { cs: 'Nabízejí studentky GFE?', en: 'Do student companions offer GFE?', de: 'Bieten Studentinnen GFE an?', uk: 'Чи пропонують студентки GFE?' },
+        a: { cs: 'Většina studentek GFE (Girlfriend Experience) nabízí. Konkrétní služby najdete v profilu každé dívky v sekci Služby.', en: 'Most student companions offer GFE (Girlfriend Experience). Specific services listed in each girl\'s profile under Services.', de: 'Die meisten Studentinnen bieten GFE an. Details im jeweiligen Profil.', uk: 'Більшість студенток пропонують GFE (Girlfriend Experience). Конкретні послуги — у профілі кожної дівчини.' },
       },
     ],
     related: ['mlade-holky', 'blondynky-praha', 'brunetky-praha', 'gfe-praha', 'fit-holky'],
@@ -173,15 +209,27 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       uk: 'Супутниці Прага — 13 перевірених супутниць у центрі.',
     },
     intro: {
-      cs: 'LovelyGirls Praha provozuje 4 diskrétní privátní apartmány v centru Prahy s ověřenými společnicemi všech typů. Blondýnky, brunetky, štíhlé, s křivkami — výběr aktuálně dostupných najdete na stránce Dívky. Každý profil je osobně ověřený, fotografie odpovídají realitě, ceny jsou jasně uvedené. Žádný úvodní poplatek, žádné překvapení.',
-      en: 'LovelyGirls Prague operates 4 discreet private apartments in central Prague with verified companions of every type. Blondes, brunettes, slim, curvy — see currently available on the Girls page. Every profile personally verified, photos match reality, prices clearly listed. No upfront fee, no surprises.',
-      de: 'LovelyGirls Prag betreibt 4 diskrete private Apartments im Zentrum.',
-      uk: 'LovelyGirls Прага керує 4 дискретними апартаментами у центрі.',
+      cs: 'LovelyGirls Praha je prémiová agentura společnic v centru Prahy. Provozujeme diskrétní privátní apartmány v Praze 1, 2, 3 a 8 s osobně ověřenými společnicemi všech typů — blondýnky, brunetky, černovlásky, štíhlé, s křivkami, české i zahraniční. Každý profil je osobně ověřený, fotografie odpovídají realitě a ceny jsou jasně uvedené bez skrytých poplatků. Společnice mluví česky, anglicky a často i dalšími jazyky. Nabízíme programy od 30 minut po 120 minut, GFE (Girlfriend Experience), párové programy a další služby. Kontaktujte nás přes WhatsApp nebo Telegram pro okamžitou domluvu. Otevřeno denně 10:00–22:30.',
+      en: 'LovelyGirls Prague is a premium companion agency in central Prague. We operate discreet private apartments in Prague 1, 2, 3, and 8 with personally verified companions of every type — blondes, brunettes, dark-haired, slim, curvy, Czech and international. Every profile is personally verified, photos match reality, and prices are clearly listed with no hidden fees. Companions speak Czech, English, and often additional languages. We offer programs from 30 to 120 minutes, GFE (Girlfriend Experience), couples programs, and more. Contact us via WhatsApp or Telegram for instant booking. Open daily 10:00–22:30.',
+      de: 'LovelyGirls Prag ist eine Premium-Begleitagentur im Zentrum von Prag. Wir betreiben diskrete private Apartments in Prag 1, 2, 3 und 8 mit persönlich verifizierten Begleiterinnen aller Typen — Blondinen, Brünette, schlank, kurvig, tschechische und internationale. Jedes Profil ist verifiziert, Fotos entsprechen der Realität, Preise transparent. Programme von 30 bis 120 Minuten, GFE und mehr. Kontakt via WhatsApp oder Telegram. Täglich 10:00–22:30.',
+      uk: 'LovelyGirls Прага — преміальна агенція супутниць у центрі Праги. Ми керуємо дискретними приватними апартаментами у Празі 1, 2, 3 та 8 з особисто перевіреними супутницями всіх типів — блондинки, брюнетки, темноволосі, стрункі, пишні, чеські та міжнародні. Кожен профіль перевірений, фотографії відповідають реальності, ціни прозорі. Програми від 30 до 120 хвилин, GFE та інше. Зв\'яжіться через WhatsApp або Telegram. Щодня 10:00–22:30.',
     },
     faq: [
       {
         q: { cs: 'Kolik společnic je aktuálně k dispozici?', en: 'How many companions are currently available?', de: 'Wie viele Begleiterinnen sind verfügbar?', uk: 'Скільки супутниць наразі доступно?' },
         a: { cs: 'Aktuální dostupnost najdete v rozvrhu — aktualizujeme denně.', en: 'Live availability in the schedule, updated daily.', de: 'Aktuelle Verfügbarkeit im täglichen Zeitplan.', uk: 'Актуальна доступність — у графіку.' },
+      },
+      {
+        q: { cs: 'Jak si vybrat společnici?', en: 'How do I choose a companion?', de: 'Wie wähle ich eine Begleiterin?', uk: 'Як обрати супутницю?' },
+        a: { cs: 'Prohlédněte si profily na stránce Dívky — každý profil obsahuje fotogalerii, popis, služby, jazyky a tělesné parametry. Filtrujte podle typu (blondýnka, brunetka), lokace nebo služby. Po výběru nás kontaktujte přes WhatsApp.', en: 'Browse profiles on the Girls page — each profile includes photo gallery, description, services, languages, and body parameters. Filter by type (blonde, brunette), location, or service. After choosing, contact us via WhatsApp.', de: 'Profile auf der Mädchen-Seite durchsuchen — Fotos, Beschreibung, Dienste, Sprachen. Nach Auswahl via WhatsApp kontaktieren.', uk: 'Перегляньте профілі на сторінці Дівчата — кожен містить фотогалерею, опис, послуги, мови та параметри. Фільтруйте за типом або послугою. Зв\'яжіться через WhatsApp.' },
+      },
+      {
+        q: { cs: 'Jaké platební metody přijímáte?', en: 'What payment methods do you accept?', de: 'Welche Zahlungsmethoden akzeptieren Sie?', uk: 'Які способи оплати приймаєте?' },
+        a: { cs: 'Platba hotově na místě v apartmánu. Žádný úvodní poplatek, žádné zálohy online. Platíte až při setkání.', en: 'Cash payment on-site at the apartment. No upfront fee, no online deposits. You pay at the meeting.', de: 'Barzahlung vor Ort im Apartment. Keine Vorauszahlung, keine Online-Kaution.', uk: 'Оплата готівкою на місці в апартаменті. Жодних передоплат, жодних онлайн-депозитів.' },
+      },
+      {
+        q: { cs: 'Jsou vaše společnice zdravotně testované?', en: 'Are your companions health-tested?', de: 'Werden die Begleiterinnen gesundheitlich getestet?', uk: 'Чи проходять супутниці медичні тести?' },
+        a: { cs: 'Ano. Všechny společnice se pravidelně testují a dodržují přísné hygienické standardy. Ochrana je vždy povinná.', en: 'Yes. All companions are regularly tested and follow strict hygiene standards. Protection is always mandatory.', de: 'Ja. Alle Begleiterinnen werden regelmäßig getestet. Schutz ist immer Pflicht.', uk: 'Так. Усі супутниці регулярно тестуються та дотримуються суворих гігієнічних стандартів. Захист завжди обов\'язковий.' },
       },
     ],
     related: ['blondynky-praha', 'brunetky-praha', 'gfe-praha', 'studentky-praha', 'ceske-holky'],
@@ -196,15 +244,27 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       uk: 'Супутниці з натуральним бюстом у Празі — перевірені, без імплантів.',
     },
     intro: {
-      cs: 'Přírodní poprsí — autentický pocit a vzhled. Naše společnice s přírodním poprsím jsou ověřené a jejich tělesné parametry odpovídají realitě. V profilu každé dívky je uvedená velikost prsou a označení (přírodní/implantáty).',
-      en: 'Natural breasts — authentic feel and look. Our companions with natural breasts are verified and body measurements match reality. Each profile shows bust size and (natural/implant) indicator.',
-      de: 'Natürliche Brüste — authentisches Gefühl und Aussehen.',
-      uk: 'Натуральний бюст — справжній вигляд і відчуття.',
+      cs: 'Společnice s přírodním poprsím v Praze — autentický pocit a přirozený vzhled bez implantátů. Mnoho klientů preferuje přírodní poprsí pro jeho měkkost, přirozený tvar a autentický dotek. V LovelyGirls Praha nabízíme výběr ověřených společnic s přírodním poprsím různých velikostí — od menších po plnější. Každý profil obsahuje přesnou velikost prsou a jasné označení, zda jsou přírodní nebo s implantáty, takže víte přesně, co očekávat. Fotografie odpovídají realitě a tělesné parametry jsou pravidelně kontrolovány. Setkání probíhají v diskrétních apartmánech v centru Prahy.',
+      en: 'Companions with natural breasts in Prague — authentic feel and natural look without implants. Many clients prefer natural breasts for their softness, natural shape, and authentic touch. At LovelyGirls Prague we offer a selection of verified companions with natural breasts of various sizes — from smaller to fuller. Each profile shows exact bust size and a clear indicator of natural or implant, so you know exactly what to expect. Photos match reality and body measurements are regularly verified. Meetings in discreet apartments in central Prague.',
+      de: 'Begleiterinnen mit natürlicher Brust in Prag — authentisches Gefühl und natürlicher Look ohne Implantate. Viele Klienten bevorzugen natürliche Brüste für ihre Weichheit und natürliche Form. Bei LovelyGirls Prag bieten wir verifizierte Begleiterinnen mit natürlicher Brust verschiedener Größen. Jedes Profil zeigt die genaue Brustgröße und eine klare Angabe natürlich/Implantat. Fotos entsprechen der Realität.',
+      uk: 'Супутниці з натуральним бюстом у Празі — справжній вигляд і відчуття без імплантів. Багато клієнтів надають перевагу натуральному бюсту за його м\'якість, природну форму та автентичний дотик. У LovelyGirls Прага пропонуємо перевірених супутниць з натуральним бюстом різних розмірів. Кожен профіль містить точний розмір та позначення натуральний/імпланти. Фотографії відповідають реальності.',
     },
     faq: [
       {
         q: { cs: 'Jak poznám, že má společnice přírodní poprsí?', en: 'How do I know if breasts are natural?', de: 'Wie erkenne ich, ob die Brust natürlich ist?', uk: 'Як зрозуміти, що бюст натуральний?' },
-        a: { cs: 'V profilu každé dívky je u sloupce „Prsa" označení (přírodní/implantáty).', en: 'Each profile has a "Bust" field with natural/implant indicator.', de: 'Im Profil ist die Angabe natürlich/Implantat.', uk: 'У профілі вказано натуральні/імпланти.' },
+        a: { cs: 'V profilu každé dívky je u sloupce „Prsa" označení (přírodní/implantáty). Také najdete přesnou velikost — žádné dohady.', en: 'Each profile has a "Bust" field with natural/implant indicator plus exact size — no guesswork.', de: 'Im Profil ist die Angabe natürlich/Implantat plus exakte Größe.', uk: 'У профілі вказано натуральні/імпланти та точний розмір.' },
+      },
+      {
+        q: { cs: 'Kolik společnic s přírodním poprsím máte?', en: 'How many companions with natural breasts do you have?', de: 'Wie viele Begleiterinnen mit natürlicher Brust haben Sie?', uk: 'Скільки супутниць з натуральним бюстом у вас є?' },
+        a: { cs: 'Většina našich společnic má přírodní poprsí. Aktuální počet a dostupnost najdete na stránce Dívky — filtrujte podle hashtagu „přírodní poprsí".', en: 'Most of our companions have natural breasts. Current count and availability on the Girls page — filter by the "natural breasts" hashtag.', de: 'Die meisten unserer Begleiterinnen haben natürliche Brüste. Aktuell auf der Mädchen-Seite filtern.', uk: 'Більшість наших супутниць мають натуральний бюст. Актуальна кількість — на сторінці Дівчата.' },
+      },
+      {
+        q: { cs: 'Mají společnice s přírodním poprsím stejný ceník?', en: 'Do companions with natural breasts have the same pricing?', de: 'Haben Begleiterinnen mit natürlicher Brust die gleichen Preise?', uk: 'Чи мають супутниці з натуральним бюстом такий же прайс?' },
+        a: { cs: 'Ano. Ceník je jednotný pro všechny společnice bez ohledu na typ poprsí. Programy od 30 do 120 minut.', en: 'Yes. Pricing is the same for all companions regardless of breast type. Programs from 30 to 120 minutes.', de: 'Ja. Preise sind für alle Begleiterinnen gleich. Programme von 30 bis 120 Minuten.', uk: 'Так. Ціни однакові для всіх супутниць незалежно від типу бюсту. Програми від 30 до 120 хвилин.' },
+      },
+      {
+        q: { cs: 'Mohu si vybrat společnici podle velikosti poprsí?', en: 'Can I choose a companion by breast size?', de: 'Kann ich nach Brustgröße wählen?', uk: 'Чи можу обрати супутницю за розміром бюсту?' },
+        a: { cs: 'Ano. V profilu každé společnice najdete přesný rozměr a typ poprsí. Prohlédněte si profily na stránce Dívky a vyberte si podle svých preferencí.', en: 'Yes. Each companion\'s profile shows exact bust measurement and type. Browse profiles on the Girls page and choose by your preference.', de: 'Ja. Im Profil jeder Begleiterin finden Sie genaue Maße und Typ. Auf der Mädchen-Seite auswählen.', uk: 'Так. У профілі кожної супутниці знайдете точний розмір та тип бюсту. Оберіть на сторінці Дівчата.' },
       },
     ],
     related: ['blondynky-praha', 'brunetky-praha', 'stihla-postava', 'krivky'],

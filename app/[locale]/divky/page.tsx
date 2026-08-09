@@ -144,6 +144,18 @@ export default async function DivkyPage({ params, searchParams }: Props) {
         )}
         {/* All girls shown on single page */}
       </div>
+
+      <section className="seo-content">
+        <h2>{locale === 'cs' ? 'O naší agentuře' : locale === 'en' ? 'About our agency' : locale === 'de' ? 'Über unsere Agentur' : 'Про нашу агенцію'}</h2>
+        <p>{locale === 'cs'
+          ? 'LovelyGirls je prémiová escort agentura v Praze s 13 ověřenými společnicemi. Nabízíme setkání v diskrétních privátních apartmánech v centru Prahy — Vinohrady, Žižkov, Nové Město a Smíchov. Všechny společnice procházejí osobním pohovorem a verifikací fotek. Otevřeno denně 10:00–22:30, rychlá rezervace přes WhatsApp.'
+          : locale === 'en'
+          ? 'LovelyGirls is a premium escort agency in Prague with 13 verified companions. We offer meetings in discreet private apartments in central Prague — Vinohrady, Žižkov, New Town and Smíchov. All companions undergo personal interviews and photo verification. Open daily 10:00–22:30, instant WhatsApp booking.'
+          : locale === 'de'
+          ? 'LovelyGirls ist eine Premium-Escort-Agentur in Prag mit 13 verifizierten Begleiterinnen. Wir bieten Treffen in diskreten privaten Apartments im Zentrum von Prag — Vinohrady, Žižkov, Neustadt und Smíchov. Alle Begleiterinnen durchlaufen ein persönliches Gespräch und Fotoverifizierung. Täglich geöffnet 10:00–22:30, sofortige WhatsApp-Buchung.'
+          : 'LovelyGirls — преміальна ескорт-агенція у Празі з 13 перевіреними супутницями. Ми пропонуємо зустрічі в дискретних приватних апартаментах у центрі Праги — Виногради, Жижков, Нове Місто та Смíхов. Усі супутниці проходять особисту співбесіду та верифікацію фото. Відкрито щодня 10:00–22:30, швидке бронювання через WhatsApp.'
+        }</p>
+      </section>
     </main>
   );
 }

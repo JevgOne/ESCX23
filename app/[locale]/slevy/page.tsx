@@ -2,7 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getActiveDiscounts } from '@/lib/queries';
-import { discountOffersJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
+import { discountOffersJsonLd, breadcrumbListJsonLd, faqPageJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import DiscountsGrid from '@/components/slevy/DiscountsGrid';
 import LoyaltyExplainer from '@/components/slevy/LoyaltyExplainer';
@@ -37,6 +37,44 @@ const CANONICAL_PATH: Record<string, string> = {
   en: '/discounts',
   de: '/rabatte',
   uk: '/znyzhky',
+};
+
+interface FaqItem { q: string; a: string }
+interface FaqBundle { heading: string; items: FaqItem[] }
+
+const FAQ_DATA: Record<string, FaqBundle> = {
+  cs: {
+    heading: 'Často kladené dotazy ke slevám',
+    items: [
+      { q: 'Jak funguje věrnostní program?', a: 'Slevy se uplatňují automaticky. Po 3. návštěvě získáte 10 %, po 5. návštěvě 12 % a po 10. návštěvě 15 % slevu. Sleva platí 12 měsíců od poslední návštěvy.' },
+      { q: 'Lze kombinovat slevy?', a: 'Ne, slevy nelze kombinovat. Vždy se uplatní ta nejvýhodnější — například pokud máte věrnostní slevu 10 % a zároveň narozeninovou 20 %, dostanete 20 %.' },
+      { q: 'Jak získám narozeninovou slevu?', a: 'V den narozenin nebo do 7 dnů od nich zmíňte datum při objednávce přes WhatsApp nebo telefon. Sleva 20 % se uplatní na libovolný program, jednou ročně.' },
+    ],
+  },
+  en: {
+    heading: 'Discount FAQ',
+    items: [
+      { q: 'How does the loyalty program work?', a: 'Discounts are applied automatically. After your 3rd visit you receive 10 %, after the 5th visit 12 %, and after the 10th visit 15 % off. The discount is valid for 12 months from your last visit.' },
+      { q: 'Can discounts be combined?', a: 'No, discounts cannot be combined. The most favourable one always applies — for example, if you have a 10 % loyalty discount and a 20 % birthday discount, you get 20 %.' },
+      { q: 'How do I get a birthday discount?', a: 'On your birthday or within 7 days of it, mention the date when booking via WhatsApp or phone. The 20 % discount applies to any program, once per year.' },
+    ],
+  },
+  de: {
+    heading: 'Häufige Fragen zu Rabatten',
+    items: [
+      { q: 'Wie funktioniert das Treueprogramm?', a: 'Rabatte werden automatisch gewährt. Nach dem 3. Besuch erhalten Sie 10 %, nach dem 5. Besuch 12 % und nach dem 10. Besuch 15 %. Der Rabatt gilt 12 Monate ab Ihrem letzten Besuch.' },
+      { q: 'Können Rabatte kombiniert werden?', a: 'Nein, Rabatte sind nicht kombinierbar. Es gilt immer der günstigere — zum Beispiel: bei einem 10 % Treuebonus und einem 20 % Geburtstagsrabatt erhalten Sie 20 %.' },
+      { q: 'Wie erhalte ich den Geburtstagsrabatt?', a: 'Am Geburtstag oder innerhalb von 7 Tagen erwähnen Sie das Datum bei der Buchung über WhatsApp oder Telefon. 20 % Rabatt auf jedes Programm, einmal pro Jahr.' },
+    ],
+  },
+  uk: {
+    heading: 'Часті запитання про знижки',
+    items: [
+      { q: 'Як працює програма лояльності?', a: 'Знижки нараховуються автоматично. Після 3-го візиту ви отримуєте 10 %, після 5-го — 12 %, а після 10-го — 15 %. Знижка діє 12 місяців від останнього візиту.' },
+      { q: 'Чи можна комбінувати знижки?', a: 'Ні, знижки не сумуються. Діє завжди найвигідніша — наприклад, якщо у вас є 10 % лояльності та 20 % до дня народження, ви отримаєте 20 %.' },
+      { q: 'Як отримати знижку до дня народження?', a: 'У день народження або протягом 7 днів назвіть дату під час бронювання через WhatsApp або телефон. Знижка 20 % діє на будь-яку програму, раз на рік.' },
+    ],
+  },
 };
 
 export async function generateMetadata({
@@ -92,6 +130,12 @@ export default async function SlevyPage({
     { name: bcLabel, url: getCanonicalUrl(locale, '/slevy') },
   ]);
 
+  const faqBundle = FAQ_DATA[locale] ?? FAQ_DATA.en;
+  const faqSchema = faqPageJsonLd(
+    faqBundle.items.map((f) => ({ q: f.q, a: f.a })),
+    locale
+  );
+
   return (
     <main>
       <script
@@ -101,6 +145,10 @@ export default async function SlevyPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
       <Breadcrumbs
@@ -144,6 +192,20 @@ export default async function SlevyPage({
           )}
 
           <HowToUse locale={locale} />
+
+          <div style={{ marginTop: '48px' }}>
+            <h2 className="section-h2" style={{ fontSize: '28px', marginBottom: '16px' }}>
+              {faqBundle.heading}
+            </h2>
+            <div className="faq-list">
+              {faqBundle.items.map((f, i) => (
+                <details key={i} className="faq-item">
+                  <summary>{f.q}</summary>
+                  <div className="faq-item-body">{f.a}</div>
+                </details>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </main>

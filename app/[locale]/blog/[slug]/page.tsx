@@ -172,7 +172,7 @@ export default async function BlogDetailPage({ params }: Props) {
 
   const articleSchema = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'BlogPosting',
     '@id': `${canonicalUrl}#article`,
     headline: post.title,
     alternativeHeadline: post.excerpt ?? undefined,

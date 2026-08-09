@@ -26,16 +26,16 @@ export const revalidate = 0;
 
 const TITLES: Record<string, string> = {
   cs: 'Escort Praha — Ověřené společnice v privátním apartmánu | LovelyGirls',
-  en: 'Escort Prague — Verified Companions, Private Apartments | LovelyGirls',
-  de: 'Escort Prag — Verifizierte Begleiterinnen, Diskrete Apartments | LovelyGirls',
-  uk: 'Ескорт Прага — Перевірені супутниці, Приватні апартаменти | LovelyGirls',
+  en: 'Escort Prague — Verified Companions in Private Apartments | LovelyGirls',
+  de: 'Escort Prag — Verifizierte Begleiterinnen in privaten Apartments | LovelyGirls',
+  uk: 'Ескорт Прага — Перевірені супутниці у приватних апартаментах | LovelyGirls',
 };
 
 const DESCRIPTIONS: Record<string, string> = {
-  cs: '13 ověřených společnic v Praze. 4 diskrétní apartmány, transparentní ceník, otevřeno denně 10–22:30. Kontakt přes WhatsApp.',
-  en: '13 verified companions in Prague. 4 discreet apartments, transparent pricing, open daily 10–22:30. Instant WhatsApp booking.',
-  de: '13 verifizierte Begleiterinnen in Prag. 4 diskrete Apartments, transparente Preise, täglich 10–22:30. WhatsApp-Buchung.',
-  uk: '13 перевірених супутниць у Празі. 4 дискретних апартаменти, прозорі ціни, щодня 10–22:30. Бронювання через WhatsApp.',
+  cs: '13 ověřených společnic v Praze. 4 diskrétní apartmány v centru, transparentní ceník od 2 000 Kč, otevřeno denně 10–22:30. Rychlý kontakt přes WhatsApp.',
+  en: '13 verified companions in Prague. 4 discreet central apartments, transparent pricing from 2,000 CZK, open daily 10–22:30. Instant WhatsApp booking.',
+  de: '13 verifizierte Begleiterinnen in Prag. 4 diskrete Apartments im Zentrum, transparente Preise ab 2.000 CZK, täglich 10–22:30. WhatsApp-Buchung.',
+  uk: '13 перевірених супутниць у Празі. 4 дискретних апартаменти в центрі, прозорі ціни від 2 000 CZK, щодня 10–22:30. Бронювання через WhatsApp.',
 };
 
 export async function generateMetadata({

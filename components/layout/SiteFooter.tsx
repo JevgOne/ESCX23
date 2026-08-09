@@ -20,6 +20,13 @@ const TRUST: Record<string, { verified: string; discreet: string; hours: string;
 
 const LOCATIONS_LBL: Record<string, string> = { cs: 'Apartmány', en: 'Apartments', de: 'Apartments', uk: 'Апартаменти' };
 
+const POPULAR_LBL: Record<string, string> = {
+  cs: 'Populární kategorie',
+  en: 'Popular categories',
+  de: 'Beliebte Kategorien',
+  uk: 'Популярні категорії',
+};
+
 function pluralizeApartments(n: number, locale: string): string {
   if (locale === 'cs') return n === 1 ? 'apartmán' : (n >= 2 && n <= 4 ? 'apartmány' : 'apartmánů');
   if (locale === 'en') return n === 1 ? 'apartment' : 'apartments';
@@ -43,6 +50,7 @@ export default async function SiteFooter() {
   const logoSub = LOGO_SUB[locale] ?? LOGO_SUB.en;
   const trust = TRUST[locale] ?? TRUST.en;
   const locationsLbl = LOCATIONS_LBL[locale] ?? LOCATIONS_LBL.en;
+  const popularLbl = POPULAR_LBL[locale] ?? POPULAR_LBL.en;
 
   const [locations, stats] = await Promise.all([
     getActiveLocations().catch(() => []),
@@ -148,6 +156,19 @@ export default async function SiteFooter() {
               </div>
             );
           })()}
+
+          <div className="footer-col">
+            <h4>{popularLbl}</h4>
+            <ul>
+              <li><a href={`${localePrefix}/hashtag/blondynky-praha`}>{locale === 'en' ? 'Blondes Prague' : locale === 'de' ? 'Blondinen Prag' : locale === 'uk' ? 'Блондинки Прага' : 'Blondýnky Praha'}</a></li>
+              <li><a href={`${localePrefix}/hashtag/brunetky-praha`}>{locale === 'en' ? 'Brunettes Prague' : locale === 'de' ? 'Brünetten Prag' : locale === 'uk' ? 'Брюнетки Прага' : 'Brunetky Praha'}</a></li>
+              <li><a href={`${localePrefix}/hashtag/gfe-praha`}>{locale === 'en' ? 'GFE Prague' : locale === 'de' ? 'GFE Prag' : locale === 'uk' ? 'GFE Прага' : 'GFE Praha'}</a></li>
+              <li><a href={`${localePrefix}/hashtag/studentky-praha`}>{locale === 'en' ? 'Students Prague' : locale === 'de' ? 'Studentinnen Prag' : locale === 'uk' ? 'Студентки Прага' : 'Studentky Praha'}</a></li>
+              <li><Link href={{ pathname: '/sluzba/[slug]', params: { slug: 'classic' } }}>{locale === 'en' ? 'Classic service' : locale === 'de' ? 'Classic Service' : locale === 'uk' ? 'Класичний сервіс' : 'Služba Classic'}</Link></li>
+              <li><Link href={{ pathname: '/sluzba/[slug]', params: { slug: 'massage' } }}>{locale === 'en' ? 'Massage service' : locale === 'de' ? 'Massage Service' : locale === 'uk' ? 'Масаж' : 'Služba Massage'}</Link></li>
+              <li><Link href="/blog">{nav('blog')}</Link></li>
+            </ul>
+          </div>
         </div>
 
         <p className="footer-disclaimer">{t('disclaimer')}</p>

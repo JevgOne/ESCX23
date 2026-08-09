@@ -6,6 +6,7 @@ import { faqPageJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
 import FaqList from '@/components/faq/FaqList';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
+import { Link } from '@/i18n/navigation';
 import type { Row } from '@libsql/client';
 
 export const revalidate = 3600;
@@ -149,6 +150,28 @@ export default async function FaqPage({
               </p>
             </div>
           )}
+        </div>
+      </section>
+
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="container">
+          <h2 className="section-h2" style={{ fontSize: '22px', marginBottom: '16px' }}>
+            {locale === 'en' ? 'See also' : locale === 'de' ? 'Siehe auch' : locale === 'uk' ? 'Дивіться також' : 'Podívejte se také'}
+          </h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+            <Link href="/cenik" className="btn btn-ghost btn-sm">
+              {locale === 'en' ? 'Pricing' : locale === 'de' ? 'Preise' : locale === 'uk' ? 'Ціни' : 'Ceník'}
+            </Link>
+            <Link href="/divky" className="btn btn-ghost btn-sm">
+              {locale === 'en' ? 'Companions' : locale === 'de' ? 'Begleiterinnen' : locale === 'uk' ? 'Дівчата' : 'Dívky'}
+            </Link>
+            <Link href="/kontakt" className="btn btn-ghost btn-sm">
+              {locale === 'en' ? 'Contact' : locale === 'de' ? 'Kontakt' : locale === 'uk' ? 'Контакт' : 'Kontakt'}
+            </Link>
+            <Link href="/blog" className="btn btn-ghost btn-sm">
+              Blog
+            </Link>
+          </div>
         </div>
       </section>
     </main>
