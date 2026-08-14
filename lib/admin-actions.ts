@@ -306,11 +306,9 @@ export async function createGirlFromApplication(formData: FormData) {
   const app = res.rows[0];
   if (!app) throw new Error('Aplikace nenalezena');
 
-  // Use stage_name from form (admin-edited) or fall back to first word of application name
-  const stageName = String(formData.get('stage_name') ?? '').trim();
-  const appName = String(app.name ?? '').trim();
-  const name = stageName || appName.split(/\s+/)[0] || appName;
-  if (!name) throw new Error('Aplikace nemá jméno');
+  // Admin must provide a stage name — never use real name from application
+  const name = String(formData.get('stage_name') ?? '').trim();
+  if (!name) throw new Error('Vyplň umělecké jméno pro profil');
   const age = Number(app.age ?? 0);
   if (age < 18) throw new Error('Aplikace má věk pod 18');
 

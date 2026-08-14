@@ -472,12 +472,12 @@ function ActionsCard({ app }: { app: ApplicationRow }) {
         <form action={createGirlFromApplication} style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 12 }}>
           <input type="hidden" name="application_id" value={app.id} />
           <div className="apd-field">
-            <span className="apd-label">Jméno pro profil (bez příjmení!)</span>
+            <span className="apd-label">Umělecké jméno pro profil</span>
             <input
               type="text"
               name="stage_name"
-              defaultValue={app.name?.split(/\s+/)[0] ?? ''}
-              placeholder="Např. Jana"
+              defaultValue=""
+              placeholder="Např. Luna, Katy, Emily…"
               required
               style={{
                 padding: '8px 12px',
