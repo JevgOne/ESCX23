@@ -142,8 +142,8 @@ export async function createGirl(formData: FormData) {
   const nameCheck = await db.execute({ sql: `SELECT id FROM girls WHERE name=? LIMIT 1`, args: [name] });
   if (nameCheck.rows.length > 0) throw new Error('Dívka s tímto jménem již existuje');
 
-  // Auto-generate slug from name
-  const baseSlug = slugify(name);
+  // Generate slug from first word only (no surname in URL)
+  const baseSlug = slugify(name.split(/\s+/)[0] || name);
   let rawSlug = baseSlug;
   let suffix = 2;
   while (true) {
@@ -306,12 +306,15 @@ export async function createGirlFromApplication(formData: FormData) {
   const app = res.rows[0];
   if (!app) throw new Error('Aplikace nenalezena');
 
-  const name = String(app.name ?? '').trim();
+  // Use stage_name from form (admin-edited) or fall back to first word of application name
+  const stageName = String(formData.get('stage_name') ?? '').trim();
+  const appName = String(app.name ?? '').trim();
+  const name = stageName || appName.split(/\s+/)[0] || appName;
   if (!name) throw new Error('Aplikace nemá jméno');
   const age = Number(app.age ?? 0);
   if (age < 18) throw new Error('Aplikace má věk pod 18');
 
-  // Generate a unique slug. If `slugify(name)` is taken, append -2, -3, …
+  // Generate slug from stage name (safe — no surname)
   const baseSlug = slugify(name);
   let slug = baseSlug;
   let suffix = 2;

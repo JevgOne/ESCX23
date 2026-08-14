@@ -468,9 +468,28 @@ function ActionsCard({ app }: { app: ApplicationRow }) {
 
   return (
     <div className="apd-actions" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <form action={createGirlFromApplication} style={{ display: 'inline-flex' }}>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <form action={createGirlFromApplication} style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 12 }}>
           <input type="hidden" name="application_id" value={app.id} />
+          <div className="apd-field">
+            <span className="apd-label">Jméno pro profil (bez příjmení!)</span>
+            <input
+              type="text"
+              name="stage_name"
+              defaultValue={app.name?.split(/\s+/)[0] ?? ''}
+              placeholder="Např. Jana"
+              required
+              style={{
+                padding: '8px 12px',
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 8,
+                color: '#fff',
+                fontSize: 14,
+                width: 180,
+              }}
+            />
+          </div>
           <button type="submit" className="apd-btn apd-btn-approve">
             ✓ Přidat jako dívku
           </button>
