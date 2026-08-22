@@ -5,6 +5,8 @@ import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { routing } from '@/i18n/routing';
+import { getSiteFacts } from '@/lib/site-facts';
+import { verifiedCompanions } from '@/lib/plural';
 import SiteHeader from '@/components/layout/SiteHeader';
 import SiteFooter from '@/components/layout/SiteFooter';
 import MobileBottomBar from '@/components/layout/MobileBottomBar';
@@ -33,60 +35,65 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
-  title: {
-    default: 'LovelyGirls Prague — Premium Companions',
-    template: '%s · LovelyGirls',
-  },
-  description:
-    'LovelyGirls Prague: 13 verified companions, 4 private apartments in Prague 2, 8, 1 and 3, open daily 10:00–22:30. Fast WhatsApp/Telegram contact.',
-  applicationName: 'LovelyGirls Prague',
-  icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: '48x48' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
-    ],
-    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
-  },
-  referrer: 'strict-origin-when-cross-origin',
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+export async function generateMetadata(): Promise<Metadata> {
+  const { companionsCount } = await getSiteFacts();
+  const companions = `${companionsCount} ${verifiedCompanions(companionsCount, 'en')}`;
+
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+    title: {
+      default: 'LovelyGirls Prague — Premium Companions',
+      template: '%s · LovelyGirls',
+    },
+    description:
+      `LovelyGirls Prague: ${companions}, private apartments in central Prague, open daily 10:00–22:30. Fast WhatsApp/Telegram contact.`,
+    applicationName: 'LovelyGirls Prague',
+    icons: {
+      icon: [
+        { url: '/favicon.ico', sizes: '48x48' },
+        { url: '/icon.svg', type: 'image/svg+xml' },
+        { url: '/icon.png', sizes: '192x192', type: 'image/png' },
+      ],
+      apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+    },
+    referrer: 'strict-origin-when-cross-origin',
+    robots: {
       index: true,
       follow: true,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-      'max-video-preview': -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
     },
-  },
-  other: {
-    rating: 'adult',
-    RATING: 'RTA-5042-1996-1400-1577-RTA',
-    'content-rating': 'mature',
-    distribution: 'global',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    site: '@lovelygirls',
-    title: 'LovelyGirls Prague — Verified Companions',
-    description:
-      'LovelyGirls Prague: 13 verified companions, 4 private apartments in Prague 2, 8, 1 and 3, open daily 10:00–22:30.',
-    images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'LovelyGirls Prague' }],
-  },
-  openGraph: {
-    type: 'website',
-    siteName: 'LovelyGirls Prague',
-    locale: 'en_US',
-    alternateLocale: ['cs_CZ', 'de_DE', 'uk_UA'],
-    images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'LovelyGirls Prague' }],
-  },
-  verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-  },
-};
+    other: {
+      rating: 'adult',
+      RATING: 'RTA-5042-1996-1400-1577-RTA',
+      'content-rating': 'mature',
+      distribution: 'global',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: '@lovelygirls',
+      title: 'LovelyGirls Prague — Verified Companions',
+      description:
+        `LovelyGirls Prague: ${companions}, private apartments in central Prague, open daily 10:00–22:30.`,
+      images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'LovelyGirls Prague' }],
+    },
+    openGraph: {
+      type: 'website',
+      siteName: 'LovelyGirls Prague',
+      locale: 'en_US',
+      alternateLocale: ['cs_CZ', 'de_DE', 'uk_UA'],
+      images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'LovelyGirls Prague' }],
+    },
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    },
+  };
+}
 
 export default async function LocaleLayout({
   children,

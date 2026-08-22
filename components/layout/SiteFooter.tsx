@@ -1,7 +1,8 @@
 import { getTranslations, getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import LogoMark from '@/components/ui/LogoMark';
-import { getActiveLocations, getFooterStats } from '@/lib/queries';
+import { getActiveLocations } from '@/lib/queries';
+import { getSiteFacts } from '@/lib/site-facts';
 import { pragueDateISO } from '@/lib/utils';
 
 const LOGO_SUB: Record<string, string> = {
@@ -54,7 +55,7 @@ export default async function SiteFooter() {
 
   const [locations, stats] = await Promise.all([
     getActiveLocations().catch(() => []),
-    getFooterStats(),
+    getSiteFacts(),
   ]);
   const localePrefix = locale === 'en' ? '' : `/${locale}`;
 

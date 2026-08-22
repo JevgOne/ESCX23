@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { getSiteFacts, fillSiteFacts } from '@/lib/site-facts';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getLocationBySlug, getActiveLocations, getGirlsWithToday, getApartmentReviews, getApartmentRatingStats } from '@/lib/queries';
 import { submitApartmentReview } from '@/lib/apartment-review-actions';
@@ -284,7 +285,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!loc) return {};
   const M = META[locale] ?? META.en;
   const lc = getLocationContent(slug);
-  const desc = lc?.metaDesc[locale as 'cs' | 'en' | 'de' | 'uk'] ?? M.description(loc.displayName);
+  const desc = fillSiteFacts(
+    lc?.metaDesc[locale as 'cs' | 'en' | 'de' | 'uk'] ?? M.description(loc.displayName),
+    await getSiteFacts(),
+    locale
+  );
   const canonical = getCanonicalUrl(locale, `/pobocka/${slug}`);
   return applyDBOverride(`/${locale}/pobocka/${slug}`, {
     title: M.title(loc.displayName),

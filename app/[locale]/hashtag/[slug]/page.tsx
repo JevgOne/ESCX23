@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { getSiteFacts, fillSiteFacts } from '@/lib/site-facts';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { Link } from '@/i18n/navigation';
 import { getGirlsForHashtag } from '@/lib/queries';
@@ -79,7 +80,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : locale === 'de' ? `Begleiterinnen mit Schwerpunkt ${lowered} in Prag. Verifizierte Profile, transparente Preise.`
     : locale === 'uk' ? `Супутниці зі спеціалізацією ${lowered} у Празі. Перевірені профілі.`
     : `Companions specialising in ${lowered} in Prague. Verified profiles, transparent pricing.`;
-  const description = content?.metaDesc[locale as 'cs' | 'en' | 'de' | 'uk'] ?? fallbackDesc;
+  const description = fillSiteFacts(
+    content?.metaDesc[locale as 'cs' | 'en' | 'de' | 'uk'] ?? fallbackDesc,
+    await getSiteFacts(),
+    locale
+  );
   return applyDBOverride(`/${locale}/hashtag/${slug}`, {
     title,
     description,

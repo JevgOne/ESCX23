@@ -20,6 +20,8 @@ import {
 } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import { getHomepageStats } from '@/lib/queries';
+import { getSiteFacts } from '@/lib/site-facts';
+import { verifiedCompanions } from '@/lib/plural';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -31,12 +33,12 @@ const TITLES: Record<string, string> = {
   uk: 'Ескорт Прага — Перевірені супутниці у приватних апартаментах | LovelyGirls',
 };
 
-const DESCRIPTIONS: Record<string, string> = {
-  cs: '13 ověřených společnic v Praze. 4 diskrétní apartmány v centru, transparentní ceník od 2 000 Kč, otevřeno denně 10–22:30. Rychlý kontakt přes WhatsApp.',
-  en: '13 verified companions in Prague. 4 discreet central apartments, transparent pricing from 2,000 CZK, open daily 10–22:30. Instant WhatsApp booking.',
-  de: '13 verifizierte Begleiterinnen in Prag. 4 diskrete Apartments im Zentrum, transparente Preise ab 2.000 CZK, täglich 10–22:30. WhatsApp-Buchung.',
-  uk: '13 перевірених супутниць у Празі. 4 дискретних апартаменти в центрі, прозорі ціни від 2 000 CZK, щодня 10–22:30. Бронювання через WhatsApp.',
-};
+const describe = (n: number): Record<string, string> => ({
+  cs: `${n} ${verifiedCompanions(n, 'cs')} v Praze. Diskrétní apartmány v centru, transparentní ceník od 2 000 Kč, otevřeno denně 10–22:30. Rychlý kontakt přes WhatsApp.`,
+  en: `${n} ${verifiedCompanions(n, 'en')} in Prague. Discreet central apartments, transparent pricing from 2,000 CZK, open daily 10–22:30. Instant WhatsApp booking.`,
+  de: `${n} ${verifiedCompanions(n, 'de')} in Prag. Diskrete Apartments im Zentrum, transparente Preise ab 2.000 CZK, täglich 10–22:30. WhatsApp-Buchung.`,
+  uk: `${n} ${verifiedCompanions(n, 'uk')} у Празі. Дискретні апартаменти в центрі, прозорі ціни від 2 000 CZK, щодня 10–22:30. Бронювання через WhatsApp.`,
+});
 
 export async function generateMetadata({
   params,
@@ -48,6 +50,8 @@ export async function generateMetadata({
   const languages = getAlternates('/');
   const { getCustomOgImage } = await import('@/lib/seo/og');
   const customOg = await getCustomOgImage('home');
+  const { companionsCount } = await getSiteFacts();
+  const DESCRIPTIONS = describe(companionsCount);
 
   return applyDBOverride(`/${locale}`, {
     title: TITLES[locale] ?? TITLES.en,
@@ -82,6 +86,7 @@ export default async function HomePage({
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: 'geo' });
+  const { companionsCount } = await getSiteFacts();
   const stats = await getHomepageStats().catch(() => ({
     totalLive: 0,
     workingNow: 0,
@@ -109,7 +114,7 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
-      <p data-geo-lead className="sr-only">{t('home_lead')}</p>
+      <p data-geo-lead className="sr-only">{t('home_lead', { count: companionsCount })}</p>
       <Hero locale={locale} />
       <StoriesRow locale={locale} />
       <FeaturedNew locale={locale} />

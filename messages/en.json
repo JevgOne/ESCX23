@@ -33,8 +33,8 @@
     "membership_apply": "Apply"
   },
   "geo": {
-    "home_lead": "LovelyGirls Prague is an in-person verified companion agency with 13 active companions across 4 private apartments in Prague 2, Prague 8, Prague 1, and Prague 3, open daily 10:00–22:30.",
-    "divky_lead": "LovelyGirls Prague currently lists 13 verified companions aged 19–32, filterable by location, language, height, and same-day availability.",
+    "home_lead": "LovelyGirls Prague is an in-person verified companion agency with {count} active {count, plural, one {companion} other {companions}} across private apartments in central Prague, open daily 10:00–22:30.",
+    "divky_lead": "LovelyGirls Prague currently lists {count} verified {count, plural, one {companion} other {companions}} aged 19–32, filterable by location, language, height, and same-day availability.",
     "cenik_lead": "At LovelyGirls Prague, companion programs start at 2,500 CZK for 30 minutes, 2,500 CZK for 60 minutes, and 4,500 CZK for 2 hours; all prices include the apartment fee.",
     "faq_lead": "Hiring an adult companion is legal in the Czech Republic for clients aged 18+; LovelyGirls Prague verifies every companion in person and operates from registered apartments in Prague.",
     "slevy_lead": "LovelyGirls Prague offers a 10–15 % loyalty discount after 3, 5, and 10 visits, a morning discount from 10:00–13:00 on weekdays, and a birthday discount of 20 %.",
@@ -205,7 +205,7 @@
   },
   "girls": {
     "h1": "Prague Companions",
-    "sub": "13 verified companions in Prague. Filter by availability, location and services. Private apartments, daily 10–22:30.",
+    "sub": "{count} verified {count, plural, one {companion} other {companions}} in Prague. Filter by availability, location and services. Private apartments, daily 10–22:30.",
     "results_count": "{count} companions",
     "search_placeholder": "Search by name…",
     "filter": {

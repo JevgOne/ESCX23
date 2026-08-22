@@ -2,6 +2,8 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getGirlsForListing, getTopServicesForFilter } from '@/lib/queries';
+import { getSiteFacts } from '@/lib/site-facts';
+import { verifiedCompanions } from '@/lib/plural';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
 import FiltersBar from '@/components/divky/FiltersBar';
 // Pagination removed — show all girls on one page
@@ -25,10 +27,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const languages = getAlternates('/divky');
   const { buildOgImages } = await import('@/lib/seo/og');
   const ogImages = await buildOgImages('divky', locale, '/divky', t('h1'));
+  const { companionsCount } = await getSiteFacts();
+  const sub = t('sub', { count: companionsCount });
 
   return applyDBOverride(`/${locale}/divky`, {
     title: t('h1'),
-    description: t('sub'),
+    description: sub,
     alternates: {
       canonical,
       languages,
@@ -36,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       images: ogImages,
       title: t('h1'),
-      description: t('sub'),
+      description: sub,
       url: canonical,
       locale: ogLocale(locale),
     },
@@ -61,6 +65,8 @@ export default async function DivkyPage({ params, searchParams }: Props) {
   }).catch(() => ({ girls: [] as Awaited<ReturnType<typeof getGirlsForListing>>['girls'], total: 0 }));
 
   const services = await getTopServicesForFilter(12).catch(() => []);
+  // Same source as the footer trust strip — the SEO paragraph must not contradict it
+  const { companionsCount } = await getSiteFacts();
   const tGeo = await getTranslations({ locale, namespace: 'geo' });
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
@@ -85,9 +91,9 @@ export default async function DivkyPage({ params, searchParams }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <p data-geo-lead className="sr-only">{tGeo('divky_lead')}</p>
+      <p data-geo-lead className="sr-only">{tGeo('divky_lead', { count: companionsCount })}</p>
       <Breadcrumbs items={[{ label: tNav('girls') }]} locale={locale} />
-      <PageHeader title={t('h1')} subtitle={t('sub')} />
+      <PageHeader title={t('h1')} subtitle={t('sub', { count: companionsCount })} />
 
       {/* Quick category chips → SEO landing pages */}
       <div className="container">
@@ -148,12 +154,12 @@ export default async function DivkyPage({ params, searchParams }: Props) {
       <section className="seo-content">
         <h2>{locale === 'cs' ? 'O naší agentuře' : locale === 'en' ? 'About our agency' : locale === 'de' ? 'Über unsere Agentur' : 'Про нашу агенцію'}</h2>
         <p>{locale === 'cs'
-          ? 'LovelyGirls je prémiová escort agentura v Praze s 13 ověřenými společnicemi. Nabízíme setkání v diskrétních privátních apartmánech v centru Prahy — Vinohrady, Žižkov, Nové Město a Smíchov. Všechny společnice procházejí osobním pohovorem a verifikací fotek. Otevřeno denně 10:00–22:30, rychlá rezervace přes WhatsApp.'
+          ? `LovelyGirls je prémiová escort agentura v Praze s ${companionsCount} ověřenými společnicemi. Nabízíme setkání v diskrétních privátních apartmánech v centru Prahy — Vinohrady, Žižkov, Nové Město a Smíchov. Všechny společnice procházejí osobním pohovorem a verifikací fotek. Otevřeno denně 10:00–22:30, rychlá rezervace přes WhatsApp.`
           : locale === 'en'
-          ? 'LovelyGirls is a premium escort agency in Prague with 13 verified companions. We offer meetings in discreet private apartments in central Prague — Vinohrady, Žižkov, New Town and Smíchov. All companions undergo personal interviews and photo verification. Open daily 10:00–22:30, instant WhatsApp booking.'
+          ? `LovelyGirls is a premium escort agency in Prague with ${companionsCount} ${verifiedCompanions(companionsCount, 'en')}. We offer meetings in discreet private apartments in central Prague — Vinohrady, Žižkov, New Town and Smíchov. All companions undergo personal interviews and photo verification. Open daily 10:00–22:30, instant WhatsApp booking.`
           : locale === 'de'
-          ? 'LovelyGirls ist eine Premium-Escort-Agentur in Prag mit 13 verifizierten Begleiterinnen. Wir bieten Treffen in diskreten privaten Apartments im Zentrum von Prag — Vinohrady, Žižkov, Neustadt und Smíchov. Alle Begleiterinnen durchlaufen ein persönliches Gespräch und Fotoverifizierung. Täglich geöffnet 10:00–22:30, sofortige WhatsApp-Buchung.'
-          : 'LovelyGirls — преміальна ескорт-агенція у Празі з 13 перевіреними супутницями. Ми пропонуємо зустрічі в дискретних приватних апартаментах у центрі Праги — Виногради, Жижков, Нове Місто та Смíхов. Усі супутниці проходять особисту співбесіду та верифікацію фото. Відкрито щодня 10:00–22:30, швидке бронювання через WhatsApp.'
+          ? `LovelyGirls ist eine Premium-Escort-Agentur in Prag mit ${companionsCount} verifizierten Begleiterinnen. Wir bieten Treffen in diskreten privaten Apartments im Zentrum von Prag — Vinohrady, Žižkov, Neustadt und Smíchov. Alle Begleiterinnen durchlaufen ein persönliches Gespräch und Fotoverifizierung. Täglich geöffnet 10:00–22:30, sofortige WhatsApp-Buchung.`
+          : `LovelyGirls — преміальна ескорт-агенція у Празі з ${companionsCount} перевіреними супутницями. Ми пропонуємо зустрічі в дискретних приватних апартаментах у центрі Праги — Виногради, Жижков, Нове Місто та Смíхов. Усі супутниці проходять особисту співбесіду та верифікацію фото. Відкрито щодня 10:00–22:30, швидке бронювання через WhatsApp.`
         }</p>
       </section>
     </main>

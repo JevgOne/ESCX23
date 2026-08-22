@@ -203,10 +203,10 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
 
   'spolecnice-praha': {
     metaDesc: {
-      cs: 'Společnice Praha — 13 ověřených společnic v centru. Diskrétní apartmány Praha 1, 2, 3, 8. Transparentní ceny, ⭐ recenze, denně 10:00–22:30.',
-      en: 'Companions Prague — 13 verified companions in central apartments. Prague 1, 2, 3, 8. Transparent pricing, real reviews, daily 10:00–22:30.',
-      de: 'Begleiterinnen Prag — 13 verifizierte Begleiterinnen in zentralen Apartments.',
-      uk: 'Супутниці Прага — 13 перевірених супутниць у центрі.',
+      cs: 'Společnice Praha — {count} {companions} v centru. Diskrétní apartmány v centru Prahy. Transparentní ceny, ⭐ recenze, denně 10:00–22:30.',
+      en: 'Companions Prague — {count} {companions} in central apartments. Transparent pricing, real reviews, daily 10:00–22:30.',
+      de: 'Begleiterinnen Prag — {count} {companions} in zentralen Apartments.',
+      uk: 'Супутниці Прага — {count} {companions} у центрі.',
     },
     intro: {
       cs: 'LovelyGirls Praha je prémiová agentura společnic v centru Prahy. Provozujeme diskrétní privátní apartmány v Praze 1, 2, 3 a 8 s osobně ověřenými společnicemi všech typů — blondýnky, brunetky, černovlásky, štíhlé, s křivkami, české i zahraniční. Každý profil je osobně ověřený, fotografie odpovídají realitě a ceny jsou jasně uvedené bez skrytých poplatků. Společnice mluví česky, anglicky a často i dalšími jazyky. Nabízíme programy od 30 minut po 120 minut, GFE (Girlfriend Experience), párové programy a další služby. Kontaktujte nás přes WhatsApp nebo Telegram pro okamžitou domluvu. Otevřeno denně 10:00–22:30.',

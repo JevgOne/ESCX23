@@ -33,8 +33,8 @@
     "membership_apply": "Bewerbung"
   },
   "geo": {
-    "home_lead": "LovelyGirls Prag betreibt 4 private Apartments in Prag 1, 2, 3 und 8. Alle 13 verifizierten Begleiterinnen, täglich 10:00–22:30 geöffnet.",
-    "divky_lead": "12 verifizierte Begleiterinnen in Prag, täglich 10:00–22:30. Filterbar nach Verfügbarkeit, Standort und Haarfarbe.",
+    "home_lead": "LovelyGirls Prag betreibt private Apartments im Zentrum von Prag. Alle {count} {count, plural, one {verifizierte Begleiterin} other {verifizierten Begleiterinnen}}, täglich 10:00–22:30 geöffnet.",
+    "divky_lead": "{count} {count, plural, one {verifizierte Begleiterin} other {verifizierte Begleiterinnen}} in Prag, täglich 10:00–22:30. Filterbar nach Verfügbarkeit, Standort und Haarfarbe.",
     "cenik_lead": "Programme ab 2 000 CZK für 30 Minuten, 2 500 CZK für 60 Minuten. Bargeld und Karte im Apartment.",
     "faq_lead": "Antworten auf die 30 häufigsten Fragen zu Buchung, Preisen, Diskretion und Apartments.",
     "slevy_lead": "Treueprogramm: 10 % nach dem 3. Besuch, 12 % nach dem 5., 15 % nach dem 10. Plus zeitlich begrenzte Angebote.",
