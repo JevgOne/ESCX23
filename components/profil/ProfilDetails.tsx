@@ -3,6 +3,7 @@ import NextLink from 'next/link';
 import type { ServiceRow } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
 import { translateLocation } from '@/lib/utils';
+import { parseList } from '@/lib/parse-list';
 
 interface Girl {
   id: unknown;
@@ -100,6 +101,7 @@ interface ProfilDetailsProps {
   scheduleLocation?: string | null;
   scheduleLocationSlug?: string | null;
   scheduleAddress?: string | null;
+  locationDay?: 'today' | 'tomorrow' | null;
   primaryPhotoUrl?: string | null;
   personalMessage?: string | null;
   voiceUrl?: string | null;
@@ -208,25 +210,25 @@ const PIERCING_VAL: Record<string, Record<string, string>> = {
   intimate: { cs: 'Intimní',  en: 'Intimate', de: 'Intim',    uk: 'Інтимний' },
 };
 
-function parseList(raw: unknown): string[] {
-  if (!raw) return [];
-  const s = String(raw).trim();
-  if (s.startsWith('[')) {
-    try { return JSON.parse(s) as string[]; } catch { /* fall */ }
-  }
-  if (s === '') return [];
-  return s.split(',').map((l) => l.trim()).filter(Boolean);
-}
+const LOC_TODAY_LBL: Record<string, string> = { cs: 'Dnes', en: 'Today', de: 'Heute', uk: 'Сьогодні' };
+const LOC_TMRW_LBL: Record<string, string> = { cs: 'Zítra', en: 'Tomorrow', de: 'Morgen', uk: 'Завтра' };
 
 const LATER_LBL: Record<string, string> = { cs: 'Později', en: 'Later', de: 'Später', uk: 'Пізніше' };
 
-export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, shiftStatus = 'off', services = [], plans = [], altDistricts = [], scheduleLocation, scheduleLocationSlug, scheduleAddress, primaryPhotoUrl, personalMessage, voiceUrl, styleWardrobe, subtitle }: ProfilDetailsProps) {
+export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo, shiftStatus = 'off', services = [], plans = [], altDistricts = [], scheduleLocation, scheduleLocationSlug, scheduleAddress, locationDay = null, primaryPhotoUrl, personalMessage, voiceUrl, styleWardrobe, subtitle }: ProfilDetailsProps) {
   const name = String(girl.name ?? '');
   const age = Number(girl.age ?? 0);
   const rating = Number(girl.rating ?? 0);
   const reviewCount = Number(girl.reviews_count ?? 0);
   const phone = girl.phone ? String(girl.phone) : null;
   const district = translateLocation(scheduleLocation ?? null, locale);
+  // No district = say nothing; a bare city name reads as a real answer but isn't one.
+  const locLabel = scheduleAddress ?? (district ? `${cityName(locale)} · ${district}` : null);
+  const locDayPrefix = locationDay === 'today'
+    ? `${LOC_TODAY_LBL[locale] ?? LOC_TODAY_LBL.en} · `
+    : locationDay === 'tomorrow'
+    ? `${LOC_TMRW_LBL[locale] ?? LOC_TMRW_LBL.en} · `
+    : '';
 
   const bio =
     locale === 'cs'
@@ -311,10 +313,12 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
             <span className="profile-meta-sep">·</span>
           </>
         )}
-        {scheduleLocationSlug ? (
-          <a href={`/${locale}/pobocka/${scheduleLocationSlug}`}>📍 {scheduleAddress ?? (district ? `${cityName(locale)} · ${district}` : cityName(locale))}</a>
-        ) : (
-          <span>📍 {scheduleAddress ?? (district ? `${cityName(locale)} · ${district}` : cityName(locale))}</span>
+        {locLabel && (
+          scheduleLocationSlug ? (
+            <a href={`/${locale}/pobocka/${scheduleLocationSlug}`}>📍 {locDayPrefix}{locLabel}</a>
+          ) : (
+            <span>📍 {locDayPrefix}{locLabel}</span>
+          )
         )}
       </div>
 

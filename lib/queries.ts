@@ -38,6 +38,8 @@ export interface GirlCard {
   weight: number | null;
   bust: number | null;
   location: string | null;
+  /** Which day `location` refers to — she can be at a different apartment tomorrow. */
+  locationDay?: 'today' | 'tomorrow' | null;
   primaryPhoto: string | null;
   secondaryPhoto: string | null;
   photoCount: number;
@@ -1693,10 +1695,13 @@ export interface GirlTodaySchedule {
   scheduleLocation: string | null;
   scheduleLocationSlug: string | null;
   scheduleAddress: string | null;
+  /** Which day the location above refers to — girls move between apartments day to day. */
+  locationDay: 'today' | 'tomorrow' | null;
 }
 
 export async function getGirlScheduleForToday(girlId: number): Promise<GirlTodaySchedule> {
   const dayOfWeek = pragueDayOfWeek();
+  const tomorrowDayOfWeek = (dayOfWeek + 1) % 7;
   const today = pragueDateISO();
 
   const result = await db.execute({
@@ -1706,7 +1711,9 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
         l.name AS schedule_location_slug,
-        l.display_name AS schedule_address
+        l.display_name AS schedule_address,
+        l2.display_name AS tmrw_location,
+        l2.name AS tmrw_location_slug
       FROM girls g
       LEFT JOIN (
         SELECT *, ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
@@ -1715,14 +1722,20 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
       ) gs ON gs.girl_id = g.id AND gs.rn = 1
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
+      LEFT JOIN (
+        SELECT *, ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+        FROM girl_schedules WHERE day_of_week = ? AND is_active = 1
+          AND (effective_from IS NULL OR effective_from <= ?)
+      ) gs2 ON gs2.girl_id = g.id AND gs2.rn = 1
+      LEFT JOIN locations l2 ON l2.id = gs2.location_id
       WHERE g.id = ?
       LIMIT 1
     `,
-    args: [dayOfWeek, today, today, girlId],
+    args: [dayOfWeek, today, today, tomorrowDayOfWeek, today, girlId],
   });
 
   const r = result.rows[0];
-  const empty: GirlTodaySchedule = { shiftFrom: null, shiftTo: null, status: 'off', scheduleLocation: null, scheduleLocationSlug: null, scheduleAddress: null };
+  const empty: GirlTodaySchedule = { shiftFrom: null, shiftTo: null, status: 'off', scheduleLocation: null, scheduleLocationSlug: null, scheduleAddress: null, locationDay: null };
   if (!r) return empty;
   if (r.exception_type === 'unavailable') return empty;
 
@@ -1743,11 +1756,26 @@ export async function getGirlScheduleForToday(girlId: number): Promise<GirlToday
     else status = 'off';
   }
 
-  const scheduleLocation = r.schedule_location ? String(r.schedule_location) : null;
-  const scheduleLocationSlug = r.schedule_location_slug ? String(r.schedule_location_slug) : null;
-  const scheduleAddress = r.schedule_address ? String(r.schedule_address) : null;
+  // Same rule as the girl cards (getGirlsForListing): today's apartment only
+  // while she is still working or due later, otherwise tomorrow's — girls move
+  // between apartments day to day, so a stale district is worse than none.
+  // Sunday evening = end of week, don't advertise Monday (next week).
+  const showToday = status === 'working' || status === 'later';
+  const isSunday = dayOfWeek === 6;
+  const todayLocation = r.schedule_location ? String(r.schedule_location) : null;
+  const tmrwLocation = !isSunday && r.tmrw_location ? String(r.tmrw_location) : null;
 
-  return { shiftFrom: rawFrom ? displayTime(rawFrom) : null, shiftTo: rawTo ? displayTime(rawTo) : null, status, scheduleLocation, scheduleLocationSlug, scheduleAddress };
+  const useToday = showToday && todayLocation !== null;
+  const locationDay: 'today' | 'tomorrow' | null =
+    useToday ? 'today' : tmrwLocation !== null ? 'tomorrow' : null;
+
+  const scheduleLocation = useToday ? todayLocation : tmrwLocation;
+  const scheduleLocationSlug = useToday
+    ? (r.schedule_location_slug ? String(r.schedule_location_slug) : null)
+    : (r.tmrw_location_slug ? String(r.tmrw_location_slug) : null);
+  const scheduleAddress = useToday && r.schedule_address ? String(r.schedule_address) : scheduleLocation;
+
+  return { shiftFrom: rawFrom ? displayTime(rawFrom) : null, shiftTo: rawTo ? displayTime(rawTo) : null, status, scheduleLocation, scheduleLocationSlug, scheduleAddress, locationDay };
 }
 
 /* =========================================================
@@ -2143,6 +2171,7 @@ export async function getGirlsForListing(
         weight: r.weight != null ? Number(r.weight) : null,
         bust: r.bust != null ? Number(r.bust) : null,
         location: todayLoc ?? (isSunday ? null : tmrwLoc),
+        locationDay: todayLoc ? 'today' : (!isSunday && tmrwLoc ? 'tomorrow' : null),
         primaryPhoto: r.primary_photo ? String(r.primary_photo) : null,
         secondaryPhoto: r.secondary_photo ? String(r.secondary_photo) : null,
         photoCount: Number(r.photo_count),

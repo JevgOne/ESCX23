@@ -4,6 +4,9 @@ import { photoUrl } from '@/lib/photoUrl';
 import { translateLocation } from '@/lib/utils';
 import type { GirlCard as GirlCardType } from '@/lib/queries';
 
+const LOC_TODAY: Record<string, string> = { cs: 'Dnes', en: 'Today', de: 'Heute', uk: 'Сьогодні' };
+const LOC_TMRW: Record<string, string> = { cs: 'Zítra', en: 'Tomorrow', de: 'Morgen', uk: 'Завтра' };
+
 const FLAG_MAP: Record<string, string> = {
   cs: '🇨🇿', en: '🇬🇧', de: '🇩🇪', uk: '🇺🇦', fr: '🇫🇷',
   it: '🇮🇹', es: '🇪🇸', ru: '🇷🇺', pl: '🇵🇱', sk: '🇸🇰',
@@ -173,6 +176,11 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
+              {girl.locationDay && (
+                <span className="girl-loc-day">
+                  {(girl.locationDay === 'today' ? LOC_TODAY : LOC_TMRW)[locale] ?? (girl.locationDay === 'today' ? LOC_TODAY.en : LOC_TMRW.en)}
+                </span>
+              )}
               <span>{translateLocation(girl.location, locale)}</span>
             </>
           ) : (

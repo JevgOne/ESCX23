@@ -3,6 +3,7 @@ import { translateLocation } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
 import PhotoLightbox from './PhotoLightbox';
 import VoicePlayer from './VoicePlayer';
+import { parseList } from '@/lib/parse-list';
 
 interface Photo {
   url: unknown;
@@ -58,6 +59,9 @@ const LANG_NAME: Record<string, string> = {
   cs: 'Čeština', en: 'English', de: 'Deutsch', uk: 'Українська', fr: 'Français',
   it: 'Italiano', es: 'Español', ru: 'Русский', pl: 'Polski', sk: 'Slovenčina',
 };
+
+const TODAY_LOC_LBL: Record<string, string> = { cs: 'Dnes', en: 'Today', de: 'Heute', uk: 'Сьогодні' };
+const TMRW_LOC_LBL: Record<string, string> = { cs: 'Zítra', en: 'Tomorrow', de: 'Morgen', uk: 'Завтра' };
 
 const SPEAKS_LBL: Record<string, string> = { cs: 'Mluví', en: 'Speaks', de: 'Spricht', uk: 'Розмовляє' };
 const EYES_LBL: Record<string, string> = { cs: 'Oči', en: 'Eyes', de: 'Augen', uk: 'Очі' };
@@ -122,6 +126,7 @@ interface ProfilHeroProps {
   scheduleLocation?: string | null;
   scheduleLocationSlug?: string | null;
   scheduleAddress?: string | null;
+  locationDay?: 'today' | 'tomorrow' | null;
   stylH?: string;
   stylSub?: string;
   stylNote?: string;
@@ -156,7 +161,7 @@ const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string 
   },
 };
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, shiftStatus = 'off', topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleLocationSlug, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '', subtitle }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, shiftStatus = 'off', topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleLocationSlug, scheduleAddress, locationDay = null, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '', subtitle }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -166,7 +171,13 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
   const altBase = age != null
     ? `${name}, ${age}, ${city} ${altNoun}`
     : `${name}, ${city} ${altNoun}`;
-  const locText = translateLocation(scheduleLocation ?? null, locale) ?? city;
+  const locText = translateLocation(scheduleLocation ?? null, locale);
+  const locLabel = scheduleAddress ?? locText;
+  const dayPrefix = locationDay === 'today'
+    ? (TODAY_LOC_LBL[locale] ?? TODAY_LOC_LBL.en)
+    : locationDay === 'tomorrow'
+    ? (TMRW_LOC_LBL[locale] ?? TMRW_LOC_LBL.en)
+    : null;
   const todayLbl = TODAY_LBL[locale] ?? TODAY_LBL.en;
   const laterLbl = LATER_LBL[locale] ?? LATER_LBL.en;
   const statusText = shiftStatus === 'working' && shiftFrom && shiftTo
@@ -184,16 +195,8 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
   const bust = girl.bust != null ? String(girl.bust) : null;
   const phone = girl.phone ? String(girl.phone) : null;
 
-  const parseJson = (v: unknown): string[] => {
-    if (Array.isArray(v)) return v.map(String);
-    if (typeof v === 'string') {
-      try { const p = JSON.parse(v); return Array.isArray(p) ? p.map(String) : []; }
-      catch { return []; }
-    }
-    return [];
-  };
-  const languages = parseJson(girl.languages);
-  const hashtags = parseJson(girl.hashtags);
+  const languages = parseList(girl.languages);
+  const hashtags = parseList(girl.hashtags);
   const eyesRaw = girl.eyes ? String(girl.eyes).trim().toLowerCase() : null;
   const hairRaw = girl.hair ? String(girl.hair).trim().toLowerCase() : null;
   const eyesEntry = eyesRaw ? EYES_DATA[eyesRaw] : null;
@@ -251,17 +254,20 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
               <span>{statusText}</span>
             </div>
           )}
-          <div className="ig-loc">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            {scheduleLocationSlug ? (
-              <a href={`/${locale}/pobocka/${scheduleLocationSlug}`}>{scheduleAddress ?? locText}</a>
-            ) : (
-              <span>{scheduleAddress ?? locText}</span>
-            )}
-          </div>
+          {locLabel && (
+            <div className="ig-loc">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              {dayPrefix && <span className="ig-loc-day">{dayPrefix}</span>}
+              {scheduleLocationSlug ? (
+                <a href={`/${locale}/pobocka/${scheduleLocationSlug}`}>{locLabel}</a>
+              ) : (
+                <span>{locLabel}</span>
+              )}
+            </div>
+          )}
           <div className="ig-meters">
             {photos.length > 0 && <span><strong>{photos.length}</strong> {photosLbl}</span>}
             <span><strong>{videoCount}</strong> {videosLbl}</span>
