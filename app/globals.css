@@ -17148,3 +17148,37 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
   .seo-content-links { gap: 8px; }
   .seo-content-link { padding: 9px 13px; flex: 1 1 auto; }
 }
+
+/* Answer blocks under the listing copy */
+.seo-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 28px 40px;
+  margin-top: 36px;
+  padding-top: 32px;
+  border-top: 1px solid var(--color-line);
+}
+.seo-content-block h3 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+.seo-content-block p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+  max-width: none;
+}
+.seo-content-more {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-coral);
+  text-decoration: none;
+}
+.seo-content-more:hover { color: var(--color-coral-hover); text-decoration: underline; }
+@media (max-width: 768px) {
+  .seo-content-grid { gap: 24px; margin-top: 28px; padding-top: 24px; }
+}

@@ -1,7 +1,7 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
-import { getGirlsForListing, getTopServicesForFilter } from '@/lib/queries';
+import { getGirlsForListing, getTopServicesForFilter, getActivePricingPlans } from '@/lib/queries';
 import { getSiteFacts, districtList } from '@/lib/site-facts';
 import { verifiedCompanions } from '@/lib/plural';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
@@ -14,6 +14,34 @@ import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 
 const APARTMENTS_LBL: Record<string, string> = {
   cs: 'Naše apartmány', en: 'Our apartments', de: 'Unsere Apartments', uk: 'Наші апартаменти',
+};
+
+/** Short answers to what people actually search before booking. */
+const SEO_BLOCKS: Record<string, { h: string; body: string; href: string; cta: string }[]> = {
+  cs: [
+    { h: 'Jak domluvit schůzku', body: 'Vyberete dívku, napíšete na WhatsApp nebo zavoláte. Potvrdíme termín a pošleme adresu apartmánu. Žádná registrace, žádná záloha — platí se hotově až na místě.', href: '/kontakt', cta: 'Kontakt' },
+    { h: 'Kolik to stojí', body: 'Programy od 30 do 120 minut. Cena je konečná a zahrnuje apartmán, žádné poplatky navíc se nepřipočítávají.', href: '/cenik', cta: 'Celý ceník' },
+    { h: 'Kdo pracuje dnes', body: 'Rozvrh ukazuje den po dni, kdo má směnu, od kolika do kolika a ve kterém apartmánu. Aktualizuje se průběžně, takže vidíte reálnou dostupnost.', href: '/rozvrh', cta: 'Rozvrh' },
+    { h: 'Ověřené fotky', body: 'Každá společnice prochází osobním pohovorem a verifikací fotek. Co je v profilu, to potkáte — proto u nás nenajdete profily bez schválení.', href: '/faq', cta: 'Časté dotazy' },
+  ],
+  en: [
+    { h: 'How to arrange a meeting', body: 'Pick a companion, message us on WhatsApp or call. We confirm the time and send the apartment address. No registration, no deposit — you pay cash on arrival.', href: '/kontakt', cta: 'Contact' },
+    { h: 'What it costs', body: 'Programs run from 30 to 120 minutes. The price is final and includes the apartment; nothing is added on top.', href: '/cenik', cta: 'Full pricing' },
+    { h: 'Who is working today', body: 'The schedule lists every day: who is on shift, the hours and which apartment. It updates continuously, so what you see is real availability.', href: '/rozvrh', cta: 'Schedule' },
+    { h: 'Verified photos', body: 'Every companion is interviewed in person and her photos are verified. Who you see in the profile is who you meet — no profile goes live unapproved.', href: '/faq', cta: 'FAQ' },
+  ],
+  de: [
+    { h: 'So vereinbaren Sie einen Termin', body: 'Wählen Sie eine Begleiterin, schreiben Sie per WhatsApp oder rufen Sie an. Wir bestätigen den Termin und senden die Adresse. Keine Registrierung, keine Anzahlung — Barzahlung vor Ort.', href: '/kontakt', cta: 'Kontakt' },
+    { h: 'Was es kostet', body: 'Programme von 30 bis 120 Minuten. Der Preis ist endgültig und beinhaltet das Apartment, ohne Zusatzgebühren.', href: '/cenik', cta: 'Preisliste' },
+    { h: 'Wer heute arbeitet', body: 'Der Zeitplan zeigt Tag für Tag, wer Schicht hat, von wann bis wann und in welchem Apartment. Er wird laufend aktualisiert.', href: '/rozvrh', cta: 'Zeitplan' },
+    { h: 'Verifizierte Fotos', body: 'Jede Begleiterin wird persönlich interviewt, ihre Fotos werden verifiziert. Wen Sie im Profil sehen, den treffen Sie auch.', href: '/faq', cta: 'FAQ' },
+  ],
+  uk: [
+    { h: 'Як домовитися про зустріч', body: 'Оберіть супутницю, напишіть у WhatsApp або зателефонуйте. Ми підтвердимо час і надішлемо адресу апартаменту. Без реєстрації та передоплати — оплата готівкою на місці.', href: '/kontakt', cta: 'Контакт' },
+    { h: 'Скільки це коштує', body: 'Програми від 30 до 120 хвилин. Ціна остаточна і включає апартамент, без додаткових зборів.', href: '/cenik', cta: 'Повний прайс' },
+    { h: 'Хто працює сьогодні', body: 'Графік показує день за днем: хто на зміні, з котрої до котрої та в якому апартаменті. Оновлюється постійно.', href: '/rozvrh', cta: 'Графік' },
+    { h: 'Перевірені фото', body: 'Кожна супутниця проходить особисту співбесіду та верифікацію фото. Кого бачите в профілі, ту і зустрінете.', href: '/faq', cta: 'FAQ' },
+  ],
 };
 
 export const dynamic = 'force-dynamic';
@@ -72,6 +100,13 @@ export default async function DivkyPage({ params, searchParams }: Props) {
   // Same source as the footer trust strip — the SEO paragraph must not contradict it
   const facts = await getSiteFacts();
   const { companionsCount } = facts;
+  const plans = await getActivePricingPlans().catch(() => []);
+  const cheapest = plans.reduce<{ duration: number; price: number } | null>((min, p) => {
+    const price = Number(p.price ?? 0);
+    const duration = Number(p.duration ?? 0);
+    if (!price || !duration) return min;
+    return !min || price < min.price ? { duration, price } : min;
+  }, null);
   const districts = districtList(facts, locale);
   const tGeo = await getTranslations({ locale, namespace: 'geo' });
   const tNav = await getTranslations({ locale, namespace: 'nav' });
@@ -167,6 +202,26 @@ export default async function DivkyPage({ params, searchParams }: Props) {
           ? `LovelyGirls ist eine Premium-Escort-Agentur in Prag mit ${companionsCount} verifizierten Begleiterinnen. Wir bieten Treffen in diskreten privaten Apartments im Zentrum von Prag — ${districts}. Alle Begleiterinnen durchlaufen ein persönliches Gespräch und Fotoverifizierung. Täglich geöffnet 10:00–22:30, sofortige WhatsApp-Buchung.`
           : `LovelyGirls — преміальна ескорт-агенція у Празі з ${companionsCount} перевіреними супутницями. Ми пропонуємо зустрічі в дискретних приватних апартаментах у центрі Праги — ${districts}. Усі супутниці проходять особисту співбесіду та верифікацію фото. Відкрито щодня 10:00–22:30, швидке бронювання через WhatsApp.`
         }</p>
+
+        {/* Short answers to the questions people search before booking. One
+            thin paragraph was not enough for a page drawing 5,400 impressions
+            a quarter, and each block links onward to the page that owns it. */}
+        <div className="seo-content-grid">
+          {(SEO_BLOCKS[locale] ?? SEO_BLOCKS.en).map((blk) => (
+            <div key={blk.h} className="seo-content-block">
+              <h3>{blk.h}</h3>
+              <p>
+                {blk.body}
+                {blk.href === '/cenik' && cheapest
+                  ? ` ${locale === 'cs' ? 'Nejkratší program' : locale === 'de' ? 'Kürzestes Programm' : locale === 'uk' ? 'Найкоротша програма' : 'The shortest program is'} ${cheapest.duration} ${locale === 'en' ? 'min' : 'min'} — ${cheapest.price.toLocaleString(locale === 'en' ? 'en-US' : 'cs-CZ')} ${locale === 'cs' ? 'Kč' : 'CZK'}.`
+                  : ''}
+              </p>
+              <a href={`${locale === 'en' ? '' : `/${locale}`}${blk.href}`} className="seo-content-more">
+                {blk.cta} →
+              </a>
+            </div>
+          ))}
+        </div>
 
         {/* Contextual links to the apartment pages. The footer already links
             them sitewide, but boilerplate links carry little weight — these sit
