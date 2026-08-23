@@ -163,7 +163,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
     getActivePricingPlans().catch(() => []),
     getAllServices().catch(() => []),
     girlRaw ? getGirlServices(Number(girlRaw.id)).catch(() => [] as number[]) : Promise.resolve([] as number[]),
-    girlRaw ? getGirlScheduleForToday(Number(girlRaw.id)).catch(() => ({ shiftFrom: null, shiftTo: null, status: 'off' as const, scheduleLocation: null, scheduleLocationSlug: null, scheduleAddress: null, locationDay: null })) : Promise.resolve({ shiftFrom: null, shiftTo: null, status: 'off' as const, scheduleLocation: null, scheduleLocationSlug: null, scheduleAddress: null, locationDay: null }),
+    girlRaw ? getGirlScheduleForToday(Number(girlRaw.id)).catch(() => ({ shiftFrom: null, shiftTo: null, status: 'off' as const, scheduleLocation: null, scheduleLocationSlug: null, scheduleAddress: null })) : Promise.resolve({ shiftFrom: null, shiftTo: null, status: 'off' as const, scheduleLocation: null, scheduleLocationSlug: null, scheduleAddress: null }),
     girlRaw ? getGirlVideos(Number(girlRaw.id)).catch(() => []) : Promise.resolve([]),
   ]);
   // Only show services the girl actually offers (basic auto-included + extras she checked)
@@ -345,7 +345,6 @@ export default async function ProfilPage({ params, searchParams }: Props) {
               scheduleLocation={todaySchedule.scheduleLocation}
               scheduleLocationSlug={todaySchedule.scheduleLocationSlug}
               scheduleAddress={todaySchedule.scheduleAddress}
-              locationDay={todaySchedule.locationDay}
               isNew={girlIsNew}
               isVip={girlVip}
               badgeType={badgeType || null}
@@ -396,7 +395,6 @@ export default async function ProfilPage({ params, searchParams }: Props) {
               scheduleLocation={todaySchedule.scheduleLocation}
               scheduleLocationSlug={todaySchedule.scheduleLocationSlug}
               scheduleAddress={todaySchedule.scheduleAddress}
-              locationDay={todaySchedule.locationDay}
               primaryPhotoUrl={(() => {
                 const primary = photoTyped.find((p) => p.is_primary) ?? photoTyped[0];
                 return primary?.url ? String(primary.url) : null;

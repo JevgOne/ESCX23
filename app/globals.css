@@ -17111,26 +17111,3 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
   border-top: 1px solid var(--color-line);
   margin-top: 48px;
 }
-
-/* Day the apartment refers to — girls move between apartments day to day,
-   so the district is meaningless without saying which day it applies to. */
-.ig-loc-day {
-  color: var(--color-coral);
-  font-weight: 700;
-}
-.ig-loc-day::after {
-  content: ' ·';
-  color: var(--color-text-dim);
-  font-weight: 400;
-}
-
-/* Same day marker on the girl cards as in the profile header */
-.girl-loc-day {
-  color: var(--color-coral);
-  font-weight: 700;
-}
-.girl-loc-day::after {
-  content: ' ·';
-  color: var(--color-text-dim);
-  font-weight: 400;
-}

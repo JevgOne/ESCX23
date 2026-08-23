@@ -4,8 +4,6 @@ import { photoUrl } from '@/lib/photoUrl';
 import { translateLocation } from '@/lib/utils';
 import type { GirlCard as GirlCardType } from '@/lib/queries';
 
-const LOC_TODAY: Record<string, string> = { cs: 'Dnes', en: 'Today', de: 'Heute', uk: 'Сьогодні' };
-const LOC_TMRW: Record<string, string> = { cs: 'Zítra', en: 'Tomorrow', de: 'Morgen', uk: 'Завтра' };
 
 const FLAG_MAP: Record<string, string> = {
   cs: '🇨🇿', en: '🇬🇧', de: '🇩🇪', uk: '🇺🇦', fr: '🇫🇷',
@@ -170,22 +168,13 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
         </div>
 
         <div className="girl-loc-row">
-          {girl.location ? (
-            <>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              {girl.locationDay && (
-                <span className="girl-loc-day">
-                  {(girl.locationDay === 'today' ? LOC_TODAY : LOC_TMRW)[locale] ?? (girl.locationDay === 'today' ? LOC_TODAY.en : LOC_TMRW.en)}
-                </span>
-              )}
-              <span>{translateLocation(girl.location, locale)}</span>
-            </>
-          ) : (
-            <span>&nbsp;</span>
-          )}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          {/* Not working today → the city still holds, and an empty row reads
+              as something that failed to load. */}
+          <span>{girl.location ? translateLocation(girl.location, locale) : (CITY[locale] ?? CITY.en)}</span>
         </div>
 
         <div className="girl-statline">

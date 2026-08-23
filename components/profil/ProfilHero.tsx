@@ -60,8 +60,6 @@ const LANG_NAME: Record<string, string> = {
   it: 'Italiano', es: 'Español', ru: 'Русский', pl: 'Polski', sk: 'Slovenčina',
 };
 
-const TODAY_LOC_LBL: Record<string, string> = { cs: 'Dnes', en: 'Today', de: 'Heute', uk: 'Сьогодні' };
-const TMRW_LOC_LBL: Record<string, string> = { cs: 'Zítra', en: 'Tomorrow', de: 'Morgen', uk: 'Завтра' };
 
 const SPEAKS_LBL: Record<string, string> = { cs: 'Mluví', en: 'Speaks', de: 'Spricht', uk: 'Розмовляє' };
 const EYES_LBL: Record<string, string> = { cs: 'Oči', en: 'Eyes', de: 'Augen', uk: 'Очі' };
@@ -126,7 +124,6 @@ interface ProfilHeroProps {
   scheduleLocation?: string | null;
   scheduleLocationSlug?: string | null;
   scheduleAddress?: string | null;
-  locationDay?: 'today' | 'tomorrow' | null;
   stylH?: string;
   stylSub?: string;
   stylNote?: string;
@@ -161,7 +158,7 @@ const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string 
   },
 };
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, shiftStatus = 'off', topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleLocationSlug, scheduleAddress, locationDay = null, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '', subtitle }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, shiftStatus = 'off', topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleLocationSlug, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '', subtitle }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -172,12 +169,9 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
     ? `${name}, ${age}, ${city} ${altNoun}`
     : `${name}, ${city} ${altNoun}`;
   const locText = translateLocation(scheduleLocation ?? null, locale);
-  const locLabel = scheduleAddress ?? locText;
-  const dayPrefix = locationDay === 'today'
-    ? (TODAY_LOC_LBL[locale] ?? TODAY_LOC_LBL.en)
-    : locationDay === 'tomorrow'
-    ? (TMRW_LOC_LBL[locale] ?? TMRW_LOC_LBL.en)
-    : null;
+  // Not working today → fall back to the city. The district shown is always
+  // today's; the rest of the week lives on /rozvrh.
+  const locLabel = scheduleAddress ?? locText ?? city;
   const todayLbl = TODAY_LBL[locale] ?? TODAY_LBL.en;
   const laterLbl = LATER_LBL[locale] ?? LATER_LBL.en;
   const statusText = shiftStatus === 'working' && shiftFrom && shiftTo
@@ -260,7 +254,6 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
-              {dayPrefix && <span className="ig-loc-day">{dayPrefix}</span>}
               {scheduleLocationSlug ? (
                 <a href={`/${locale}/pobocka/${scheduleLocationSlug}`}>{locLabel}</a>
               ) : (
