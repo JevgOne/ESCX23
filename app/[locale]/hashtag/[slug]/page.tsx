@@ -11,6 +11,10 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { getHashtagContent, HASHTAG_CONTENT } from '@/lib/seo/landing-content';
 import { breadcrumbListJsonLd, faqPageJsonLd, itemListPeopleJsonLd, collectionPageJsonLd } from '@/lib/seo/jsonld';
 
+const APARTMENTS_LBL: Record<string, string> = {
+  cs: 'Kde nás najdete', en: 'Where to find us', de: 'Wo Sie uns finden', uk: 'Де нас знайти',
+};
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -257,6 +261,28 @@ export default async function HashtagPage({ params }: Props) {
                   </a>
                 );
               })}
+            </div>
+          </section>
+        )}
+
+        {/* Apartments. LandingContent had a relatedLocations field for this, but
+            it was never rendered and every entry pointed at 'vinohrady', a slug
+            that does not exist. Reading active locations instead means these
+            links cannot go stale. */}
+        {facts.apartments.length > 0 && (
+          <section className="lp-section">
+            <h2 className="lp-h2">{APARTMENTS_LBL[locale] ?? APARTMENTS_LBL.en}</h2>
+            <div className="seo-content-links">
+              {facts.apartments.map((a) => (
+                <a
+                  key={a.slug}
+                  href={`${locale === 'en' ? '' : `/${locale}`}/pobocka/${a.slug}`}
+                  className="seo-content-link"
+                >
+                  <strong>Escort {a.district ?? a.name}</strong>
+                  <span>{a.name}</span>
+                </a>
+              ))}
             </div>
           </section>
         )}

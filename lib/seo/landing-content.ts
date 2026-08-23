@@ -21,7 +21,6 @@ export interface LandingContent {
   intro: LandingIntro;
   faq: LandingFaqItem[];
   related: string[]; // hashtag slugs
-  relatedLocations?: string[]; // location names
   metaDesc: { cs: string; en: string; de: string; uk: string };
 }
 
@@ -66,7 +65,6 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       },
     ],
     related: ['cernovlasky-praha', 'brunetky-praha', 'studentky-praha', 'gfe-praha', 'modre-oci', 'dlouhe-vlasy'],
-    relatedLocations: ['vinohrady'],
   },
 
   'brunetky-praha': {
@@ -101,7 +99,6 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       },
     ],
     related: ['cernovlasky-praha', 'blondynky-praha', 'gfe-praha', 'elegantni-holky'],
-    relatedLocations: ['vinohrady'],
   },
 
   'cernovlasky-praha': {
@@ -124,7 +121,6 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       },
     ],
     related: ['brunetky-praha', 'blondynky-praha', 'exoticke-krasky'],
-    relatedLocations: ['vinohrady'],
   },
 
   'gfe-praha': {
@@ -163,7 +159,6 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       },
     ],
     related: ['blondynky-praha', 'brunetky-praha', 'studentky-praha', 'luxusni-sluzby', 'elegantni-holky'],
-    relatedLocations: ['vinohrady'],
   },
 
   'studentky-praha': {
@@ -198,7 +193,6 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       },
     ],
     related: ['mlade-holky', 'blondynky-praha', 'brunetky-praha', 'gfe-praha', 'fit-holky'],
-    relatedLocations: ['vinohrady'],
   },
 
   'spolecnice-praha': {
@@ -233,7 +227,6 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       },
     ],
     related: ['blondynky-praha', 'brunetky-praha', 'gfe-praha', 'studentky-praha', 'ceske-holky'],
-    relatedLocations: ['vinohrady'],
   },
 
   'prirodni-poprsi': {

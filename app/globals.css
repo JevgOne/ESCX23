@@ -17111,3 +17111,40 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
   border-top: 1px solid var(--color-line);
   margin-top: 48px;
 }
+
+/* Apartment links under the listing copy — contextual, district in the anchor */
+.seo-content-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+.seo-content-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-line);
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.seo-content-link strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.seo-content-link span {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+}
+.seo-content-link:hover {
+  border-color: rgba(242, 125, 141, 0.4);
+  background: rgba(242, 125, 141, 0.06);
+}
+.seo-content-link:hover strong { color: var(--color-coral); }
+@media (max-width: 768px) {
+  .seo-content-links { gap: 8px; }
+  .seo-content-link { padding: 9px 13px; flex: 1 1 auto; }
+}

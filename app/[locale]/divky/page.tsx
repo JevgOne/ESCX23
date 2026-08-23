@@ -12,6 +12,10 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { collectionPageJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 
+const APARTMENTS_LBL: Record<string, string> = {
+  cs: 'Naše apartmány', en: 'Our apartments', de: 'Unsere Apartments', uk: 'Наші апартаменти',
+};
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -163,6 +167,25 @@ export default async function DivkyPage({ params, searchParams }: Props) {
           ? `LovelyGirls ist eine Premium-Escort-Agentur in Prag mit ${companionsCount} verifizierten Begleiterinnen. Wir bieten Treffen in diskreten privaten Apartments im Zentrum von Prag — ${districts}. Alle Begleiterinnen durchlaufen ein persönliches Gespräch und Fotoverifizierung. Täglich geöffnet 10:00–22:30, sofortige WhatsApp-Buchung.`
           : `LovelyGirls — преміальна ескорт-агенція у Празі з ${companionsCount} перевіреними супутницями. Ми пропонуємо зустрічі в дискретних приватних апартаментах у центрі Праги — ${districts}. Усі супутниці проходять особисту співбесіду та верифікацію фото. Відкрито щодня 10:00–22:30, швидке бронювання через WhatsApp.`
         }</p>
+
+        {/* Contextual links to the apartment pages. The footer already links
+            them sitewide, but boilerplate links carry little weight — these sit
+            in copy, on the page that actually ranks, with the district in the
+            anchor text people search for. */}
+        {facts.apartments.length > 0 && (
+          <nav className="seo-content-links" aria-label={APARTMENTS_LBL[locale] ?? APARTMENTS_LBL.en}>
+            {facts.apartments.map((a) => (
+              <a
+                key={a.slug}
+                href={`${locale === 'en' ? '' : `/${locale}`}/pobocka/${a.slug}`}
+                className="seo-content-link"
+              >
+                <strong>Escort {a.district ?? a.name}</strong>
+                <span>{a.name}</span>
+              </a>
+            ))}
+          </nav>
+        )}
       </section>
     </main>
   );
