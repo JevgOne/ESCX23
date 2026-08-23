@@ -11,26 +11,71 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
 export const dynamic = 'force-dynamic';
 
-const TITLES: Record<string, string> = {
-  cs: 'Slevy a věrnostní program — Až 20 % sleva | LovelyGirls Praha',
-  en: 'Discounts & Loyalty Program — Up to 20 % Off | LovelyGirls Prague',
-  de: 'Rabatte & Treueprogramm — Bis zu 20 % Rabatt | LovelyGirls Prag',
-  uk: 'Знижки та програма лояльності — До 20 % знижки | LovelyGirls Прага',
-};
+type DiscountRow = Record<string, unknown>;
 
-const DESCRIPTIONS: Record<string, string> = {
-  cs: 'Ranní sleva, věrnostní bonus po 3/5/10 návštěvách, narozeninová sleva 20 %. LovelyGirls Praha odměňuje stálé klienty.',
-  en: 'Morning discount, loyalty bonus after 3/5/10 visits, 20 % birthday discount. LovelyGirls Prague rewards returning clients.',
-  de: 'Morgenrabatt, Treuebonus nach 3/5/10 Besuchen, 20 % Geburtstagsrabatt. LovelyGirls Prag belohnt Stammkunden.',
-  uk: 'Ранкова знижка, бонус лояльності після 3/5/10 відвідувань, 20 % знижка до дня народження. LovelyGirls Прага.',
+const CURRENCY: Record<string, string> = { cs: 'Kč', en: 'CZK', de: 'CZK', uk: 'CZK' };
+const NO_DISCOUNTS: Record<string, string> = {
+  cs: 'Momentálně neběží žádná sleva. Aktuální ceny najdete v ceníku.',
+  en: 'No discount is running right now. Current prices are on the pricing page.',
+  de: 'Derzeit läuft kein Rabatt. Aktuelle Preise finden Sie in der Preisliste.',
+  uk: 'Наразі знижок немає. Актуальні ціни — на сторінці цін.',
 };
+const PAGE_LABEL: Record<string, string> = { cs: 'Slevy', en: 'Discounts', de: 'Rabatte', uk: 'Знижки' };
+const BRAND: Record<string, string> = { cs: 'LovelyGirls Praha', en: 'LovelyGirls Prague', de: 'LovelyGirls Prag', uk: 'LovelyGirls Прага' };
 
-const GEO_LEADS: Record<string, string> = {
-  en: 'LovelyGirls Prague offers a 10–15 % loyalty discount after 3, 5, and 10 visits, a morning discount from 10:00–13:00 on weekdays, and a birthday discount of 20 %.',
-  cs: 'LovelyGirls Praha poskytuje věrnostní slevu 10–15 % po 3, 5 a 10 návštěvách, ranní slevu 10:00–13:00 v pracovní dny a narozeninovou slevu 20 %.',
-  de: 'LovelyGirls Prag bietet 10–15 % Treuebonus nach 3, 5 und 10 Besuchen, Morgenrabatt 10:00–13:00 an Werktagen und 20 % Geburtstagsrabatt.',
-  uk: 'LovelyGirls Прага дає знижку лояльності 10–15 % після 3, 5 і 10 відвідувань, ранню знижку 10:00–13:00 у будні та знижку до дня народження 20 %.',
-};
+function loc(d: DiscountRow, field: string, locale: string): string {
+  return String(d[`${field}_${locale}`] ?? d[`${field}_en`] ?? d[`${field}_cs`] ?? '').trim();
+}
+
+/** "20 %" or "200 Kč" — empty when the discount carries no number. */
+function amountLabel(d: DiscountRow, locale: string): string {
+  const value = Number(d.discount_value ?? 0);
+  if (!value) return '';
+  return String(d.discount_type) === 'percentage'
+    ? `${value} %`
+    : `${value} ${CURRENCY[locale] ?? CURRENCY.en}`;
+}
+
+/**
+ * Every claim on this page is built from the discounts table.
+ *
+ * It used to hardcode a loyalty program (10/12/15 % after 3/5/10 visits), a
+ * morning discount and a 20 % birthday discount in the title, description, GEO
+ * lead, FAQ and FAQ JSON-LD — none of which the agency offers. Staff then had
+ * to turn those promises down at the door, and Google was being told about
+ * them in structured data. Derived copy cannot promise a discount that is not
+ * in the table.
+ */
+function discountCopy(discounts: DiscountRow[], locale: string) {
+  const brand = BRAND[locale] ?? BRAND.en;
+  const label = PAGE_LABEL[locale] ?? PAGE_LABEL.en;
+  const items = discounts.map((d) => ({
+    name: loc(d, 'name', locale),
+    amount: amountLabel(d, locale),
+    desc: loc(d, 'description', locale),
+  })).filter((i) => i.name);
+
+  if (items.length === 0) {
+    return {
+      title: `${label} — ${brand}`,
+      description: NO_DISCOUNTS[locale] ?? NO_DISCOUNTS.en,
+      geoLead: NO_DISCOUNTS[locale] ?? NO_DISCOUNTS.en,
+      items,
+    };
+  }
+
+  const short = (i: { name: string; amount: string }) => (i.amount ? `${i.name} ${i.amount}` : i.name);
+  const title = `${label} — ${items.slice(0, 2).map(short).join(', ')} | ${brand}`;
+  const listed = items.map(short).join(', ');
+  const intro: Record<string, string> = {
+    cs: `Aktuální slevy u ${brand}: ${listed}. Slevu stačí zmínit při domluvě přes WhatsApp nebo telefon.`,
+    en: `Current discounts at ${brand}: ${listed}. Just mention the discount when booking via WhatsApp or phone.`,
+    de: `Aktuelle Rabatte bei ${brand}: ${listed}. Erwähnen Sie den Rabatt einfach bei der Buchung.`,
+    uk: `Актуальні знижки в ${brand}: ${listed}. Просто згадайте знижку під час бронювання.`,
+  };
+  const text = intro[locale] ?? intro.en;
+  return { title, description: text, geoLead: text, items };
+}
 
 const CANONICAL_PATH: Record<string, string> = {
   cs: '/slevy',
@@ -40,42 +85,41 @@ const CANONICAL_PATH: Record<string, string> = {
 };
 
 interface FaqItem { q: string; a: string }
-interface FaqBundle { heading: string; items: FaqItem[] }
 
-const FAQ_DATA: Record<string, FaqBundle> = {
-  cs: {
-    heading: 'Často kladené dotazy ke slevám',
-    items: [
-      { q: 'Jak funguje věrnostní program?', a: 'Slevy se uplatňují automaticky. Po 3. návštěvě získáte 10 %, po 5. návštěvě 12 % a po 10. návštěvě 15 % slevu. Sleva platí 12 měsíců od poslední návštěvy.' },
-      { q: 'Lze kombinovat slevy?', a: 'Ne, slevy nelze kombinovat. Vždy se uplatní ta nejvýhodnější — například pokud máte věrnostní slevu 10 % a zároveň narozeninovou 20 %, dostanete 20 %.' },
-      { q: 'Jak získám narozeninovou slevu?', a: 'V den narozenin nebo do 7 dnů od nich zmíňte datum při objednávce přes WhatsApp nebo telefon. Sleva 20 % se uplatní na libovolný program, jednou ročně.' },
-    ],
-  },
-  en: {
-    heading: 'Discount FAQ',
-    items: [
-      { q: 'How does the loyalty program work?', a: 'Discounts are applied automatically. After your 3rd visit you receive 10 %, after the 5th visit 12 %, and after the 10th visit 15 % off. The discount is valid for 12 months from your last visit.' },
-      { q: 'Can discounts be combined?', a: 'No, discounts cannot be combined. The most favourable one always applies — for example, if you have a 10 % loyalty discount and a 20 % birthday discount, you get 20 %.' },
-      { q: 'How do I get a birthday discount?', a: 'On your birthday or within 7 days of it, mention the date when booking via WhatsApp or phone. The 20 % discount applies to any program, once per year.' },
-    ],
-  },
-  de: {
-    heading: 'Häufige Fragen zu Rabatten',
-    items: [
-      { q: 'Wie funktioniert das Treueprogramm?', a: 'Rabatte werden automatisch gewährt. Nach dem 3. Besuch erhalten Sie 10 %, nach dem 5. Besuch 12 % und nach dem 10. Besuch 15 %. Der Rabatt gilt 12 Monate ab Ihrem letzten Besuch.' },
-      { q: 'Können Rabatte kombiniert werden?', a: 'Nein, Rabatte sind nicht kombinierbar. Es gilt immer der günstigere — zum Beispiel: bei einem 10 % Treuebonus und einem 20 % Geburtstagsrabatt erhalten Sie 20 %.' },
-      { q: 'Wie erhalte ich den Geburtstagsrabatt?', a: 'Am Geburtstag oder innerhalb von 7 Tagen erwähnen Sie das Datum bei der Buchung über WhatsApp oder Telefon. 20 % Rabatt auf jedes Programm, einmal pro Jahr.' },
-    ],
-  },
-  uk: {
-    heading: 'Часті запитання про знижки',
-    items: [
-      { q: 'Як працює програма лояльності?', a: 'Знижки нараховуються автоматично. Після 3-го візиту ви отримуєте 10 %, після 5-го — 12 %, а після 10-го — 15 %. Знижка діє 12 місяців від останнього візиту.' },
-      { q: 'Чи можна комбінувати знижки?', a: 'Ні, знижки не сумуються. Діє завжди найвигідніша — наприклад, якщо у вас є 10 % лояльності та 20 % до дня народження, ви отримаєте 20 %.' },
-      { q: 'Як отримати знижку до дня народження?', a: 'У день народження або протягом 7 днів назвіть дату під час бронювання через WhatsApp або телефон. Знижка 20 % діє на будь-яку програму, раз на рік.' },
-    ],
-  },
+const FAQ_HEADING: Record<string, string> = {
+  cs: 'Časté dotazy ke slevám',
+  en: 'Discount FAQ',
+  de: 'Häufige Fragen zu Rabatten',
+  uk: 'Часті запитання про знижки',
 };
+const HOW_Q: Record<string, string> = {
+  cs: 'Jak slevu uplatním?',
+  en: 'How do I claim a discount?',
+  de: 'Wie erhalte ich den Rabatt?',
+  uk: 'Як отримати знижку?',
+};
+const HOW_A: Record<string, string> = {
+  cs: 'Stačí ji zmínit při domluvě přes WhatsApp nebo telefon. Sleva se odečte na místě, nic předem neplatíte.',
+  en: 'Mention it when you book via WhatsApp or phone. It is deducted on arrival — nothing is paid in advance.',
+  de: 'Erwähnen Sie ihn bei der Buchung über WhatsApp oder Telefon. Er wird vor Ort abgezogen.',
+  uk: 'Згадайте її під час бронювання через WhatsApp або телефон. Знижка віднімається на місці.',
+};
+const HOW_WORKS: Record<string, string> = {
+  cs: 'Jak funguje sleva', en: 'How does the', de: 'Wie funktioniert der Rabatt', uk: 'Як працює знижка',
+};
+
+/** One question per real discount, answered with that discount's own description. */
+function buildFaq(items: { name: string; amount: string; desc: string }[], locale: string): FaqItem[] {
+  const lead = HOW_WORKS[locale] ?? HOW_WORKS.en;
+  const out: FaqItem[] = items
+    .filter((i) => i.desc)
+    .map((i) => ({
+      q: locale === 'en' ? `${lead} "${i.name}" discount work?` : `${lead} „${i.name}"?`,
+      a: i.amount ? `${i.desc} (${i.amount})` : i.desc,
+    }));
+  out.push({ q: HOW_Q[locale] ?? HOW_Q.en, a: HOW_A[locale] ?? HOW_A.en });
+  return out;
+}
 
 export async function generateMetadata({
   params,
@@ -86,19 +130,20 @@ export async function generateMetadata({
   const path = CANONICAL_PATH[locale] ?? '/slevy';
   const canonical = getCanonicalUrl(locale, path);
   const { buildOgImages } = await import('@/lib/seo/og');
-  const ogImages = await buildOgImages('slevy', locale, '/slevy', TITLES[locale] ?? TITLES.en);
+  const copy = discountCopy(await getActiveDiscounts().catch(() => []), locale);
+  const ogImages = await buildOgImages('slevy', locale, '/slevy', copy.title);
 
   return applyDBOverride(`/${locale}/slevy`, {
-    title: TITLES[locale] ?? TITLES.en,
-    description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
+    title: copy.title,
+    description: copy.description,
     alternates: {
       canonical,
       languages: getAlternates('/slevy'),
     },
     openGraph: {
       images: ogImages,
-      title: TITLES[locale] ?? TITLES.en,
-      description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
+      title: copy.title,
+      description: copy.description,
       url: canonical,
       locale: ogLocale(locale),
     },
@@ -124,15 +169,16 @@ export default async function SlevyPage({
       amount_type: d.amount_type,
     }))
   );
-  const geoLead = GEO_LEADS[locale] ?? GEO_LEADS.cs;
+  const copy = discountCopy(discounts, locale);
+  const geoLead = copy.geoLead;
   const bcLabel = locale === 'en' ? 'Discounts' : locale === 'de' ? 'Rabatte' : locale === 'uk' ? 'Знижки' : 'Slevy';
   const breadcrumbSchema = breadcrumbListJsonLd([
     { name: bcLabel, url: getCanonicalUrl(locale, '/slevy') },
   ]);
 
-  const faqBundle = FAQ_DATA[locale] ?? FAQ_DATA.en;
+  const faqItems = buildFaq(copy.items, locale);
   const faqSchema = faqPageJsonLd(
-    faqBundle.items.map((f) => ({ q: f.q, a: f.a })),
+    faqItems.map((f) => ({ q: f.q, a: f.a })),
     locale
   );
 
@@ -188,17 +234,17 @@ export default async function SlevyPage({
           {discounts.length > 0 ? (
             <DiscountsGrid discounts={discounts} locale={locale} />
           ) : (
-            <FallbackDiscountCards locale={locale} />
+            <p className="no-results">{NO_DISCOUNTS[locale] ?? NO_DISCOUNTS.en}</p>
           )}
 
           <HowToUse locale={locale} />
 
           <div style={{ marginTop: '48px' }}>
             <h2 className="section-h2" style={{ fontSize: '28px', marginBottom: '16px' }}>
-              {faqBundle.heading}
+              {FAQ_HEADING[locale] ?? FAQ_HEADING.en}
             </h2>
             <div className="faq-list">
-              {faqBundle.items.map((f, i) => (
+              {faqItems.map((f, i) => (
                 <details key={i} className="faq-item">
                   <summary>{f.q}</summary>
                   <div className="faq-item-body">{f.a}</div>
@@ -212,119 +258,3 @@ export default async function SlevyPage({
   );
 }
 
-interface FallbackBundle {
-  loyaltyH: string; loyaltyIntro: string; tier3: string; tier5: string; tier10: string; tier_lasts: string;
-  morningH: string; cur: string; morningIntro: string; monFri: string; minProgram: string;
-  birthdayH: string; birthdayIntro: string; onceYearly: string; mentionBirthday: string;
-}
-const FALLBACK: Record<string, FallbackBundle> = {
-  cs: {
-    loyaltyH: 'Věrnostní program',
-    loyaltyIntro: 'Stálí klienti získávají slevu automaticky. Čím častěji nás navštěvujete, tím větší výhoda.',
-    tier3: 'Po 3. návštěvě: 10 %',
-    tier5: 'Po 5. návštěvě: 12 %',
-    tier10: 'Po 10. návštěvě: 15 %',
-    tier_lasts: 'Sleva platí 12 měsíců od poslední návštěvy',
-    morningH: 'Ranní sleva',
-    cur: 'Kč',
-    morningIntro: 'Sleva 300 Kč na program 60+ minut, pokud přijdete 10:00–13:00 (Po–Pá).',
-    monFri: 'Pondělí — pátek',
-    minProgram: 'Min. program 60 minut',
-    birthdayH: 'Narozeninová sleva',
-    birthdayIntro: 'V den narozenin nebo do 7 dnů od nich získáte slevu 20 % na libovolný program.',
-    onceYearly: 'Platí 1× ročně',
-    mentionBirthday: 'Při domluvě uveďte datum narozenin',
-  },
-  en: {
-    loyaltyH: 'Loyalty program',
-    loyaltyIntro: 'Regular clients receive an automatic discount. The more often you visit, the better the perk.',
-    tier3: 'After visit 3: 10 %',
-    tier5: 'After visit 5: 12 %',
-    tier10: 'After visit 10: 15 %',
-    tier_lasts: 'Discount valid 12 months from your last visit',
-    morningH: 'Morning discount',
-    cur: 'CZK',
-    morningIntro: '300 CZK off any 60+ minute program when you arrive 10:00–13:00 (Mon–Fri).',
-    monFri: 'Monday — Friday',
-    minProgram: 'Minimum 60-minute program',
-    birthdayH: 'Birthday discount',
-    birthdayIntro: 'On your birthday or within 7 days you receive 20 % off any program.',
-    onceYearly: 'Once per year',
-    mentionBirthday: 'Please mention your birth date when booking',
-  },
-  de: {
-    loyaltyH: 'Treueprogramm',
-    loyaltyIntro: 'Stammkunden erhalten automatisch einen Rabatt. Je häufiger Sie zu Gast sind, desto höher der Vorteil.',
-    tier3: 'Nach 3 Besuchen: 10 %',
-    tier5: 'Nach 5 Besuchen: 12 %',
-    tier10: 'Nach 10 Besuchen: 15 %',
-    tier_lasts: 'Rabatt gilt 12 Monate ab Ihrem letzten Besuch',
-    morningH: 'Morgenrabatt',
-    cur: 'CZK',
-    morningIntro: '300 CZK Rabatt auf Programme ab 60 Minuten bei Ankunft 10:00–13:00 (Mo–Fr).',
-    monFri: 'Montag — Freitag',
-    minProgram: 'Mindestens 60-Minuten-Programm',
-    birthdayH: 'Geburtstagsrabatt',
-    birthdayIntro: 'Am Geburtstag oder innerhalb von 7 Tagen erhalten Sie 20 % auf jedes Programm.',
-    onceYearly: '1× pro Jahr',
-    mentionBirthday: 'Bitte erwähnen Sie Ihr Geburtsdatum bei der Buchung',
-  },
-  uk: {
-    loyaltyH: 'Програма лояльності',
-    loyaltyIntro: 'Постійні клієнти отримують знижку автоматично. Чим частіше ви до нас приходите, тим більший бонус.',
-    tier3: 'Після 3 візитів: 10 %',
-    tier5: 'Після 5 візитів: 12 %',
-    tier10: 'Після 10 візитів: 15 %',
-    tier_lasts: 'Знижка діє 12 місяців з моменту останнього візиту',
-    morningH: 'Ранкова знижка',
-    cur: 'CZK',
-    morningIntro: 'Знижка 300 CZK на програму 60+ хвилин, якщо приходите 10:00–13:00 (Пн–Пт).',
-    monFri: 'Понеділок — п\'ятниця',
-    minProgram: 'Мінімум 60 хвилин',
-    birthdayH: 'Знижка до дня народження',
-    birthdayIntro: 'У день народження або протягом 7 днів отримуєте 20 % на будь-яку програму.',
-    onceYearly: '1 раз на рік',
-    mentionBirthday: 'Під час бронювання назвіть дату народження',
-  },
-};
-
-function FallbackDiscountCards({ locale }: { locale: string }) {
-  const F = FALLBACK[locale] ?? FALLBACK.en;
-  return (
-    <div className="discounts-grid">
-      <div className="discount-card featured">
-        <div className="discount-card-icon">⭐</div>
-        <h3>{F.loyaltyH}</h3>
-        <div className="discount-card-amount">10—15 <small>%</small></div>
-        <p>{F.loyaltyIntro}</p>
-        <ul className="discount-conditions">
-          <li>{F.tier3}</li>
-          <li>{F.tier5}</li>
-          <li>{F.tier10}</li>
-          <li>{F.tier_lasts}</li>
-        </ul>
-      </div>
-      <div className="discount-card">
-        <div className="discount-card-icon">🌅</div>
-        <h3>{F.morningH}</h3>
-        <div className="discount-card-amount">300 <small>{F.cur}</small></div>
-        <p>{F.morningIntro}</p>
-        <ul className="discount-conditions">
-          <li>{F.monFri}</li>
-          <li>10:00 — 13:00</li>
-          <li>{F.minProgram}</li>
-        </ul>
-      </div>
-      <div className="discount-card">
-        <div className="discount-card-icon">🎂</div>
-        <h3>{F.birthdayH}</h3>
-        <div className="discount-card-amount">20 <small>%</small></div>
-        <p>{F.birthdayIntro}</p>
-        <ul className="discount-conditions">
-          <li>{F.onceYearly}</li>
-          <li>{F.mentionBirthday}</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
