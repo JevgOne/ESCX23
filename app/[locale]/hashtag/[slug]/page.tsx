@@ -160,14 +160,20 @@ export default async function HashtagPage({ params }: Props) {
     })),
     title,
   );
-  const faqJsonLd = content && content.faq.length > 0
-    ? faqPageJsonLd(content.faq.map((f) => ({
-        q: f.q[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.q.cs,
-        a: f.a[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.a.cs,
-      })))
-    : null;
+  // Landing copy carries {districts}/{count} tokens so it can never name an
+  // apartment we closed. Fill them before rendering AND before the JSON-LD,
+  // or Google gets the raw placeholder.
+  const facts = await getSiteFacts();
+  const fill = (t: string) => fillSiteFacts(t, facts, locale);
 
-  const introText = content?.intro[locale as 'cs' | 'en' | 'de' | 'uk'];
+  const faq = (content?.faq ?? []).map((f) => ({
+    q: fill(f.q[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.q.cs),
+    a: fill(f.a[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.a.cs),
+  }));
+  const faqJsonLd = faq.length > 0 ? faqPageJsonLd(faq) : null;
+
+  const introRaw = content?.intro[locale as 'cs' | 'en' | 'de' | 'uk'];
+  const introText = introRaw ? fill(introRaw) : undefined;
 
   return (
     <main>
@@ -256,14 +262,14 @@ export default async function HashtagPage({ params }: Props) {
         )}
 
         {/* FAQ */}
-        {content && content.faq.length > 0 && (
+        {faq.length > 0 && (
           <section className="lp-faq-section">
             <h2 className="lp-h2">{faqLabel}</h2>
             <div className="lp-faq-list">
-              {content.faq.map((item, i) => (
+              {faq.map((item, i) => (
                 <details key={i} className="lp-faq-item">
-                  <summary>{item.q[locale as 'cs' | 'en' | 'de' | 'uk'] ?? item.q.cs}</summary>
-                  <p>{item.a[locale as 'cs' | 'en' | 'de' | 'uk'] ?? item.a.cs}</p>
+                  <summary>{item.q}</summary>
+                  <p>{item.a}</p>
                 </details>
               ))}
             </div>

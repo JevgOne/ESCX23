@@ -1,15 +1,16 @@
 import { ImageResponse } from 'next/og';
+import { getSiteFacts, districtList } from '@/lib/site-facts';
 
 export const runtime = 'nodejs';
 export const alt = 'LovelyGirls Prague — Verified Companions';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-const TAGLINES: Record<string, { headline: string; tagline: string }> = {
-  en: { headline: 'LovelyGirls Prague', tagline: 'Verified Companions · Prague 1, 2, 3, 8' },
-  cs: { headline: 'LovelyGirls Praha', tagline: 'Ověřené společnice · Praha 1, 2, 3, 8' },
-  de: { headline: 'LovelyGirls Prag', tagline: 'Verifizierte Begleiterinnen · Prag 1, 2, 3, 8' },
-  uk: { headline: 'LovelyGirls Прага', tagline: 'Перевірені супутниці · Прага 1, 2, 3, 8' },
+const HEADLINES: Record<string, { headline: string; label: string }> = {
+  en: { headline: 'LovelyGirls Prague', label: 'Verified Companions' },
+  cs: { headline: 'LovelyGirls Praha', label: 'Ověřené společnice' },
+  de: { headline: 'LovelyGirls Prag', label: 'Verifizierte Begleiterinnen' },
+  uk: { headline: 'LovelyGirls Прага', label: 'Перевірені супутниці' },
 };
 
 export default async function OpengraphImage({
@@ -18,7 +19,12 @@ export default async function OpengraphImage({
   params: { locale: string };
 }) {
   const locale = params?.locale ?? 'en';
-  const { headline, tagline } = TAGLINES[locale] ?? TAGLINES.en;
+  const { headline, label } = HEADLINES[locale] ?? HEADLINES.en;
+  // Districts from the DB, not a frozen list — this image is what people see
+  // shared on social, so a district we closed reads as a stale business.
+  const facts = await getSiteFacts();
+  const districts = districtList(facts, locale);
+  const tagline = districts ? `${label} · ${districts}` : label;
 
   return new ImageResponse(
     (

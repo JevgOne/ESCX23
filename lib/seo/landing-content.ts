@@ -54,7 +54,7 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       },
       {
         q: { cs: 'Kde se s blondýnkou potkám?', en: 'Where do I meet the blonde companion?', de: 'Wo treffe ich die Begleiterin?', uk: 'Де я зустріну блондинку?' },
-        a: { cs: 'V diskrétním privátním apartmánu v centru Prahy (Praha 1, 2, 3 nebo 8). Přesnou adresu obdržíte po potvrzení termínu.', en: 'In a discreet private apartment in central Prague (Prague 1, 2, 3 or 8). Exact address sent after booking confirmation.', de: 'In einem diskreten privaten Apartment im Zentrum von Prag.', uk: 'У дискретному приватному апартаменті у центрі Праги.' },
+        a: { cs: 'V diskrétním privátním apartmánu v centru Prahy ({districts}). Přesnou adresu obdržíte po potvrzení termínu.', en: 'In a discreet private apartment in central Prague ({districts}). Exact address sent after booking confirmation.', de: 'In einem diskreten privaten Apartment im Zentrum von Prag.', uk: 'У дискретному приватному апартаменті у центрі Праги.' },
       },
       {
         q: { cs: 'Kolik stojí setkání s blondýnkou?', en: 'How much does a meeting with a blonde companion cost?', de: 'Was kostet ein Treffen mit einer Blondine?', uk: 'Скільки коштує зустріч з блондинкою?' },
@@ -209,10 +209,10 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       uk: 'Супутниці Прага — {count} {companions} у центрі.',
     },
     intro: {
-      cs: 'LovelyGirls Praha je prémiová agentura společnic v centru Prahy. Provozujeme diskrétní privátní apartmány v Praze 1, 2, 3 a 8 s osobně ověřenými společnicemi všech typů — blondýnky, brunetky, černovlásky, štíhlé, s křivkami, české i zahraniční. Každý profil je osobně ověřený, fotografie odpovídají realitě a ceny jsou jasně uvedené bez skrytých poplatků. Společnice mluví česky, anglicky a často i dalšími jazyky. Nabízíme programy od 30 minut po 120 minut, GFE (Girlfriend Experience), párové programy a další služby. Kontaktujte nás přes WhatsApp nebo Telegram pro okamžitou domluvu. Otevřeno denně 10:00–22:30.',
-      en: 'LovelyGirls Prague is a premium companion agency in central Prague. We operate discreet private apartments in Prague 1, 2, 3, and 8 with personally verified companions of every type — blondes, brunettes, dark-haired, slim, curvy, Czech and international. Every profile is personally verified, photos match reality, and prices are clearly listed with no hidden fees. Companions speak Czech, English, and often additional languages. We offer programs from 30 to 120 minutes, GFE (Girlfriend Experience), couples programs, and more. Contact us via WhatsApp or Telegram for instant booking. Open daily 10:00–22:30.',
-      de: 'LovelyGirls Prag ist eine Premium-Begleitagentur im Zentrum von Prag. Wir betreiben diskrete private Apartments in Prag 1, 2, 3 und 8 mit persönlich verifizierten Begleiterinnen aller Typen — Blondinen, Brünette, schlank, kurvig, tschechische und internationale. Jedes Profil ist verifiziert, Fotos entsprechen der Realität, Preise transparent. Programme von 30 bis 120 Minuten, GFE und mehr. Kontakt via WhatsApp oder Telegram. Täglich 10:00–22:30.',
-      uk: 'LovelyGirls Прага — преміальна агенція супутниць у центрі Праги. Ми керуємо дискретними приватними апартаментами у Празі 1, 2, 3 та 8 з особисто перевіреними супутницями всіх типів — блондинки, брюнетки, темноволосі, стрункі, пишні, чеські та міжнародні. Кожен профіль перевірений, фотографії відповідають реальності, ціни прозорі. Програми від 30 до 120 хвилин, GFE та інше. Зв\'яжіться через WhatsApp або Telegram. Щодня 10:00–22:30.',
+      cs: 'LovelyGirls Praha je prémiová agentura společnic v centru Prahy. Provozujeme diskrétní privátní apartmány v centru Prahy — {districts} — s osobně ověřenými společnicemi všech typů — blondýnky, brunetky, černovlásky, štíhlé, s křivkami, české i zahraniční. Každý profil je osobně ověřený, fotografie odpovídají realitě a ceny jsou jasně uvedené bez skrytých poplatků. Společnice mluví česky, anglicky a často i dalšími jazyky. Nabízíme programy od 30 minut po 120 minut, GFE (Girlfriend Experience), párové programy a další služby. Kontaktujte nás přes WhatsApp nebo Telegram pro okamžitou domluvu. Otevřeno denně 10:00–22:30.',
+      en: 'LovelyGirls Prague is a premium companion agency in central Prague. We operate discreet private apartments in central Prague — {districts} — with personally verified companions of every type — blondes, brunettes, dark-haired, slim, curvy, Czech and international. Every profile is personally verified, photos match reality, and prices are clearly listed with no hidden fees. Companions speak Czech, English, and often additional languages. We offer programs from 30 to 120 minutes, GFE (Girlfriend Experience), couples programs, and more. Contact us via WhatsApp or Telegram for instant booking. Open daily 10:00–22:30.',
+      de: 'LovelyGirls Prag ist eine Premium-Begleitagentur im Zentrum von Prag. Wir betreiben diskrete private Apartments im Zentrum von Prag — {districts} — mit persönlich verifizierten Begleiterinnen aller Typen — Blondinen, Brünette, schlank, kurvig, tschechische und internationale. Jedes Profil ist verifiziert, Fotos entsprechen der Realität, Preise transparent. Programme von 30 bis 120 Minuten, GFE und mehr. Kontakt via WhatsApp oder Telegram. Täglich 10:00–22:30.',
+      uk: 'LovelyGirls Прага — преміальна агенція супутниць у центрі Праги. Ми керуємо дискретними приватними апартаментами у центрі Праги — {districts} — з особисто перевіреними супутницями всіх типів — блондинки, брюнетки, темноволосі, стрункі, пишні, чеські та міжнародні. Кожен профіль перевірений, фотографії відповідають реальності, ціни прозорі. Програми від 30 до 120 хвилин, GFE та інше. Зв\'яжіться через WhatsApp або Telegram. Щодня 10:00–22:30.',
     },
     faq: [
       {
@@ -326,29 +326,29 @@ export interface LocationContent {
 export const LOCATION_CONTENT: Record<string, LocationContent> = {
   'praha-3': {
     metaDesc: {
-      cs: 'Apartmán Žižkov Praha 3 — nový diskrétní privát. Otevření červen 2026. Ověřené společnice, soukromý vchod, hotovostní platba.',
-      en: 'Zizkov apartment Prague 3 — new discreet private flat. Opening June 2026. Verified companions, private entrance, cash payment.',
-      de: 'Apartment Zizkov Prag 3 — neues diskretes Privatapartment. Eröffnung Juni 2026. Verifizierte Begleiterinnen.',
-      uk: 'Апартамент Жижков Прага 3 — новий дискретний приватний апартамент. Відкриття червень 2026.',
+      cs: 'Escort Praha 3 — ověřené společnice v diskrétním privátu na Žižkově. Metro Jiřího z Poděbrad, soukromý vchod, denně 10–22:30.',
+      en: 'Escort Prague 3 — verified companions in a discreet private flat in Zizkov. Metro Jiřího z Poděbrad, private entrance, daily 10–22:30.',
+      de: 'Escort Prag 3 — verifizierte Begleiterinnen im diskreten Privatapartment in Zizkov. Metro Jiřího z Poděbrad, privater Eingang, täglich 10–22:30.',
+      uk: 'Ескорт Прага 3 — перевірені супутниці у дискретному приватному апартаменті на Жижкові. Метро Jiřího z Poděbrad, приватний вхід, щодня 10–22:30.',
     },
     intro: {
-      cs: 'Nový apartmán LovelyGirls na Žižkově (Praha 3) otevíráme v červnu 2026. Diskrétní byt s vlastním vchodem v klidné ulici, snadná dostupnost metrem i tramvají. Žižkov je oblíbená čtvrť plná kaváren a vináren — náš apartmán v ní nabídne stejný komfort a soukromí jako hlavní pobočka na Vinohradech.',
-      en: 'The new LovelyGirls Zizkov apartment (Prague 3) opens in June 2026. Discreet flat with private entrance on a quiet street, easy metro and tram access. Zizkov is a popular neighborhood full of cafes and wine bars — our apartment offers the same comfort and privacy as the main Vinohrady location.',
-      de: 'Das neue LovelyGirls Zizkov Apartment (Prag 3) eröffnet im Juni 2026. Diskrete Wohnung mit privatem Eingang, Metro- und Tramanbindung.',
-      uk: 'Новий апартамент LovelyGirls на Жижкові (Прага 3) відкривається у червні 2026. Дискретна квартира з приватним входом у тихій вулиці, зручний доступ метро та трамваєм.',
+      cs: 'Apartmán LovelyGirls na Žižkově (Praha 3) je diskrétní privát s vlastním vchodem v klidné ulici. Od metra Jiřího z Poděbrad (linka A) je to pět minut pěšky, tramvaje jezdí Seifertovou i Husitskou. Žižkov je čtvrť kaváren a vináren, takže příchod ani odchod tu nikoho nezaujme. Uvnitř najdete sprchu, ručníky a plné vybavení. Ceník je stejný jako na ostatních apartmánech, platí se hotově na místě. Otevřeno denně 10:00–22:30, kdo pracuje dnes uvidíte v rozvrhu.',
+      en: 'The LovelyGirls apartment in Zizkov (Prague 3) is a discreet private flat with its own entrance on a quiet street. Five minutes on foot from Jiřího z Poděbrad metro (line A), with trams running along Seifertova and Husitská. Zizkov is a neighbourhood of cafes and wine bars, so nobody pays attention to who comes or goes. Inside there is a shower, towels and full amenities. Pricing matches our other apartments and payment is cash on arrival. Open daily 10:00–22:30 — the schedule shows who is working today.',
+      de: 'Das LovelyGirls Apartment in Zizkov (Prag 3) ist eine diskrete Privatwohnung mit eigenem Eingang in einer ruhigen Straße. Fünf Gehminuten von der Metro Jiřího z Poděbrad (Linie A), Straßenbahnen in der Seifertova und Husitská. Zizkov ist ein Viertel voller Cafés und Weinbars — niemand achtet darauf, wer kommt oder geht. Dusche, Handtücher und volle Ausstattung sind vorhanden. Gleiche Preise wie in unseren anderen Apartments, Barzahlung vor Ort. Täglich 10:00–22:30 geöffnet.',
+      uk: 'Апартамент LovelyGirls на Жижкові (Прага 3) — дискретна приватна квартира з власним входом на тихій вулиці. П\'ять хвилин пішки від метро Jiřího z Poděbrad (лінія A), трамваї по Seifertova та Husitská. Жижков — район кав\'ярень і винних барів, тож ніхто не звертає уваги, хто приходить чи йде. Усередині душ, рушники та повне обладнання. Ціни такі ж, як в інших апартаментах, оплата готівкою на місці. Відкрито щодня 10:00–22:30.',
     },
     faq: [
       {
-        q: { cs: 'Kdy otevíráte apartmán na Žižkově?', en: 'When does the Zizkov apartment open?', de: 'Wann eröffnet das Zizkov-Apartment?', uk: 'Коли відкривається апартамент на Жижкові?' },
-        a: { cs: 'Plánované otevření je 18. června 2026. Sledujte naše stránky pro aktuální informace.', en: 'Planned opening is June 18, 2026. Follow our pages for updates.', de: 'Geplante Eröffnung am 18. Juni 2026.', uk: 'Планове відкриття 18 червня 2026. Слідкуйте за нашими сторінками.' },
-      },
-      {
         q: { cs: 'Jak se dostanu na Žižkov MHD?', en: 'How do I get to Zizkov by public transport?', de: 'Wie komme ich mit dem ÖPNV nach Zizkov?', uk: 'Як дістатися на Жижков громадським транспортом?' },
-        a: { cs: 'Metro A — stanice Jiřího z Poděbrad (5 minut pěšky), tramvaje po Seifertově a Husitské ulici. Žižkov je velmi dobře dopravně obsloužený.', en: 'Metro A — Jiřího z Poděbrad station (5 min walk), trams on Seifertova and Husitská streets. Zizkov has excellent public transport.', de: 'Metro A — Jiřího z Poděbrad (5 Min. Fußweg), Tram auf Seifertova.', uk: 'Метро A — станція Jiřího z Poděbrad (5 хвилин пішки), трамваї по Seifertova та Husitská. Жижков має відмінне транспортне сполучення.' },
+        a: { cs: 'Metro A — stanice Jiřího z Poděbrad, pět minut pěšky. Tramvaje jezdí po Seifertově a Husitské ulici. Parkování v okolních modrých zónách.', en: 'Metro A — Jiřího z Poděbrad station, five minutes on foot. Trams run on Seifertova and Husitská. Street parking in the surrounding blue zones.', de: 'Metro A — Jiřího z Poděbrad, fünf Gehminuten. Straßenbahnen in der Seifertova und Husitská. Parken in den blauen Zonen.', uk: 'Метро A — станція Jiřího z Poděbrad, п\'ять хвилин пішки. Трамваї по Seifertova та Husitská. Парковка в синіх зонах поблизу.' },
       },
       {
-        q: { cs: 'Bude na Žižkově stejná nabídka jako na Vinohradech?', en: 'Will Zizkov offer the same services as Vinohrady?', de: 'Hat Zizkov das gleiche Angebot wie Vinohrady?', uk: 'Чи буде на Жижкові такий же вибір як на Виноградах?' },
-        a: { cs: 'Ano — stejné společnice, stejný ceník, stejný komfort. Některé dívky budou pracovat v obou lokacích.', en: 'Yes — same companions, same pricing, same comfort. Some girls will work at both locations.', de: 'Ja — gleiche Begleiterinnen, gleiche Preise, gleicher Komfort.', uk: 'Так — ті ж супутниці, ті ж ціни, той же комфорт. Деякі дівчата працюватимуть в обох локаціях.' },
+        q: { cs: 'Je nabídka na Praze 3 stejná jako na ostatních apartmánech?', en: 'Is Prague 3 the same as your other apartments?', de: 'Ist Prag 3 wie unsere anderen Apartments?', uk: 'Чи такий же вибір на Празі 3, як в інших апартаментах?' },
+        a: { cs: 'Ano — stejné společnice, stejný ceník, stejný komfort. Část dívek se mezi apartmány střídá podle rozvrhu.', en: 'Yes — same companions, same pricing, same comfort. Some companions rotate between apartments according to the schedule.', de: 'Ja — gleiche Begleiterinnen, gleiche Preise, gleicher Komfort. Einige wechseln je nach Zeitplan zwischen den Apartments.', uk: 'Так — ті ж супутниці, ті ж ціни, той же комфорт. Частина дівчат чергується між апартаментами за графіком.' },
+      },
+      {
+        q: { cs: 'Jak zjistím, kdo je dnes na Praze 3?', en: 'How do I find who is at Prague 3 today?', de: 'Wie erfahre ich, wer heute in Prag 3 ist?', uk: 'Як дізнатися, хто сьогодні на Празі 3?' },
+        a: { cs: 'V rozvrhu si vyberete den a vyfiltrujete podle apartmánu. Rozvrh se aktualizuje průběžně, takže vidíte reálnou dostupnost.', en: 'Open the schedule, pick a day and filter by apartment. It updates continuously, so what you see is real availability.', de: 'Im Zeitplan den Tag wählen und nach Apartment filtern. Er wird laufend aktualisiert.', uk: 'У графіку оберіть день і відфільтруйте за апартаментом. Графік оновлюється постійно.' },
       },
     ],
     relatedHashtags: ['spolecnice-praha', 'blondynky-praha', 'gfe-praha', 'studentky-praha'],
@@ -356,29 +356,29 @@ export const LOCATION_CONTENT: Record<string, LocationContent> = {
 
   'praha-5': {
     metaDesc: {
-      cs: 'Apartmán Smíchov Praha 5 — nový diskrétní privát u Anděla. Otevření červenec 2026. Ověřené společnice, soukromý vchod.',
-      en: 'Smichov apartment Prague 5 — new discreet private flat near Andel. Opening July 2026. Verified companions, private entrance.',
-      de: 'Apartment Smichov Prag 5 — neues diskretes Privatapartment nahe Andel. Eröffnung Juli 2026.',
-      uk: 'Апартамент Смíхов Прага 5 — новий дискретний приватний апартамент біля Анділа. Відкриття липень 2026.',
+      cs: 'Escort Praha 5 — ověřené společnice v diskrétním privátu u Anděla. Metro Anděl linka B, soukromý vchod, denně 10–22:30.',
+      en: 'Escort Prague 5 — verified companions in a discreet private flat by Andel. Andel metro line B, private entrance, daily 10–22:30.',
+      de: 'Escort Prag 5 — verifizierte Begleiterinnen im diskreten Privatapartment bei Andel. Metro Andel Linie B, privater Eingang, täglich 10–22:30.',
+      uk: 'Ескорт Прага 5 — перевірені супутниці у дискретному приватному апартаменті біля Анділа. Метро Anděl лінія B, приватний вхід, щодня 10–22:30.',
     },
     intro: {
-      cs: 'Apartmán LovelyGirls na Smíchově (Praha 5, Anděl) otevíráme v červenci 2026. Moderní byt s vlastním vchodem v blízkosti metra Anděl — jedna z nejživějších částí Prahy. Apartmán nabídne stejný komfort a diskrétnost jako naše ostatní pobočky.',
-      en: 'The LovelyGirls Smichov apartment (Prague 5, Andel) opens in July 2026. Modern flat with private entrance near Andel metro — one of Prague\'s liveliest neighborhoods. Same comfort and discretion as our other locations.',
-      de: 'Das LovelyGirls Smichov Apartment (Prag 5, Andel) eröffnet im Juli 2026. Moderne Wohnung nahe der Metro Andel.',
-      uk: 'Апартамент LovelyGirls на Смíхові (Прага 5, Анділ) відкривається у липні 2026. Сучасна квартира з приватним входом біля метро Анділ — одна з найжвавіших частин Праги.',
+      cs: 'Apartmán LovelyGirls na Smíchově (Praha 5) stojí kousek od metra Anděl, linka B. Je to jedna z nejživějších částí Prahy — obchody, kavárny a stálý pohyb lidí, což je pro diskrétní návštěvu spíš výhoda. Byt má vlastní vchod, sprchu a plné vybavení. Ceník je jednotný se zbytkem apartmánů, platba hotově na místě. Otevřeno denně 10:00–22:30; aktuální obsazení najdete v rozvrhu, kde si můžete filtrovat právě Prahu 5.',
+      en: 'The LovelyGirls apartment in Smichov (Prague 5) sits a short walk from Andel metro on line B. It is one of the liveliest parts of Prague — shops, cafes and constant foot traffic, which works in favour of a discreet visit. The flat has its own entrance, a shower and full amenities. Pricing is the same across all our apartments and payment is cash on arrival. Open daily 10:00–22:30; the schedule lets you filter for Prague 5.',
+      de: 'Das LovelyGirls Apartment in Smichov (Prag 5) liegt wenige Gehminuten von der Metro Andel, Linie B. Es ist einer der lebhaftesten Teile Prags — Geschäfte, Cafés und ständiger Betrieb, was einem diskreten Besuch entgegenkommt. Eigener Eingang, Dusche und volle Ausstattung. Einheitliche Preise, Barzahlung vor Ort. Täglich 10:00–22:30 geöffnet.',
+      uk: 'Апартамент LovelyGirls на Смíхові (Прага 5) розташований за кілька хвилин від метро Anděl, лінія B. Це одна з найжвавіших частин Праги — магазини, кав\'ярні та постійний рух людей, що для дискретного візиту радше плюс. Квартира має власний вхід, душ і повне обладнання. Ціни єдині для всіх апартаментів, оплата готівкою. Відкрито щодня 10:00–22:30.',
     },
     faq: [
       {
-        q: { cs: 'Kdy otevíráte apartmán na Smíchově?', en: 'When does the Smichov apartment open?', de: 'Wann eröffnet das Smichov-Apartment?', uk: 'Коли відкривається апартамент на Смíхові?' },
-        a: { cs: 'Plánované otevření je 25. července 2026.', en: 'Planned opening is July 25, 2026.', de: 'Geplante Eröffnung am 25. Juli 2026.', uk: 'Планове відкриття 25 липня 2026.' },
+        q: { cs: 'Kde přesně na Praze 5 apartmán je?', en: 'Where exactly in Prague 5 is the apartment?', de: 'Wo genau in Prag 5 befindet sich das Apartment?', uk: 'Де саме на Празі 5 знаходиться апартамент?' },
+        a: { cs: 'Pár minut od metra Anděl (linka B). Přesnou adresu pošleme po potvrzení termínu — kvůli soukromí dívek i vašemu ji neuvádíme veřejně.', en: 'A few minutes from Andel metro (line B). We send the exact address once your booking is confirmed — we keep it off the public site for everyone\'s privacy.', de: 'Wenige Minuten von der Metro Andel (Linie B). Die genaue Adresse senden wir nach Bestätigung der Buchung.', uk: 'За кілька хвилин від метро Anděl (лінія B). Точну адресу надсилаємо після підтвердження бронювання.' },
       },
       {
-        q: { cs: 'Kde přesně na Smíchově se apartmán nachází?', en: 'Where exactly in Smichov is the apartment?', de: 'Wo genau in Smichov befindet sich das Apartment?', uk: 'Де саме на Смíхові знаходиться апартамент?' },
-        a: { cs: 'V blízkosti metra Anděl (linka B). Přesnou adresu sdílíme po potvrzení rezervace.', en: 'Near Andel metro (line B). Exact address shared after booking confirmation.', de: 'Nahe der Metro Andel (Linie B). Adresse nach Buchung.', uk: 'Біля метро Анділ (лінія B). Точну адресу надаємо після підтвердження бронювання.' },
+        q: { cs: 'Je Praha 5 levnější než ostatní apartmány?', en: 'Is Prague 5 cheaper than your other apartments?', de: 'Ist Prag 5 günstiger als die anderen Apartments?', uk: 'Чи Прага 5 дешевша за інші апартаменти?' },
+        a: { cs: 'Ne, ceník je jednotný pro všechny apartmány — stejné programy, stejné ceny. Lokalita cenu neovlivňuje.', en: 'No — pricing is unified across all apartments, same programs and same prices. Location does not change the price.', de: 'Nein, die Preise sind an allen Standorten gleich — gleiche Programme, gleiche Preise.', uk: 'Ні, ціни єдині для всіх апартаментів — ті ж програми, ті ж ціни.' },
       },
       {
-        q: { cs: 'Bude Smíchov levnější než Vinohrady?', en: 'Will Smichov be cheaper than Vinohrady?', de: 'Wird Smichov günstiger sein als Vinohrady?', uk: 'Чи буде Смíхов дешевшим ніж Виногради?' },
-        a: { cs: 'Ceník je jednotný pro všechny pobočky — stejné programy, stejné ceny.', en: 'Pricing is unified across all locations — same programs, same prices.', de: 'Die Preise sind an allen Standorten gleich.', uk: 'Ціни єдині для всіх локацій — ті ж програми, ті ж ціни.' },
+        q: { cs: 'Dá se na Praze 5 zaparkovat?', en: 'Is there parking near Prague 5?', de: 'Gibt es Parkplätze in Prag 5?', uk: 'Чи є парковка біля Праги 5?' },
+        a: { cs: 'V okolí jsou modré zóny a placená parkoviště u Anděla. Většina hostů ale dorazí metrem — je to rychlejší.', en: 'There are blue zones and paid car parks around Andel. Most guests arrive by metro, which is faster.', de: 'Rund um Andel gibt es blaue Zonen und Parkhäuser. Die meisten Gäste kommen mit der Metro.', uk: 'Поблизу Anděl є сині зони та платні паркінги. Більшість гостей приїжджає метро — це швидше.' },
       },
     ],
     relatedHashtags: ['spolecnice-praha', 'brunetky-praha', 'gfe-praha', 'cernovlasky-praha'],
@@ -484,7 +484,9 @@ export function getHashtagContent(slug: string): LandingContent | null {
 }
 
 const LOCATION_SLUG_ALIASES: Record<string, string> = {
-  'praha-2': 'vinohrady',
+  // Praha 2 is Nové Město, not Vinohrady — the alias below used to serve
+  // Vinohrady copy on /pobocka/praha-2 while the DB said Nové Město.
+  'praha-2': 'nove-mesto',
   'stare-mesto': 'praha-1',
   'smichov': 'praha-5',
 };

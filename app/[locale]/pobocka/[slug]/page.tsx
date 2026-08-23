@@ -352,12 +352,13 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
     ratingCount: ratingStats.totalReviews > 0 ? ratingStats.totalReviews : undefined,
   });
 
-  const faqJsonLd = lc && lc.faq.length > 0
-    ? faqPageJsonLd(lc.faq.map((f) => ({
-        q: f.q[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.q.cs,
-        a: f.a[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.a.cs,
-      })))
-    : null;
+  // Fill {districts}/{count} before rendering and before the JSON-LD.
+  const facts = await getSiteFacts();
+  const faq = (lc?.faq ?? []).map((f) => ({
+    q: fillSiteFacts(f.q[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.q.cs, facts, locale),
+    a: fillSiteFacts(f.a[locale as 'cs' | 'en' | 'de' | 'uk'] ?? f.a.cs, facts, locale),
+  }));
+  const faqJsonLd = faq.length > 0 ? faqPageJsonLd(faq) : null;
 
   const today = pragueDateISO();
   const isUpcoming = loc.openingDate != null && loc.openingDate > today;
@@ -600,15 +601,15 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
       )}
 
       {/* FAQ */}
-      {lc && lc.faq.length > 0 && (
+      {faq.length > 0 && (
         <section className="pobocka-section">
           <div className="container">
             <h2 className="lp-h2">{faqLbl}</h2>
             <div className="lp-faq-list">
-              {lc.faq.map((item, i) => (
+              {faq.map((item, i) => (
                 <details key={i} className="lp-faq-item">
-                  <summary>{item.q[locale as 'cs' | 'en' | 'de' | 'uk'] ?? item.q.cs}</summary>
-                  <p>{item.a[locale as 'cs' | 'en' | 'de' | 'uk'] ?? item.a.cs}</p>
+                  <summary>{item.q}</summary>
+                  <p>{item.a}</p>
                 </details>
               ))}
             </div>

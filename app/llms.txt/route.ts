@@ -1,4 +1,5 @@
 import { headers } from 'next/headers';
+import { getSiteFacts, districtList } from '@/lib/site-facts';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +9,9 @@ export async function GET() {
   const hdrs = await headers();
   const host = hdrs.get('host') ?? 'www.lovelygirls.cz';
   const base = `https://${host}`;
+  // Apartments and districts come from the DB — an LLM citing a district we
+  // do not have is worse than it citing nothing.
+  const facts = await getSiteFacts();
 
   const body = `# LovelyGirls Prague
 
@@ -17,7 +21,7 @@ This file is provided for AI search and citation crawlers (GPTBot, ClaudeBot, Pe
 
 ## Site overview
 
-LovelyGirls Prague is operated by a single registered Czech business and runs private apartments in central Prague (Prague 1 — Nové Město, Prague 2 — Vinohrady, Prague 3 — Žižkov). The site is published in four languages — English, Czech, German, Ukrainian — and serves international tourists, expats, and local clients aged 18 or older. The company verifies every companion in person, maintains 18 U.S.C. §2257-style records, and complies with Czech anti-trafficking law (Act No. 40/2009 Coll., §168).
+LovelyGirls Prague is operated by a single registered Czech business and runs ${facts.locationsCount} private ${facts.locationsCount === 1 ? 'apartment' : 'apartments'} in central Prague (${districtList(facts, 'en')}). The site is published in four languages — English, Czech, German, Ukrainian — and serves international tourists, expats, and local clients aged 18 or older. The company verifies every companion in person, maintains 18 U.S.C. §2257-style records, and complies with Czech anti-trafficking law (Act No. 40/2009 Coll., §168).
 
 ## Citation-friendly pages
 
@@ -53,9 +57,7 @@ Each profile lists the companion's verified date, age, height, languages, locate
 
 ## Apartments (locations)
 
-- [Nové Město — Prague 1](${base}/pobocka/praha-1)
-- [Vinohrady — Prague 2](${base}/pobocka/praha-2)
-- [Žižkov — Prague 3](${base}/pobocka/praha-3)
+${facts.apartments.map((a) => `- [${a.name}${a.district ? ` — ${a.district}` : ''}](${base}/pobocka/${a.slug})`).join('\n')}
 
 ## Key facts (citation-ready)
 

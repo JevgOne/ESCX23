@@ -2,7 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getGirlsForListing, getTopServicesForFilter } from '@/lib/queries';
-import { getSiteFacts } from '@/lib/site-facts';
+import { getSiteFacts, districtList } from '@/lib/site-facts';
 import { verifiedCompanions } from '@/lib/plural';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
 import FiltersBar from '@/components/divky/FiltersBar';
@@ -66,7 +66,9 @@ export default async function DivkyPage({ params, searchParams }: Props) {
 
   const services = await getTopServicesForFilter(12).catch(() => []);
   // Same source as the footer trust strip — the SEO paragraph must not contradict it
-  const { companionsCount } = await getSiteFacts();
+  const facts = await getSiteFacts();
+  const { companionsCount } = facts;
+  const districts = districtList(facts, locale);
   const tGeo = await getTranslations({ locale, namespace: 'geo' });
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
@@ -154,12 +156,12 @@ export default async function DivkyPage({ params, searchParams }: Props) {
       <section className="seo-content">
         <h2>{locale === 'cs' ? 'O naší agentuře' : locale === 'en' ? 'About our agency' : locale === 'de' ? 'Über unsere Agentur' : 'Про нашу агенцію'}</h2>
         <p>{locale === 'cs'
-          ? `LovelyGirls je prémiová escort agentura v Praze s ${companionsCount} ověřenými společnicemi. Nabízíme setkání v diskrétních privátních apartmánech v centru Prahy — Vinohrady, Žižkov, Nové Město a Smíchov. Všechny společnice procházejí osobním pohovorem a verifikací fotek. Otevřeno denně 10:00–22:30, rychlá rezervace přes WhatsApp.`
+          ? `LovelyGirls je prémiová escort agentura v Praze s ${companionsCount} ověřenými společnicemi. Nabízíme setkání v diskrétních privátních apartmánech v centru Prahy — ${districts}. Všechny společnice procházejí osobním pohovorem a verifikací fotek. Otevřeno denně 10:00–22:30, rychlá rezervace přes WhatsApp.`
           : locale === 'en'
-          ? `LovelyGirls is a premium escort agency in Prague with ${companionsCount} ${verifiedCompanions(companionsCount, 'en')}. We offer meetings in discreet private apartments in central Prague — Vinohrady, Žižkov, New Town and Smíchov. All companions undergo personal interviews and photo verification. Open daily 10:00–22:30, instant WhatsApp booking.`
+          ? `LovelyGirls is a premium escort agency in Prague with ${companionsCount} ${verifiedCompanions(companionsCount, 'en')}. We offer meetings in discreet private apartments in central Prague — ${districts}. All companions undergo personal interviews and photo verification. Open daily 10:00–22:30, instant WhatsApp booking.`
           : locale === 'de'
-          ? `LovelyGirls ist eine Premium-Escort-Agentur in Prag mit ${companionsCount} verifizierten Begleiterinnen. Wir bieten Treffen in diskreten privaten Apartments im Zentrum von Prag — Vinohrady, Žižkov, Neustadt und Smíchov. Alle Begleiterinnen durchlaufen ein persönliches Gespräch und Fotoverifizierung. Täglich geöffnet 10:00–22:30, sofortige WhatsApp-Buchung.`
-          : `LovelyGirls — преміальна ескорт-агенція у Празі з ${companionsCount} перевіреними супутницями. Ми пропонуємо зустрічі в дискретних приватних апартаментах у центрі Праги — Виногради, Жижков, Нове Місто та Смíхов. Усі супутниці проходять особисту співбесіду та верифікацію фото. Відкрито щодня 10:00–22:30, швидке бронювання через WhatsApp.`
+          ? `LovelyGirls ist eine Premium-Escort-Agentur in Prag mit ${companionsCount} verifizierten Begleiterinnen. Wir bieten Treffen in diskreten privaten Apartments im Zentrum von Prag — ${districts}. Alle Begleiterinnen durchlaufen ein persönliches Gespräch und Fotoverifizierung. Täglich geöffnet 10:00–22:30, sofortige WhatsApp-Buchung.`
+          : `LovelyGirls — преміальна ескорт-агенція у Празі з ${companionsCount} перевіреними супутницями. Ми пропонуємо зустрічі в дискретних приватних апартаментах у центрі Праги — ${districts}. Усі супутниці проходять особисту співбесіду та верифікацію фото. Відкрито щодня 10:00–22:30, швидке бронювання через WhatsApp.`
         }</p>
       </section>
     </main>
