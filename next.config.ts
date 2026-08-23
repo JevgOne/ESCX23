@@ -92,23 +92,83 @@ const config: NextConfig = {
       { source: '/wp-sitemap.xml', destination: '/sitemap.xml', permanent: true },
       { source: '/sitemap_index.xml', destination: '/sitemap.xml', permanent: true },
 
-      // === G) Legacy English service slugs → DB Czech slugs ===
-      // Covers all locale path variants: /sluzba/, /service/, /leistung/, /posluha/
-      ...[
-        ['classic', 'klasicky-sex'],
-        ['massage', 'eroticka-masaz'],
-        ['deepthroat', 'hluboky-oral'],
-        ['cim', 'strikani-do-ust'],
-        ['light_sm', 'bdsm-lehke'],
-        ['cuddling', 'klasicky-sex'],
-        ['licking', 'oral-bez-ochrany'],
-        ['shared_shower', 'klasicky-sex'],
-      ].flatMap(([from, to]) => [
-        { source: `/cs/sluzba/${from}`, destination: `/cs/sluzba/${to}`, permanent: true },
-        { source: `/service/${from}`, destination: `/service/${to}`, permanent: true },
-        { source: `/de/leistung/${from}`, destination: `/de/leistung/${to}`, permanent: true },
-        { source: `/uk/posluha/${from}`, destination: `/uk/posluha/${to}`, permanent: true },
-      ]),
+      // === G) Legacy Secretstory URLs, every locale ===
+      // The rules above only ever covered /cs. EN is the default locale with no
+      // prefix and de/uk exist too, so /main, /sluzby/*, /praktiky/* and
+      // /profily/* stayed dead — 128 URLs still pulling ~930 clicks a quarter
+      // into 404s, several of them ranking in the top 5.
+      ...(() => {
+        // Localised path segments, verified against production.
+        const L = {
+          '':    { girls: '/girls',       pricing: '/pricing',   service: '/service',     profile: '/profile',   hashtag: '/hashtag',    schedule: '/schedule',     root: '/' },
+          '/cs': { girls: '/cs/divky',    pricing: '/cs/cenik',  service: '/cs/sluzba',   profile: '/cs/profil', hashtag: '/cs/hashtag', schedule: '/cs/rozvrh',    root: '/cs' },
+          '/de': { girls: '/de/maedchen', pricing: '/de/preise', service: '/de/leistung', profile: '/de/profil', hashtag: '/de/hashtag', schedule: '/de/zeitplan',  root: '/de' },
+          '/uk': { girls: '/uk/divchata', pricing: '/uk/tsiny',  service: '/uk/posluha',  profile: '/uk/profil', hashtag: '/uk/hashtag', schedule: '/uk/rozklad',   root: '/uk' },
+        };
+
+        // Old /sluzby/* used Czech marketing slugs; the live catalogue uses the
+        // English keys below. Anything with no counterpart goes to the listing.
+        const SERVICE_SLUG: Record<string, string> = {
+          'oral-bez-ochrany': 'blowjob_no_condom',
+          'oral-s-ochranou': 'blowjob_condom',
+          'hluboky-oral': 'deepthroat',
+          'eroticka-masaz': 'erotic_massage',
+          'nohy-fetis': 'foot_fetish',
+          'strikani-do-obliceje': 'cof',
+          'strikani-do-ust': 'cim',
+          'strikani-na-telo': 'cum_on_body',
+          'strikani-divky': 'cum_on_body',
+          'bdsm-lehke': 'light_sm',
+          'hrani-roli': 'role_play',
+          'analni-sex': 'anal_girl',
+          'polyknuti': 'swallow',
+          'klasicky-sex': 'classic',
+          'francouzske-libani': 'kissing',
+          'poloha-69': '69',
+          'prostatova-masaz': 'prostate_massage',
+          'pse-pornstar-zkusenost': 'hard_sex',
+          'duo-service': 'threesome_fmf',
+        };
+        // Format/marketing pages with no service page behind them.
+        const TO_PRICING = ['overnight'];
+        const TO_HASHTAG: Record<string, string> = { 'gfe-zkusenost-pritelkyne': 'gfe-praha' };
+
+        const out: { source: string; destination: string; permanent: boolean }[] = [];
+        for (const [prefix, path] of Object.entries(L)) {
+          // /praktiky/* kept today's slugs, so it is a straight path rename
+          out.push({ source: `${prefix}/praktiky/:slug`, destination: `${path.service}/:slug`, permanent: true });
+          out.push({ source: `${prefix}/praktiky`, destination: path.girls, permanent: true });
+
+          for (const [from, to] of Object.entries(SERVICE_SLUG)) {
+            out.push({ source: `${prefix}/sluzby/${from}`, destination: `${path.service}/${to}`, permanent: true });
+          }
+          for (const slug of TO_PRICING) {
+            out.push({ source: `${prefix}/sluzby/${slug}`, destination: path.pricing, permanent: true });
+          }
+          for (const [from, to] of Object.entries(TO_HASHTAG)) {
+            out.push({ source: `${prefix}/sluzby/${from}`, destination: `${path.hashtag}/${to}`, permanent: true });
+          }
+          // everything else under /sluzby, plus the index itself
+          out.push({ source: `${prefix}/sluzby/:slug`, destination: path.girls, permanent: true });
+          out.push({ source: `${prefix}/sluzby`, destination: path.girls, permanent: true });
+
+          out.push({ source: `${prefix}/profily/:slug`, destination: `${path.profile}/:slug`, permanent: true });
+          out.push({ source: `${prefix}/profiles/:slug`, destination: `${path.profile}/:slug`, permanent: true });
+          out.push({ source: `${prefix}/main`, destination: path.root, permanent: true });
+
+          // Hashtags that no longer exist in the catalogue
+          for (const dead of ['asiatky', 'zrale-zeny', 'privatni-sluzby', 'modelky-praha', 'zrzky-praha', 'vysoke-holky', 'vip-holky', 'silikonove-prsa']) {
+            out.push({ source: `${prefix}/hashtag/${dead}`, destination: path.girls, permanent: true });
+          }
+
+          // /landing/* existed for every locale, not just /cs
+          if (prefix !== '/cs') {
+            out.push({ source: `${prefix}/landing/nonstop-escort-praha`, destination: path.schedule, permanent: true });
+            out.push({ source: `${prefix}/landing/:slug`, destination: path.girls, permanent: true });
+          }
+        }
+        return out;
+      })(),
 
       // === Wildcard /cz → /cs (MUST be last) ===
       { source: '/cz/:path*', destination: '/cs/:path*', permanent: true },
