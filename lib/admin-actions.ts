@@ -1087,7 +1087,7 @@ export async function addGirlSchedule(formData: FormData) {
   const girlId = Number(formData.get('girl_id'));
   if (!girlId) await adminRedirect('/admin/schedules?error=missing_girl');
 
-  // Default apartment for every ticked day; each day may override it below.
+  // Apartment picked once for the whole submit; each day may override it below.
   const defaultLocationId = formData.get('location_id') ? Number(formData.get('location_id')) : null;
   const effectiveFrom = formData.get('effective_from') ? String(formData.get('effective_from')).trim() : null;
 
@@ -1124,10 +1124,10 @@ export async function addGirlSchedule(formData: FormData) {
       endTime = globalEnd;
     }
 
-    // Apartment per day, same fallback shape as the times above. Without this a
-    // girl working Tuesday in Žižkov and Thursday in Nové Město could not be
-    // entered at all — one submit stamped a single apartment onto every ticked
-    // day, and there is no edit action to correct it afterwards.
+    // Apartment belongs to the day. It used to be read once for the whole
+    // submit and stamped onto every ticked day, so a girl working Tuesday in
+    // Žižkov and Thursday in Nové Město could not be entered at all — and with
+    // no edit action, a wrong apartment meant deleting the day and starting over.
     const perDayLocation = formData.get(`location_${i}`);
     const pdl = perDayLocation ? String(perDayLocation).trim() : '';
     const locationId = pdl ? Number(pdl) : defaultLocationId;
