@@ -216,6 +216,16 @@ export default async function AdminSchedulesPage({
           box-shadow: 0 4px 16px -4px rgba(242,125,141,0.5);
         }
 
+        /* Per-day apartment override. Compact so it reads as a detail of the
+           day, not a second copy of the picker above it. */
+        .sched-day-loc { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+        .sched-day-loc-label {
+          font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+          color: var(--color-text-dim); margin-right: 2px;
+        }
+        .sched-day-loc .sched-loc-opt { flex: 0 1 auto; }
+        .sched-loc-chip-sm { padding: 6px 11px; font-size: 12px; border-radius: 999px; border-width: 1px; }
+
         /* Day selector */
         .sched-day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .sched-day-opt { display: block; cursor: pointer; position: relative; }
@@ -597,7 +607,7 @@ export default async function AdminSchedulesPage({
 
                 {/* Step 2: Location */}
                 <div className="sched-section">
-                  <div className="sched-section-label">Pobočka</div>
+                  <div className="sched-section-label">Pobočka — výchozí pro všechny dny</div>
                   <div className="sched-loc-row">
                     {locations.map((loc) => (
                       <label key={loc.id} className="sched-loc-opt">
@@ -651,6 +661,22 @@ export default async function AdminSchedulesPage({
                         <div className="sched-time-head">
                           <span className="sched-time-head-dot" />
                           {dayName}
+                        </div>
+
+                        {/* Apartment for this day. Defaults to the one picked
+                            above, so the common case stays one click. */}
+                        <div className="sched-day-loc">
+                          <span className="sched-day-loc-label">Pobočka</span>
+                          <label className="sched-loc-opt">
+                            <input type="radio" name={`location_${i}`} value="" defaultChecked />
+                            <span className="sched-loc-chip sched-loc-chip-sm">Jako výše</span>
+                          </label>
+                          {locations.map((loc) => (
+                            <label key={loc.id} className="sched-loc-opt">
+                              <input type="radio" name={`location_${i}`} value={loc.id} />
+                              <span className="sched-loc-chip sched-loc-chip-sm">{loc.displayName}</span>
+                            </label>
+                          ))}
                         </div>
 
                         <div className="sched-presets">
