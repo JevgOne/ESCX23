@@ -57,7 +57,9 @@ const config: NextConfig = {
       { source: '/cs/landing/girlfriend-experience-praha', destination: '/cs/hashtag/gfe-praha', permanent: true },
       { source: '/cs/landing/nonstop-escort-praha', destination: '/cs/rozvrh', permanent: true },
       { source: '/cs/landing/outcall-escort-praha', destination: '/cs/divky', permanent: true },
-      { source: '/cs/landing/duo-escort-praha', destination: '/cs/divky', permanent: true },
+      // Duo is a service we actually run (threesome_fmf), so send the intent
+      // to the service page instead of dumping it on the full listing.
+      { source: '/cs/landing/duo-escort-praha', destination: '/cs/sluzba/threesome_fmf', permanent: true },
       { source: '/cs/landing/eroticke-masaze-praha', destination: '/cs/divky', permanent: true },
       { source: '/cs/landing/vip-escort-praha', destination: '/cs/divky', permanent: true },
       // landing catchall

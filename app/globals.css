@@ -10928,6 +10928,24 @@ a.psd-pill-link:hover { border-color: var(--color-coral); background: rgba(242,1
   margin: 12px 0;
 }
 .service-prose li { margin-bottom: 6px; }
+/* The block styled headings and lists but never paragraphs, so DB copy arrived
+   as one unbroken column. Matches .seo-content p, which had the same gap. */
+/* Shrnutí cen nad tabulkou. Bylo sr-only — psané pro crawlery, neviditelné
+   pro člověka, který má stejná čísla o kus níž. Viditelné slouží oběma. */
+.pricing-lead {
+  max-width: 68ch;
+  margin: 0 auto 28px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+.service-prose p {
+  max-width: 76ch;
+  margin: 0 0 16px;
+}
+.service-prose p:last-child { margin-bottom: 0; }
+.service-prose h2:first-child { margin-top: 0; }
 
 .service-related {
   padding-bottom: 64px;

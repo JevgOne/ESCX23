@@ -56,3 +56,6 @@ pull-lovelygirls.mjs
 .env.prod-real
 profile_ig_shots.mjs
 .env*.local
+
+# Zálohy před zápisem do produkční DB — nikdy necommitovat
+backups/

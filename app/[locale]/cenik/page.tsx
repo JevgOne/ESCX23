@@ -1,5 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import type { Row } from '@libsql/client';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getActivePricingPlans } from '@/lib/queries';
 import { offerListJsonLd, breadcrumbListJsonLd, faqPageJsonLd } from '@/lib/seo/jsonld';
@@ -28,12 +29,68 @@ const DESCRIPTIONS: Record<string, string> = {
   uk: 'Прозорі ціни LovelyGirls Прага. 5 програм від 30 до 120 хвилин, готівка, без прихованих платежів.',
 };
 
-const GEO_LEADS: Record<string, string> = {
-  en: 'At LovelyGirls Prague, companion programs start at 2,500 CZK for 30 minutes, 2,500 CZK for 60 minutes, and 4,500 CZK for 2 hours; all prices include the apartment fee.',
-  cs: 'U LovelyGirls Praha začínají programy na 2 500 Kč za 30 minut, 2 500 Kč za 60 minut a 4 500 Kč za 2 hodiny; ceny zahrnují poplatek za apartmán.',
-  de: 'Bei LovelyGirls Prag beginnen die Programme bei 2 500 CZK für 30 Minuten, 2 500 CZK für 60 Minuten und 4 500 CZK für 2 Stunden; Apartmentgebühr inklusive.',
-  uk: 'У LovelyGirls Прага програми починаються від 2 500 CZK за 30 хвилин, 2 500 CZK за годину та 4 500 CZK за 2 години; вартість апартаменту включена.',
+/**
+ * The sr-only lead an assistant quotes back when asked what we cost. It used to
+ * be hardcoded and had drifted from the table right below it: it claimed 2,500
+ * CZK for 30 minutes while the DB says 2,000, and repeated that same figure for
+ * 60 minutes. Now it is built from the same rows ProgramsGrid renders, so the
+ * two can only ever agree — and it states the night rate, which the cards show
+ * but the old paragraph never mentioned.
+ */
+const GEO_CURRENCY: Record<string, string> = { cs: 'Kč', en: 'CZK', de: 'CZK', uk: 'CZK' };
+const GEO_PRICE_LOCALE: Record<string, string> = { cs: 'cs-CZ', en: 'en-GB', de: 'de-DE', uk: 'uk-UA' };
+
+const GEO_LEAD: Record<string, (list: string, night: string) => string> = {
+  cs: (list, night) =>
+    `U LovelyGirls Praha se platí za čas, ne za služby: ${list}. Cena zahrnuje privátní apartmán i sprchu, platí se hotově na místě a nic dalšího se nepřipočítává.${night}`,
+  en: (list, night) =>
+    `At LovelyGirls Prague you pay for time, not for services: ${list}. The price covers the private apartment and shower, is paid in cash on arrival, and nothing else is added.${night}`,
+  de: (list, night) =>
+    `Bei LovelyGirls Prag bezahlen Sie die Zeit, nicht die Leistungen: ${list}. Der Preis umfasst das private Apartment und die Dusche, wird bar vor Ort bezahlt, und es kommt nichts hinzu.${night}`,
+  uk: (list, night) =>
+    `У LovelyGirls Прага ви платите за час, а не за послуги: ${list}. Ціна включає приватні апартаменти й душ, оплата готівкою на місці, нічого не додається.${night}`,
 };
+
+const GEO_NIGHT: Record<string, (range: string) => string> = {
+  cs: (range) => ` Od 23:00 do 7:00 platí noční sazba, o ${range} vyšší.`,
+  en: (range) => ` Between 11 PM and 7 AM a night rate applies, ${range} higher.`,
+  de: (range) => ` Zwischen 23:00 und 7:00 Uhr gilt ein Nachttarif, ${range} höher.`,
+  uk: (range) => ` З 23:00 до 7:00 діє нічний тариф, на ${range} вищий.`,
+};
+
+function buildGeoLead(programs: Row[], locale: string): string {
+  const cur = GEO_CURRENCY[locale] ?? GEO_CURRENCY.en;
+  const priceLoc = GEO_PRICE_LOCALE[locale] ?? GEO_PRICE_LOCALE.en;
+  const money = (n: number) => `${n.toLocaleString(priceLoc)} ${cur}`;
+
+  const plans = programs
+    .map((p) => ({
+      duration: Number(p.duration),
+      price: Number(p.price),
+      night: p.night_price != null ? Number(p.night_price) : null,
+    }))
+    .filter((p) => Number.isFinite(p.duration) && Number.isFinite(p.price))
+    .sort((a, b) => a.duration - b.duration);
+
+  // The DB was unreachable — say nothing rather than quote a stale number.
+  if (plans.length === 0) return '';
+
+  const minLabel = locale === 'cs' ? 'min' : locale === 'uk' ? 'хв' : 'min';
+  const list = plans.map((p) => `${p.duration} ${minLabel} ${money(p.price)}`).join(', ');
+
+  const surcharges = plans
+    .filter((p) => p.night !== null && Number.isFinite(p.night) && p.night > p.price)
+    .map((p) => (p.night as number) - p.price);
+  let night = '';
+  if (surcharges.length > 0) {
+    const lo = Math.min(...surcharges);
+    const hi = Math.max(...surcharges);
+    const range = lo === hi ? money(lo) : `${lo.toLocaleString(priceLoc)}–${money(hi)}`;
+    night = (GEO_NIGHT[locale] ?? GEO_NIGHT.en)(range);
+  }
+
+  return (GEO_LEAD[locale] ?? GEO_LEAD.en)(list, night);
+}
 
 const CANONICAL_PATH: Record<string, string> = {
   cs: '/cenik',
@@ -49,41 +106,41 @@ const FAQ_DATA: Record<string, FaqBundle> = {
   cs: {
     heading: 'Často kladené dotazy k ceníku',
     items: [
-      { q: 'Kolik stojí návštěva u LovelyGirls?', a: 'Programy začínají na 2 500 Kč za 30 minut. Kompletní ceník s pěti programy od 30 do 120 minut najdete na této stránce. Ceny zahrnují apartmán, žádné skryté poplatky.' },
+      { q: 'Kolik stojí návštěva u LovelyGirls?', a: 'Programy začínají na 2 000 Kč za 30 minut. Kompletní ceník s pěti programy od 30 do 120 minut najdete na této stránce. Ceny zahrnují apartmán, žádné skryté poplatky.' },
       { q: 'Co je zahrnuto v ceně?', a: 'Cena zahrnuje čas se zvolenou společnicí v soukromém apartmánu, sprchu a diskrétní prostředí. Žádný příplatek za vstup ani pronájem pokoje.' },
       { q: 'Jaké platební metody přijímáte?', a: 'Přijímáme výhradně hotovost — CZK nebo EUR. Kartou, převodem ani jinak bezhotovostně platit nelze. Důvodem je maximální diskrétnost.' },
       { q: 'Jsou ceny stejné pro všechny společnice?', a: 'Ano, ceny programů jsou jednotné pro všechny dostupné společnice. Liší se pouze podle délky programu a případných extra služeb.' },
-      { q: 'Nabízíte slevy?', a: 'Ano — máme věrnostní program (10–15 % sleva po 3, 5 a 10 návštěvách), ranní slevu 300 Kč (10:00–13:00, Po–Pá) a narozeninovou slevu 20 %. Podrobnosti najdete na stránce Slevy.' },
+      { q: 'Nabízíte slevy?', a: 'Ano — 200 Kč z první návštěvy a bonus v den narozenin. Aktuálně běžící slevy jsou vždy na stránce Slevy; co tam není, právě neběží.' },
     ],
   },
   en: {
     heading: 'Pricing FAQ',
     items: [
-      { q: 'How much does a visit to LovelyGirls cost?', a: 'Programs start at 2,500 CZK for 30 minutes. The full price list with five packages from 30 to 120 minutes is on this page. Prices include the apartment — no hidden fees.' },
+      { q: 'How much does a visit to LovelyGirls cost?', a: 'Programs start at 2,000 CZK for 30 minutes. The full price list with five packages from 30 to 120 minutes is on this page. Prices include the apartment — no hidden fees.' },
       { q: 'What is included in the price?', a: 'The price covers time with your chosen companion in a private apartment, shower access and a discreet setting. No extra entry or room rental charge.' },
       { q: 'What payment methods do you accept?', a: 'We accept cash only — CZK or EUR. Cards, bank transfers and other cashless payments are not accepted. This ensures maximum discretion.' },
       { q: 'Are prices the same for all companions?', a: 'Yes, program prices are the same for every available companion. They only vary by program duration and optional extras.' },
-      { q: 'Do you offer discounts?', a: 'Yes — we have a loyalty program (10–15 % off after 3, 5 and 10 visits), a morning discount of 300 CZK (10:00–13:00, Mon–Fri) and a 20 % birthday discount. See the Discounts page for details.' },
+      { q: 'Do you offer discounts?', a: 'Yes — 200 CZK off your first visit, plus a bonus on your birthday. The Discounts page always lists what is currently running; anything not there is not active.' },
     ],
   },
   de: {
     heading: 'Häufige Fragen zu den Preisen',
     items: [
-      { q: 'Wie viel kostet ein Besuch bei LovelyGirls?', a: 'Programme beginnen bei 2 500 CZK für 30 Minuten. Die vollständige Preisliste mit fünf Programmen von 30 bis 120 Minuten finden Sie auf dieser Seite. Die Preise beinhalten die Wohnung — keine versteckten Gebühren.' },
+      { q: 'Wie viel kostet ein Besuch bei LovelyGirls?', a: 'Programme beginnen bei 2.000 CZK für 30 Minuten. Die vollständige Preisliste mit fünf Programmen von 30 bis 120 Minuten finden Sie auf dieser Seite. Die Preise beinhalten die Wohnung — keine versteckten Gebühren.' },
       { q: 'Was ist im Preis enthalten?', a: 'Der Preis umfasst die Zeit mit der gewählten Begleiterin in einer privaten Wohnung, Dusche und ein diskretes Ambiente. Kein Aufpreis für Eintritt oder Zimmermiete.' },
       { q: 'Welche Zahlungsmethoden akzeptieren Sie?', a: 'Wir akzeptieren ausschließlich Bargeld — CZK oder EUR. Karten, Überweisungen und andere bargeldlose Zahlungen werden nicht akzeptiert. Dies gewährleistet maximale Diskretion.' },
       { q: 'Sind die Preise für alle Begleiterinnen gleich?', a: 'Ja, die Programmpreise sind für alle verfügbaren Begleiterinnen identisch. Sie variieren nur nach Programmdauer und optionalen Extras.' },
-      { q: 'Bieten Sie Rabatte an?', a: 'Ja — wir haben ein Treueprogramm (10–15 % nach 3, 5 und 10 Besuchen), einen Morgenrabatt von 300 CZK (10:00–13:00, Mo–Fr) und einen Geburtstagsrabatt von 20 %. Details auf der Seite Rabatte.' },
+      { q: 'Bieten Sie Rabatte an?', a: 'Ja — 200 CZK auf den ersten Besuch und einen Bonus am Geburtstag. Auf der Seite Rabatte steht immer, was gerade läuft; was dort fehlt, ist nicht aktiv.' },
     ],
   },
   uk: {
     heading: 'Часті запитання про ціни',
     items: [
-      { q: 'Скільки коштує візит до LovelyGirls?', a: 'Програми починаються від 2 500 CZK за 30 хвилин. Повний прайс із п\'ятьма програмами від 30 до 120 хвилин — на цій сторінці. Ціни включають апартамент, жодних прихованих платежів.' },
+      { q: 'Скільки коштує візит до LovelyGirls?', a: 'Програми починаються від 2 000 CZK за 30 хвилин. Повний прайс із п\'ятьма програмами від 30 до 120 хвилин — на цій сторінці. Ціни включають апартамент, жодних прихованих платежів.' },
       { q: 'Що входить у вартість?', a: 'Ціна охоплює час з обраною супутницею у приватному апартаменті, душ та дискретне середовище. Жодних доплат за вхід чи оренду номера.' },
       { q: 'Які способи оплати ви приймаєте?', a: 'Ми приймаємо тільки готівку — CZK або EUR. Картки, перекази та інші безготівкові способи не приймаються. Це гарантує максимальну конфіденційність.' },
       { q: 'Ціни однакові для всіх супутниць?', a: 'Так, ціни програм однакові для всіх доступних супутниць. Вони різняться лише за тривалістю програми та додатковими послугами.' },
-      { q: 'Чи є у вас знижки?', a: 'Так — у нас є програма лояльності (10–15 % після 3, 5 і 10 відвідувань), ранкова знижка 300 CZK (10:00–13:00, Пн–Пт) та знижка до дня народження 20 %. Деталі на сторінці Знижки.' },
+      { q: 'Чи є у вас знижки?', a: 'Так — 200 Kč на перший візит і бонус у день народження. На сторінці Знижки завжди вказано, що діє зараз; чого там немає, те не діє.' },
     ],
   },
 };
@@ -136,7 +193,7 @@ export default async function CenikPage({
     locale
   );
 
-  const geoLead = GEO_LEADS[locale] ?? GEO_LEADS.cs;
+  const geoLead = buildGeoLead(programs, locale);
 
   const faqBundle = FAQ_DATA[locale] ?? FAQ_DATA.en;
   const faqSchema = faqPageJsonLd(
@@ -189,7 +246,7 @@ export default async function CenikPage({
 
       <section className="section">
         <div className="container">
-          <p data-geo-lead className="sr-only">{geoLead}</p>
+          {geoLead && <p data-geo-lead className="pricing-lead">{geoLead}</p>}
 
           <ProgramsGrid programs={programs} locale={locale} />
           <NightPricingNote locale={locale} />
