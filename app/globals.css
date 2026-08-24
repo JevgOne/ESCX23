@@ -7941,6 +7941,19 @@ body {
   }
 }
 
+/* ===== ADMIN TABLES — horizontal scroll instead of a squeezed page =====
+   Admin lists are real tables with 5+ columns. Without a scroll container they
+   either overflow the viewport or crush every column to unreadable width. The
+   wrapper scrolls itself so the page body never moves sideways. */
+.admin-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+@media (max-width: 900px) {
+  .admin-table-scroll > table { min-width: 620px; }
+}
+
 /* ===== FORMS — mobile ===== */
 @media (max-width: 768px) {
   .apply-form .form-row,
@@ -7948,6 +7961,25 @@ body {
   .application-form .form-row {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* ===== ADMIN FORMS — mobile =====
+   The girl editor and the new-girl form had no breakpoint at all: two- and
+   three-column rows stayed side by side on a phone, and the language picker
+   held five columns. Everything here collapses; nothing changes on desktop. */
+@media (max-width: 700px) {
+  .gf2-row,
+  .gf2-row-3,
+  .gf2-new-row-2,
+  .gf2-new-row-3 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .gf2-lang-grid { grid-template-columns: repeat(3, 1fr); }
+  .ad-svc-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+@media (max-width: 420px) {
+  .gf2-lang-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ===== GIRLS GRID — very small screens ===== */

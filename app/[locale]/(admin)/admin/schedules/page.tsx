@@ -421,6 +421,9 @@ export default async function AdminSchedulesPage({
           .sched-girl-chip { padding: 8px 10px; font-size: 12px; }
           .sched-loc-row { flex-direction: column; gap: 6px; }
           .sched-loc-chip { padding: 11px 10px; font-size: 12px; }
+          /* Four chips in one row is unreadable on a phone. */
+          .sched-pick-loc { grid-template-columns: repeat(2, 1fr); }
+          .sched-loc-chip-sm { padding: 10px 8px; font-size: 11.5px; }
           .sched-day-grid { grid-template-columns: repeat(7, 1fr); gap: 4px; }
           .sched-day-btn { padding: 10px 2px; font-size: 11px; border-radius: 8px; }
           .sched-day-check { width: 14px; height: 14px; font-size: 7px; top: -4px; right: -4px; }

@@ -155,6 +155,7 @@ export default async function AdminAplikacePage({ params, searchParams }: Props)
             : 'Zatím žádné aplikace.'}
         </div>
       ) : (
+        <div className="admin-table-scroll">
         <table className="apl-table">
           <thead>
             <tr>
@@ -172,6 +173,7 @@ export default async function AdminAplikacePage({ params, searchParams }: Props)
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </>
   );
