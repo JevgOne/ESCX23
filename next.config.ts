@@ -103,6 +103,10 @@ const config: NextConfig = {
         // Localised path segments, verified against production.
         const L = {
           '':    { girls: '/girls',       pricing: '/pricing',   service: '/service',     profile: '/profile',   hashtag: '/hashtag',    schedule: '/schedule',     root: '/' },
+          // EN is prefix-free, so without this /en/praktiky/bdsm takes two hops:
+          // next-intl strips the prefix (307), and only the resulting
+          // /praktiky/bdsm matches the rule below (308). Same targets as ''.
+          '/en': { girls: '/girls',       pricing: '/pricing',   service: '/service',     profile: '/profile',   hashtag: '/hashtag',    schedule: '/schedule',     root: '/' },
           '/cs': { girls: '/cs/divky',    pricing: '/cs/cenik',  service: '/cs/sluzba',   profile: '/cs/profil', hashtag: '/cs/hashtag', schedule: '/cs/rozvrh',    root: '/cs' },
           '/de': { girls: '/de/maedchen', pricing: '/de/preise', service: '/de/leistung', profile: '/de/profil', hashtag: '/de/hashtag', schedule: '/de/zeitplan',  root: '/de' },
           '/uk': { girls: '/uk/divchata', pricing: '/uk/tsiny',  service: '/uk/posluha',  profile: '/uk/profil', hashtag: '/uk/hashtag', schedule: '/uk/rozklad',   root: '/uk' },
