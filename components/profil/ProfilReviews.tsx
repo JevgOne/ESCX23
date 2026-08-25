@@ -18,6 +18,10 @@ interface ProfilReviewsProps {
   showAllLabel: string;
   locale?: string;
   avgRating?: number;
+  /** Distribution over all approved reviews (index 0 = 1★ … 4 = 5★). */
+  buckets?: number[];
+  /** Share of reviewers who ticked 👍, or null when there are too few to mean anything. */
+  recommendPct?: number | null;
   girlName?: string;
   girlPhoto?: string | null;
 }
@@ -43,6 +47,8 @@ export default function ProfilReviews({
   showAllLabel,
   locale = 'cs',
   avgRating = 0,
+  buckets: bucketsProp,
+  recommendPct: recommendPctProp,
   girlName = '',
   girlPhoto = null,
 }: ProfilReviewsProps) {
@@ -54,6 +60,8 @@ export default function ProfilReviews({
           write: 'Napsat recenzi',
           basedOn: 'na základě',
           reviews: 'recenzí',
+          reviewsOne: 'recenze',
+          reviewsFew: 'recenzí',
           recommend: 'doporučují',
           verified: 'Ověřená',
         }
@@ -64,6 +72,8 @@ export default function ProfilReviews({
           write: 'Bewertung schreiben',
           basedOn: 'basierend auf',
           reviews: 'Bewertungen',
+          reviewsOne: 'Bewertung',
+          reviewsFew: 'Bewertungen',
           recommend: 'empfehlen',
           verified: 'Verifiziert',
         }
@@ -74,6 +84,8 @@ export default function ProfilReviews({
           write: 'Написати відгук',
           basedOn: 'на основі',
           reviews: 'відгуків',
+          reviewsOne: 'відгуку',
+          reviewsFew: 'відгуків',
           recommend: 'рекомендують',
           verified: 'Перевірена',
         }
@@ -83,23 +95,40 @@ export default function ProfilReviews({
           write: 'Write review',
           basedOn: 'based on',
           reviews: 'reviews',
+          reviewsOne: 'review',
+          reviewsFew: 'reviews',
           recommend: 'recommend',
           verified: 'Verified',
         };
 
   const hasReviews = reviews.length > 0;
 
-  // Distribution
-  const buckets = [0, 0, 0, 0, 0];
-  reviews.forEach((r) => {
-    const n = Math.min(5, Math.max(1, Math.round(Number(r.rating ?? 0))));
-    buckets[n - 1]++;
-  });
+  // Distribution over ALL approved reviews when the page supplies it; only the first
+  // few reviews are rendered, so counting the rendered ones would understate the rest.
+  const buckets =
+    bucketsProp && bucketsProp.length === 5
+      ? bucketsProp
+      : (() => {
+          const b = [0, 0, 0, 0, 0];
+          reviews.forEach((r) => {
+            const n = Math.min(5, Math.max(1, Math.round(Number(r.rating ?? 0))));
+            b[n - 1]++;
+          });
+          return b;
+        })();
+  const bucketTotal = buckets.reduce((a, b) => a + b, 0);
+  // The real figure comes from the 👍/👎 answer on the review form. Older rows that
+  // predate it fall back to "4★ and up counts as a recommendation", and either way a
+  // percentage off one or two reviews means nothing, so it stays hidden.
   const recommendPct =
-    hasReviews
-      ? Math.round(((buckets[3] + buckets[4]) / reviews.length) * 100)
-      : 0;
+    recommendPctProp != null
+      ? recommendPctProp
+      : bucketTotal >= 3
+      ? Math.round(((buckets[3] + buckets[4]) / bucketTotal) * 100)
+      : null;
   const maxBucket = Math.max(1, ...buckets);
+  const reviewsWord =
+    totalCount === 1 ? L.reviewsOne : totalCount < 5 ? L.reviewsFew : L.reviews;
 
   const writeHref = `/${locale}/recenze/nova/${girlSlug}`;
   const showAllHref = `/${locale}/recenze?girl=${girlSlug}`;
@@ -129,9 +158,9 @@ export default function ProfilReviews({
               {'☆'.repeat(Math.max(0, 5 - Math.round(avgRating)))}
             </div>
             <div className="reviews-summary-meta">
-              {L.basedOn} {totalCount} {L.reviews}
+              {L.basedOn} {totalCount} {reviewsWord}
             </div>
-            {recommendPct > 0 && (
+            {recommendPct != null && (
               <div className="reviews-summary-recommend">
                 <strong>{recommendPct}%</strong> {L.recommend}
               </div>

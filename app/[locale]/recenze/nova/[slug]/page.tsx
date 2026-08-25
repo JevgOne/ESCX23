@@ -54,6 +54,8 @@ async function submitReview(formData: FormData) {
   const vibe = String(formData.get('mood') ?? '').trim() || null;
   const tagsArr = formData.getAll('vibes').map(String).filter(Boolean).slice(0, 5);
   const tagsJson = tagsArr.length > 0 ? JSON.stringify(tagsArr) : null;
+  // The 👍/👎 answer drives the "% recommend" figure on the profile.
+  const recommends = String(formData.get('recommends') ?? 'yes') === 'no' ? 0 : 1;
 
   if (!slug || !text || !nickname || ratingOverall < 1 || text.length < 10) {
     redirect(`/recenze/nova/${slug}?error=invalid`);
@@ -70,9 +72,9 @@ async function submitReview(formData: FormData) {
     const girlId = Number(girlRes.rows[0].id);
 
     await db.execute({
-      sql: `INSERT INTO reviews (girl_id, rating, content, author_name, status, vibe, tags)
-            VALUES (?, ?, ?, ?, 'pending', ?, ?)`,
-      args: [girlId, ratingOverall, text, nickname, vibe, tagsJson],
+      sql: `INSERT INTO reviews (girl_id, rating, content, author_name, status, vibe, tags, recommends)
+            VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)`,
+      args: [girlId, ratingOverall, text, nickname, vibe, tagsJson, recommends],
     });
 
     await createAdminNotification(

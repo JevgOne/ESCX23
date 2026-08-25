@@ -69,7 +69,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count, g.status,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
@@ -181,7 +181,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count, g.status,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
@@ -363,6 +363,66 @@ export async function getReviewsForGirl(girlId: number, limit = 10) {
     args: [girlId, limit],
   });
   return result.rows;
+}
+
+/** Živý průměr a počet schválených recenzí dívky (denormalizované sloupce na girls
+ *  přepočítává až cron, takže by čerstvá recenze jinak nebyla vidět v souhrnu). */
+export async function getReviewStatsForGirl(
+  girlId: number
+): Promise<{ count: number; avg: number; buckets: number[]; recommendPct: number | null }> {
+  const empty = { count: 0, avg: 0, buckets: [0, 0, 0, 0, 0], recommendPct: null };
+  if (!girlId) return empty;
+
+  // Count and average come from columns that have always existed, so this query is the
+  // one that must not fail — the profile summary would otherwise fall back to zero and
+  // contradict the reviews listed right below it.
+  let result;
+  try {
+    result = await db.execute({
+      sql: `SELECT CAST(rating AS INTEGER) AS stars, COUNT(*) AS cnt
+            FROM reviews WHERE girl_id = ? AND status = 'approved'
+            GROUP BY stars`,
+      args: [girlId],
+    });
+  } catch {
+    return empty;
+  }
+
+  // buckets[0] = 1 star … buckets[4] = 5 stars
+  const buckets = [0, 0, 0, 0, 0];
+  let count = 0;
+  let sum = 0;
+  for (const row of result.rows as unknown as Record<string, unknown>[]) {
+    const stars = Math.min(5, Math.max(1, Number(row.stars ?? 0)));
+    const n = Number(row.cnt ?? 0);
+    buckets[stars - 1] += n;
+    count += n;
+    sum += stars * n;
+  }
+
+  // "recommends" is a newer column; on a database where the migration has not landed yet
+  // this query throws, and the rest of the summary must still render.
+  let recommendPct: number | null = null;
+  if (count >= 3) {
+    try {
+      const rec = await db.execute({
+        sql: `SELECT SUM(CASE WHEN COALESCE(recommends, 1) = 1 THEN 1 ELSE 0 END) AS rec
+              FROM reviews WHERE girl_id = ? AND status = 'approved'`,
+        args: [girlId],
+      });
+      const recommended = Number((rec.rows[0] as Record<string, unknown> | undefined)?.rec ?? 0);
+      recommendPct = Math.round((recommended / count) * 100);
+    } catch {
+      recommendPct = null;
+    }
+  }
+
+  return {
+    count,
+    avg: count > 0 ? Math.round((sum / count) * 10) / 10 : 0,
+    buckets,
+    recommendPct,
+  };
 }
 
 /** Všechny fotky dívky. */
@@ -800,7 +860,7 @@ export async function getGirlsForDay(
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.rating, g.reviews_count,
+        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count,
         gs.start_time AS shift_from, gs.end_time AS shift_to, gs.is_active AS gs_active,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location, l.district AS schedule_district,
@@ -2022,7 +2082,7 @@ export async function getGirlsForListing(
   const baseSql = `
     SELECT
       g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-      g.created_at, g.is_new, g.languages, g.rating, g.reviews_count, g.status,
+      g.created_at, g.is_new, g.languages, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count, g.status,
       gs.start_time AS shift_from, gs.end_time AS shift_to,
       se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
       l.display_name AS schedule_location,
@@ -2180,7 +2240,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
-        g.created_at, g.is_new, g.languages, g.hashtags, g.rating, g.reviews_count,
+        g.created_at, g.is_new, g.languages, g.hashtags, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
@@ -2394,7 +2454,7 @@ export async function getFeaturedGirlForHero(): Promise<FeaturedGirlForHero | nu
             (SELECT url FROM girl_photos WHERE girl_id=g.id ORDER BY is_primary DESC, id ASC LIMIT 1) AS photo
      FROM girls g
      WHERE g.status='active' AND g.vip IS NOT 1
-     ORDER BY g.is_featured DESC, g.rating DESC, g.id DESC
+     ORDER BY g.is_featured DESC, (SELECT COALESCE(AVG(rv.rating), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') DESC, g.id DESC
      LIMIT 1`
   );
   const r = res.rows[0];
@@ -2414,7 +2474,7 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
     sql: `
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust,
-        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, g.rating, g.reviews_count, g.status,
+        g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count, g.status,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         COALESCE(
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
@@ -2424,7 +2484,7 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
         (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count
       FROM girls g
       WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
-      ORDER BY g.rating DESC, g.name ASC
+      ORDER BY (SELECT COALESCE(AVG(rv.rating), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') DESC, g.name ASC
       LIMIT ?
     `,
     args: [limit + 1],

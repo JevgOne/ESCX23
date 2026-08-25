@@ -3196,7 +3196,10 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   top: 100px;
 }
 .profile-right-extra {
-  grid-column: 2;
+  /* Reviews and "other girls" belong to the whole page, not to the info column —
+     they span both grid columns so they line up with the photo column's left edge. */
+  grid-column: 1 / -1;
+  min-width: 0;
 }
 .profile-info-col {
   display: flex;
@@ -15310,6 +15313,9 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
   display: flex;
   align-items: center;
   gap: 12px;
+  /* The translate button floats in the card's top-right corner — keep the stars
+     clear of it instead of letting the two overlap. */
+  padding-right: 38px;
 }
 .rev-item-avatar {
   flex-shrink: 0;

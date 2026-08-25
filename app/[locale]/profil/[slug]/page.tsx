@@ -6,6 +6,7 @@ import {
   getGirlBySlug,
   getPhotosForGirl,
   getReviewsForGirl,
+  getReviewStatsForGirl,
   getActivePricingPlans,
   getAllServices,
   getGirlServices,
@@ -156,10 +157,11 @@ export default async function ProfilPage({ params, searchParams }: Props) {
     getCurrentUser().catch(() => null),
   ]);
 
-  const [girl, photos, reviews, plans, allServices, girlServiceIds, todaySchedule, videos] = await Promise.all([
+  const [girl, photos, reviews, reviewStats, plans, allServices, girlServiceIds, todaySchedule, videos] = await Promise.all([
     Promise.resolve(girlRaw),
     girlRaw ? getPhotosForGirl(Number(girlRaw.id)).catch(() => []) : Promise.resolve([]),
     girlRaw ? getReviewsForGirl(Number(girlRaw.id), 6).catch(() => []) : Promise.resolve([]),
+    girlRaw ? getReviewStatsForGirl(Number(girlRaw.id)).catch(() => ({ count: 0, avg: 0, buckets: [0, 0, 0, 0, 0], recommendPct: null })) : Promise.resolve({ count: 0, avg: 0, buckets: [0, 0, 0, 0, 0], recommendPct: null }),
     getActivePricingPlans().catch(() => []),
     getAllServices().catch(() => []),
     girlRaw ? getGirlServices(Number(girlRaw.id)).catch(() => [] as number[]) : Promise.resolve([] as number[]),
@@ -192,7 +194,11 @@ export default async function ProfilPage({ params, searchParams }: Props) {
     return Date.now() - new Date(String(g.created_at)).getTime() < 14 * 24 * 60 * 60 * 1000;
   })();
 
-  const totalReviews = Number(girl.reviews_count ?? 0);
+  // The summary must agree with the reviews actually listed below it, so both come
+  // from the reviews table; girls.rating / girls.reviews_count lag until the cron runs.
+  const totalReviews = reviewStats.count;
+  const avgRating = reviewStats.avg;
+  const girlWithStats = { ...(girl as Record<string, unknown>), rating: avgRating, reviews_count: totalReviews };
 
   type PhotoRow = { url: unknown; is_primary: unknown; id: unknown };
   type ReviewRow = { id: unknown; rating: unknown; content: unknown; author_name: unknown; created_at: unknown };
@@ -213,7 +219,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
   const photoTyped = photos as unknown as PhotoRow[];
   const reviewTyped = reviews as unknown as ReviewRow[];
   const planTyped = plans as unknown as PlanRow[];
-  const girlTyped = girl as unknown as GirlRow;
+  const girlTyped = girlWithStats as unknown as GirlRow;
   const servicesTyped = services as ServiceRow[];
 
   const labels = {
@@ -280,7 +286,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
   };
 
   const personSchema = profilePersonJsonLd(
-    girl as unknown as Parameters<typeof profilePersonJsonLd>[0],
+    girlWithStats as unknown as Parameters<typeof profilePersonJsonLd>[0],
     photoTyped as unknown as Parameters<typeof profilePersonJsonLd>[1],
     reviewTyped as unknown as Parameters<typeof profilePersonJsonLd>[2]
   );
@@ -426,7 +432,9 @@ export default async function ProfilPage({ params, searchParams }: Props) {
                 heading={t('reviews.h2')}
                 showAllLabel={t('reviews.show_all', { count: totalReviews })}
                 locale={locale}
-                avgRating={Number(girl.rating ?? 0)}
+                avgRating={avgRating}
+                buckets={reviewStats.buckets}
+                recommendPct={reviewStats.recommendPct}
                 girlName={String(girl.name ?? '')}
                 girlPhoto={(() => {
                   const primary = photoTyped.find((p) => p.is_primary) ?? photoTyped[0];

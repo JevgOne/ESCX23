@@ -32,6 +32,10 @@ async function runMigrations(client: Client) {
   global.__db_migrated = true;
 
   const migrations = [
+    'ALTER TABLE reviews ADD COLUMN recommends INTEGER DEFAULT 1',
+    'ALTER TABLE reviews ADD COLUMN reply TEXT',
+    'ALTER TABLE reviews ADD COLUMN reply_at TEXT',
+    'ALTER TABLE reviews ADD COLUMN reply_by TEXT',
     'ALTER TABLE girl_applications ADD COLUMN bust_natural INTEGER',
     'ALTER TABLE girl_applications ADD COLUMN style_wardrobe TEXT',
     'ALTER TABLE girl_applications ADD COLUMN converted_to_girl_id INTEGER',

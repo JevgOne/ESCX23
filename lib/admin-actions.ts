@@ -1187,23 +1187,62 @@ export async function fixScheduleColors(formData: FormData) {
   await adminRedirect('/admin/schedules');
 }
 
+/** Rewrite the denormalised rating / reviews_count on girls from the approved reviews.
+ *  The nightly recalc-stats cron does the same thing, but a review approved during the
+ *  day must show up on the profile and on the girl cards straight away, not tomorrow. */
+async function recalcGirlReviewStats(girlId: number) {
+  if (!girlId) return;
+  await db.execute({
+    sql: `UPDATE girls SET
+            reviews_count = (SELECT COUNT(*) FROM reviews WHERE reviews.girl_id = girls.id AND reviews.status = 'approved'),
+            rating = (SELECT COALESCE(ROUND(AVG(rating), 1), 0) FROM reviews WHERE reviews.girl_id = girls.id AND reviews.status = 'approved')
+          WHERE id = ?`,
+    args: [girlId],
+  });
+}
+
+async function girlIdOfReview(reviewId: number): Promise<number> {
+  const res = await db.execute({
+    sql: `SELECT girl_id FROM reviews WHERE id = ? LIMIT 1`,
+    args: [reviewId],
+  });
+  return Number(res.rows[0]?.girl_id ?? 0);
+}
+
+/** Drop the cached pages that show a rating so the new number is visible immediately. */
+async function revalidateReviewPages(girlId: number) {
+  const res = await db.execute({ sql: `SELECT slug FROM girls WHERE id = ? LIMIT 1`, args: [girlId] });
+  const slug = res.rows[0]?.slug ? String(res.rows[0].slug) : null;
+  for (const locale of ['cs', 'en', 'de', 'uk']) {
+    revalidatePath(`/${locale}/divky`);
+    revalidatePath(`/${locale}`);
+    if (slug) revalidatePath(`/${locale}/profil/${slug}`);
+  }
+}
+
 export async function approveReview(formData: FormData) {
   await requireAdmin();
   const id = Number(formData.get('id'));
+  const girlId = await girlIdOfReview(id);
   await db.execute({
     sql: `UPDATE reviews SET status='approved', approved_at=CURRENT_TIMESTAMP, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
     args: [id],
   });
+  await recalcGirlReviewStats(girlId);
+  await revalidateReviewPages(girlId);
   revalidatePath('/cs/admin/recenze');
 }
 
 export async function rejectReview(formData: FormData) {
   await requireAdmin();
   const id = Number(formData.get('id'));
+  const girlId = await girlIdOfReview(id);
   await db.execute({
     sql: `UPDATE reviews SET status='rejected', updated_at=CURRENT_TIMESTAMP WHERE id=?`,
     args: [id],
   });
+  await recalcGirlReviewStats(girlId);
+  await revalidateReviewPages(girlId);
   revalidatePath('/cs/admin/recenze');
 }
 
