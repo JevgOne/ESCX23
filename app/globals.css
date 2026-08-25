@@ -58,7 +58,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
-  overflow-x: hidden;
+  /* clip, not hidden: overflow-x:hidden turns the root into a scroll container and
+     silently disables every position:sticky on the site. clip trims the same overflow
+     without doing that. */
+  overflow-x: clip;
 }
 
 a {
@@ -3192,6 +3195,10 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   align-items: flex-start;
 }
 .profile-photo-col {
+  /* Stretch to the full row height, otherwise the sticky child has nowhere to travel. */
+  align-self: stretch;
+}
+.profile-photo-sticky {
   position: sticky;
   top: 100px;
 }
@@ -3225,7 +3232,8 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 }
 @media (max-width: 520px) {
   .profile-grid { grid-template-columns: 1fr; gap: 24px; }
-  .profile-photo-col { position: static; }
+  .profile-photo-col { align-self: start; }
+  .profile-photo-sticky { position: static; }
   .profile-right-extra { grid-column: 1; }
 }
 
@@ -7799,7 +7807,9 @@ a.calendar-day:hover {
 
 html,
 body {
-  overflow-x: hidden;
+  /* clip instead of hidden — see the note at the top: hidden makes the root a scroll
+     container and kills position:sticky everywhere. */
+  overflow-x: clip;
 }
 
 /* Hamburger toggle — hidden by default (desktop) */
@@ -9923,6 +9933,35 @@ body {
   color: #fbbf24;
   font-weight: 700;
 }
+/* Legend under the service chips — same icons, same colours as the chips above it,
+   so the key reads as an explanation of them rather than a loose line of text. */
+.ig-services-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-line);
+  font-size: 12px;
+  color: var(--color-text-dim);
+}
+.ig-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.ig-legend-check {
+  color: var(--color-green);
+  font-weight: 700;
+}
+.ig-legend-emoji {
+  color: #fbbf24;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+}
+
 .mini-chip-more {
   background: transparent;
   color: var(--color-coral);

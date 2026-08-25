@@ -225,6 +225,9 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
 
   return (
     <div className="profile-photo-col">
+      {/* Inner wrapper does the sticking: the column itself stretches to the row height
+          so the photo can travel alongside the services and let go at the reviews. */}
+      <div className="profile-photo-sticky">
       {/* Mobile-only Instagram-style header */}
       <div className="profile-ig-header">
         <div className="ig-avatar">
@@ -566,6 +569,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
