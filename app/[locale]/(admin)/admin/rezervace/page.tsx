@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { setRequestLocale } from 'next-intl/server';
 import { getBookings } from '@/lib/queries';
 import { db } from '@/lib/db';
@@ -125,8 +126,8 @@ export default async function AdminRezervacePage({
           </div>
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+        <div className="rez-wrap">
+          <table className="rez-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-dim)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 <th style={{ padding: '8px 12px', textAlign: 'left' }}>Dívka</th>
@@ -141,7 +142,33 @@ export default async function AdminRezervacePage({
               {bookings.map((b) => {
                 const st = STATUS_COLORS[b.status] ?? { label: b.status, color: '#6b7280' };
                 return (
-                  <tr key={b.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <Fragment key={b.id}>
+                  {/* Phone layout — the 7-column table only scrolls sideways. */}
+                  <tr className="rez-card-row">
+                    <td colSpan={6}>
+                      <div className="rez-card">
+                        <div className="rez-card-top">
+                          <div className="rez-card-girl">
+                            {b.girlPhoto && (
+                              <img src={photoUrl(b.girlPhoto)} alt={b.girlName ?? ''} />
+                            )}
+                            <span>{b.girlName ?? `#${b.girlId}`}</span>
+                          </div>
+                          <span className="rez-card-status" style={{ background: st.color + '22', color: st.color }}>
+                            {st.label}
+                          </span>
+                        </div>
+                        <div className="rez-card-when">
+                          {b.proposedDate}{b.startTime ? ` · ${b.startTime.slice(0, 5)}` : ''}
+                        </div>
+                        <div className="rez-card-contact">
+                          <span>{b.channel ? (CHANNEL_ICONS[b.channel] ?? b.channel) : '—'}</span>
+                          <span>{b.clientContact ?? '—'}</span>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr className="rez-row" style={{ borderBottom: '1px solid var(--color-border)' }}>
                     <td style={{ padding: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         {b.girlPhoto && (
@@ -172,6 +199,7 @@ export default async function AdminRezervacePage({
                       </span>
                     </td>
                   </tr>
+                  </Fragment>
                 );
               })}
             </tbody>

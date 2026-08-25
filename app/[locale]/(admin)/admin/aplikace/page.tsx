@@ -99,6 +99,38 @@ export default async function AdminAplikacePage({ params, searchParams }: Props)
           font-size: 11px;
           font-weight: 700;
         }
+        /* Desktop shows the table, phones show one card per application.
+           A 6-column table on a 390px screen only ever scrolls sideways. */
+        .apl-card-row { display: none; }
+        @media (max-width: 820px) {
+          .apl-table thead { display: none; }
+          .apl-table-row { display: none; }
+          .apl-card-row { display: block; }
+          .apl-table, .apl-table tbody { display: block; border: 0; background: none; }
+          .apl-card-row > td { display: block; padding: 0 0 10px; border: 0; }
+
+          .apl-card {
+            display: flex; flex-direction: column; gap: 5px;
+            padding: 14px 16px; text-decoration: none;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-line);
+            border-radius: 12px;
+          }
+          .apl-card:active { border-color: var(--color-line-mid); }
+          .apl-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+          .apl-card-name { font-size: 15px; font-weight: 600; color: var(--color-text); }
+          .apl-card-sub { font-size: 11.5px; color: var(--color-text-dim); }
+          .apl-card-contact { font-family: ui-monospace, monospace; font-size: 13px; color: var(--color-text-muted); margin-top: 2px; }
+          .apl-card-mail { font-size: 12px; color: var(--color-text-dim); word-break: break-all; }
+          .apl-card-foot {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 8px; padding-top: 9px;
+            border-top: 1px solid var(--color-line);
+            font-size: 11.5px; color: var(--color-text-dim);
+          }
+          .apl-card-cta { color: var(--color-coral); font-weight: 600; }
+        }
+
         .apl-table {
           width: 100%;
           border-collapse: separate;
@@ -155,7 +187,6 @@ export default async function AdminAplikacePage({ params, searchParams }: Props)
             : 'Zatím žádné aplikace.'}
         </div>
       ) : (
-        <div className="admin-table-scroll">
         <table className="apl-table">
           <thead>
             <tr>
@@ -173,7 +204,6 @@ export default async function AdminAplikacePage({ params, searchParams }: Props)
             ))}
           </tbody>
         </table>
-        </div>
       )}
     </>
   );
@@ -186,8 +216,30 @@ function ApplicationListRow({ app }: { app: ApplicationRow }) {
     app.bust ? `prsa ${app.bust}` : null,
   ].filter(Boolean).join(' · ');
 
+  const detailHref = `/cs/admin/aplikace/${app.id}`;
+
   return (
-    <tr>
+    <>
+    {/* Phone layout. The table stays for wide screens; both read the same
+        fields so there is no second source of truth. */}
+    <tr className="apl-card-row">
+      <td colSpan={6}>
+        <a href={detailHref} className="apl-card">
+          <div className="apl-card-top">
+            <span className="apl-card-name">{app.name}</span>
+            <StatusBadge status={app.status} />
+          </div>
+          <div className="apl-card-sub">#{app.id} · {app.age} let{measures ? ` · ${measures}` : ''}</div>
+          <div className="apl-card-contact">{app.phone}</div>
+          {app.email && <div className="apl-card-mail">{app.email}</div>}
+          <div className="apl-card-foot">
+            <span>{app.created_at ? relativeTime(app.created_at) : '—'}</span>
+            <span className="apl-card-cta">Detail →</span>
+          </div>
+        </a>
+      </td>
+    </tr>
+    <tr className="apl-table-row">
       <td>
         <div className="apl-name">{app.name}</div>
         <div className="apl-meta">#{app.id} · {app.age} let</div>
@@ -206,8 +258,9 @@ function ApplicationListRow({ app }: { app: ApplicationRow }) {
         </span>
       </td>
       <td style={{ textAlign: 'right' }}>
-        <a href={`/cs/admin/aplikace/${app.id}`} className="apl-row-link">Detail →</a>
+        <a href={detailHref} className="apl-row-link">Detail →</a>
       </td>
     </tr>
+    </>
   );
 }
