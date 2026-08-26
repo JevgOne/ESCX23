@@ -60,7 +60,7 @@ export default async function BlogPage({ params }: Props) {
 
   if (locale === 'de' || locale === 'uk') {
     const { redirect } = await import('next/navigation');
-    redirect('/cs/blog');
+    redirect('/blog');
   }
 
   const t = await getTranslations({ locale, namespace: 'blog' });

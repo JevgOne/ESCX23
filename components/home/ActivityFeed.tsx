@@ -43,7 +43,7 @@ export default async function ActivityFeed({ locale }: ActivityFeedProps) {
               return (
                 <Link key={i} href={{ pathname: '/profil/[slug]', params: { slug: item.girlSlug } }} className="activity-item">
                   <img
-                    src={photoUrl(item.girlPhoto)}
+                    src={photoUrl(item.girlPhoto, 44)}
                     className="activity-avatar"
                     alt={item.girlName}
                     loading="lazy"

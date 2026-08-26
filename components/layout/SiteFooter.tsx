@@ -58,6 +58,8 @@ export default async function SiteFooter() {
     getSiteFacts(),
   ]);
   const localePrefix = locale === 'en' ? '' : `/${locale}`;
+  // Blog only has CS/EN content — DE/UK would just link to a redirect.
+  const showBlog = locale === 'cs' || locale === 'en';
 
   return (
     <footer id="footer">
@@ -131,7 +133,7 @@ export default async function SiteFooter() {
               <li><Link href="/rozvrh">{nav('schedule')}</Link></li>
               <li><Link href="/slevy">{nav('discounts')}</Link></li>
               <li><Link href="/faq">{nav('faq')}</Link></li>
-              <li><Link href="/blog">{nav('blog')}</Link></li>
+              {showBlog && <li><Link href="/blog">{nav('blog')}</Link></li>}
             </ul>
           </div>
 
@@ -167,7 +169,7 @@ export default async function SiteFooter() {
               <li><a href={`${localePrefix}/hashtag/studentky-praha`}>{locale === 'en' ? 'Students Prague' : locale === 'de' ? 'Studentinnen Prag' : locale === 'uk' ? 'Студентки Прага' : 'Studentky Praha'}</a></li>
               <li><Link href={{ pathname: '/sluzba/[slug]', params: { slug: 'classic' } }}>{locale === 'en' ? 'Classic service' : locale === 'de' ? 'Classic Service' : locale === 'uk' ? 'Класичний сервіс' : 'Služba Classic'}</Link></li>
               <li><Link href={{ pathname: '/sluzba/[slug]', params: { slug: 'massage' } }}>{locale === 'en' ? 'Massage service' : locale === 'de' ? 'Massage Service' : locale === 'uk' ? 'Масаж' : 'Služba Massage'}</Link></li>
-              <li><Link href="/blog">{nav('blog')}</Link></li>
+              {showBlog && <li><Link href="/blog">{nav('blog')}</Link></li>}
             </ul>
           </div>
         </div>

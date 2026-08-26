@@ -124,6 +124,50 @@ async function runMigrations(client: Client) {
   } catch {
     // Table already exists — OK
   }
+
+  // Review listing queries do correlated subqueries on reviews per row — index the lookup.
+  try {
+    await client.execute(
+      'CREATE INDEX IF NOT EXISTS idx_reviews_girl_status ON reviews(girl_id, status)'
+    );
+  } catch {
+    // OK
+  }
+
+  // Tracks slugs of girls removed (deleted or archived) from the public site, so their
+  // old profile URLs can 308-redirect instead of 404ing — Google keeps crawling them
+  // long after the profile is gone.
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS removed_girl_slugs (
+        slug TEXT PRIMARY KEY,
+        removed_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        reason TEXT
+      )
+    `);
+  } catch {
+    // Table already exists — OK
+  }
+
+  // Legacy slugs confirmed 404ing in production (GSC export, /Users/lunagroup/Downloads/
+  // lovelygirls-3/Tabulka.csv, cross-checked against production with curl) from before
+  // this table existed.
+  const legacyRemovedSlugs = [
+    'rebeca', 'anhel', 'anna', 'diana', 'ema', 'christina', 'jessica',
+    'karin', 'lara', 'lucka', 'marie', 'nikol', 'niky', 'sammy', 'sophie',
+    // Found via the /girls/{slug} and /girls-cz/{slug} legacy pattern (docs/TASKS-404.md #2)
+    'linda', 'samantha', 'bibi', 'jennifer',
+  ];
+  for (const slug of legacyRemovedSlugs) {
+    try {
+      await client.execute({
+        sql: "INSERT OR IGNORE INTO removed_girl_slugs (slug, reason) VALUES (?, 'legacy')",
+        args: [slug],
+      });
+    } catch {
+      // OK
+    }
+  }
 }
 
 // Fire and forget on startup

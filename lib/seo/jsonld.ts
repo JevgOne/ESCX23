@@ -150,9 +150,6 @@ export function profilePersonJsonLd(
     .map((p) => String(p.url));
   const height = g.height ? `${Number(g.height)} cm` : undefined;
   const verifiedAt = g.verified ? String(g.verified) : undefined;
-  const ratingValue = g.rating != null ? Number(g.rating) : null;
-  const reviewCount = g.reviews_count != null ? Number(g.reviews_count) : 0;
-
   const person: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Person',
@@ -173,52 +170,10 @@ export function profilePersonJsonLd(
     worksFor: { '@id': `${BASE}/#business` },
   };
 
-  // Compute aggregateRating from DB value or from review data
-  let hasAggregate = false;
-  if (ratingValue != null && ratingValue > 0 && reviewCount > 0) {
-    person.aggregateRating = {
-      '@type': 'AggregateRating',
-      ratingValue: Number(ratingValue).toFixed(1),
-      reviewCount,
-      bestRating: 5,
-      worstRating: 1,
-    };
-    hasAggregate = true;
-  } else if (reviews.length > 0) {
-    // Fallback: compute from review data so Google always sees aggregateRating with reviews
-    const ratings = reviews.map((r) => Number(r.rating)).filter((v) => v > 0);
-    if (ratings.length > 0) {
-      const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
-      person.aggregateRating = {
-        '@type': 'AggregateRating',
-        ratingValue: avg.toFixed(1),
-        reviewCount: ratings.length,
-        bestRating: 5,
-        worstRating: 1,
-      };
-      hasAggregate = true;
-    }
-  }
-
-  // Only include Review objects when aggregateRating is present (Google requirement)
-  if (hasAggregate) {
-    const reviewObjects = reviews.slice(0, 5).map((r) => ({
-      '@type': 'Review',
-      author: { '@type': 'Person', name: String(r.author_name ?? 'Anonymous') },
-      reviewRating: {
-        '@type': 'Rating',
-        ratingValue: Number(r.rating),
-        bestRating: 5,
-        worstRating: 1,
-      },
-      reviewBody: String(r.content ?? '').slice(0, 300),
-      datePublished: String(r.created_at ?? '').slice(0, 10),
-    }));
-    if (reviewObjects.length > 0) {
-      person.review = reviewObjects;
-    }
-  }
-
+  // No aggregateRating or Review nodes here on purpose. Google's review snippets do not
+  // support Person as the reviewed item, so this markup was rejected wholesale — 54 invalid
+  // items in Search Console — and the stars never rendered. The site-wide rating lives on
+  // the LocalBusiness node on the homepage, which is a type Google does accept.
   return person;
 }
 

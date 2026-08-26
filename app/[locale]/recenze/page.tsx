@@ -220,7 +220,7 @@ export default async function RecenzePage({
                 className={`rev-chip ${activeGirl === g.slug ? 'active' : ''}`}
               >
                 {g.photo && (
-                  <img src={photoUrl(g.photo)} alt="" className="rev-chip-img" />
+                  <img src={photoUrl(g.photo, 20)} alt="" className="rev-chip-img" />
                 )}
                 {g.name}
                 <span className="rev-chip-count">{g.reviewCount}</span>
@@ -239,11 +239,10 @@ export default async function RecenzePage({
                 const full = Math.round(Math.max(0, Math.min(5, review.rating)));
                 return (
                   <article key={review.id} className="rev-item">
-                    <TranslateButton text={review.text} targetLocale={locale} />
                     <div className="rev-item-head">
                       <Link href={`/${locale}/profil/${review.girlSlug}`} className="rev-item-avatar">
                         {review.girlPhoto ? (
-                          <img src={photoUrl(review.girlPhoto)} alt={review.girlName} />
+                          <img src={photoUrl(review.girlPhoto, 44)} alt={review.girlName} />
                         ) : (
                           <span className="rev-item-avatar-letter">{review.girlName.charAt(0)}</span>
                         )}
@@ -263,6 +262,7 @@ export default async function RecenzePage({
                           <span className="rev-item-stars-empty">{'★'.repeat(5 - full)}</span>
                         </span>
                       </div>
+                      <TranslateButton text={review.text} targetLocale={locale} />
                     </div>
                     {review.vibe && VIBE_EMOJI[review.vibe] && (
                       <div className="rev-item-vibe">
@@ -284,7 +284,7 @@ export default async function RecenzePage({
                       <div className="rev-reply">
                         <div className="rev-reply-head">
                           {review.girlPhoto && (
-                            <img src={photoUrl(review.girlPhoto)} alt={review.girlName} className="rev-reply-avatar" />
+                            <img src={photoUrl(review.girlPhoto, 28)} alt={review.girlName} className="rev-reply-avatar" />
                           )}
                           <span className="rev-reply-name">{review.girlName}</span>
                           {review.replyAt && (

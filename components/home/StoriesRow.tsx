@@ -1,4 +1,5 @@
 import { getPublicStoriesFiltered } from '@/lib/story-schedule';
+import { photoUrl } from '@/lib/photoUrl';
 import NextLink from 'next/link';
 import StoriesScroll from './StoriesScroll';
 
@@ -144,7 +145,7 @@ export default async function StoriesRow({ locale }: Props) {
                 <div className="sr-ring">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={story.girlPhoto ?? story.mediaUrl}
+                    src={photoUrl(story.girlPhoto ?? story.mediaUrl, 78)}
                     alt={story.girlName}
                     className="sr-photo"
                     loading="lazy"

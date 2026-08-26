@@ -109,7 +109,7 @@ export default async function StoryViewerPage({ params }: Props) {
         <NextLink href={profileHref} className="story-header-link">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={photoUrl(story.girlPhoto)}
+            src={photoUrl(story.girlPhoto, 36)}
             alt={story.girlName}
             className="story-avatar"
             width={36}

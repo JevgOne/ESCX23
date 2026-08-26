@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getGirlBySlug, getPhotosForGirl } from '@/lib/queries';
-import { photoUrl } from '@/lib/photoUrl';
+import { photoUrlOriginal } from '@/lib/photoUrl';
 
 export const runtime = 'nodejs';
 export const alt = 'LovelyGirls Prague — Verified Companion';
@@ -63,7 +63,7 @@ export default async function OgImage({
 
   const photos = await getPhotosForGirl(Number(girl.id)).catch(() => [] as { url: unknown; is_primary: unknown }[]);
   const primary = photos.find((p) => p.is_primary) ?? photos[0];
-  const photoSrc = primary?.url ? photoUrl(String(primary.url)) : null;
+  const photoSrc = primary?.url ? photoUrlOriginal(String(primary.url)) : null;
 
   const name = String(girl.name ?? 'Companion');
   const age = Number(girl.age ?? 0);

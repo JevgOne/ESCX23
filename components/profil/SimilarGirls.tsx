@@ -96,20 +96,18 @@ export default async function SimilarGirls({ currentSlug, locale }: Props) {
 
     return (
       <section className={`similar-girls section${hasWorking ? '' : ' similar-girls-later'}`}>
-        <div className="container">
-          <div className="similar-girls-head">
-            <div className="similar-girls-eyebrow">
-              <span className="similar-girls-dot" />
-              {eyebrow}
-            </div>
-            <h2 className="similar-girls-h2">{heading}</h2>
-            <p className="similar-girls-sub">{subtitle}</p>
+        <div className="similar-girls-head">
+          <div className="similar-girls-eyebrow">
+            <span className="similar-girls-dot" />
+            {eyebrow}
           </div>
-          <div className="girls-grid">
-            {others.map((g) => (
-              <GirlCard key={g.id} girl={g} />
-            ))}
-          </div>
+          <h2 className="similar-girls-h2">{heading}</h2>
+          <p className="similar-girls-sub">{subtitle}</p>
+        </div>
+        <div className="girls-grid girls-grid-centered">
+          {others.map((g) => (
+            <GirlCard key={g.id} girl={g} />
+          ))}
         </div>
       </section>
     );
@@ -121,20 +119,18 @@ export default async function SimilarGirls({ currentSlug, locale }: Props) {
 
   return (
     <section className="similar-girls section similar-girls-later">
-      <div className="container">
-        <div className="similar-girls-head">
-          <div className="similar-girls-eyebrow">
-            <span className="similar-girls-dot" />
-            {L.eyebrow_other}
-          </div>
-          <h2 className="similar-girls-h2">{L.heading_other}</h2>
-          <p className="similar-girls-sub">{L.sub_other}</p>
+      <div className="similar-girls-head">
+        <div className="similar-girls-eyebrow">
+          <span className="similar-girls-dot" />
+          {L.eyebrow_other}
         </div>
-        <div className="girls-grid">
-          {fallback.map((g) => (
-            <GirlCard key={g.id} girl={g} />
-          ))}
-        </div>
+        <h2 className="similar-girls-h2">{L.heading_other}</h2>
+        <p className="similar-girls-sub">{L.sub_other}</p>
+      </div>
+      <div className="girls-grid girls-grid-centered">
+        {fallback.map((g) => (
+          <GirlCard key={g.id} girl={g} />
+        ))}
       </div>
     </section>
   );

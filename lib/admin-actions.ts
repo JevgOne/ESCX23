@@ -531,6 +531,18 @@ export async function archiveGirl(formData: FormData) {
     await adminRedirect(`/admin/divky/${id}/edit?error=${encodeURIComponent('Archivace selhala: ' + String(err))}`);
   }
 
+  // Best-effort: track the slug so its old profile URL 308s instead of 404ing. Never
+  // block the archive itself if this fails (e.g. migration not landed yet).
+  try {
+    await db.execute({
+      sql: `INSERT OR REPLACE INTO removed_girl_slugs (slug, reason)
+            SELECT slug, 'archived' FROM girls WHERE id = ?`,
+      args: [id],
+    });
+  } catch (err) {
+    console.error('[admin] archiveGirl slug tracking failed:', { id, error: String(err) });
+  }
+
   revalidatePath('/admin/divky');
   revalidatePath('/cs/admin/divky');
   revalidatePath('/cs/divky');
@@ -552,6 +564,16 @@ export async function restoreGirl(formData: FormData) {
     await adminRedirect(`/admin/divky?error=${encodeURIComponent('Obnovení selhalo: ' + String(err))}`);
   }
 
+  // The girl is public again — her own profile URL must stop redirecting away.
+  try {
+    await db.execute({
+      sql: `DELETE FROM removed_girl_slugs WHERE slug = (SELECT slug FROM girls WHERE id = ?)`,
+      args: [id],
+    });
+  } catch (err) {
+    console.error('[admin] restoreGirl slug untracking failed:', { id, error: String(err) });
+  }
+
   revalidatePath('/admin/divky');
   revalidatePath('/cs/admin/divky');
   revalidatePath('/cs/divky');
@@ -564,6 +586,18 @@ export async function deleteGirl(formData: FormData) {
   if (!id) throw new Error('Missing id');
 
   try {
+    // Track the slug before the row disappears, so its old profile URL 308s instead
+    // of 404ing. Best-effort — never block the delete itself if this fails.
+    try {
+      await db.execute({
+        sql: `INSERT OR REPLACE INTO removed_girl_slugs (slug, reason)
+              SELECT slug, 'deleted' FROM girls WHERE id = ?`,
+        args: [id],
+      });
+    } catch (err) {
+      console.error('[admin] deleteGirl slug tracking failed:', { id, error: String(err) });
+    }
+
     // Delete related records first, then the girl
     await db.execute({ sql: `DELETE FROM girl_services WHERE girl_id = ?`, args: [id] });
     await db.execute({ sql: `DELETE FROM girl_photos WHERE girl_id = ?`, args: [id] });

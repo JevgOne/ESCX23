@@ -29,11 +29,26 @@ const PRICE_LOCALE: Record<string, string> = {
 const NIGHT_LABEL: Record<string, string> = {
   cs: 'Noční', en: 'Night', de: 'Nacht', uk: 'Нічний',
 };
+const BOOK_TEXT: Record<string, (title: string, duration: number, min: string) => string> = {
+  cs: (title, duration, min) => `Dobrý den, mám zájem o program ${title} (${duration} ${min}).`,
+  en: (title, duration, min) => `Hi, I'm interested in the ${title} program (${duration} ${min}).`,
+  de: (title, duration, min) => `Hallo, ich interessiere mich für das Programm ${title} (${duration} ${min}).`,
+  uk: (title, duration, min) => `Вітаю, мене цікавить програма ${title} (${duration} ${min}).`,
+};
+
+// Approximate, cash-desk style conversion — the CZK price is the one that counts,
+// EUR is shown rounded as a courtesy for visitors paying in euros (see PricingNotes).
+const CZK_PER_EUR = 25;
+function toEur(czk: number): number {
+  return Math.round(czk / CZK_PER_EUR / 5) * 5;
+}
 
 function titleFor(p: Row, locale: string): string {
   const key = `title_${locale}` as keyof Row;
   return String(p[key] ?? p.title_cs ?? `${p.duration} min`);
 }
+
+const WHATSAPP_NUMBER = '420734332131';
 
 export default function ProgramsGrid({ programs, locale = 'cs' }: ProgramsGridProps) {
   const popular = POPULAR_LABEL[locale] ?? POPULAR_LABEL.en;
@@ -42,6 +57,7 @@ export default function ProgramsGrid({ programs, locale = 'cs' }: ProgramsGridPr
   const book = BOOK_LABEL[locale] ?? BOOK_LABEL.en;
   const currency = CURRENCY_LABEL[locale] ?? CURRENCY_LABEL.en;
   const priceLoc = PRICE_LOCALE[locale] ?? PRICE_LOCALE.en;
+  const bookText = BOOK_TEXT[locale] ?? BOOK_TEXT.en;
 
   return (
     <div className="programs-grid">
@@ -52,6 +68,7 @@ export default function ProgramsGrid({ programs, locale = 'cs' }: ProgramsGridPr
         const duration = Number(p.duration);
         const title = titleFor(p, locale);
         const nightLabel = NIGHT_LABEL[locale] ?? NIGHT_LABEL.en;
+        const waHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(bookText(title, duration, min))}`;
 
         return (
           <article key={String(p.id)} className={`program-card${isPopular ? ' program-card-popular' : ''}`}>
@@ -65,6 +82,7 @@ export default function ProgramsGrid({ programs, locale = 'cs' }: ProgramsGridPr
               <span className="program-card-price-num">{price.toLocaleString(priceLoc)}</span>
               <span className="program-card-price-cur">{currency}</span>
             </div>
+            <div className="program-card-price-eur">~{toEur(price)} €</div>
             {nightPrice != null && nightPrice !== price && (
               <div className="program-card-night">
                 <span className="program-card-night-icon" aria-hidden="true">&#127769;</span>
@@ -75,7 +93,7 @@ export default function ProgramsGrid({ programs, locale = 'cs' }: ProgramsGridPr
               </div>
             )}
             <div className="program-card-incl">✓ {incl}</div>
-            <a href="#kontakt" className="program-card-cta">{book}</a>
+            <a href={waHref} target="_blank" rel="noopener noreferrer" className="program-card-cta">{book}</a>
           </article>
         );
       })}

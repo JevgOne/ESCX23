@@ -72,7 +72,7 @@ export default async function AdminRezervacePage({
         return {
           id: girlId,
           name: String(r.name),
-          photo: r.photo ? photoUrl(String(r.photo)) : null,
+          photo: r.photo ? photoUrl(String(r.photo), 28) : null,
           connected,
           gcalError,
           events,
@@ -150,7 +150,7 @@ export default async function AdminRezervacePage({
                         <div className="rez-card-top">
                           <div className="rez-card-girl">
                             {b.girlPhoto && (
-                              <img src={photoUrl(b.girlPhoto)} alt={b.girlName ?? ''} />
+                              <img src={photoUrl(b.girlPhoto, 30)} alt={b.girlName ?? ''} />
                             )}
                             <span>{b.girlName ?? `#${b.girlId}`}</span>
                           </div>
@@ -173,7 +173,7 @@ export default async function AdminRezervacePage({
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         {b.girlPhoto && (
                           <img
-                            src={photoUrl(b.girlPhoto)}
+                            src={photoUrl(b.girlPhoto, 32)}
                             alt={b.girlName ?? ''}
                             style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
                           />

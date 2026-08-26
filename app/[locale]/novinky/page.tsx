@@ -156,7 +156,7 @@ export default async function NovinkyPage({ params, searchParams }: Props) {
                         <div className="news-avatar news-avatar-apt">🏠</div>
                       ) : (
                         <img
-                          src={photoUrl(item.girlPhoto)}
+                          src={photoUrl(item.girlPhoto, 52)}
                           className="news-avatar"
                           alt={item.girlName}
                           loading="lazy"

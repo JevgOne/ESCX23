@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { Link } from '@/i18n/navigation';
-import { getBlogPostBySlug, getRelatedBlogPosts, getActiveGirlCards } from '@/lib/queries';
+import { getBlogPostBySlug, getBlogPostLocales, getRelatedBlogPosts, getActiveGirlCards } from '@/lib/queries';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
 
@@ -32,9 +32,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : `${BASE}/${locale}/blog/${slug}`;
   const description = post.metaDescription ?? post.excerpt ?? undefined;
   const publishDate = post.publishedAt ?? post.createdAt;
+  // No cover image → fall back to the auto-generated opengraph-image.tsx for this route
+  // (Next.js resolves that file convention itself, so `images` is simply omitted here).
   const ogImages = post.coverUrl
     ? [{ url: post.coverUrl, width: 1200, height: 630, alt: post.title }]
-    : [{ url: `${BASE}/api/og/blog/${slug}`, width: 1200, height: 630, alt: post.title }];
+    : undefined;
+
+  const postLocales = await getBlogPostLocales(slug);
+  const languages: Record<string, string> = {};
+  for (const l of postLocales) {
+    languages[l] = l === 'en' ? `${BASE}/blog/${slug}` : `${BASE}/${l}/blog/${slug}`;
+  }
+  languages['x-default'] = postLocales.includes('en')
+    ? `${BASE}/blog/${slug}`
+    : languages[postLocales[0]];
 
   return applyDBOverride(`/${locale}/blog/${slug}`, {
     title: `${post.title} — ${brand}`,
@@ -43,11 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     authors: [{ name: post.author }],
     alternates: {
       canonical,
-      languages: {
-        en: `${BASE}/blog/${slug}`,
-        cs: `${BASE}/cs/blog/${slug}`,
-        'x-default': `${BASE}/blog/${slug}`,
-      },
+      languages,
     },
     openGraph: {
       title: post.title,
@@ -61,13 +68,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       authors: [post.author],
       section: post.tags[0]?.name ?? 'Blog',
       tags: post.tags.map((t) => t.name),
-      images: ogImages,
+      ...(ogImages ? { images: ogImages } : {}),
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description,
-      images: ogImages.map((i) => i.url),
+      ...(ogImages ? { images: ogImages.map((i) => i.url) } : {}),
     },
     robots: {
       index: true,
@@ -129,10 +136,10 @@ export default async function BlogDetailPage({ params }: Props) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
-  // DE/UK blog has no translations — redirect to CS version
+  // DE/UK blog has no translations — redirect to EN version
   if (locale === 'de' || locale === 'uk') {
     const { redirect } = await import('next/navigation');
-    redirect(`/cs/blog/${slug}`);
+    redirect(`/blog/${slug}`);
   }
 
   const t = await getTranslations({ locale, namespace: 'blog' });

@@ -5,7 +5,7 @@ import { getSiteFacts, fillSiteFacts } from '@/lib/site-facts';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { Link } from '@/i18n/navigation';
 import { getGirlsForHashtag } from '@/lib/queries';
-import { photoUrl } from '@/lib/photoUrl';
+import { photoUrlOriginal } from '@/lib/photoUrl';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { getHashtagContent, HASHTAG_CONTENT } from '@/lib/seo/landing-content';
@@ -160,7 +160,7 @@ export default async function HashtagPage({ params }: Props) {
       slug: g.slug,
       name: g.name,
       url: `${BASE}${localePrefix(locale)}/${locale === 'en' ? 'profile' : 'profil'}/${g.slug}`,
-      image: g.primaryPhoto ? photoUrl(g.primaryPhoto) : null,
+      image: g.primaryPhoto ? photoUrlOriginal(g.primaryPhoto) : null,
     })),
     title,
   );

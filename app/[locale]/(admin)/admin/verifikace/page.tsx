@@ -38,7 +38,7 @@ export default async function AdminVerifikacePage({
             <div key={photo.id} className="verify-card">
               <a href={`/cs/admin/divky/${photo.girlId}`} style={{ display: 'block' }}>
                 <img
-                  src={photoUrl(photo.thumbnailUrl ?? photo.url)}
+                  src={photoUrl(photo.thumbnailUrl ?? photo.url, 300)}
                   alt={`Fotka — ${photo.girlName}`}
                   className="verify-card-img"
                 />

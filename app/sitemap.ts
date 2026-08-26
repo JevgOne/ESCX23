@@ -6,7 +6,7 @@ import {
   getPhotosBySlug,
   getBlogPostSlugs,
 } from '@/lib/queries';
-import { photoUrl } from '@/lib/photoUrl';
+import { photoUrlOriginal } from '@/lib/photoUrl';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,7 +105,6 @@ const STATIC_KEYS: Array<{ key: string; freq: 'daily' | 'hourly' | 'weekly' | 'm
   { key: '/o-nas', freq: 'monthly', priority: 0.5 },
   { key: '/kontakt', freq: 'monthly', priority: 0.5 },
   { key: '/novinky', freq: 'daily', priority: 0.5 },
-  { key: '/blog', freq: 'daily', priority: 0.8 },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -121,7 +120,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const resolveImages = (slug: string): string[] => {
     const urls = photosBySlug[slug] ?? [];
     return urls.map((u) => {
-      const resolved = photoUrl(u);
+      const resolved = photoUrlOriginal(u);
       if (resolved.startsWith('http')) return resolved;
       return `${BASE}${resolved.startsWith('/') ? '' : '/'}${resolved}`;
     });
@@ -211,15 +210,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // Blog posts (per post × CS + EN only — DE/UK are untranslated duplicates)
+  // Blog list — CS + EN only, DE/UK have no content and just redirect to /blog
+  const BLOG_LOCALES = ['en', 'cs'] as const;
+  for (const l of BLOG_LOCALES) {
+    pages.push({
+      url: l === 'en' ? `${BASE}/blog` : `${BASE}/${l}/blog`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.8,
+      alternates: {
+        languages: {
+          en: `${BASE}/blog`,
+          cs: `${BASE}/cs/blog`,
+          'x-default': `${BASE}/blog`,
+        },
+      },
+    });
+  }
+
+  // Blog posts (per post × only the locales the post actually has content in)
   for (const bp of blogSlugs) {
     const lastmod = bp.updatedAt ? new Date(bp.updatedAt) : now;
-    const alternates: Record<string, string> = {
-      en: `${BASE}/blog/${bp.slug}`,
-      cs: `${BASE}/cs/blog/${bp.slug}`,
-      'x-default': `${BASE}/blog/${bp.slug}`,
-    };
-    for (const l of ['en', 'cs'] as const) {
+    const alternates: Record<string, string> = {};
+    for (const l of bp.locales) {
+      alternates[l] = l === 'en' ? `${BASE}/blog/${bp.slug}` : `${BASE}/${l}/blog/${bp.slug}`;
+    }
+    alternates['x-default'] = bp.locales.includes('en')
+      ? `${BASE}/blog/${bp.slug}`
+      : alternates[bp.locales[0]];
+    for (const l of bp.locales) {
       pages.push({
         url: l === 'en' ? `${BASE}/blog/${bp.slug}` : `${BASE}/${l}/blog/${bp.slug}`,
         lastModified: lastmod,

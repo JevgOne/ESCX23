@@ -327,6 +327,24 @@ export async function getGirlBySlug(slug: string) {
   return result.rows[0] ?? null;
 }
 
+/**
+ * Whether `slug` used to belong to a girl who was deleted or archived — used to 308
+ * an old profile URL to the girls listing instead of 404ing it (Google keeps crawling
+ * removed profiles long after they're gone). Wrapped in try/catch so a production DB
+ * that hasn't run the `removed_girl_slugs` migration yet still just falls through to 404.
+ */
+export async function wasGirlSlugRemoved(slug: string): Promise<boolean> {
+  try {
+    const result = await db.execute({
+      sql: `SELECT 1 FROM removed_girl_slugs WHERE slug = ? LIMIT 1`,
+      args: [slug],
+    });
+    return result.rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 /** Aktivní pricing plans (programy 30/45/60/90/120 min). */
 export async function getActivePricingPlans() {
   const result = await db.execute(
@@ -405,8 +423,12 @@ export async function getReviewStatsForGirl(
   let recommendPct: number | null = null;
   if (count >= 3) {
     try {
+      // The `recommends` migration backfilled 1 on every historical row, so relying on it
+      // alone would count old 1★ reviews as recommendations. Historical rows (no explicit
+      // 👍/👎) fall back to "4★ and up = recommends", matching the fallback in
+      // ProfilReviews.tsx so both code paths agree.
       const rec = await db.execute({
-        sql: `SELECT SUM(CASE WHEN COALESCE(recommends, 1) = 1 THEN 1 ELSE 0 END) AS rec
+        sql: `SELECT SUM(CASE WHEN COALESCE(recommends, 1) = 1 AND rating >= 4 THEN 1 ELSE 0 END) AS rec
               FROM reviews WHERE girl_id = ? AND status = 'approved'`,
         args: [girlId],
       });
@@ -1249,6 +1271,17 @@ export async function createGirl(data: {
 }
 
 export async function deleteGirlById(id: number): Promise<void> {
+  // Track the slug before the row disappears, so its old profile URL 308s instead of
+  // 404ing. Best-effort — never block the delete itself if this fails.
+  try {
+    await db.execute({
+      sql: `INSERT OR REPLACE INTO removed_girl_slugs (slug, reason)
+            SELECT slug, 'deleted' FROM girls WHERE id = ?`,
+      args: [id],
+    });
+  } catch (err) {
+    console.error('[queries] deleteGirlById slug tracking failed:', { id, error: String(err) });
+  }
   await db.execute({ sql: `DELETE FROM girls WHERE id=?`, args: [id] });
 }
 
@@ -1847,6 +1880,8 @@ function blogLang(locale: string): BlogLocale {
 }
 
 export async function getBlogPosts(locale: string, limit = 20, offset = 0): Promise<BlogPost[]> {
+  // `lang` is normalized by blogLang() to the literal 'cs' | 'en', never raw user input,
+  // so interpolating it into the column name below cannot introduce SQL injection.
   const lang = blogLang(locale);
   try {
     const result = await db.execute({
@@ -1856,14 +1891,15 @@ export async function getBlogPosts(locale: string, limit = 20, offset = 0): Prom
               cover_url, author, reading_time_min,
               created_at, published_at
             FROM blog_posts WHERE status = 'published'
+              AND title_${lang} IS NOT NULL AND TRIM(title_${lang}) <> ''
             ORDER BY published_at DESC, created_at DESC LIMIT ? OFFSET ?`,
       args: [limit, offset],
     });
     const posts = result.rows.map((r) => ({
       id: Number(r.id),
       slug: String(r.slug),
-      title: String(r[`title_${lang}`] || r.title_cs || ''),
-      excerpt: r[`excerpt_${lang}`] ? String(r[`excerpt_${lang}`]) : (r.excerpt_cs ? String(r.excerpt_cs) : null),
+      title: String(r[`title_${lang}`] ?? ''),
+      excerpt: r[`excerpt_${lang}`] ? String(r[`excerpt_${lang}`]) : null,
       content: null as string | null,
       metaDescription: r[`meta_description_${lang}`] ? String(r[`meta_description_${lang}`]) : null,
       coverUrl: r.cover_url ? String(r.cover_url) : null,
@@ -1908,6 +1944,8 @@ export async function getBlogPosts(locale: string, limit = 20, offset = 0): Prom
 }
 
 export async function getBlogPostBySlug(slug: string, locale: string): Promise<BlogPost | null> {
+  // `lang` is normalized by blogLang() to the literal 'cs' | 'en', never raw user input,
+  // so interpolating it into the column name below cannot introduce SQL injection.
   const lang = blogLang(locale);
   try {
     const result = await db.execute({
@@ -1917,7 +1955,10 @@ export async function getBlogPostBySlug(slug: string, locale: string): Promise<B
               meta_description_cs, meta_description_en,
               cover_url, author, reading_time_min,
               created_at, published_at
-            FROM blog_posts WHERE slug = ? AND status = 'published' LIMIT 1`,
+            FROM blog_posts
+            WHERE slug = ? AND status = 'published'
+              AND title_${lang} IS NOT NULL AND TRIM(title_${lang}) <> ''
+            LIMIT 1`,
       args: [slug],
     });
     if (!result.rows[0]) return null;
@@ -1940,9 +1981,9 @@ export async function getBlogPostBySlug(slug: string, locale: string): Promise<B
     return {
       id: Number(r.id),
       slug: String(r.slug),
-      title: String(r[`title_${lang}`] || r.title_cs || ''),
-      excerpt: r[`excerpt_${lang}`] ? String(r[`excerpt_${lang}`]) : (r.excerpt_cs ? String(r.excerpt_cs) : null),
-      content: r[`content_${lang}`] ? String(r[`content_${lang}`]) : (r.content_cs ? String(r.content_cs) : null),
+      title: String(r[`title_${lang}`] ?? ''),
+      excerpt: r[`excerpt_${lang}`] ? String(r[`excerpt_${lang}`]) : null,
+      content: r[`content_${lang}`] ? String(r[`content_${lang}`]) : null,
       metaDescription: r[`meta_description_${lang}`] ? String(r[`meta_description_${lang}`]) : null,
       coverUrl: r.cover_url ? String(r.cover_url) : null,
       author: String(r.author ?? 'LovelyGirls Praha'),
@@ -1957,25 +1998,57 @@ export async function getBlogPostBySlug(slug: string, locale: string): Promise<B
   }
 }
 
-/** All published blog slugs (for sitemap). */
-export async function getBlogPostSlugs(): Promise<{ slug: string; updatedAt: string | null }[]> {
+/** All published blog slugs (for sitemap), with the locales each one actually has content in. */
+export async function getBlogPostSlugs(): Promise<
+  { slug: string; updatedAt: string | null; locales: BlogLocale[] }[]
+> {
   try {
     const result = await db.execute({
-      sql: `SELECT slug, updated_at FROM blog_posts WHERE status = 'published' ORDER BY published_at DESC`,
+      sql: `SELECT slug, updated_at, title_cs, title_en
+            FROM blog_posts WHERE status = 'published' ORDER BY published_at DESC`,
       args: [],
     });
-    return result.rows.map((r) => ({
-      slug: String(r.slug),
-      updatedAt: r.updated_at ? String(r.updated_at) : null,
-    }));
+    return result.rows
+      .map((r) => {
+        const locales: BlogLocale[] = [];
+        if (r.title_cs && String(r.title_cs).trim() !== '') locales.push('cs');
+        if (r.title_en && String(r.title_en).trim() !== '') locales.push('en');
+        return {
+          slug: String(r.slug),
+          updatedAt: r.updated_at ? String(r.updated_at) : null,
+          locales,
+        };
+      })
+      .filter((p) => p.locales.length > 0);
   } catch (err) {
     console.error('[blog] getBlogPostSlugs failed', err);
     return [];
   }
 }
 
+/** Which locales a given post slug actually has content in (for hreflang alternates). */
+export async function getBlogPostLocales(slug: string): Promise<BlogLocale[]> {
+  try {
+    const result = await db.execute({
+      sql: `SELECT title_cs, title_en FROM blog_posts WHERE slug = ? LIMIT 1`,
+      args: [slug],
+    });
+    const r = result.rows[0];
+    if (!r) return [];
+    const locales: BlogLocale[] = [];
+    if (r.title_cs && String(r.title_cs).trim() !== '') locales.push('cs');
+    if (r.title_en && String(r.title_en).trim() !== '') locales.push('en');
+    return locales;
+  } catch (err) {
+    console.error('[blog] getBlogPostLocales failed', err);
+    return [];
+  }
+}
+
 /** Posts sharing any tag with the given post. */
 export async function getRelatedBlogPosts(postId: number, locale: string, limit = 3): Promise<BlogPost[]> {
+  // `lang` is normalized by blogLang() to the literal 'cs' | 'en', never raw user input,
+  // so interpolating it into the column name below cannot introduce SQL injection.
   const lang = blogLang(locale);
   try {
     const result = await db.execute({
@@ -1988,14 +2061,15 @@ export async function getRelatedBlogPosts(postId: number, locale: string, limit 
             JOIN blog_post_tags bpt ON bpt.post_id = bp.id
             WHERE bpt.tag_id IN (SELECT tag_id FROM blog_post_tags WHERE post_id = ?)
               AND bp.id != ? AND bp.status = 'published'
+              AND bp.title_${lang} IS NOT NULL AND TRIM(bp.title_${lang}) <> ''
             ORDER BY bp.published_at DESC LIMIT ?`,
       args: [postId, postId, limit],
     });
     return result.rows.map((r) => ({
       id: Number(r.id),
       slug: String(r.slug),
-      title: String(r[`title_${lang}`] || r.title_cs || ''),
-      excerpt: r[`excerpt_${lang}`] ? String(r[`excerpt_${lang}`]) : (r.excerpt_cs ? String(r.excerpt_cs) : null),
+      title: String(r[`title_${lang}`] ?? ''),
+      excerpt: r[`excerpt_${lang}`] ? String(r[`excerpt_${lang}`]) : null,
       content: null,
       metaDescription: null,
       coverUrl: r.cover_url ? String(r.cover_url) : null,

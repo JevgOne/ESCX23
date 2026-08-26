@@ -114,7 +114,7 @@ export default async function RecenzeNovaPage({ params, searchParams }: Props) {
 
   const girl = girlRes.rows[0] as Record<string, unknown>;
   const girlName = String(girl.name ?? '');
-  const girlPhoto = girl.photo ? photoUrl(String(girl.photo)) : null;
+  const girlPhoto = girl.photo ? photoUrl(String(girl.photo), 96) : null;
   const sent = sp.sent === '1';
   const hasError = !!sp.error;
 

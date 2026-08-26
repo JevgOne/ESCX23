@@ -6,10 +6,10 @@ import { getActivePricingPlans } from '@/lib/queries';
 import { offerListJsonLd, breadcrumbListJsonLd, faqPageJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import ProgramsGrid from '@/components/cenik/ProgramsGrid';
+import ExperienceFlow from '@/components/cenik/ExperienceFlow';
 import NightPricingNote from '@/components/cenik/NightPricingNote';
 import ExtrasGrid from '@/components/cenik/ExtrasGrid';
 import PricingNotes from '@/components/cenik/PricingNotes';
-import FaqTeaser from '@/components/cenik/FaqTeaser';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { Link } from '@/i18n/navigation';
 
@@ -109,6 +109,7 @@ const FAQ_DATA: Record<string, FaqBundle> = {
       { q: 'Kolik stojí návštěva u LovelyGirls?', a: 'Programy začínají na 2 000 Kč za 30 minut. Kompletní ceník s pěti programy od 30 do 120 minut najdete na této stránce. Ceny zahrnují apartmán, žádné skryté poplatky.' },
       { q: 'Co je zahrnuto v ceně?', a: 'Cena zahrnuje čas se zvolenou společnicí v soukromém apartmánu, sprchu a diskrétní prostředí. Žádný příplatek za vstup ani pronájem pokoje.' },
       { q: 'Jaké platební metody přijímáte?', a: 'Přijímáme výhradně hotovost — CZK nebo EUR. Kartou, převodem ani jinak bezhotovostně platit nelze. Důvodem je maximální diskrétnost.' },
+      { q: 'Jsou ceny pevné, nebo lze smlouvat?', a: 'Ceny programů jsou stanovené a veřejně transparentní. Smlouvání není zvykem. Slevy získáte v rámci věrnostního programu — viz stránka Slevy.' },
       { q: 'Jsou ceny stejné pro všechny společnice?', a: 'Ano, ceny programů jsou jednotné pro všechny dostupné společnice. Liší se pouze podle délky programu a případných extra služeb.' },
       { q: 'Nabízíte slevy?', a: 'Ano — 200 Kč z první návštěvy a bonus v den narozenin. Aktuálně běžící slevy jsou vždy na stránce Slevy; co tam není, právě neběží.' },
     ],
@@ -119,6 +120,7 @@ const FAQ_DATA: Record<string, FaqBundle> = {
       { q: 'How much does a visit to LovelyGirls cost?', a: 'Programs start at 2,000 CZK for 30 minutes. The full price list with five packages from 30 to 120 minutes is on this page. Prices include the apartment — no hidden fees.' },
       { q: 'What is included in the price?', a: 'The price covers time with your chosen companion in a private apartment, shower access and a discreet setting. No extra entry or room rental charge.' },
       { q: 'What payment methods do you accept?', a: 'We accept cash only — CZK or EUR. Cards, bank transfers and other cashless payments are not accepted. This ensures maximum discretion.' },
+      { q: 'Are the prices fixed, or can they be negotiated?', a: 'Program prices are fixed and publicly transparent. Bargaining is not customary. Discounts are available through our loyalty program — see the Discounts page.' },
       { q: 'Are prices the same for all companions?', a: 'Yes, program prices are the same for every available companion. They only vary by program duration and optional extras.' },
       { q: 'Do you offer discounts?', a: 'Yes — 200 CZK off your first visit, plus a bonus on your birthday. The Discounts page always lists what is currently running; anything not there is not active.' },
     ],
@@ -129,6 +131,7 @@ const FAQ_DATA: Record<string, FaqBundle> = {
       { q: 'Wie viel kostet ein Besuch bei LovelyGirls?', a: 'Programme beginnen bei 2.000 CZK für 30 Minuten. Die vollständige Preisliste mit fünf Programmen von 30 bis 120 Minuten finden Sie auf dieser Seite. Die Preise beinhalten die Wohnung — keine versteckten Gebühren.' },
       { q: 'Was ist im Preis enthalten?', a: 'Der Preis umfasst die Zeit mit der gewählten Begleiterin in einer privaten Wohnung, Dusche und ein diskretes Ambiente. Kein Aufpreis für Eintritt oder Zimmermiete.' },
       { q: 'Welche Zahlungsmethoden akzeptieren Sie?', a: 'Wir akzeptieren ausschließlich Bargeld — CZK oder EUR. Karten, Überweisungen und andere bargeldlose Zahlungen werden nicht akzeptiert. Dies gewährleistet maximale Diskretion.' },
+      { q: 'Sind die Preise fest oder verhandelbar?', a: 'Die Programmpreise sind festgelegt und öffentlich transparent. Feilschen ist nicht üblich. Rabatte erhalten Sie im Rahmen unseres Treueprogramms — siehe Seite Rabatte.' },
       { q: 'Sind die Preise für alle Begleiterinnen gleich?', a: 'Ja, die Programmpreise sind für alle verfügbaren Begleiterinnen identisch. Sie variieren nur nach Programmdauer und optionalen Extras.' },
       { q: 'Bieten Sie Rabatte an?', a: 'Ja — 200 CZK auf den ersten Besuch und einen Bonus am Geburtstag. Auf der Seite Rabatte steht immer, was gerade läuft; was dort fehlt, ist nicht aktiv.' },
     ],
@@ -139,6 +142,7 @@ const FAQ_DATA: Record<string, FaqBundle> = {
       { q: 'Скільки коштує візит до LovelyGirls?', a: 'Програми починаються від 2 000 CZK за 30 хвилин. Повний прайс із п\'ятьма програмами від 30 до 120 хвилин — на цій сторінці. Ціни включають апартамент, жодних прихованих платежів.' },
       { q: 'Що входить у вартість?', a: 'Ціна охоплює час з обраною супутницею у приватному апартаменті, душ та дискретне середовище. Жодних доплат за вхід чи оренду номера.' },
       { q: 'Які способи оплати ви приймаєте?', a: 'Ми приймаємо тільки готівку — CZK або EUR. Картки, перекази та інші безготівкові способи не приймаються. Це гарантує максимальну конфіденційність.' },
+      { q: 'Ціни фіксовані чи можна торгуватися?', a: 'Ціни на програми фіксовані та публічно прозорі. Торг не прийнятий. Знижки доступні в межах програми лояльності — див. сторінку Знижки.' },
       { q: 'Ціни однакові для всіх супутниць?', a: 'Так, ціни програм однакові для всіх доступних супутниць. Вони різняться лише за тривалістю програми та додатковими послугами.' },
       { q: 'Чи є у вас знижки?', a: 'Так — 200 Kč на перший візит і бонус у день народження. На сторінці Знижки завжди вказано, що діє зараз; чого там немає, те не діє.' },
     ],
@@ -227,7 +231,7 @@ export default async function CenikPage({
         locale={locale}
       />
 
-      <section className="page-header">
+      <section className="page-header cenik-header">
         <div className="container">
           <h1>
             {locale === 'en' ? 'Pricing' : locale === 'de' ? 'Preise' : locale === 'uk' ? 'Ціни' : 'Ceník'}
@@ -246,8 +250,16 @@ export default async function CenikPage({
 
       <section className="section">
         <div className="container">
-          {geoLead && <p data-geo-lead className="pricing-lead">{geoLead}</p>}
+          {/* sr-only on purpose — same numbers appear in the cards right below,
+              this exists so AI crawlers get a full-sentence answer (see docs/GEO-strategy.md).
+              Do not make it visible again: it duplicated the cards and users flagged it. */}
+          {geoLead && <p data-geo-lead className="sr-only">{geoLead}</p>}
 
+          <ExperienceFlow locale={locale} />
+
+          <h2 className="section-h2" style={{ fontSize: '28px', margin: '48px 0 24px' }}>
+            {locale === 'en' ? 'Choose your program' : locale === 'de' ? 'Wählen Sie Ihr Programm' : locale === 'uk' ? 'Оберіть програму' : 'Vyberte si program'}
+          </h2>
           <ProgramsGrid programs={programs} locale={locale} />
           <NightPricingNote locale={locale} />
 
@@ -259,14 +271,10 @@ export default async function CenikPage({
           <PricingNotes locale={locale} />
 
           <div style={{ marginTop: '64px' }}>
-            <FaqTeaser locale={locale} />
-          </div>
-
-          <div style={{ marginTop: '48px' }}>
             <h2 className="section-h2" style={{ fontSize: '28px', marginBottom: '16px' }}>
               {faqBundle.heading}
             </h2>
-            <div className="faq-list">
+            <div className="faq-list wide-faq-list" style={{ marginBottom: '20px' }}>
               {faqBundle.items.map((f, i) => (
                 <details key={i} className="faq-item">
                   <summary>{f.q}</summary>
@@ -274,6 +282,19 @@ export default async function CenikPage({
                 </details>
               ))}
             </div>
+            <Link
+              href="/faq"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: 'var(--color-coral)',
+                fontWeight: 600,
+                fontSize: '14px',
+              }}
+            >
+              {locale === 'en' ? 'See all FAQs →' : locale === 'de' ? 'Alle Fragen ansehen →' : locale === 'uk' ? 'Подивитися всі запитання →' : 'Zobrazit všechny časté dotazy →'}
+            </Link>
           </div>
         </div>
       </section>

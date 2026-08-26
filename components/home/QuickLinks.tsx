@@ -6,6 +6,7 @@ const LINKS: Array<{
   href: Record<string, string>;
   label: Record<string, string>;
   icon: string;
+  csEnOnly?: boolean;
 }> = [
   {
     href: { cs: '/cs/cenik', en: '/pricing', de: '/de/preise', uk: '/uk/tsiny' },
@@ -23,9 +24,10 @@ const LINKS: Array<{
     icon: '❓',
   },
   {
-    href: { cs: '/cs/blog', en: '/blog', de: '/de/blog', uk: '/uk/blog' },
-    label: { cs: 'Blog & novinky', en: 'Blog & News', de: 'Blog & Neuigkeiten', uk: 'Блог та новини' },
+    href: { cs: '/cs/blog', en: '/blog' },
+    label: { cs: 'Blog & novinky', en: 'Blog & News' },
     icon: '📰',
+    csEnOnly: true,
   },
   {
     href: { cs: '/cs/recenze', en: '/reviews', de: '/de/rezensionen', uk: '/uk/vidhuky' },
@@ -52,7 +54,7 @@ export default function QuickLinks({ locale }: QuickLinksProps) {
           <h2 className="section-h2">{heading}</h2>
         </div>
         <div className="quick-links-grid">
-          {LINKS.map((link) => (
+          {LINKS.filter((link) => !link.csEnOnly || locale === 'cs' || locale === 'en').map((link) => (
             <a
               key={link.href.en}
               href={link.href[locale] ?? link.href.en}

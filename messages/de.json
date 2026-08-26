@@ -35,8 +35,8 @@
   "geo": {
     "home_lead": "LovelyGirls Prag betreibt private Apartments im Zentrum von Prag. Alle {count} {count, plural, one {verifizierte Begleiterin} other {verifizierten Begleiterinnen}}, täglich 10:00–22:30 geöffnet.",
     "divky_lead": "{count} {count, plural, one {verifizierte Begleiterin} other {verifizierte Begleiterinnen}} in Prag, täglich 10:00–22:30. Filterbar nach Verfügbarkeit, Standort und Haarfarbe.",
-    "cenik_lead": "Programme ab 2 000 CZK für 30 Minuten, 2 500 CZK für 60 Minuten. Bargeld und Karte im Apartment.",
-    "faq_lead": "Antworten auf die 30 häufigsten Fragen zu Buchung, Preisen, Diskretion und Apartments.",
+    "cenik_lead": "Programme ab 2 000 CZK für 30 Minuten, 2 500 CZK für 60 Minuten, 4 500 CZK für 2 Stunden. Zahlung in bar vor Ort, in CZK oder EUR.",
+    "faq_lead": "Antworten auf die häufigsten Fragen zu Buchung, Preisen, Diskretion und Apartments.",
     "slevy_lead": "Treueprogramm: 10 % nach dem 3. Besuch, 12 % nach dem 5., 15 % nach dem 10. Plus zeitlich begrenzte Angebote.",
     "rozvrh_lead": "Aktueller Zeitplan der Begleiterinnen für heute und 6 Tage im Voraus, gefiltert nach Apartment."
   },

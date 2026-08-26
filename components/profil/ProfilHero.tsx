@@ -232,7 +232,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
       <div className="profile-ig-header">
         <div className="ig-avatar">
           <img
-            src={photoUrl(primaryPhoto?.url ? String(primaryPhoto.url) : null)}
+            src={photoUrl(primaryPhoto?.url ? String(primaryPhoto.url) : null, 124)}
             alt={altBase}
             loading="eager"
             fetchPriority="high"
@@ -509,7 +509,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
       {/* Desktop hero photo (and same on mobile, just below IG header) */}
       <div className="profile-hero-photo">
         <img
-          src={photoUrl(primaryPhoto?.url ? String(primaryPhoto.url) : null)}
+          src={photoUrl(primaryPhoto?.url ? String(primaryPhoto.url) : null, 420)}
           alt={altBase}
           loading="eager"
           fetchPriority="high"

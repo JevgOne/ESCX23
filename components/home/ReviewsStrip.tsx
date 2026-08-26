@@ -66,7 +66,7 @@ export default async function ReviewsStrip({ locale }: ReviewsStripProps) {
                     aria-label={review.girlName}
                   >
                     {review.girlPhoto ? (
-                      <img src={photoUrl(review.girlPhoto)} alt={review.girlName} />
+                      <img src={photoUrl(review.girlPhoto, 44)} alt={review.girlName} />
                     ) : (
                       avatarLetter(review.girlName)
                     )}

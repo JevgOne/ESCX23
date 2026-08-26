@@ -29,7 +29,7 @@ export default async function FeaturedNew({ locale }: FeaturedNewProps) {
       >
         <div className="featured-photo-wrap">
           <img
-            src={photoUrl(girl.primaryPhoto)}
+            src={photoUrl(girl.primaryPhoto, 120)}
             className="featured-photo"
             alt={girl.name}
             loading="eager"

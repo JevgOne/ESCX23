@@ -26,6 +26,9 @@ const CURRENCY: Record<string, string> = { cs: 'Kč', en: 'CZK', de: 'CZK', uk: 
 function formatAmount(row: Row, locale: string): string {
   const val = Number(row.discount_value ?? row.amount_value ?? 0);
   const type = String(row.discount_type ?? row.amount_type ?? 'percentage');
+  // A discount can carry no number of its own — a birthday bonus, a duo price.
+  // Printing "0 Kč" for those reads as "worth nothing", so print nothing at all.
+  if (!val) return '';
   if (type === 'PERCENT' || type === 'percentage') return `${val} %`;
   const cur = CURRENCY[locale] ?? CURRENCY.en;
   const fmt = locale === 'cs' ? 'cs-CZ' : locale === 'de' ? 'de-DE' : locale === 'uk' ? 'uk-UA' : 'en-GB';
@@ -61,10 +64,12 @@ export default function DiscountsGrid({ discounts, locale }: DiscountsGridProps)
           <div key={String(d.id)} className={`discount-card${isFeatured ? ' featured' : ''}`}>
             <div className="discount-card-icon">{getIcon(slug)}</div>
             <h3>{name}</h3>
-            <div className="discount-card-amount">
-              {amount.split(' ')[0]}{' '}
-              <small>{amount.split(' ').slice(1).join(' ')}</small>
-            </div>
+            {amount && (
+              <div className="discount-card-amount">
+                {amount.split(' ')[0]}{' '}
+                <small>{amount.split(' ').slice(1).join(' ')}</small>
+              </div>
+            )}
             {desc && <p>{desc}</p>}
             {conditions.length > 0 && (
               <ul className="discount-conditions">

@@ -1,7 +1,8 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
+import { getPathname } from '@/i18n/navigation';
 import {
   getGirlBySlug,
   getPhotosForGirl,
@@ -12,9 +13,10 @@ import {
   getGirlServices,
   getGirlScheduleForToday,
   getGirlVideos,
+  wasGirlSlugRemoved,
   type ServiceRow,
 } from '@/lib/queries';
-import { photoUrl } from '@/lib/photoUrl';
+import { photoUrl, photoUrlOriginal } from '@/lib/photoUrl';
 import { getCurrentUser } from '@/lib/auth';
 import { profilePersonJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { getProfileCanonical, getProfileAlternates, ogLocale } from '@/lib/seo/meta';
@@ -113,7 +115,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Primary photo for OG image
   const photos = await getPhotosForGirl(Number(girl.id)).catch(() => []);
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
-  const primaryPhotoUrl = primaryPhoto?.url ? photoUrl(String(primaryPhoto.url)) : null;
+  const primaryPhotoUrl = primaryPhoto?.url ? photoUrlOriginal(String(primaryPhoto.url)) : null;
 
   return applyDBOverride(`/${locale}/profil/${slug}`, {
     title: localizedTitle,
@@ -171,7 +173,17 @@ export default async function ProfilPage({ params, searchParams }: Props) {
   // Only show services the girl actually offers (basic auto-included + extras she checked)
   const services = allServices.filter((s) => girlServiceIds.includes(Number(s.id)));
 
-  if (!girl) notFound();
+  if (!girl) {
+    // Deleted/archived profiles keep getting crawled long after they're gone — send
+    // those old URLs to the girls listing instead of 404ing. Unknown slugs (typos,
+    // never-existed) still 404 as before, or every bad URL would end up indexed as a
+    // "real" redirect. permanentRedirect() throws, so it must stay outside any
+    // try/catch that could swallow it.
+    if (await wasGirlSlugRemoved(slug)) {
+      permanentRedirect(getPathname({ href: '/divky', locale }));
+    }
+    notFound();
+  }
 
   const girlVip = Boolean((girl as Record<string, unknown>).vip);
   const isMember = currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'girl';
@@ -306,7 +318,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
     <main>
       {(() => {
         const pp = photos.find((p: Record<string, unknown>) => p.is_primary) ?? photos[0];
-        const ppUrl = pp?.url ? photoUrl(String(pp.url)) : null;
+        const ppUrl = pp?.url ? photoUrl(String(pp.url), 420) : null;
         return ppUrl ? <link rel="preload" as="image" href={ppUrl} fetchPriority="high" /> : null;
       })()}
       <script
@@ -438,7 +450,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
                 girlName={String(girl.name ?? '')}
                 girlPhoto={(() => {
                   const primary = photoTyped.find((p) => p.is_primary) ?? photoTyped[0];
-                  return primary?.url ? String(primary.url) : null;
+                  return primary?.url ? photoUrl(String(primary.url), 88) : null;
                 })()}
               />
               <SimilarGirls currentSlug={slug} locale={locale} />

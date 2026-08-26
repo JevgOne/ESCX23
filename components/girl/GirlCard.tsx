@@ -1,6 +1,10 @@
 import { Link } from '@/i18n/navigation';
 import { getLocale } from 'next-intl/server';
-import { photoUrl } from '@/lib/photoUrl';
+import { photoUrl, photoUrlSrcSet } from '@/lib/photoUrl';
+
+// Card width ranges from ~172px (2-col mobile) to ~314px (3/4-col desktop),
+// matching the "sizes" attribute below — see globals.css .girls-grid.
+const CARD_WIDTHS = [192, 256, 384, 640];
 import { translateLocation } from '@/lib/utils';
 import type { GirlCard as GirlCardType } from '@/lib/queries';
 
@@ -86,9 +90,9 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
       data-status={isAway ? 'away' : 'available'}
     >
       <div className="girl-photo-wrap">
-        <img className="girl-photo girl-photo-front" src={photoUrl(girl.primaryPhoto)} alt={altText} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} decoding="async" sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 280px" />
+        <img className="girl-photo girl-photo-front" src={photoUrl(girl.primaryPhoto, 293)} srcSet={photoUrlSrcSet(girl.primaryPhoto, CARD_WIDTHS)} alt={altText} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} decoding="async" sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 280px" />
         {girl.secondaryPhoto && (
-          <img className="girl-photo girl-photo-back" src={photoUrl(girl.secondaryPhoto)} alt="" loading="lazy" aria-hidden="true" />
+          <img className="girl-photo girl-photo-back" src={photoUrl(girl.secondaryPhoto, 293)} alt="" loading="lazy" aria-hidden="true" />
         )}
 
         {girl.isVip ? (

@@ -45,7 +45,7 @@ export default async function AdminRecenzePage({
             <div key={review.id} className="review-card-admin">
               <div className="review-card-admin-girl">
                 <img
-                  src={photoUrl(review.girlPhoto)}
+                  src={photoUrl(review.girlPhoto, 44)}
                   alt={review.girlName}
                   className="review-card-admin-thumb"
                 />

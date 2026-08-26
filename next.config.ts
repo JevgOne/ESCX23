@@ -40,6 +40,11 @@ const config: NextConfig = {
       { source: '/cs/profily/:slug', destination: '/cs/profil/:slug', permanent: true },
       { source: '/cs/profiles', destination: '/cs/divky', permanent: true },
       { source: '/cz/profiles', destination: '/cs/divky', permanent: true },
+      // EN old profile URL pattern — `/girls` itself (no slug) stays the live EN listing
+      // page, this only matches when a slug segment follows it.
+      { source: '/girls/:slug', destination: '/profile/:slug', permanent: true },
+      { source: '/girls-cz/:slug', destination: '/cs/profil/:slug', permanent: true },
+      { source: '/girls-cz', destination: '/cs/divky', permanent: true },
 
       // === B) Landing pages ===
       { source: '/cs/landing/escort-prague', destination: '/cs/divky', permanent: true },
@@ -66,9 +71,20 @@ const config: NextConfig = {
       { source: '/cs/landing/:slug', destination: '/cs/', permanent: true },
 
       // === C) Blog old URLs ===
+      // Renamed-slug overrides MUST come before the generic /blog-cs/:slug catch-all
+      // below, or that one matches first and redirects to the old (now nonexistent) slug.
+      { source: '/blog-cs/jak-si-vybrat-spolecnici-v-praze-elegantne-a-bez-stresu', destination: '/cs/blog/jak-vybrat-spolecnici-praha', permanent: true },
       { source: '/blog-cs/:slug', destination: '/cs/blog/:slug', permanent: true },
       { source: '/blogs-cz/:slug', destination: '/cs/blog/:slug', permanent: true },
-      { source: '/blog', destination: '/cs/blog', permanent: true },
+      // Old EN article slugs → today's slug (content restored/renamed under new titles)
+      { source: '/blog/escort-outcall-prague-a-calm-hotel-guide', destination: '/blog/outcall-do-hotelu-v-praze-prakticky-pruvodce', permanent: true },
+      { source: '/blog/escort-prague-availability-how-to-read-todays-shifts', destination: '/blog/kalendar-dostupnosti-jak-ho-cist-a-rychle-domluvit', permanent: true },
+      { source: '/blog/erotic-stories-elevator-at-dusk', destination: '/blog/eroticka-povidka-vytah-za-soumraku', permanent: true },
+      { source: '/blog/discreet-incall-prague-how-it-works', destination: '/blog/soukrome-apartmany-escort-praha', permanent: true },
+      { source: '/en/blog/proc-volit-overenou-escort-agenturu-v-praze-pred-soukromymi-inzeraty', destination: '/blog/jak-vybrat-spolecnici-praha', permanent: true },
+      // Old interview section — slugs are unchanged, only the path moved into /blog
+      { source: '/interview-cs/:slug', destination: '/cs/blog/:slug', permanent: true },
+      { source: '/interview/:slug', destination: '/blog/:slug', permanent: true },
 
       // === D) Old locale/structural URLs ===
       { source: '/cz/main', destination: '/cs/', permanent: true },
@@ -85,8 +101,10 @@ const config: NextConfig = {
       // === E) WordPress-era / bare URLs ===
       { source: '/escort-praha', destination: '/cs/divky', permanent: true },
       { source: '/escort-prague', destination: '/en/girls', permanent: true },
-      { source: '/bdsm', destination: '/cs/blog', permanent: true },
+      { source: '/bdsm', destination: '/blog', permanent: true },
       { source: '/author/:slug', destination: '/cs/', permanent: true },
+      { source: '/home', destination: '/', permanent: true },
+      { source: '/en/home', destination: '/', permanent: true },
 
       // === F) Old sitemaps ===
       { source: '/slecny-sitemap.xml', destination: '/sitemap.xml', permanent: true },
@@ -134,6 +152,13 @@ const config: NextConfig = {
           'prostatova-masaz': 'prostate_massage',
           'pse-pornstar-zkusenost': 'hard_sex',
           'duo-service': 'threesome_fmf',
+          'mazleni': 'cuddling',
+          'masaz-prostaty': 'prostate_massage',
+          'nataceni-bez-obliceje': 'filming_no_face',
+          'pansky-anal': 'anal_man',
+          'piss-active': 'piss_active',
+          'rimming-passive': 'rimming_passive',
+          'rollenspiel': 'role_play',
         };
         // Format/marketing pages with no service page behind them.
         const TO_PRICING = ['overnight'];
@@ -147,6 +172,10 @@ const config: NextConfig = {
 
           for (const [from, to] of Object.entries(SERVICE_SLUG)) {
             out.push({ source: `${prefix}/sluzby/${from}`, destination: `${path.service}/${to}`, permanent: true });
+            // The mapping above only ever covered the old /sluzby/ path. Google also
+            // crawled old marketing slugs glued onto today's /sluzba (etc.) path —
+            // same fix, just under the live prefix.
+            out.push({ source: `${path.service}/${from}`, destination: `${path.service}/${to}`, permanent: true });
           }
           for (const slug of TO_PRICING) {
             out.push({ source: `${prefix}/sluzby/${slug}`, destination: path.pricing, permanent: true });
@@ -163,7 +192,7 @@ const config: NextConfig = {
           out.push({ source: `${prefix}/main`, destination: path.root, permanent: true });
 
           // Hashtags that no longer exist in the catalogue
-          for (const dead of ['asiatky', 'zrale-zeny', 'privatni-sluzby', 'modelky-praha', 'zrzky-praha', 'vysoke-holky', 'vip-holky', 'silikonove-prsa']) {
+          for (const dead of ['asiatky', 'zrale-zeny', 'privatni-sluzby', 'modelky-praha', 'zrzky-praha', 'vysoke-holky', 'vip-holky', 'silikonove-prsa', 'atleticke-telo', 'bujne-tvary', 'latinky', 'polykani', 'tipy', 'vystrik-na-telo']) {
             out.push({ source: `${prefix}/hashtag/${dead}`, destination: path.girls, permanent: true });
           }
 

@@ -30,7 +30,7 @@ export default async function AdminGirlDetailPage({
     args: [Number(id)],
   });
   const primaryPhoto = photoResult.rows[0]?.url
-    ? photoUrl(String(photoResult.rows[0].url))
+    ? photoUrl(String(photoResult.rows[0].url), 200)
     : (girl.og_image ? String(girl.og_image) : null);
 
   // Google Calendar status

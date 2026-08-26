@@ -11,7 +11,7 @@ import { Link as I18nLink } from '@/i18n/navigation';
 import { breadcrumbListJsonLd, localBusinessJsonLd, faqPageJsonLd, itemListPeopleJsonLd } from '@/lib/seo/jsonld';
 import { getCanonicalUrl } from '@/lib/seo/meta';
 import { getLocationContent } from '@/lib/seo/landing-content';
-import { photoUrl } from '@/lib/photoUrl';
+import { photoUrl, photoUrlOriginal } from '@/lib/photoUrl';
 import { pragueDateISO, formatOpeningDate } from '@/lib/utils';
 
 export const revalidate = 3600;
@@ -403,7 +403,7 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
           slug: g.slug,
           name: g.name,
           url: `${BASE}${localePrefix}/${locale === 'en' ? 'profile' : 'profil'}/${g.slug}`,
-          image: g.primaryPhoto ? photoUrl(g.primaryPhoto) : null,
+          image: g.primaryPhoto ? photoUrlOriginal(g.primaryPhoto) : null,
         })),
         `${L.apartmentWord} ${loc.displayName} — ${girlsAtLocationLbl}`,
       )
@@ -504,7 +504,7 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
                         title={g.name}
                       >
                         {g.primaryPhoto ? (
-                          <img src={photoUrl(g.primaryPhoto)} alt={g.name} />
+                          <img src={photoUrl(g.primaryPhoto, 52)} alt={g.name} />
                         ) : (
                           <span className="pobocka-companion-initial">{g.name.charAt(0)}</span>
                         )}

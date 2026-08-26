@@ -85,7 +85,7 @@ export default function PhotoLightbox({ photos, girlName }: PhotoLightboxProps) 
       )}
 
       <img
-        src={photoUrl(photos[idx]?.url ?? null)}
+        src={photoUrl(photos[idx]?.url ?? null, 800)}
         alt={`${girlName} — ${idx + 1} / ${photos.length}`}
         className="lightbox-img"
         onClick={(e) => e.stopPropagation()}
@@ -119,7 +119,7 @@ export default function PhotoLightbox({ photos, girlName }: PhotoLightboxProps) 
             type="button"
           >
             <img
-              src={photoUrl(photo.url || null)}
+              src={photoUrl(photo.url || null, 190)}
               alt={`${girlName} — ${i + 1}`}
               loading="lazy"
             />

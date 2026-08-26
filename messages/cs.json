@@ -35,8 +35,8 @@
   "geo": {
     "home_lead": "LovelyGirls Praha provozuje soukromé apartmány v centru Prahy. Všech {count} {count, plural, one {ověřená společnice} few {ověřené společnice} other {ověřených společnic}}, otevřeno denně 10:00–22:30.",
     "divky_lead": "{count} {count, plural, one {ověřená společnice} few {ověřené společnice} other {ověřených společnic}} v Praze, denně 10:00–22:30. Filtrujte podle dostupnosti, lokace nebo barvy vlasů.",
-    "cenik_lead": "Programy 30 minut od 2 000 Kč, 60 minut 2 500 Kč. Hotovost a karta v apartmánu.",
-    "faq_lead": "Odpovědi na 30 nejčastějších otázek o rezervaci, cenách, diskrétnosti a apartmánech.",
+    "cenik_lead": "Programy 30 minut od 2 000 Kč, 60 minut 2 500 Kč, 120 minut 4 500 Kč. Platí se hotově na místě, v Kč nebo EUR.",
+    "faq_lead": "Odpovědi na nejčastější otázky o rezervaci, cenách, diskrétnosti a apartmánech.",
     "slevy_lead": "Věrnostní program: 10 % po 3. návštěvě, 12 % po 5., 15 % po 10. Plus časově omezené akce.",
     "rozvrh_lead": "Aktuální rozvrh společnic na dnes a 6 dní dopředu, podle apartmánu."
   },
