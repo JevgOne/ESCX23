@@ -65,7 +65,19 @@ function discountCopy(discounts: DiscountRow[], locale: string) {
   }
 
   const short = (i: { name: string; amount: string }) => (i.amount ? `${i.name} ${i.amount}` : i.name);
-  const title = `${label} — ${items.slice(0, 2).map(short).join(', ')}`;
+  // The root template appends " · LovelyGirls", so the built part has to leave
+  // room for it — two Ukrainian discount names alone pushed the title to 70,
+  // past what Google shows. Take names while they still fit.
+  const BRAND_SUFFIX = ' · LovelyGirls'.length;
+  const title = (() => {
+    let out = label;
+    for (const item of items.slice(0, 2)) {
+      const next = out === label ? `${label} — ${short(item)}` : `${out}, ${short(item)}`;
+      if (next.length + BRAND_SUFFIX > 65) break;
+      out = next;
+    }
+    return out;
+  })();
   const listed = items.map(short).join(', ');
   const intro: Record<string, string> = {
     cs: `Aktuální slevy u ${brand}: ${listed}. Slevu stačí zmínit při domluvě přes WhatsApp nebo telefon.`,
