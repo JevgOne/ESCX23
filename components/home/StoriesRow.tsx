@@ -1,3 +1,4 @@
+import { localeHref } from '@/lib/seo/meta';
 import { getPublicStoriesFiltered } from '@/lib/story-schedule';
 import { photoUrl } from '@/lib/photoUrl';
 import NextLink from 'next/link';
@@ -135,7 +136,7 @@ export default async function StoriesRow({ locale }: Props) {
           {stories.map((story) => (
             <NextLink
               key={story.id}
-              href={`/${locale}/stories/${story.id}`}
+              href={localeHref(locale, `/stories/${story.id}`)}
               className="sr-item"
               role="listitem"
               aria-label={`Story ${story.girlName}`}

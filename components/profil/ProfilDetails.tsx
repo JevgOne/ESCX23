@@ -1,4 +1,4 @@
-import { localePrefix } from '@/lib/seo/meta';
+import { localePrefix, localeHref } from '@/lib/seo/meta';
 import { Link } from '@/i18n/navigation';
 import NextLink from 'next/link';
 import type { ServiceRow } from '@/lib/queries';
@@ -343,19 +343,19 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
       {/* Pill badges (same as mobile) */}
       <div className="profile-stat-details profile-desktop-only">
         {girl.bust != null && (
-          <a href={`/${locale}/divky?bust=${String(girl.bust)}`} className="psd-pill psd-pill-link">
+          <a href={localeHref(locale, "/divky") + `?bust=${String(girl.bust)}`} className="psd-pill psd-pill-link">
             <span className="psd-label">{locale === 'cs' ? 'Prsa' : locale === 'de' ? 'Brust' : locale === 'uk' ? 'Груди' : 'Bust'}</span>
             <span className="psd-value">{String(girl.bust)}</span>
           </a>
         )}
         {girl.eyes != null && String(girl.eyes).trim() !== '' && (
-          <a href={`/${locale}/divky?eyes=${encodeURIComponent(String(girl.eyes))}`} className="psd-pill psd-pill-link">
+          <a href={localeHref(locale, "/divky") + `?eyes=${encodeURIComponent(String(girl.eyes))}`} className="psd-pill psd-pill-link">
             <span className="psd-label">{traitEmoji(String(girl.eyes), EYES_MAP)} {locale === 'cs' ? 'Oči' : locale === 'de' ? 'Augen' : locale === 'uk' ? 'Очі' : 'Eyes'}</span>
             <span className="psd-value" style={traitColor(String(girl.eyes), EYES_MAP) ? { color: traitColor(String(girl.eyes), EYES_MAP) } : undefined}>{localizeValue(String(girl.eyes), EYES_MAP, locale)}</span>
           </a>
         )}
         {girl.hair != null && String(girl.hair).trim() !== '' && (
-          <a href={`/${locale}/divky?hair=${encodeURIComponent(String(girl.hair))}`} className="psd-pill psd-pill-link">
+          <a href={localeHref(locale, "/divky") + `?hair=${encodeURIComponent(String(girl.hair))}`} className="psd-pill psd-pill-link">
             <span className="psd-label">{traitEmoji(String(girl.hair), HAIR_MAP)} {locale === 'cs' ? 'Vlasy' : locale === 'de' ? 'Haare' : locale === 'uk' ? 'Волосся' : 'Hair'}</span>
             <span className="psd-value" style={traitColor(String(girl.hair), HAIR_MAP) ? { color: traitColor(String(girl.hair), HAIR_MAP) } : undefined}>{localizeValue(String(girl.hair), HAIR_MAP, locale)}</span>
           </a>

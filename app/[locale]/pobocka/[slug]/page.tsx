@@ -9,7 +9,7 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import Link from 'next/link';
 import { Link as I18nLink } from '@/i18n/navigation';
 import { breadcrumbListJsonLd, localBusinessJsonLd, faqPageJsonLd, itemListPeopleJsonLd } from '@/lib/seo/jsonld';
-import { getCanonicalUrl } from '@/lib/seo/meta';
+import { getCanonicalUrl, localeHref } from '@/lib/seo/meta';
 import { getLocationContent } from '@/lib/seo/landing-content';
 import { photoUrl, photoUrlOriginal } from '@/lib/photoUrl';
 import { pragueDateISO, formatOpeningDate } from '@/lib/utils';
@@ -512,7 +512,7 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
                       </I18nLink>
                     ))}
                   </div>
-                  <Link href={`/${locale}/divky`} className="pobocka-companions-all">
+                  <Link href={localeHref(locale, "/divky")} className="pobocka-companions-all">
                     {L.inclCta}
                   </Link>
                 </div>
@@ -558,7 +558,7 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
                   ))}
                 </ul>
               </div>
-              <Link href={`/${locale}/divky`} className="pobocka-pronajem-cta">
+              <Link href={localeHref(locale, "/divky")} className="pobocka-pronajem-cta">
                 {L.inclCta}
               </Link>
             </div>

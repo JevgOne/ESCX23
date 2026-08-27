@@ -1,3 +1,4 @@
+import { localeHref } from '@/lib/seo/meta';
 import Link from 'next/link';
 
 interface VipGateProps {
@@ -45,7 +46,7 @@ export default function VipGate({ girlName, locale = 'cs' }: VipGateProps) {
       <div className="vip-gate-eyebrow">{L.eyebrow}</div>
       <h1 className="vip-gate-h1">{L.headline(girlName)}</h1>
       <p className="vip-gate-text">{L.body}</p>
-      <Link href={`/${locale}/clenstvi/zadost`} className="vip-gate-btn">{L.cta}</Link>
+      <Link href={localeHref(locale, "/clenstvi/zadost")} className="vip-gate-btn">{L.cta}</Link>
     </div>
   );
 }

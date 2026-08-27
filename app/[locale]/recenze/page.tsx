@@ -4,7 +4,7 @@ import { applyDBOverride } from '@/lib/seo/db-override';
 import Link from 'next/link';
 import { getRecentApprovedReviews, getReviewPageData } from '@/lib/queries';
 import { photoUrl } from '@/lib/photoUrl';
-import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
+import { getCanonicalUrl, ogLocale, localeHref } from '@/lib/seo/meta';
 import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { relativeTime } from '@/lib/utils';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
@@ -118,7 +118,7 @@ export async function generateMetadata({
   const { buildOgImages } = await import('@/lib/seo/og');
   const ogImages = await buildOgImages('recenze', locale, '/recenze', TITLES[locale] ?? TITLES.cs);
 
-  return applyDBOverride(`/${locale}/recenze`, {
+  return applyDBOverride(localeHref(locale, "/recenze"), {
     title: TITLES[locale] ?? TITLES.cs,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.cs,
     alternates: {
@@ -208,7 +208,7 @@ export default async function RecenzePage({
           {/* Girl filter chips */}
           <div className="rev-filters">
             <Link
-              href={`/${locale}/recenze`}
+              href={localeHref(locale, "/recenze")}
               className={`rev-chip ${!activeGirl ? 'active' : ''}`}
             >
               {t.filterAll}
@@ -216,7 +216,7 @@ export default async function RecenzePage({
             {pageData.girlsWithReviews.map((g) => (
               <Link
                 key={g.slug}
-                href={`/${locale}/recenze?girl=${g.slug}`}
+                href={localeHref(locale, "/recenze") + `?girl=${g.slug}`}
                 className={`rev-chip ${activeGirl === g.slug ? 'active' : ''}`}
               >
                 {g.photo && (
@@ -240,7 +240,7 @@ export default async function RecenzePage({
                 return (
                   <article key={review.id} className="rev-item">
                     <div className="rev-item-head">
-                      <Link href={`/${locale}/profil/${review.girlSlug}`} className="rev-item-avatar">
+                      <Link href={localeHref(locale, `/profil/${review.girlSlug}`)} className="rev-item-avatar">
                         {review.girlPhoto ? (
                           <img src={photoUrl(review.girlPhoto, 44)} alt={review.girlName} />
                         ) : (
@@ -248,7 +248,7 @@ export default async function RecenzePage({
                         )}
                       </Link>
                       <div className="rev-item-info">
-                        <Link href={`/${locale}/profil/${review.girlSlug}`} className="rev-item-girl">
+                        <Link href={localeHref(locale, `/profil/${review.girlSlug}`)} className="rev-item-girl">
                           {review.girlName}
                         </Link>
                         <div className="rev-item-meta">

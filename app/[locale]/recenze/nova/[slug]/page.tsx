@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { photoUrl } from '@/lib/photoUrl';
 import { createAdminNotification } from '@/lib/admin-notifications';
-import { getCanonicalUrl } from '@/lib/seo/meta';
+import { getCanonicalUrl, localeHref } from '@/lib/seo/meta';
 
 export const dynamic = 'force-dynamic';
 
@@ -207,7 +207,7 @@ export default async function RecenzeNovaPage({ params, searchParams }: Props) {
             <div className="qr-success-icon">✓</div>
             <h1 className="qr-success-h1">{T.thanks}</h1>
             <p className="qr-success-text">{T.sentMsg}</p>
-            <Link href={`/${locale}/profil/${slug}`} className="qr-submit">
+            <Link href={localeHref(locale, `/profil/${slug}`)} className="qr-submit">
               {T.back}
             </Link>
           </div>

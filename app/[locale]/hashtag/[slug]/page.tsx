@@ -1,3 +1,4 @@
+import { localeHref } from '@/lib/seo/meta';
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -276,7 +277,7 @@ export default async function HashtagPage({ params }: Props) {
               {facts.apartments.map((a) => (
                 <a
                   key={a.slug}
-                  href={`${locale === 'en' ? '' : `/${locale}`}/pobocka/${a.slug}`}
+                  href={localeHref(locale, `/pobocka/${a.slug}`)}
                   className="seo-content-link"
                 >
                   <strong>Escort {a.district ?? a.name}</strong>

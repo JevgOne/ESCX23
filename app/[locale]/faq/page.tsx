@@ -168,9 +168,14 @@ export default async function FaqPage({
             <Link href="/kontakt" className="btn btn-ghost btn-sm">
               {locale === 'en' ? 'Contact' : locale === 'de' ? 'Kontakt' : locale === 'uk' ? 'Контакт' : 'Kontakt'}
             </Link>
-            <Link href="/blog" className="btn btn-ghost btn-sm">
+            {/* The blog exists in cs and en only; /de/blog and /uk/blog just
+                redirect to the English listing, so do not send readers through
+                a hop from a page that has no translation behind it. */}
+            {(locale === 'cs' || locale === 'en') && (
+              <Link href="/blog" className="btn btn-ghost btn-sm">
               Blog
-            </Link>
+              </Link>
+            )}
           </div>
         </div>
       </section>

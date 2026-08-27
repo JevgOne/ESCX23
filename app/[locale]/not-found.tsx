@@ -1,3 +1,4 @@
+import { localeHref } from '@/lib/seo/meta';
 import { headers } from 'next/headers';
 
 const T: Record<string, { h: string; p: string; btn: string }> = {
@@ -21,7 +22,7 @@ export default async function NotFoundPage() {
       <div className="container" style={{ textAlign: 'center', padding: '80px 20px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '12px' }}>{t.h}</h1>
         <p style={{ color: 'var(--color-text-muted)', marginBottom: '24px' }}>{t.p}</p>
-        <a href={`/${locale}/`} className="btn btn-primary">{t.btn}</a>
+        <a href={localeHref(locale, "/")} className="btn btn-primary">{t.btn}</a>
       </div>
     </main>
   );

@@ -70,6 +70,16 @@ export function localePrefix(locale: string): string {
   return LOCALE_PREFIXES[locale] ?? `/${locale}`;
 }
 
+/**
+ * Relative href for an internal path in a given locale — prefix *and*
+ * translated segment. `/${locale}/divky` was being hand-built all over the
+ * codebase; on English that yields /en/divky, which redirects twice before
+ * landing on /girls. Use this instead of gluing a prefix onto a Czech path.
+ */
+export function localeHref(locale: string, path: string): string {
+  return (localePrefix(locale) + localizedPath(locale, path)) || '/';
+}
+
 export function getCanonicalUrl(locale: string, path: string): string {
   const prefix = LOCALE_PREFIXES[locale] ?? `/${locale}`;
   const lPath = localizedPath(locale, path);

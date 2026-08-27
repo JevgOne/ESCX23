@@ -1,4 +1,4 @@
-import { localePrefix } from '@/lib/seo/meta';
+import { localePrefix, localeHref } from '@/lib/seo/meta';
 import { photoUrl } from '@/lib/photoUrl';
 import { translateLocation } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
@@ -311,19 +311,19 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
       {(bust || eyesText || hairText || tattooText || piercingText || languages.length > 0) && (
         <div className="profile-stat-details ig-stat-details">
           {bust && (
-            <a href={`/${locale}/divky?bust=${bust}`} className="psd-pill psd-pill-link">
+            <a href={localeHref(locale, "/divky") + `?bust=${bust}`} className="psd-pill psd-pill-link">
               <span className="psd-label">{locale === 'cs' ? 'Prsa' : locale === 'de' ? 'Brust' : locale === 'uk' ? 'Груди' : 'Bust'}</span>
               <span className="psd-value">{bust}</span>
             </a>
           )}
           {eyesText && (
-            <a href={`/${locale}/divky?eyes=${encodeURIComponent(String(girl.eyes))}`} className="psd-pill psd-pill-link">
+            <a href={localeHref(locale, "/divky") + `?eyes=${encodeURIComponent(String(girl.eyes))}`} className="psd-pill psd-pill-link">
               <span className="psd-label">👁️ {eyesLbl}</span>
               <span className="psd-value" style={eyesColor ? { color: eyesColor } : undefined}>{eyesText}</span>
             </a>
           )}
           {hairText && (
-            <a href={`/${locale}/divky?hair=${encodeURIComponent(String(girl.hair))}`} className="psd-pill psd-pill-link">
+            <a href={localeHref(locale, "/divky") + `?hair=${encodeURIComponent(String(girl.hair))}`} className="psd-pill psd-pill-link">
               <span className="psd-label">💇 {hairLbl}</span>
               <span className="psd-value" style={hairColor ? { color: hairColor } : undefined}>{hairText}</span>
             </a>
@@ -380,7 +380,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           {hashtags.slice(0, 10).map((tag) => {
             const clean = tag.replace(/^#/, '');
             return (
-              <a key={tag} href={`/${locale}/hashtag/${clean}`} className="ig-hashtag">#{clean}</a>
+              <a key={tag} href={localeHref(locale, `/hashtag/${clean}`)} className="ig-hashtag">#{clean}</a>
             );
           })}
         </div>
