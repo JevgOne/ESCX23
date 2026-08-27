@@ -46,7 +46,6 @@
 
 :root {
   /* Hot accent gradient — deep ember to amber, used for blog article accents (see docs/BLOG-BLOKY.md) */
-  --gradient-ember: linear-gradient(90deg, #5c0f26 0%, #c8395a 32%, #f27d8d 62%, #e8a54d 100%);
 }
 
 * {
@@ -4997,7 +4996,7 @@ html.lightbox-active .profile-sticky-bar-desktop {
   top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--gradient-ember);
+  background: var(--color-magenta);
   color: white;
   font-size: 10px;
   font-weight: 700;
@@ -5009,8 +5008,9 @@ html.lightbox-active .profile-sticky-bar-desktop {
   box-shadow: 0 6px 16px -4px rgba(242,125,141,0.55);
 }
 .program-card-popular .program-card-duration-num {
-  background: var(--gradient-ember);
-  -webkit-background-clip: text;
+  background: none;
+  color: var(--color-coral);
+  -webkit-background-clip: border-box;
   background-clip: text;
 }
 
@@ -5129,7 +5129,7 @@ html.lightbox-active .profile-sticky-bar-desktop {
   color: #fff;
 }
 .program-card-popular .program-card-cta {
-  background: var(--gradient-ember);
+  background: var(--color-magenta);
   border-color: transparent;
   color: #fff;
   box-shadow: 0 6px 16px -8px rgba(242,125,141,0.32);
@@ -5145,95 +5145,75 @@ html.lightbox-active .profile-sticky-bar-desktop {
    see docs/OBSAHOVE-BLOKY.md for reuse elsewhere.
    ========================================================= */
 .experience-flow-wrap { margin: 40px 0 56px; }
+/* Three steps side by side, echoing the programme cards below them. */
 .experience-flow {
-  position: relative;
-}
-.experience-flow::before {
-  content: '';
-  position: absolute;
-  left: 22px;
-  top: 22px;
-  bottom: 22px;
-  width: 2px;
-  background: linear-gradient(to bottom, rgba(242,125,141,0.05), rgba(242,125,141,0.35) 15%, rgba(242,125,141,0.35) 85%, rgba(242,125,141,0.05));
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
 }
 .experience-flow-step {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 0;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  padding: 26px 24px 24px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.experience-flow-step:hover {
+  border-color: rgba(242,125,141,0.35);
+  transform: translateY(-3px);
 }
 .experience-flow-icon {
-  position: relative;
-  z-index: 1;
-  flex-shrink: 0;
-  width: 44px; height: 44px;
+  width: 46px; height: 46px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 19px;
+  font-size: 20px;
   background: var(--color-bg-elev);
-  border: 1px solid rgba(242,125,141,0.3);
+  border: 1px solid rgba(242,125,141,0.28);
+  margin-bottom: 18px;
 }
+/* The step number sits large and quiet in the corner, as an ordinal, not a badge. */
 .experience-flow-pulse {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 58px;
-  padding: 6px 4px;
-  border-radius: 12px;
-  background: rgba(242,125,141,0.08);
-  border: 1px solid rgba(242,125,141,0.18);
+  position: absolute;
+  top: 18px;
+  right: 24px;
 }
 .experience-flow-pulse-num {
   font-family: var(--font-display);
-  font-size: 19px;
+  font-size: 40px;
   font-weight: 700;
-  color: var(--color-coral);
   line-height: 1;
-}
-.experience-flow-pulse-unit {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-dim);
-  margin-top: 2px;
+  color: rgba(242,125,141,0.22);
 }
 .experience-flow-step-title {
   display: block;
+  font-family: var(--font-display);
+  font-size: 18px;
   color: var(--color-text);
-  font-weight: 600;
-  margin-bottom: 2px;
+  font-weight: 700;
+  margin-bottom: 6px;
 }
 .experience-flow-text {
   font-size: 14.5px;
   line-height: 1.6;
   color: var(--color-text-muted);
 }
+.experience-flow-step-peak {
+  border-color: rgba(242,125,141,0.32);
+}
 .experience-flow-step-peak .experience-flow-icon {
-  background: var(--gradient-ember);
+  background: var(--color-magenta);
   border-color: transparent;
-  box-shadow: 0 0 12px rgba(242,125,141,0.28);
 }
-.experience-flow-step-peak .experience-flow-pulse {
-  background: linear-gradient(135deg, rgba(242,125,141,0.2), rgba(232,165,77,0.14));
-  border-color: rgba(242,125,141,0.45);
-}
-.experience-flow-step-peak .experience-flow-pulse-num {
-  color: #ffb199;
-  text-shadow: 0 0 8px rgba(242,125,141,0.3);
-}
+.experience-flow-step-peak .experience-flow-pulse-num { color: rgba(242,125,141,0.4); }
 .experience-flow-step-peak .experience-flow-text { color: var(--color-text); }
-@media (max-width: 420px) {
-  .experience-flow-step { gap: 10px; }
-  .experience-flow-icon { width: 38px; height: 38px; font-size: 16px; }
-  .experience-flow-pulse { min-width: 48px; padding: 5px 3px; }
-  .experience-flow-pulse-num { font-size: 16px; }
-  .experience-flow::before { left: 19px; top: 19px; bottom: 19px; }
+@media (max-width: 860px) {
+  .experience-flow { grid-template-columns: 1fr; gap: 12px; }
+  .experience-flow-step { padding: 22px 20px; }
+  .experience-flow-icon { width: 40px; height: 40px; font-size: 18px; margin-bottom: 14px; }
+  .experience-flow-pulse-num { font-size: 32px; }
 }
 
 /* Optional black & white treatment for a photo dropped into content —
@@ -5399,6 +5379,14 @@ html.lightbox-active .profile-sticky-bar-desktop {
 }
 
 /* ===== FAQ ===== */
+/* The heading above a FAQ block sits on the same 760px column as the questions,
+   so the two line up — on /faq, /cenik and /slevy alike. */
+.faq-section-title {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
 .faq-list {
   max-width: 760px;
   margin: 0 auto;
@@ -5410,10 +5398,6 @@ html.lightbox-active .profile-sticky-bar-desktop {
    (/cenik, /slevy) — centering a narrower list under that heading read as
    misaligned. Not applied on /faq: there .faq-list is the only content under
    a centered .page-header, so the centering matches its surroundings. */
-.wide-faq-list {
-  max-width: none;
-  margin: 0;
-}
 .faq-group { display: flex; flex-direction: column; gap: 10px; }
 .faq-group-title {
   font-size: 11px;
@@ -9284,8 +9268,7 @@ body {
   left: 0; top: 3px; bottom: 3px;
   width: 4px;
   border-radius: 3px;
-  background: var(--gradient-ember);
-  box-shadow: 0 0 14px rgba(242,125,141,0.45);
+  background: var(--color-coral);
 }
 .blog-detail-content h2:first-child { margin-top: 0; }
 .blog-detail-content p { margin-bottom: 20px; }

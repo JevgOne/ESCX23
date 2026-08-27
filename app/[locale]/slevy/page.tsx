@@ -240,10 +240,10 @@ export default async function SlevyPage({
           <HowToUse locale={locale} />
 
           <div style={{ marginTop: '48px' }}>
-            <h2 className="section-h2" style={{ fontSize: '28px', marginBottom: '16px' }}>
+            <h2 className="section-h2 faq-section-title" style={{ fontSize: '28px', marginBottom: '16px' }}>
               {FAQ_HEADING[locale] ?? FAQ_HEADING.en}
             </h2>
-            <div className="faq-list wide-faq-list">
+            <div className="faq-list">
               {faqItems.map((f, i) => (
                 <details key={i} className="faq-item">
                   <summary>{f.q}</summary>

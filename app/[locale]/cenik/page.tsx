@@ -271,10 +271,10 @@ export default async function CenikPage({
           <PricingNotes locale={locale} />
 
           <div style={{ marginTop: '64px' }}>
-            <h2 className="section-h2" style={{ fontSize: '28px', marginBottom: '16px' }}>
+            <h2 className="section-h2 faq-section-title" style={{ fontSize: '28px', marginBottom: '16px' }}>
               {faqBundle.heading}
             </h2>
-            <div className="faq-list wide-faq-list" style={{ marginBottom: '20px' }}>
+            <div className="faq-list" style={{ marginBottom: '20px' }}>
               {faqBundle.items.map((f, i) => (
                 <details key={i} className="faq-item">
                   <summary>{f.q}</summary>
