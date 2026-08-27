@@ -1,3 +1,5 @@
+import { getHashtagById } from '@/lib/hashtags';
+import { localePrefix } from '@/lib/seo/meta';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -322,9 +324,22 @@ export default async function BlogDetailPage({ params }: Props) {
           {post.tags.length > 0 && (
             <div className="blog-detail-tags">
               {post.tags.map((tag) => {
-                const tagPrefix = locale === 'en' ? '' : `/${locale}`;
+                // Blog tags and girl hashtags are separate taxonomies. Linking
+                // every tag to /hashtag/<slug> sent readers to 404s for tags
+                // like "pruvodce" or "apartmany" that have no hashtag behind
+                // them, so only the ones that really exist become links.
+                const hashtag = getHashtagById(tag.slug);
+                if (!hashtag) {
+                  return <span key={tag.slug} className="blog-tag blog-tag-hero">{tag.name}</span>;
+                }
                 return (
-                  <a key={tag.slug} href={`${tagPrefix}/hashtag/${tag.slug}`} className="blog-tag blog-tag-hero">{tag.name}</a>
+                  <a
+                    key={tag.slug}
+                    href={`${localePrefix(locale)}/hashtag/${tag.slug}`}
+                    className="blog-tag blog-tag-hero"
+                  >
+                    {tag.name}
+                  </a>
                 );
               })}
             </div>

@@ -76,7 +76,10 @@ function buildLocalizedHref(canonicalKey: string, params: Record<string, string>
     result = result.replace(`[${name}]`, val);
   }
   const prefix = targetLocale === routing.defaultLocale ? '' : `/${targetLocale}`;
-  return (prefix + result) || '/';
+  // routing.pathnames['/'] is '/', so the homepage came out as '/cs/' — a
+  // trailing slash that only 308s to '/cs', on every page that renders this.
+  const path = result === '/' ? '' : result;
+  return (prefix + path) || '/';
 }
 
 /** The blog is written in Czech and English only — /de/blog and /uk/blog just

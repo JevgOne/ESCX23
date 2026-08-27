@@ -1,3 +1,4 @@
+import { localePrefix } from '@/lib/seo/meta';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import NextLink from 'next/link';
@@ -30,7 +31,7 @@ export default async function ActivityFeed({ locale }: ActivityFeedProps) {
             {items.map((item, i) => {
               if (item.kind === 'apartment_review') {
                 return (
-                  <NextLink key={i} href={`/${locale}/pobocka/${item.locationSlug ?? ''}`} className="activity-item">
+                  <NextLink key={i} href={`${localePrefix(locale)}/pobocka/${item.locationSlug ?? ''}`} className="activity-item">
                     <div className="activity-avatar activity-avatar-apt">🏠</div>
                     <div className="activity-icon">🏠</div>
                     <div className="activity-text">

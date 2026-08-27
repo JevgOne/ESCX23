@@ -1,3 +1,4 @@
+import { localePrefix } from '@/lib/seo/meta';
 import { Link } from '@/i18n/navigation';
 import NextLink from 'next/link';
 import type { ServiceRow } from '@/lib/queries';
@@ -308,7 +309,7 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
         )}
         {locLabel && (
           scheduleLocationSlug ? (
-            <a href={`/${locale}/pobocka/${scheduleLocationSlug}`}>📍 {locLabel}</a>
+            <a href={`${localePrefix(locale)}/pobocka/${scheduleLocationSlug}`}>📍 {locLabel}</a>
           ) : (
             <span>📍 {locLabel}</span>
           )

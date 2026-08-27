@@ -61,6 +61,15 @@ function localizedPath(locale: string, path: string): string {
   return path;
 }
 
+/**
+ * URL prefix for a locale — empty for the default (EN is prefix-free).
+ * Hardcoding `/${locale}/…` produced /en/pobocka/praha-2 on English pages,
+ * which only 307s back to /pobocka/praha-2 and wastes a hop on every link.
+ */
+export function localePrefix(locale: string): string {
+  return LOCALE_PREFIXES[locale] ?? `/${locale}`;
+}
+
 export function getCanonicalUrl(locale: string, path: string): string {
   const prefix = LOCALE_PREFIXES[locale] ?? `/${locale}`;
   const lPath = localizedPath(locale, path);

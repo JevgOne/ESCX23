@@ -1,3 +1,4 @@
+import { localePrefix } from '@/lib/seo/meta';
 import { photoUrl } from '@/lib/photoUrl';
 import { translateLocation } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
@@ -258,7 +259,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
                 <circle cx="12" cy="10" r="3" />
               </svg>
               {scheduleLocationSlug ? (
-                <a href={`/${locale}/pobocka/${scheduleLocationSlug}`}>{locLabel}</a>
+                <a href={`${localePrefix(locale)}/pobocka/${scheduleLocationSlug}`}>{locLabel}</a>
               ) : (
                 <span>{locLabel}</span>
               )}

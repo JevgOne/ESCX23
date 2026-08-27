@@ -1,3 +1,4 @@
+import { localePrefix } from '@/lib/seo/meta';
 import { getActiveLocations } from '@/lib/queries';
 import { pragueDateISO } from '@/lib/utils';
 
@@ -50,7 +51,7 @@ export default async function MobileBottomBar({ locale }: MobileBottomBarProps) 
           {locations.map((loc) => (
             <a
               key={loc.id}
-              href={`/${locale}/pobocka/${loc.name}`}
+              href={`${localePrefix(locale)}/pobocka/${loc.name}`}
               className="mbb-dropdown-item"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

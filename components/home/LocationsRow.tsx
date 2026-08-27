@@ -1,3 +1,4 @@
+import { localePrefix } from '@/lib/seo/meta';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { getActiveLocations } from '@/lib/queries';
@@ -49,7 +50,7 @@ export default async function LocationsRow({ locale }: LocationsRowProps) {
             return (
               <Link
                 key={loc.id}
-                href={`/${locale}/pobocka/${loc.name}`}
+                href={`${localePrefix(locale)}/pobocka/${loc.name}`}
                 className={`loc-row-card${loc.isPrimary ? ' loc-row-primary' : ''}${isPreparing ? ' loc-row-preparing' : ''}`}
               >
                 <div className="loc-row-pin">
