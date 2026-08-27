@@ -4835,8 +4835,7 @@ html.lightbox-active .profile-sticky-bar-desktop {
   height: 280%;
   transform: translate(-50%, -50%);
   background:
-    radial-gradient(ellipse 55% 70% at 50% 45%, rgba(242,125,141,0.48) 0%, transparent 68%),
-    radial-gradient(ellipse 35% 50% at 65% 35%, rgba(232,165,77,0.28) 0%, transparent 68%);
+    radial-gradient(ellipse 55% 70% at 50% 45%, rgba(242,125,141,0.34) 0%, transparent 68%);
   filter: blur(34px);
   z-index: -1;
   pointer-events: none;
