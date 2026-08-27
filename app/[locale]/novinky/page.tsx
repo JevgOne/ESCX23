@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Link } from '@/i18n/navigation';
 import NextLink from 'next/link';
 import { applyDBOverride } from '@/lib/seo/db-override';
-import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
+import { getCanonicalUrl, getAlternates, ogLocale, localeHref } from '@/lib/seo/meta';
 import { buildOgImages } from '@/lib/seo/og';
 import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import { getRecentActivity } from '@/lib/queries';
@@ -190,7 +190,7 @@ export default async function NovinkyPage({ params, searchParams }: Props) {
 
                 if (isApt) {
                   return (
-                    <NextLink key={i} href={`/${locale}/pobocka/${item.locationSlug ?? ''}`} className="news-card-link">
+                    <NextLink key={i} href={localeHref(locale, `/pobocka/${item.locationSlug ?? ''}`)} className="news-card-link">
                       {content}
                     </NextLink>
                   );

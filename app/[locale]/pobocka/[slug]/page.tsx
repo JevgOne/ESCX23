@@ -781,7 +781,7 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
             <h2 className="pobocka-others-h2">{L.othersH}</h2>
             <div className="pobocka-others-grid">
               {others.map((o) => (
-                <Link key={o.id} href={`/${locale}/pobocka/${o.name}`} className="pobocka-other-card">
+                <Link key={o.id} href={localeHref(locale, `/pobocka/${o.name}`)} className="pobocka-other-card">
                   <span className="pobocka-other-icon">🏠</span>
                   <div>
                     <div className="pobocka-other-name">{o.displayName}</div>

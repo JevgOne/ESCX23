@@ -1,0 +1,74 @@
+# Runs the SEO audit against production so a regression is caught by the
+# schedule rather than by someone noticing it in Search Console weeks later.
+#
+# The canonical/hreflang breakage this guards against was found by accident:
+# every service page pointed its alternates at URLs that did not exist, and
+# nothing complained. This complains.
+name: SEO audit
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'      # Monday 06:00 UTC
+  workflow_dispatch:          # and on demand from the Actions tab
+  push:
+    branches: [main]
+    paths:
+      - 'lib/seo/**'
+      - 'i18n/routing.ts'
+      - 'app/sitemap.ts'
+      - 'next.config.ts'
+      - 'components/LanguageSwitcher.tsx'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # On a push, give Vercel time to finish deploying what we just merged,
+      # otherwise the audit reads the previous build and reports stale results.
+      - name: Wait for deploy
+        if: github.event_name == 'push'
+        run: sleep 120
+
+      - name: Run audit
+        id: audit
+        run: node scripts/audit-seo.mjs --json findings.json | tee audit.log
+
+      - name: Upload findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-findings
+          path: |
+            findings.json
+            audit.log
+
+      # Fail on the categories that mean Google is being sent somewhere wrong.
+      # Over-long titles are cosmetic and tracked separately, so they do not
+      # break the build.
+      - name: Fail on broken signals
+        run: |
+          node -e "
+            const f = require('./findings.json');
+            const blocking = [
+              'sitemap-not-200', 'noindex-in-sitemap',
+              'canonical-missing', 'canonical-malformed', 'canonical-off-domain',
+              'canonical-not-200', 'canonical-not-self',
+              'hreflang-not-200', 'hreflang-off-domain', 'hreflang-malformed',
+              'hreflang-no-x-default',
+              'link-broken', 'jsonld-invalid', 'unreachable',
+            ];
+            const hits = f.filter(x => blocking.includes(x.kind));
+            if (hits.length === 0) { console.log('OK — žádné blokující nálezy'); process.exit(0); }
+            const byKind = {};
+            for (const h of hits) (byKind[h.kind] ??= []).push(h);
+            for (const [k, list] of Object.entries(byKind)) {
+              console.error(k + ' — ' + list.length + '×');
+              for (const h of list.slice(0, 5)) console.error('   ' + h.url + '\n       ' + h.detail);
+            }
+            process.exit(1);
+          "
