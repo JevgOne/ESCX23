@@ -4977,11 +4977,10 @@ html.lightbox-active .profile-sticky-bar-desktop {
 
 .program-card-popular {
   background:
-    linear-gradient(180deg, rgba(242,125,141,0.12) 0%, rgba(200,75,139,0.05) 100%),
+    linear-gradient(180deg, rgba(242,125,141,0.07) 0%, rgba(200,75,139,0.03) 100%),
     rgba(28,12,20,0.85);
-  border-color: rgba(242,125,141,0.45);
-  box-shadow: 0 24px 60px -20px rgba(242,125,141,0.35),
-              0 0 0 1px rgba(242,125,141,0.25);
+  border-color: rgba(242,125,141,0.32);
+  box-shadow: 0 18px 44px -24px rgba(242,125,141,0.18);
   transform: translateY(-6px);
   z-index: 2;
 }
@@ -5133,11 +5132,11 @@ html.lightbox-active .profile-sticky-bar-desktop {
   background: var(--gradient-ember);
   border-color: transparent;
   color: #fff;
-  box-shadow: 0 8px 20px -6px rgba(242,125,141,0.55);
+  box-shadow: 0 6px 16px -8px rgba(242,125,141,0.32);
 }
 .program-card-popular .program-card-cta:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 26px -6px rgba(242,125,141,0.65);
+  box-shadow: 0 10px 22px -8px rgba(242,125,141,0.42);
 }
 
 /* =========================================================
@@ -5212,7 +5211,7 @@ html.lightbox-active .profile-sticky-bar-desktop {
 .experience-flow-step-peak .experience-flow-icon {
   background: var(--gradient-ember);
   border-color: transparent;
-  box-shadow: 0 0 20px rgba(242,125,141,0.55);
+  box-shadow: 0 0 12px rgba(242,125,141,0.28);
 }
 .experience-flow-step-peak .experience-flow-pulse {
   background: linear-gradient(135deg, rgba(242,125,141,0.2), rgba(232,165,77,0.14));
@@ -5220,7 +5219,7 @@ html.lightbox-active .profile-sticky-bar-desktop {
 }
 .experience-flow-step-peak .experience-flow-pulse-num {
   color: #ffb199;
-  text-shadow: 0 0 12px rgba(242,125,141,0.6);
+  text-shadow: 0 0 8px rgba(242,125,141,0.3);
 }
 .experience-flow-step-peak .experience-flow-text { color: var(--color-text); }
 @media (max-width: 420px) {
