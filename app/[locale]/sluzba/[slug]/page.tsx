@@ -37,7 +37,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const ogImages = await buildOgImages(`sluzba-${slug}`, locale, routePath, title);
 
     return applyDBOverride(`/${locale}/sluzba/${slug}`, {
-      title,
+      // absolute: seo_title already ends in "| LovelyGirls", and the root
+      // template appends "· LovelyGirls" to anything that is not absolute.
+      title: { absolute: title },
       description,
       alternates: {
         canonical,

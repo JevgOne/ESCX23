@@ -50,7 +50,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : languages[postLocales[0]];
 
   return applyDBOverride(`/${locale}/blog/${slug}`, {
-    title: `${post.title} — ${brand}`,
+    // The post titles run to 100+ characters on their own; adding the brand
+    // and then letting the root template add it again pushed them past 130,
+    // where Google shows barely half. Brand only when there is room for it.
+    title: {
+      absolute: post.title.length <= 45 ? `${post.title} — ${brand}` : post.title,
+    },
     description,
     keywords: post.tags.map((t) => t.name).join(', ') || undefined,
     authors: [{ name: post.author }],

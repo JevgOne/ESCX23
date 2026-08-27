@@ -118,7 +118,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const primaryPhotoUrl = primaryPhoto?.url ? photoUrlOriginal(String(primaryPhoto.url)) : null;
 
   return applyDBOverride(`/${locale}/profil/${slug}`, {
-    title: localizedTitle,
+    // Same double-brand as the service pages: the girls' meta titles already
+    // end in "| LovelyGirls" and the root template appended it again.
+    title: { absolute: localizedTitle },
     description: metaDesc,
     alternates: {
       canonical,
