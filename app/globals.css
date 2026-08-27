@@ -5203,6 +5203,12 @@ html.lightbox-active .profile-sticky-bar-desktop {
   color: var(--color-text-dim);
   margin-top: 2px;
 }
+.experience-flow-step-title {
+  display: block;
+  color: var(--color-text);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
 .experience-flow-text {
   font-size: 14.5px;
   line-height: 1.6;

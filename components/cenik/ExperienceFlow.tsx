@@ -1,6 +1,6 @@
 interface Step {
   icon: string;
-  pulse: number;
+  title: string;
   text: string;
 }
 
@@ -9,48 +9,45 @@ interface FlowText {
   steps: Step[];
 }
 
+/** The site's own three steps, worded as on the homepage, with the payment
+ *  detail added — on a pricing page that is the part people are unsure about. */
 const T: Record<string, FlowText> = {
   cs: {
-    title: 'Jak probíhá setkání',
+    title: '3 kroky k diskrétnímu setkání',
     steps: [
-      { icon: '🥂', pulse: 75, text: 'Přivítání v soukromém apartmánu — sklenka na uvolnění a chvíle na sebe.' },
-      { icon: '🚿', pulse: 90, text: 'Společná sprcha, čas na sblížení, žádný spěch.' },
-      { icon: '🔥', pulse: 130, text: 'Masáž a blízkost naplno, v tempu, které vám sedí.' },
-      { icon: '🌙', pulse: 80, text: 'Klidné doznění a rozloučení bez spěchu.' },
+      { icon: '👀', title: 'Vyberte si společnici', text: 'Prohlédněte profily, fotografie a aktuální dostupnost.' },
+      { icon: '💬', title: 'Napište nám', text: 'Pošlete zprávu přes WhatsApp nebo Telegram — odpovídáme do 5 minut.' },
+      { icon: '🔑', title: 'Užijte si setkání', text: 'Obdržíte adresu apartmánu a přijdete v dohodnutý čas. Platíte až na místě, hotově.' },
     ],
   },
   en: {
-    title: 'How a visit unfolds',
+    title: '3 steps to a discreet meeting',
     steps: [
-      { icon: '🥂', pulse: 75, text: 'A private welcome in the apartment — a drink to unwind and settle in.' },
-      { icon: '🚿', pulse: 90, text: 'A shared shower, time to connect, no rush at all.' },
-      { icon: '🔥', pulse: 130, text: 'Massage and closeness, at whatever pace feels right.' },
-      { icon: '🌙', pulse: 80, text: 'A calm ending, a goodbye without hurry.' },
+      { icon: '👀', title: 'Pick a companion', text: 'Browse profiles, photos and live availability.' },
+      { icon: '💬', title: 'Message us', text: 'Send a message on WhatsApp or Telegram — we reply within 5 minutes.' },
+      { icon: '🔑', title: 'Enjoy the meeting', text: 'You get the apartment address and arrive at the agreed time. You pay on site, in cash.' },
     ],
   },
   de: {
-    title: 'So läuft ein Besuch ab',
+    title: '3 Schritte zum diskreten Treffen',
     steps: [
-      { icon: '🥂', pulse: 75, text: 'Private Begrüßung im Apartment — ein Drink zum Ankommen.' },
-      { icon: '🚿', pulse: 90, text: 'Gemeinsame Dusche, Zeit zum Näherkommen, ganz ohne Eile.' },
-      { icon: '🔥', pulse: 130, text: 'Massage und Nähe, in Ihrem eigenen Tempo.' },
-      { icon: '🌙', pulse: 80, text: 'Ruhiger Ausklang, ein Abschied ohne Eile.' },
+      { icon: '👀', title: 'Begleiterin wählen', text: 'Profile, Fotos und Live-Verfügbarkeit ansehen.' },
+      { icon: '💬', title: 'Nachricht senden', text: 'Schreiben Sie via WhatsApp oder Telegram — Antwort innerhalb von 5 Minuten.' },
+      { icon: '🔑', title: 'Treffen genießen', text: 'Sie erhalten die Adresse und kommen zum vereinbarten Termin. Bezahlt wird vor Ort, in bar.' },
     ],
   },
   uk: {
-    title: 'Як проходить зустріч',
+    title: '3 кроки до дискретної зустрічі',
     steps: [
-      { icon: '🥂', pulse: 75, text: 'Приватне вітання в апартаменті — напій для розслаблення.' },
-      { icon: '🚿', pulse: 90, text: 'Спільний душ, час для зближення, без поспіху.' },
-      { icon: '🔥', pulse: 130, text: 'Масаж і близькість у зручному для вас темпі.' },
-      { icon: '🌙', pulse: 80, text: 'Спокійне завершення, прощання без поспіху.' },
+      { icon: '👀', title: 'Оберіть супутницю', text: 'Перегляньте профілі, фото та поточну доступність.' },
+      { icon: '💬', title: 'Напишіть нам', text: 'Надішліть повідомлення у WhatsApp або Telegram — відповімо за 5 хвилин.' },
+      { icon: '🔑', title: 'Насолоджуйтесь зустріччю', text: 'Отримаєте адресу апартаменту та прийдете у домовлений час. Оплата на місці, готівкою.' },
     ],
   },
 };
 
 export default function ExperienceFlow({ locale = 'cs' }: { locale?: string }) {
   const t = T[locale] ?? T.en;
-  const peak = Math.max(...t.steps.map((s) => s.pulse));
 
   return (
     <div className="experience-flow-wrap">
@@ -59,14 +56,16 @@ export default function ExperienceFlow({ locale = 'cs' }: { locale?: string }) {
         {t.steps.map((step, i) => (
           <div
             key={i}
-            className={`experience-flow-step${step.pulse === peak ? ' experience-flow-step-peak' : ''}`}
+            className={`experience-flow-step${i === t.steps.length - 1 ? ' experience-flow-step-peak' : ''}`}
           >
             <div className="experience-flow-icon">{step.icon}</div>
             <div className="experience-flow-pulse">
-              <span className="experience-flow-pulse-num">{step.pulse}</span>
-              <span className="experience-flow-pulse-unit">bpm</span>
+              <span className="experience-flow-pulse-num">{i + 1}</span>
             </div>
-            <div className="experience-flow-text">{step.text}</div>
+            <div className="experience-flow-text">
+              <strong className="experience-flow-step-title">{step.title}</strong>
+              {step.text}
+            </div>
           </div>
         ))}
       </div>
