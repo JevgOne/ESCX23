@@ -1,3 +1,5 @@
+import { routing } from '@/i18n/routing';
+
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
 
 const LOCALE_PREFIXES: Record<string, string> = {
@@ -8,32 +10,52 @@ const LOCALE_PREFIXES: Record<string, string> = {
 };
 
 /**
- * Localized path mappings from i18n/routing.ts.
- * Key = internal (cs) path, value = { locale: localized path }.
- * Paths not listed here are the same across all locales.
+ * Localised path segments, derived from i18n/routing.ts.
+ *
+ * This used to be a hand-written copy of that table and had fallen behind it:
+ * /sluzba, /profil, /pobocka, /hashtag, /faq and /blog were all missing, so
+ * localizedPath() returned the Czech slug unchanged for them. Every service
+ * page therefore advertised hreflang alternates at /sluzba/bdsm,
+ * /de/sluzba/bdsm and /uk/sluzba/bdsm — none of which exist — and canonicals
+ * pointed at the same dead URLs. Deriving it means the two can no longer drift.
  */
-const LOCALIZED_PATHS: Record<string, Record<string, string>> = {
-  '/divky': { en: '/girls', cs: '/divky', de: '/maedchen', uk: '/divchata' },
-  '/cenik': { en: '/pricing', cs: '/cenik', de: '/preise', uk: '/tsiny' },
-  '/rozvrh': { en: '/schedule', cs: '/rozvrh', de: '/zeitplan', uk: '/rozklad' },
-  '/slevy': { en: '/discounts', cs: '/slevy', de: '/rabatte', uk: '/znyzhky' },
-  '/recenze': { en: '/reviews', cs: '/recenze', de: '/rezensionen', uk: '/vidhuky' },
-  '/kontakt': { en: '/contact', cs: '/kontakt', de: '/kontakt', uk: '/kontakt' },
-  '/o-nas': { en: '/about', cs: '/o-nas', de: '/ueber-uns', uk: '/pro-nas' },
-  '/podminky': { en: '/terms', cs: '/podminky', de: '/agb', uk: '/umovy' },
-  '/soukromi': { en: '/privacy', cs: '/soukromi', de: '/datenschutz', uk: '/konfidentsiinist' },
-};
+const LOCALIZED_PATHS: Record<string, Record<string, string>> = (() => {
+  const stripParam = (p: string) => p.replace(/\/\[[^\]]+\]$/, '');
+  const out: Record<string, Record<string, string>> = {};
+
+  for (const [internal, value] of Object.entries(routing.pathnames)) {
+    const key = stripParam(internal);
+    if (!key || key === '/') continue;
+
+    if (typeof value === 'string') {
+      const v = stripParam(value);
+      out[key] = { en: v, cs: v, de: v, uk: v };
+      continue;
+    }
+    const perLocale: Record<string, string> = {};
+    for (const [loc, localised] of Object.entries(value as Record<string, string>)) {
+      perLocale[loc] = stripParam(localised);
+    }
+    out[key] = perLocale;
+  }
+  return out;
+})();
+
+/** Longest prefix first, so /clenstvi/zadost never swallows a longer sibling. */
+const LOCALIZED_PREFIXES = Object.entries(LOCALIZED_PATHS).sort(
+  (a, b) => b[0].length - a[0].length,
+);
 
 function localizedPath(locale: string, path: string): string {
   if (path === '/' || path === '') return '';
-  const mapping = LOCALIZED_PATHS[path];
-  if (mapping) return mapping[locale] ?? path;
-  // For paths with slugs like /sluzba/69 — check prefix
-  for (const [prefix, localeMap] of Object.entries(LOCALIZED_PATHS)) {
+
+  const exact = LOCALIZED_PATHS[path];
+  if (exact) return exact[locale] ?? path;
+
+  // Paths carrying a slug, e.g. /sluzba/bdsm or /profil/luna.
+  for (const [prefix, localeMap] of LOCALIZED_PREFIXES) {
     if (path.startsWith(prefix + '/')) {
-      const suffix = path.slice(prefix.length);
-      const localizedPrefix = localeMap[locale] ?? prefix;
-      return localizedPrefix + suffix;
+      return (localeMap[locale] ?? prefix) + path.slice(prefix.length);
     }
   }
   return path;
