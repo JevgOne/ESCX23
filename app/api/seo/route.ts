@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 // GET /api/seo - Get all SEO metadata (with optional filters) (ADMIN ONLY)
 export async function GET(request: NextRequest) {
@@ -183,6 +183,9 @@ export async function POST(request: NextRequest) {
       // Revalidate the page to clear Next.js cache
       try {
         revalidatePath(page_path, 'page');
+        // getCachedSEOMetadata is an unstable_cache keyed by the 'seo' tag; without
+        // this the edit only shows up when its hour-long window expires.
+        revalidateTag('seo', 'max');
         console.log('[SEO API] Revalidated path:', page_path);
       } catch (revalidateError) {
         console.error('[SEO API] Error revalidating path:', revalidateError);
@@ -242,6 +245,9 @@ export async function POST(request: NextRequest) {
       // Revalidate the page to clear Next.js cache
       try {
         revalidatePath(page_path, 'page');
+        // getCachedSEOMetadata is an unstable_cache keyed by the 'seo' tag; without
+        // this the edit only shows up when its hour-long window expires.
+        revalidateTag('seo', 'max');
         console.log('[SEO API] Revalidated path:', page_path);
       } catch (revalidateError) {
         console.error('[SEO API] Error revalidating path:', revalidateError);
@@ -293,6 +299,7 @@ export async function DELETE(request: NextRequest) {
     // Revalidate the page to clear Next.js cache
     try {
       revalidatePath(pagePath, 'page');
+      revalidateTag('seo', 'max');
       console.log('[SEO API] Revalidated path after deletion:', pagePath);
     } catch (revalidateError) {
       console.error('[SEO API] Error revalidating path:', revalidateError);
