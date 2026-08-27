@@ -79,6 +79,17 @@ function buildLocalizedHref(canonicalKey: string, params: Record<string, string>
   return (prefix + result) || '/';
 }
 
+/** The blog is written in Czech and English only — /de/blog and /uk/blog just
+ *  redirect to the English listing. Offering those flags here would promise a
+ *  translation that does not exist, so on blog pages the switcher shows cs+en. */
+const BLOG_LOCALES: Locale[] = ['en', 'cs'];
+function localesFor(canonicalKey: string): readonly Locale[] {
+  if (canonicalKey === '/blog' || canonicalKey.startsWith('/blog/')) {
+    return routing.locales.filter((l) => BLOG_LOCALES.includes(l));
+  }
+  return routing.locales;
+}
+
 export default async function LanguageSwitcher({ currentLocale }: Props) {
   const hdrs = await headers();
   const pathname = hdrs.get('x-pathname') ?? hdrs.get('next-url') ?? '/';
@@ -96,7 +107,7 @@ export default async function LanguageSwitcher({ currentLocale }: Props) {
         </svg>
       </summary>
       <div className="lang-switcher-menu" role="menu">
-        {routing.locales.map((loc) => {
+        {localesFor(canonicalKey).map((loc) => {
           const isActive = loc === currentLocale;
           const href = buildLocalizedHref(canonicalKey, params, loc);
           return (
