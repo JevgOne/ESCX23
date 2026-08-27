@@ -117,7 +117,6 @@ export default async function HomePage({
       />
       <p data-geo-lead className="sr-only">{t('home_lead', { count: companionsCount })}</p>
       <Hero locale={locale} />
-      <HomeIntro locale={locale} />
       <StoriesRow locale={locale} />
       <FeaturedNew locale={locale} />
       <GirlsGridSection locale={locale} />
@@ -128,6 +127,7 @@ export default async function HomePage({
       <LocationsRow locale={locale} />
       <QuickLinks locale={locale} />
       <ContactSteps locale={locale} />
+      <HomeIntro locale={locale} />
       <FinalCta locale={locale} />
     </main>
   );

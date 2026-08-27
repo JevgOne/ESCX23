@@ -4,7 +4,7 @@ import { getSiteFacts, districtList } from '@/lib/site-facts';
 import { verifiedCompanions } from '@/lib/plural';
 
 /**
- * A block of prose under the hero.
+ * The one connected passage on a page that is otherwise all cards.
  *
  * The homepage says plenty, but almost all of it is inside cards and UI — a
  * crawler sees "Prague", "companions" and "verified" scattered across widgets
@@ -29,24 +29,15 @@ export default async function HomeIntro({ locale }: { locale: string }) {
         <>
           <p>
             LovelyGirls is a Prague escort agency with {companions} and three private
-            apartments of its own in the centre of the city. Every profile is verified in
-            person: the photographs are of the woman who opens the door, and the services
-            listed on her page are the services she offers. Nothing is negotiated on the
-            doorstep.
+            apartments of its own — {districts}. Every profile is verified in person: the
+            photographs are of the woman who opens the door. We work incall only, and who is
+            working today is on the <Link href="/rozvrh">schedule</Link>.
           </p>
           <p>
-            We work incall only — you come to us, never the other way round. The apartments
-            are in {districts}, each with a private entrance, its own bathroom and a street
-            where nobody pays attention to who comes or goes. Which companions are working
-            today, and in which apartment, is on the{' '}
-            <Link href="/rozvrh">schedule</Link>, updated every morning.
-          </p>
-          <p>
-            Prices depend on time, not on services: programmes run from 30 to 120 minutes
-            and are the same for every companion, with the apartment and a shower included.
-            The full list is on the <Link href="/cenik">pricing page</Link>, and the{' '}
-            <Link href="/faq">FAQ</Link> answers what people usually ask before booking.
-            Cash on arrival, no card, no hidden fees.
+            Prices depend on time, not on services — 30 to 120 minutes, the same for every
+            companion, apartment and shower included. See the{' '}
+            <Link href="/cenik">pricing</Link> or the <Link href="/faq">FAQ</Link>. Cash on
+            arrival, no hidden fees.
           </p>
         </>
       ),
@@ -58,21 +49,15 @@ export default async function HomeIntro({ locale }: { locale: string }) {
         <>
           <p>
             LovelyGirls je pražská escort agentura — {companions} a tři vlastní privátní
-            apartmány v centru. Každý profil ověřujeme osobně: na fotkách je ta žena, která
-            vám otevře, a služby v profilu jsou služby, které skutečně nabízí. Na místě se
-            nic nedomlouvá.
+            apartmány: {districts}. Každý profil ověřujeme osobně, na fotkách je ta žena,
+            která vám otevře. Pracujeme výhradně formou incall a kdo dnes pracuje, najdete
+            v <Link href="/rozvrh">rozvrhu</Link>.
           </p>
           <p>
-            Pracujeme výhradně formou incall — přijedete k nám, nikdy naopak. Apartmány jsou
-            v {districts}, každý s vlastním vchodem, koupelnou a v ulici, kde nikdo neřeší,
-            kdo přichází a odchází. Kdo dnes pracuje a ve kterém apartmánu, najdete v{' '}
-            <Link href="/rozvrh">rozvrhu</Link>, který aktualizujeme každé ráno.
-          </p>
-          <p>
-            Platí se za čas, ne za služby: programy od 30 do 120 minut, jednotné pro všechny
-            společnice, v ceně apartmán i sprcha. Kompletní přehled je v{' '}
-            <Link href="/cenik">ceníku</Link> a na časté dotazy odpovídáme ve{' '}
-            <Link href="/faq">FAQ</Link>. Hotově na místě, bez karet a bez příplatků.
+            Platí se za čas, ne za služby — 30 až 120 minut, jednotně pro všechny
+            společnice, v ceně apartmán i sprcha. Podrobnosti v{' '}
+            <Link href="/cenik">ceníku</Link> nebo ve <Link href="/faq">FAQ</Link>. Hotově
+            na místě, bez příplatků.
           </p>
         </>
       ),
@@ -87,12 +72,6 @@ export default async function HomeIntro({ locale }: { locale: string }) {
             privaten Apartments im Zentrum. Jedes Profil wird persönlich verifiziert: Auf den
             Fotos ist die Frau, die Ihnen die Tür öffnet, und die aufgeführten Leistungen sind
             die, die sie anbietet. An der Tür wird nichts verhandelt.
-          </p>
-          <p>
-            Wir arbeiten ausschließlich als Incall — Sie kommen zu uns, nie umgekehrt. Die
-            Apartments liegen in {districts}, jedes mit eigenem Eingang und eigenem Bad. Wer
-            heute arbeitet und in welchem Apartment, steht im{' '}
-            <Link href="/rozvrh">Zeitplan</Link>, täglich aktualisiert.
           </p>
           <p>
             Bezahlt wird die Zeit, nicht die Leistung: Programme von 30 bis 120 Minuten, für
@@ -116,12 +95,6 @@ export default async function HomeIntro({ locale }: { locale: string }) {
             місці нічого не узгоджується.
           </p>
           <p>
-            Працюємо виключно як incall — ви приїжджаєте до нас, ніколи навпаки. Апартаменти
-            розташовані в {districts}, кожні з власним входом і ванною кімнатою. Хто працює
-            сьогодні й у яких апартаментах — у <Link href="/rozvrh">графіку</Link>, який
-            оновлюємо щоранку.
-          </p>
-          <p>
             Платите за час, а не за послуги: програми від 30 до 120 хвилин, однакові для всіх
             супутниць, апартаменти й душ включені. Повний{' '}
             <Link href="/cenik">цінник</Link> і відповіді на{' '}
@@ -137,22 +110,27 @@ export default async function HomeIntro({ locale }: { locale: string }) {
 
   return (
     <section className="home-intro">
-      <div className="container">
-        <h2>{c.h2}</h2>
-        {c.body}
+      <div className="container home-intro-inner">
+        <div className="home-intro-head">
+          <span className="home-intro-eyebrow">LovelyGirls</span>
+          <h2>{c.h2}</h2>
+        </div>
+        <div className="home-intro-body">{c.body}</div>
         {facts.apartments.length > 0 && (
-          <p className="home-intro-links">
-            <span className="home-intro-links-label">{c.more}:</span>
-            {facts.apartments.map((a) => (
-              <Link
-                key={a.slug}
-                href={localeHref(locale, `/pobocka/${a.slug}`) as '/'}
-                className="home-intro-chip"
-              >
-                {a.district && a.district !== a.name ? `${a.name} (${a.district})` : a.name}
-              </Link>
-            ))}
-          </p>
+          <div className="home-intro-links">
+            <span className="home-intro-links-label">{c.more}</span>
+            <div className="home-intro-chips">
+              {facts.apartments.map((a) => (
+                <Link
+                  key={a.slug}
+                  href={localeHref(locale, `/pobocka/${a.slug}`) as '/'}
+                  className="home-intro-chip"
+                >
+                  {a.district && a.district !== a.name ? `${a.name} (${a.district})` : a.name}
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </section>
