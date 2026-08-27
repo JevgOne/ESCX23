@@ -150,16 +150,58 @@ export function formatOpeningDate(dateStr: string, locale: string): string {
   return `${day}.${month}.`;
 }
 
-export function relativeTime(date: Date | string): string {
+/**
+ * "3 days ago" in the reader's language.
+ *
+ * This used to return Czech unconditionally, so the English homepage showed
+ * "a 5★ review včera" next to English copy — and the Czech was wrong too:
+ * a single `před ${n} týdny` gave "před 1 týdny" instead of "před 1 týdnem".
+ * Czech needs three forms (1 / 2–4 / 5+), so the units are spelled out.
+ */
+type Unit = 'today' | 'yesterday' | 'day' | 'week' | 'month';
+
+const RELATIVE: Record<string, Record<Unit, (n: number) => string>> = {
+  cs: {
+    today: () => 'dnes',
+    yesterday: () => 'včera',
+    day: (n) => `před ${n} ${n < 5 ? 'dny' : 'dny'}`,
+    week: (n) => `před ${n} ${n === 1 ? 'týdnem' : n < 5 ? 'týdny' : 'týdny'}`,
+    month: (n) => `před ${n} ${n === 1 ? 'měsícem' : n < 5 ? 'měsíci' : 'měsíci'}`,
+  },
+  en: {
+    today: () => 'today',
+    yesterday: () => 'yesterday',
+    day: (n) => `${n} days ago`,
+    week: (n) => `${n} ${n === 1 ? 'week' : 'weeks'} ago`,
+    month: (n) => `${n} ${n === 1 ? 'month' : 'months'} ago`,
+  },
+  de: {
+    today: () => 'heute',
+    yesterday: () => 'gestern',
+    day: (n) => `vor ${n} Tagen`,
+    week: (n) => `vor ${n} ${n === 1 ? 'Woche' : 'Wochen'}`,
+    month: (n) => `vor ${n} ${n === 1 ? 'Monat' : 'Monaten'}`,
+  },
+  uk: {
+    today: () => 'сьогодні',
+    yesterday: () => 'вчора',
+    day: (n) => `${n} дн. тому`,
+    week: (n) => `${n} тиж. тому`,
+    month: (n) => `${n} міс. тому`,
+  },
+};
+
+export function relativeTime(date: Date | string, locale: string = 'cs'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const diffMs = Date.now() - d.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const L = RELATIVE[locale] ?? RELATIVE.cs;
 
-  if (diffDays < 1) return 'dnes';
-  if (diffDays === 1) return 'včera';
-  if (diffDays < 7) return `před ${diffDays} dny`;
+  if (diffDays < 1) return L.today(0);
+  if (diffDays === 1) return L.yesterday(1);
+  if (diffDays < 7) return L.day(diffDays);
   const diffWeeks = Math.floor(diffDays / 7);
-  if (diffWeeks < 5) return `před ${diffWeeks} týdny`;
-  const diffMonths = Math.floor(diffDays / 30);
-  return `před ${diffMonths} měsíci`;
+  if (diffWeeks < 5) return L.week(diffWeeks);
+  return L.month(Math.floor(diffDays / 30));
 }
+

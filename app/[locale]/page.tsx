@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import Hero from '@/components/home/Hero';
+import HomeIntro from '@/components/home/HomeIntro';
 import StoriesRow from '@/components/home/StoriesRow';
 import FeaturedNew from '@/components/home/FeaturedNew';
 import GirlsGridSection from '@/components/home/GirlsGridSection';
@@ -116,6 +117,7 @@ export default async function HomePage({
       />
       <p data-geo-lead className="sr-only">{t('home_lead', { count: companionsCount })}</p>
       <Hero locale={locale} />
+      <HomeIntro locale={locale} />
       <StoriesRow locale={locale} />
       <FeaturedNew locale={locale} />
       <GirlsGridSection locale={locale} />

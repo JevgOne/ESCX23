@@ -37,7 +37,7 @@ export default async function ActivityFeed({ locale }: ActivityFeedProps) {
                     <div className="activity-text">
                       {t('apartment_review', { location: item.locationName ?? '' })}
                     </div>
-                    <div className="activity-time">{relativeTime(item.when)}</div>
+                    <div className="activity-time">{relativeTime(item.when, locale)}</div>
                   </NextLink>
                 );
               }
@@ -64,7 +64,7 @@ export default async function ActivityFeed({ locale }: ActivityFeedProps) {
                           ? t('updated_profile')
                           : t('received_review', { rating: item.rating ?? 5 })}
                   </div>
-                  <div className="activity-time">{relativeTime(item.when)}</div>
+                  <div className="activity-time">{relativeTime(item.when, locale)}</div>
                 </Link>
               );
             })}

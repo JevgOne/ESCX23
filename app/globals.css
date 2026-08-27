@@ -8127,6 +8127,71 @@ body {
   }
 }
 
+/* ===== HOMEPAGE INTRO =====
+   The one connected passage on a page that is otherwise all cards. Sits under
+   the hero, sets the container's reading width rather than the grid width. */
+.home-intro {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 8px 24px 44px;
+}
+.home-intro h2 {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+.home-intro p {
+  max-width: 74ch;
+  font-size: 15.5px;
+  line-height: 1.8;
+  color: var(--color-text-muted);
+  margin: 0 0 14px;
+}
+.home-intro a {
+  color: var(--color-coral);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(242, 125, 141, 0.4);
+}
+.home-intro a:hover { text-decoration-color: var(--color-coral); }
+
+.home-intro-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+.home-intro-links-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+  margin-right: 2px;
+}
+.home-intro-chip {
+  padding: 7px 14px;
+  border: 1px solid var(--color-line-mid);
+  border-radius: var(--pill-radius);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-decoration: none !important;
+  transition: border-color 0.15s, color 0.15s;
+}
+.home-intro-chip:hover {
+  border-color: var(--color-coral);
+  color: var(--color-text);
+}
+@media (max-width: 700px) {
+  .home-intro { padding: 4px 16px 34px; }
+  .home-intro p { font-size: 15px; line-height: 1.75; }
+}
+
 /* ===== ADMIN LISTS — cards on phones =====
    Reservations is a 7-column table. Sideways scrolling is not a phone layout,
    so below 820px each booking becomes a card and the table steps aside. The

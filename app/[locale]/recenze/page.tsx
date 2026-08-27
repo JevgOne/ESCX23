@@ -256,7 +256,7 @@ export default async function RecenzePage({
                         </Link>
                         <div className="rev-item-meta">
                           {review.clientNickname && <span className="rev-item-author">{review.clientNickname}</span>}
-                          <span className="rev-item-date">{relativeTime(review.createdAt)}</span>
+                          <span className="rev-item-date">{relativeTime(review.createdAt, locale)}</span>
                         </div>
                       </div>
                       <div className="rev-item-rating">
@@ -291,7 +291,7 @@ export default async function RecenzePage({
                           )}
                           <span className="rev-reply-name">{review.girlName}</span>
                           {review.replyAt && (
-                            <span className="rev-reply-date">{relativeTime(review.replyAt)}</span>
+                            <span className="rev-reply-date">{relativeTime(review.replyAt, locale)}</span>
                           )}
                         </div>
                         <p className="rev-reply-text">{review.reply}</p>
