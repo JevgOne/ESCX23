@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
-import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
+import { getCanonicalUrl, getAlternates, ogLocale, localeHref } from '@/lib/seo/meta';
 import { buildOgImages } from '@/lib/seo/og';
 import { getServiceBySlug, getRelatedServices, getGirlsForService } from '@/lib/queries';
 import { Link } from '@/i18n/navigation';
@@ -164,7 +164,7 @@ export default async function ServicePage({ params }: Props) {
       />
       <Breadcrumbs
         items={[
-          { label: servicesLabel, href: `/${locale}/cenik` },
+          { label: servicesLabel, href: localeHref(locale, "/cenik") },
           { label: name },
         ]}
         locale={locale}

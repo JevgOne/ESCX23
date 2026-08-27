@@ -205,7 +205,7 @@ export default async function HashtagPage({ params }: Props) {
 
       <Breadcrumbs
         items={[
-          { label: girlsLabel, href: `/${locale}/divky` },
+          { label: girlsLabel, href: localeHref(locale, "/divky") },
           { label: `#${title}` },
         ]}
         locale={locale}

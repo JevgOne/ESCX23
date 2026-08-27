@@ -272,7 +272,7 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
     : locale === 'uk' ? 'відгуків'
     : 'reviews';
 
-  const hashtagPath = `/${locale}/hashtag`;
+  const hashtagPath = localeHref(locale, '/hashtag');
 
   return (
     <div className="profile-info-col">

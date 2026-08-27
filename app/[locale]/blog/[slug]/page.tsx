@@ -1,5 +1,5 @@
 import { getHashtagById } from '@/lib/hashtags';
-import { localePrefix } from '@/lib/seo/meta';
+import { localePrefix, localeHref } from '@/lib/seo/meta';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -311,7 +311,7 @@ export default async function BlogDetailPage({ params }: Props) {
       )}
       <Breadcrumbs
         items={[
-          { label: t('h1'), href: `/${locale}/blog` },
+          { label: t('h1'), href: localeHref(locale, "/blog") },
           { label: post.title },
         ]}
         locale={locale}

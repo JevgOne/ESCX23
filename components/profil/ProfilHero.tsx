@@ -522,7 +522,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
       {(() => {
         const profileSegment = locale === 'en' ? 'profile' : 'profil';
         const photoHref = `/${locale}/${profileSegment}/${slug}`;
-        const videoHref = `/${locale}/${profileSegment}/${slug}?media=video`;
+        const videoHref = localeHref(locale, `/profil/${slug}`) + '?media=video';
         return (
           <div className="media-tabs">
             <a

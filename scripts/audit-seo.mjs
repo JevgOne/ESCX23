@@ -20,12 +20,14 @@
  *   node scripts/audit-seo.mjs                 # whole sitemap
  *   node scripts/audit-seo.mjs --limit 40      # first 40 URLs
  *   node scripts/audit-seo.mjs --filter sluzba # only URLs containing "sluzba"
+ *   node scripts/audit-seo.mjs --json out.json  # every finding, for grouping
  */
 const BASE = process.env.SITE ?? 'https://www.lovelygirls.cz';
 const HOST = new URL(BASE).host;
 const args = process.argv.slice(2);
 const limit = args.includes('--limit') ? Number(args[args.indexOf('--limit') + 1]) : Infinity;
 const filter = args.includes('--filter') ? args[args.indexOf('--filter') + 1] : null;
+const jsonOut = args.includes('--json') ? args[args.indexOf('--json') + 1] : null;
 const CONCURRENCY = 6;
 
 const headCache = new Map();
@@ -242,6 +244,12 @@ async function main() {
   for (const p of found) {
     if (!byKind.has(p.kind)) byKind.set(p.kind, []);
     byKind.get(p.kind).push(p);
+  }
+
+  if (jsonOut) {
+    const { writeFileSync } = await import('node:fs');
+    writeFileSync(jsonOut, JSON.stringify(found, null, 2));
+    process.stdout.write(`\nVšech ${found.length} nálezů zapsáno do ${jsonOut}\n`);
   }
 
   if (found.length === 0) {

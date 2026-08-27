@@ -19,7 +19,7 @@ import {
 import { photoUrl, photoUrlOriginal } from '@/lib/photoUrl';
 import { getCurrentUser } from '@/lib/auth';
 import { profilePersonJsonLd, breadcrumbListJsonLd } from '@/lib/seo/jsonld';
-import { getProfileCanonical, getProfileAlternates, ogLocale } from '@/lib/seo/meta';
+import { getProfileCanonical, getProfileAlternates, ogLocale, localeHref } from '@/lib/seo/meta';
 import ProfilHero from '@/components/profil/ProfilHero';
 import ProfilDetails from '@/components/profil/ProfilDetails';
 import ProfilGallery from '@/components/profil/ProfilGallery';
@@ -331,7 +331,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
       />
       <Breadcrumbs
         items={[
-          { label: girlsLabel, href: `/${locale}/divky` },
+          { label: girlsLabel, href: localeHref(locale, "/divky") },
           { label: String(girl.name ?? '') },
         ]}
         locale={locale}
