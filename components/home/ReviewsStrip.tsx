@@ -80,7 +80,7 @@ export default async function ReviewsStrip({ locale }: ReviewsStripProps) {
                     </Link>
                     <div className="rev-card-meta">
                       <span className="rev-card-reviewer">{reviewByLabel} <strong>{reviewerName}</strong></span>
-                      <span> · {relativeTime(review.createdAt)}</span>
+                      <span> · {relativeTime(review.createdAt, locale)}</span>
                     </div>
                   </div>
                   <div className="rev-card-stars">

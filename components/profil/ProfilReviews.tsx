@@ -220,7 +220,7 @@ export default function ProfilReviews({
                         <span className="rev-card-verified" title={L.verified}>✓</span>
                       </div>
                       <div className="rev-card-meta">
-                        {review.created_at ? relativeTime(String(review.created_at)) : ''}
+                        {review.created_at ? relativeTime(String(review.created_at), locale) : ''}
                       </div>
                     </div>
                     <div className="rev-card-stars">
@@ -237,7 +237,7 @@ export default function ProfilReviews({
                         )}
                         <span className="rev-reply-name">{girlName}</span>
                         {String(review.reply_at ?? '') !== '' && (
-                          <span className="rev-reply-date">{relativeTime(String(review.reply_at))}</span>
+                          <span className="rev-reply-date">{relativeTime(String(review.reply_at), locale)}</span>
                         )}
                       </div>
                       <p className="rev-reply-text">{String(review.reply)}</p>
