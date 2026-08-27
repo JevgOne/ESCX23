@@ -1,3 +1,4 @@
+import { localePrefix } from '@/lib/seo/meta';
 import Link from 'next/link';
 
 interface Crumb {
@@ -24,7 +25,7 @@ export default function Breadcrumbs({ items, locale = 'cs' }: Props) {
       <div className="container breadcrumbs-inner">
         <ol className="breadcrumbs-list">
           <li className="breadcrumb-item">
-            <Link href={`/${locale}`} className="breadcrumb-link">{homeLabel}</Link>
+            <Link href={localePrefix(locale) || '/'} className="breadcrumb-link">{homeLabel}</Link>
           </li>
           {items.map((it, i) => {
             const isLast = i === items.length - 1;

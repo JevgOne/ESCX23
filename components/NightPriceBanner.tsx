@@ -1,3 +1,4 @@
+import { Link } from '@/i18n/navigation';
 const T: Record<string, { text: string; link: string }> = {
   cs: {
     text: 'V nočních hodinách (23:00–07:00) platí zvýšené ceny.',
@@ -28,9 +29,9 @@ export default function NightPriceBanner({ locale }: { locale: string }) {
         <p className="night-banner-msg">
           {L.text}
           {' '}
-          <a href={`/${locale}/cenik`} className="night-banner-cta">
+          <Link href="/cenik" className="night-banner-cta">
             {L.link} →
-          </a>
+          </Link>
         </p>
       </div>
     </div>

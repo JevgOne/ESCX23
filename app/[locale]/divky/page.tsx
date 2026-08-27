@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { Link } from '@/i18n/navigation';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getGirlsForListing, getTopServicesForFilter, getActivePricingPlans } from '@/lib/queries';
 import { getSiteFacts, districtList } from '@/lib/site-facts';
@@ -216,9 +217,12 @@ export default async function DivkyPage({ params, searchParams }: Props) {
                   ? ` ${locale === 'cs' ? 'Nejkratší program' : locale === 'de' ? 'Kürzestes Programm' : locale === 'uk' ? 'Найкоротша програма' : 'The shortest program is'} ${cheapest.duration} ${locale === 'en' ? 'min' : 'min'} — ${cheapest.price.toLocaleString(locale === 'en' ? 'en-US' : 'cs-CZ')} ${locale === 'cs' ? 'Kč' : 'CZK'}.`
                   : ''}
               </p>
-              <a href={`${locale === 'en' ? '' : `/${locale}`}${blk.href}`} className="seo-content-more">
+              {/* Localised Link, not a hand-built href: /cenik on an English
+                  page only 307s to /pricing, and this block renders on every
+                  locale of the listing. */}
+              <Link href={blk.href as '/cenik'} className="seo-content-more">
                 {blk.cta} →
-              </a>
+              </Link>
             </div>
           ))}
         </div>
