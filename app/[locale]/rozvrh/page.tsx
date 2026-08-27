@@ -16,10 +16,11 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const TITLES: Record<string, string> = {
-  cs: 'Rozvrh společnic dnes — Kdo je k dispozici | LovelyGirls Praha',
-  en: 'Companion Schedule Today — Who\'s Available | LovelyGirls Prague',
-  de: 'Zeitplan Begleiterinnen heute — Verfügbarkeit | LovelyGirls Prag',
-  uk: 'Розклад супутниць сьогодні — Хто доступний | LovelyGirls Прага',
+  // The layout template appends " · LovelyGirls" — don't spell the brand twice.
+  cs: 'Rozvrh společnic dnes — Kdo je k dispozici',
+  en: 'Companion Schedule Today — Who\'s Available',
+  de: 'Zeitplan Begleiterinnen heute — Verfügbarkeit',
+  uk: 'Розклад супутниць сьогодні — Хто доступний',
 };
 
 const DESCRIPTIONS: Record<string, string> = {
@@ -106,7 +107,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return applyDBOverride(`/${locale}/rozvrh`, {
     title: TITLES[locale] ?? TITLES.en,
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.en,
-    robots: { index: true, follow: false },
+    robots: { index: true, follow: true },
     alternates: {
       canonical,
       languages: {

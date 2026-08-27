@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const ogImages = await buildOgImages('novinky', locale, '/novinky', t('h1'));
 
   return applyDBOverride(`/${locale}/novinky`, {
-    title: t('h1') + ' | LovelyGirls',
+    title: t('h1'),
     description: t('lead'),
     alternates: {
       canonical,

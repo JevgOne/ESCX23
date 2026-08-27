@@ -57,7 +57,7 @@ function discountCopy(discounts: DiscountRow[], locale: string) {
 
   if (items.length === 0) {
     return {
-      title: `${label} — ${brand}`,
+      title: label,
       description: NO_DISCOUNTS[locale] ?? NO_DISCOUNTS.en,
       geoLead: NO_DISCOUNTS[locale] ?? NO_DISCOUNTS.en,
       items,
@@ -65,7 +65,7 @@ function discountCopy(discounts: DiscountRow[], locale: string) {
   }
 
   const short = (i: { name: string; amount: string }) => (i.amount ? `${i.name} ${i.amount}` : i.name);
-  const title = `${label} — ${items.slice(0, 2).map(short).join(', ')} | ${brand}`;
+  const title = `${label} — ${items.slice(0, 2).map(short).join(', ')}`;
   const listed = items.map(short).join(', ');
   const intro: Record<string, string> = {
     cs: `Aktuální slevy u ${brand}: ${listed}. Slevu stačí zmínit při domluvě přes WhatsApp nebo telefon.`,
