@@ -12,11 +12,14 @@ import TranslateButton from '@/components/ui/TranslateButton';
 
 export const dynamic = 'force-dynamic';
 
+// Kept under ~65 characters, which is roughly where Google truncates. These
+// are emitted absolute — the root template would otherwise append the brand a
+// second time on top of the one already here.
 const TITLES: Record<string, string> = {
-  cs: 'Recenze klientů — Zkušenosti se společnicemi | LovelyGirls Praha',
-  en: 'Client Reviews — Companion Experiences | LovelyGirls Prague',
-  de: 'Kundenbewertungen — Erfahrungen mit Begleiterinnen | LovelyGirls Prag',
-  uk: 'Відгуки клієнтів — Досвід з супутницями | LovelyGirls Прага',
+  cs: 'Recenze klientů — zkušenosti se společnicemi | LovelyGirls',
+  en: 'Client Reviews — Companion Experiences | LovelyGirls',
+  de: 'Kundenbewertungen — Begleiterinnen in Prag | LovelyGirls',
+  uk: 'Відгуки клієнтів — досвід із супутницями | LovelyGirls',
 };
 
 const DESCRIPTIONS: Record<string, string> = {
@@ -119,7 +122,7 @@ export async function generateMetadata({
   const ogImages = await buildOgImages('recenze', locale, '/recenze', TITLES[locale] ?? TITLES.cs);
 
   return applyDBOverride(localeHref(locale, "/recenze"), {
-    title: TITLES[locale] ?? TITLES.cs,
+    title: { absolute: TITLES[locale] ?? TITLES.cs },
     description: DESCRIPTIONS[locale] ?? DESCRIPTIONS.cs,
     alternates: {
       canonical,
