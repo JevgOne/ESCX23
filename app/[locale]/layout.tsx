@@ -125,12 +125,12 @@ export default async function LocaleLayout({
       <head>
         <link rel="preconnect" href="https://qktyf1ozcve7804i.public.blob.vercel-storage.com" />
         <link rel="dns-prefetch" href="https://qktyf1ozcve7804i.public.blob.vercel-storage.com" />
+        {!isProtectedArea && <AhrefsAnalytics />}
       </head>
       <body>
         <Suspense fallback={null}>
           <GoogleAnalytics />
         </Suspense>
-        {!isProtectedArea && <AhrefsAnalytics />}
         <NextIntlClientProvider>
           {!isProtectedArea && <AgeGate />}
           {!isProtectedArea && isNightHours && <NightPriceBanner locale={locale} />}
