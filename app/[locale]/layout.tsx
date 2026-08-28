@@ -13,6 +13,7 @@ import MobileBottomBar from '@/components/layout/MobileBottomBar';
 import AgeGate from '@/components/AgeGate';
 import NightPriceBanner from '@/components/NightPriceBanner';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import AhrefsAnalytics from '@/components/AhrefsAnalytics';
 import { Suspense } from 'react';
 import '../globals.css';
 
@@ -129,6 +130,7 @@ export default async function LocaleLayout({
         <Suspense fallback={null}>
           <GoogleAnalytics />
         </Suspense>
+        {!isProtectedArea && <AhrefsAnalytics />}
         <NextIntlClientProvider>
           {!isProtectedArea && <AgeGate />}
           {!isProtectedArea && isNightHours && <NightPriceBanner locale={locale} />}
