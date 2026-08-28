@@ -113,6 +113,9 @@ export default async function AgeGate() {
 
   const hdrs = await headers();
   const ua = (hdrs.get('user-agent') ?? '').toLowerCase();
+  // The page carries its own path into the action; see setAgeVerified for why
+  // the Referer header is not good enough.
+  const returnTo = hdrs.get('x-pathname') ?? hdrs.get('next-url') ?? '/';
   if (BOT_PATTERNS.some((p) => ua.includes(p))) return null;
 
   const locale = await getLocale();
@@ -144,6 +147,7 @@ export default async function AgeGate() {
           </div>
           <div className="age-gate-buttons">
             <form action={setAgeVerified}>
+              <input type="hidden" name="returnTo" value={returnTo} />
               <button type="submit" className="btn btn-pink age-gate-confirm">
                 {L.enter}
               </button>
