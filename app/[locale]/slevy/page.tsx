@@ -1,8 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
-// Only reads `discounts`, which changes when someone toggles one in the admin
-// — and that route already calls revalidatePath('/cs/slevy'), so the cache is
-// dropped on save rather than waited out.
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getActiveDiscounts } from '@/lib/queries';
