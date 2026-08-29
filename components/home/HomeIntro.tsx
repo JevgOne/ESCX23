@@ -123,7 +123,9 @@ export default async function HomeIntro({ locale }: { locale: string }) {
               {facts.apartments.map((a) => (
                 <Link
                   key={a.slug}
-                  href={localeHref(locale, `/pobocka/${a.slug}`) as '/'}
+                  // The i18n Link adds the locale prefix itself; localeHref would
+                // add a second one and produce /cs/cs/pobocka/praha-2.
+                href={`/pobocka/${a.slug}` as '/'}
                   className="home-intro-chip"
                 >
                   {a.district && a.district !== a.name ? `${a.name} (${a.district})` : a.name}
