@@ -10,8 +10,11 @@ import GirlCardGrid from '@/components/girl/GirlCardGrid';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// The page renders one row from `services` and nothing live — no schedule, no
+// status pill. It was regenerating on every request for all 136 of its URLs,
+// each one a round trip to the database. An hour is plenty; the admin route
+// revalidates the path on save.
+export const revalidate = 3600;
 
 interface Props {
   params: Promise<{ locale: string; slug: string }>;

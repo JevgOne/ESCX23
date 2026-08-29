@@ -1,4 +1,8 @@
 import { setRequestLocale } from 'next-intl/server';
+// Only reads `discounts`, which changes when someone toggles one in the admin
+// — and that route already calls revalidatePath('/cs/slevy'), so the cache is
+// dropped on save rather than waited out.
+export const revalidate = 3600;
 import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import { getActiveDiscounts } from '@/lib/queries';
@@ -9,7 +13,6 @@ import LoyaltyExplainer from '@/components/slevy/LoyaltyExplainer';
 import HowToUse from '@/components/slevy/HowToUse';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
-export const dynamic = 'force-dynamic';
 
 type DiscountRow = Record<string, unknown>;
 
