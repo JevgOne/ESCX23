@@ -1,4 +1,5 @@
 import { db } from './db';
+import { unstable_cache } from 'next/cache';
 import { pragueDateISO, pragueDayOfWeek, formatPragueTime, isWithinShift, isBeforeShift, isShiftEnded, displayTime, classifyShift, type ShiftCategory } from './utils';
 
 /* =========================================================
@@ -346,7 +347,7 @@ export async function wasGirlSlugRemoved(slug: string): Promise<boolean> {
 }
 
 /** Aktivní pricing plans (programy 30/45/60/90/120 min). */
-export async function getActivePricingPlans() {
+async function getActivePricingPlans_uncached() {
   const result = await db.execute(
     `SELECT id, duration, price, night_price, is_popular, title_cs, title_en, title_de, title_uk
      FROM pricing_plans WHERE is_active = 1
@@ -356,7 +357,7 @@ export async function getActivePricingPlans() {
 }
 
 /** Aktivní slevy. */
-export async function getActiveDiscounts() {
+async function getActiveDiscounts_uncached() {
   const result = await db.execute(
     `SELECT * FROM discounts WHERE is_active = 1 ORDER BY display_order ASC`
   );
@@ -364,7 +365,7 @@ export async function getActiveDiscounts() {
 }
 
 /** FAQ položky. */
-export async function getFaqItems() {
+async function getFaqItems_uncached() {
   const result = await db.execute(
     `SELECT * FROM faq_items WHERE is_active = 1 ORDER BY display_order ASC`
   );
@@ -837,7 +838,7 @@ export async function getLocationBySlug(slug: string, locale = 'cs') {
   };
 }
 
-export async function getActiveLocations(): Promise<Location[]> {
+async function getActiveLocations_uncached(): Promise<Location[]> {
   const result = await db.execute(
     `SELECT * FROM locations WHERE is_active = 1 ORDER BY is_primary DESC, id ASC`
   );
@@ -1765,7 +1766,7 @@ export async function getAllServices(): Promise<ServiceRow[]> {
   }));
 }
 
-export async function getServiceBySlug(slug: string): Promise<ServiceRow | null> {
+async function getServiceBySlug_uncached(slug: string): Promise<ServiceRow | null> {
   const result = await db.execute({
     sql: `SELECT * FROM services WHERE slug = ? LIMIT 1`,
     args: [slug],
@@ -2864,3 +2865,27 @@ export async function getPendingApartmentReviews(statusFilter?: string): Promise
   });
 }
 
+
+/* ============================================================
+   Cached reads
+
+   Every page on this site renders dynamically — the age gate reads a cookie in
+   the root layout, which opts the whole tree out of static rendering — so the
+   `revalidate` values on individual pages never applied. Until the gate is
+   restructured, the way to stop paying for a database round trip on every
+   request is to cache at this layer instead.
+
+   These are the slow-moving reads. Each carries a tag so an admin save can
+   drop it immediately rather than waiting the window out.
+============================================================ */
+
+export const getActiveLocations = unstable_cache(getActiveLocations_uncached, ['getActiveLocations'], { revalidate: 3600, tags: ['locations'] });
+
+export const getActivePricingPlans = unstable_cache(getActivePricingPlans_uncached, ['getActivePricingPlans'], { revalidate: 3600, tags: ['pricing'] });
+
+export const getActiveDiscounts = unstable_cache(getActiveDiscounts_uncached, ['getActiveDiscounts'], { revalidate: 300, tags: ['discounts'] });
+
+export const getFaqItems = unstable_cache(getFaqItems_uncached, ['getFaqItems'], { revalidate: 3600, tags: ['faq'] });
+
+export const getServiceBySlug = (slug: string) =>
+  unstable_cache(getServiceBySlug_uncached, ['getServiceBySlug'], { revalidate: 3600, tags: ['services'] })(slug);

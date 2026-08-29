@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { put } from '@vercel/blob';
@@ -764,6 +764,7 @@ export async function updatePricingPlan(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
+  revalidateTag('pricing', 'max');
   await adminRedirect('/admin/cenik');
 }
 
@@ -791,6 +792,7 @@ export async function createPricingPlan(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
+  revalidateTag('pricing', 'max');
   await adminRedirect('/admin/cenik');
 }
 
@@ -803,6 +805,7 @@ export async function deletePricingPlan(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
+  revalidateTag('pricing', 'max');
   await adminRedirect('/admin/cenik');
 }
 
@@ -826,6 +829,7 @@ export async function createPricingExtra(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
+  revalidateTag('pricing', 'max');
   await adminRedirect('/admin/cenik');
 }
 
@@ -851,6 +855,7 @@ export async function updatePricingExtra(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
+  revalidateTag('pricing', 'max');
   await adminRedirect('/admin/cenik');
 }
 
@@ -863,6 +868,7 @@ export async function deletePricingExtra(formData: FormData) {
 
   revalidatePath('/cs/admin/cenik');
   revalidatePath('/cs/cenik');
+  revalidateTag('pricing', 'max');
   await adminRedirect('/admin/cenik');
 }
 
@@ -894,6 +900,7 @@ export async function createSleva(formData: FormData) {
 
   revalidatePath('/cs/admin/slevy');
   revalidatePath('/cs/slevy');
+  revalidateTag('discounts', 'max');
   await adminRedirect('/admin/slevy');
 }
 
@@ -928,6 +935,7 @@ export async function updateSleva(formData: FormData) {
 
   revalidatePath('/cs/admin/slevy');
   revalidatePath('/cs/slevy');
+  revalidateTag('discounts', 'max');
   await adminRedirect('/admin/slevy');
 }
 
@@ -940,6 +948,7 @@ export async function deleteSleva(formData: FormData) {
 
   revalidatePath('/cs/admin/slevy');
   revalidatePath('/cs/slevy');
+  revalidateTag('discounts', 'max');
   await adminRedirect('/admin/slevy');
 }
 
@@ -969,6 +978,7 @@ export async function createFaq(formData: FormData) {
 
   revalidatePath('/cs/admin/faq');
   revalidatePath('/cs/faq');
+  revalidateTag('faq', 'max');
   await adminRedirect('/admin/faq');
 }
 
@@ -1000,6 +1010,7 @@ export async function updateFaq(formData: FormData) {
 
   revalidatePath('/cs/admin/faq');
   revalidatePath('/cs/faq');
+  revalidateTag('faq', 'max');
   await adminRedirect('/admin/faq');
 }
 
@@ -1012,6 +1023,7 @@ export async function deleteFaq(formData: FormData) {
 
   revalidatePath('/cs/admin/faq');
   revalidatePath('/cs/faq');
+  revalidateTag('faq', 'max');
   await adminRedirect('/admin/faq');
 }
 
