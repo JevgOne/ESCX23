@@ -1,4 +1,6 @@
-import { headers } from 'next/headers';
+'use client';
+
+import { usePathname } from 'next/navigation';
 import { routing, type Locale } from '@/i18n/routing';
 
 interface Props {
@@ -93,9 +95,8 @@ function localesFor(canonicalKey: string): readonly Locale[] {
   return routing.locales;
 }
 
-export default async function LanguageSwitcher({ currentLocale }: Props) {
-  const hdrs = await headers();
-  const pathname = hdrs.get('x-pathname') ?? hdrs.get('next-url') ?? '/';
+export default function LanguageSwitcher({ currentLocale }: Props) {
+  const pathname = usePathname();
   const stripped = stripLocale(pathname);
   const { key: canonicalKey, params } = findCanonicalKey(stripped);
   const activeLoc = currentLocale as Locale;
