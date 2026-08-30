@@ -13,17 +13,21 @@ export default function middleware(request: NextRequest) {
     return response;
   }
 
-  // Set x-pathname on REQUEST headers so Server Components can read it via headers()
+  // Set x-pathname on request headers so Server Components can read it via headers()
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-pathname', pathname);
 
-  const result = NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+  // Check if next-intl did a rewrite (e.g. /pricing → /en/cenik)
+  const rewriteUrl = response.headers.get('x-middleware-rewrite');
+
+  const result = rewriteUrl
+    ? NextResponse.rewrite(new URL(rewriteUrl), { request: { headers: requestHeaders } })
+    : NextResponse.next({ request: { headers: requestHeaders } });
 
   // Preserve next-intl's response headers (cookies for locale, etc.)
   response.headers.forEach((value, key) => {
-    if (key.toLowerCase() !== 'x-middleware-next') {
+    const lower = key.toLowerCase();
+    if (lower !== 'x-middleware-rewrite' && lower !== 'x-middleware-next') {
       result.headers.set(key, value);
     }
   });
