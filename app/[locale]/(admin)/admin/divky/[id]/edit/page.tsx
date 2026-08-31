@@ -4,6 +4,7 @@ import { getGirlById, getGirlServices, getAllServices } from '@/lib/queries';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import { updateGirl, archiveGirl, deleteGirl, adminUploadVoice } from '@/lib/admin-actions';
 import { getBasicServices, getExtraServices } from '@/lib/services';
+import UnsavedChangesGuard from '@/components/admin/UnsavedChangesGuard';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -483,7 +484,8 @@ export default async function AdminGirlEditPage({
         </div>
       )}
 
-      <form action={updateGirl} className="gf2-wrap">
+      <form action={updateGirl} className="gf2-wrap" id="girl-edit-form">
+        <UnsavedChangesGuard formId="girl-edit-form" />
         <input type="hidden" name="id" value={g.id} />
 
         {/* SEKCE 1: Základní info */}
@@ -926,7 +928,7 @@ export default async function AdminGirlEditPage({
             <div className="gf2-section-title">Fotky</div>
           </div>
           <div className="gf2-media-links">
-            <a href={`/cs/admin/divky/${g.id}/fotky`} className="gf2-media-btn">
+            <a href={`/cs/admin/divky/${g.id}/fotky`} className="gf2-media-btn" data-nav-away>
               📸 Spravovat fotky →
             </a>
           </div>
@@ -939,7 +941,7 @@ export default async function AdminGirlEditPage({
             <div className="gf2-section-title">Videa</div>
           </div>
           <div className="gf2-media-links">
-            <a href={`/cs/admin/divky/${g.id}/videa`} className="gf2-media-btn">
+            <a href={`/cs/admin/divky/${g.id}/videa`} className="gf2-media-btn" data-nav-away>
               🎬 Spravovat videa →
             </a>
           </div>
