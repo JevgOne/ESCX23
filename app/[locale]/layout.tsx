@@ -133,10 +133,8 @@ export default async function LocaleLayout({
         </Suspense>
         <NextIntlClientProvider>
           {!isProtectedArea && <AgeGate />}
-          <div className="sticky-top-group">
-            {!isProtectedArea && isNightHours && <NightPriceBanner locale={locale} />}
-            <SiteHeader locale={locale} />
-          </div>
+          {!isProtectedArea && isNightHours && <NightPriceBanner locale={locale} />}
+          <SiteHeader locale={locale} />
           {children}
           <SiteFooter />
           {!isProtectedArea && <MobileBottomBar locale={locale} />}
