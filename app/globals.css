@@ -167,8 +167,7 @@ iframe {
 
 /* ===== HEADER ===== */
 header.header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 50;
   background: rgba(12, 10, 14, 0.92);
   backdrop-filter: blur(24px);
@@ -5247,11 +5246,15 @@ html.lightbox-active .profile-sticky-bar-desktop {
 }
 .night-pricing-note p { margin: 0; line-height: 1.5; }
 
-/* Night price banner (top bar during 23:00–07:00) */
-.night-banner {
+/* Sticky wrapper for night banner + header */
+.sticky-top-group {
   position: sticky;
   top: 0;
   z-index: 1100;
+}
+
+/* Night price banner (top bar during 23:00–07:00) */
+.night-banner {
   background: linear-gradient(90deg, #0f0818 0%, #1a0d2e 50%, #0f0818 100%);
   border-bottom: 1px solid rgba(212, 175, 55, 0.15);
   overflow: hidden;
