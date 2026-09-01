@@ -279,6 +279,17 @@ const T: Record<string, PageBundle> = {
   },
 };
 
+function locationAlternates(slug: string): Record<string, string> {
+  const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
+  return {
+    en: `${BASE}/location/${slug}`,
+    cs: `${BASE}/cs/pobocka/${slug}`,
+    de: `${BASE}/de/standort/${slug}`,
+    uk: `${BASE}/uk/lokatsiya/${slug}`,
+    'x-default': `${BASE}/location/${slug}`,
+  };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, locale } = await params;
   const loc = await getLocationBySlug(slug).catch(() => null);
@@ -294,7 +305,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return applyDBOverride(`/${locale}/pobocka/${slug}`, {
     title: M.title(loc.displayName),
     description: desc,
-    alternates: { canonical },
+    alternates: { canonical, languages: locationAlternates(slug) },
     openGraph: {
       title: M.title(loc.displayName),
       description: desc,
