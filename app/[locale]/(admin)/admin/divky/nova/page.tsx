@@ -123,8 +123,6 @@ export default async function AdminNovaDivkaPage({
     weight: app?.weight != null ? String(app.weight) : '',
     bust: app?.bust != null ? String(app.bust) : '',
     bust_natural: app?.bust_natural != null ? String(app.bust_natural) : '1',
-    waist: app?.waist != null ? String(app.waist) : '',
-    hips: app?.hips != null ? String(app.hips) : '',
     hair: app?.hair ?? '',
     eyes: app?.eyes ?? '',
     tattoo_percentage: String(app?.tattoo_percentage ?? (app?.tattoo === 1 ? 10 : 0)),

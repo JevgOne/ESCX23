@@ -51,8 +51,6 @@ export async function updateGirl(formData: FormData) {
     weight: getNum('weight'),
     bust: getStr('bust'),
     bust_natural: formData.get('bust_natural') !== null ? Number(formData.get('bust_natural')) : 1,
-    waist: getNum('waist'),
-    hips: getNum('hips'),
     eyes: getStr('eyes'),
     hair: getStr('hair'),
     tattoo_percentage: formData.get('tattoo_percentage') ? Number(formData.get('tattoo_percentage')) : 0,

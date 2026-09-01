@@ -1166,8 +1166,6 @@ export interface GirlUpdateData {
   weight: number | null;
   bust: string | null;
   bust_natural: number;
-  waist: number | null;
-  hips: number | null;
   eyes: string | null;
   hair: string | null;
   tattoo_percentage: number;
@@ -1222,7 +1220,7 @@ export interface GirlUpdateData {
 export async function updateGirlById(id: number, data: GirlUpdateData): Promise<void> {
   await db.execute({
     sql: `UPDATE girls SET
-      name=?, slug=?, age=?, height=?, weight=?, bust=?, bust_natural=?, waist=?, hips=?,
+      name=?, slug=?, age=?, height=?, weight=?, bust=?, bust_natural=?,
       eyes=?, hair=?, tattoo_percentage=?, tattoo_description=?, piercing=?, piercing_description=?,
       bio=?, status=?, online=?, badge_type=?, ethnicity=?, location=?, nationality=?,
       telegram=?, email=?, phone=?, languages=?,
@@ -1238,7 +1236,7 @@ export async function updateGirlById(id: number, data: GirlUpdateData): Promise<
       updated_at=CURRENT_TIMESTAMP
     WHERE id=?`,
     args: [
-      data.name, data.slug, data.age, data.height, data.weight, data.bust, data.bust_natural, data.waist, data.hips,
+      data.name, data.slug, data.age, data.height, data.weight, data.bust, data.bust_natural,
       data.eyes, data.hair, data.tattoo_percentage, data.tattoo_description, data.piercing, data.piercing_description,
       data.bio, data.status, data.online, data.badge_type, data.ethnicity ?? null, data.location, data.nationality,
       data.telegram, data.email, data.phone, data.languages,

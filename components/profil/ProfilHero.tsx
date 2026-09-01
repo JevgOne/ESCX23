@@ -21,6 +21,7 @@ interface Girl {
   height?: unknown;
   weight?: unknown;
   bust?: unknown;
+  bust_natural?: unknown;
   rating?: unknown;
   reviews_count?: unknown;
   phone?: unknown;
@@ -188,6 +189,11 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
   const height = girl.height != null ? String(girl.height) : null;
   const weight = girl.weight != null ? String(girl.weight) : null;
   const bust = girl.bust != null ? String(girl.bust) : null;
+  const bustNatural = girl.bust_natural;
+  const bustType =
+    bustNatural === 1 ? (locale === 'cs' ? 'přírodní' : locale === 'de' ? 'natürlich' : locale === 'uk' ? 'натуральні' : 'natural')
+    : bustNatural === 0 ? (locale === 'cs' ? 'implantáty' : locale === 'de' ? 'Implantate' : locale === 'uk' ? 'імпланти' : 'implants')
+    : null;
   const phone = girl.phone ? String(girl.phone) : null;
 
   const languages = parseList(girl.languages);
@@ -313,7 +319,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
           {bust && (
             <a href={localeHref(locale, "/divky") + `?bust=${bust}`} className="psd-pill psd-pill-link">
               <span className="psd-label">{locale === 'cs' ? 'Prsa' : locale === 'de' ? 'Brust' : locale === 'uk' ? 'Груди' : 'Bust'}</span>
-              <span className="psd-value">{bust}</span>
+              <span className="psd-value">{bust}{bustType ? ` (${bustType})` : ''}</span>
             </a>
           )}
           {eyesText && (

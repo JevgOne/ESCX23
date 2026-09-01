@@ -23,8 +23,6 @@ export async function submitApplication(formData: FormData) {
     bustNaturalRaw === '1' ? 1
     : bustNaturalRaw === '0' ? 0
     : null;
-  const waist = formData.get('waist') ? Number(formData.get('waist')) : null;
-  const hips = formData.get('hips') ? Number(formData.get('hips')) : null;
   const email = formData.get('email') ? String(formData.get('email')) : null;
   const telegram = formData.get('telegram') ? String(formData.get('telegram')) : null;
   const hair = formData.get('hair') ? String(formData.get('hair')) : null;
@@ -54,12 +52,12 @@ export async function submitApplication(formData: FormData) {
 
   await db.execute({
     sql: `INSERT INTO girl_applications
-      (name, age, height, weight, bust, bust_natural, waist, hips, email, phone, telegram,
+      (name, age, height, weight, bust, bust_natural, email, phone, telegram,
        hair, eyes, tattoo, tattoo_description, tattoo_percentage, piercing, nationality,
        languages, services, availability, bio_cs, bio_en, experience, style_wardrobe, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
     args: [
-      name, age, height, weight, bust, bustNatural, waist, hips,
+      name, age, height, weight, bust, bustNatural,
       email, phone, telegram,
       hair, eyes, tattoo, tattooDescription, tattooPercentage, piercing, nationality,
       languages, services, availability, bio_cs, bio_en, experience, styleWardrobe,

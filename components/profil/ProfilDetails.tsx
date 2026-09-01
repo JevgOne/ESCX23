@@ -345,7 +345,7 @@ export default function ProfilDetails({ girl, locale, labels, shiftFrom, shiftTo
         {girl.bust != null && (
           <a href={localeHref(locale, "/divky") + `?bust=${String(girl.bust)}`} className="psd-pill psd-pill-link">
             <span className="psd-label">{locale === 'cs' ? 'Prsa' : locale === 'de' ? 'Brust' : locale === 'uk' ? 'Груди' : 'Bust'}</span>
-            <span className="psd-value">{String(girl.bust)}</span>
+            <span className="psd-value">{String(girl.bust)}{bustUnit ? ` (${bustUnit})` : ''}</span>
           </a>
         )}
         {girl.eyes != null && String(girl.eyes).trim() !== '' && (

@@ -583,14 +583,6 @@ export default async function AdminGirlEditPage({
               <label className="gf2-label" htmlFor="bust">Prsa (cup)</label>
               <input id="bust" name="bust" type="text" defaultValue={g.bust} placeholder="např. C nebo D" />
             </div>
-            <div className="gf2-field">
-              <label className="gf2-label" htmlFor="waist">Pas (cm)</label>
-              <input id="waist" name="waist" type="number" defaultValue={g.waist} min={50} max={120} placeholder="65" />
-            </div>
-            <div className="gf2-field">
-              <label className="gf2-label" htmlFor="hips">Boky (cm)</label>
-              <input id="hips" name="hips" type="number" defaultValue={g.hips} min={60} max={140} placeholder="92" />
-            </div>
           </div>
 
           <div className="gf2-row">
