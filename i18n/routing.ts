@@ -87,6 +87,12 @@ export const routing = defineRouting({
       de: '/mitgliedschaft/bewerben/gesendet',
       uk: '/chlenstvo/zaiavka/nadislano',
     },
+    '/pobocka/[slug]': {
+      cs: '/pobocka/[slug]',
+      en: '/location/[slug]',
+      de: '/standort/[slug]',
+      uk: '/lokatsiya/[slug]',
+    },
     '/sluzba/[slug]': {
       cs: '/sluzba/[slug]',
       en: '/service/[slug]',

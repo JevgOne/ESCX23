@@ -26,10 +26,10 @@ const PATHS: Record<string, Record<Locale, string>> = {
     uk: '/profil/[slug]',
   },
   '/pobocka/[slug]': {
-    en: '/pobocka/[slug]',
+    en: '/location/[slug]',
     cs: '/pobocka/[slug]',
-    de: '/pobocka/[slug]',
-    uk: '/pobocka/[slug]',
+    de: '/standort/[slug]',
+    uk: '/lokatsiya/[slug]',
   },
   '/sluzba/[slug]': {
     en: '/service/[slug]',
