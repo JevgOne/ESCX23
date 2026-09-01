@@ -192,7 +192,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
   const bustNatural = girl.bust_natural;
   const bustType =
     bustNatural === 1 ? (locale === 'cs' ? 'přírodní' : locale === 'de' ? 'natürlich' : locale === 'uk' ? 'натуральні' : 'natural')
-    : bustNatural === 0 ? (locale === 'cs' ? 'implantáty' : locale === 'de' ? 'Implantate' : locale === 'uk' ? 'імпланти' : 'implants')
+    : bustNatural === 0 ? (locale === 'cs' ? 'silikon' : locale === 'de' ? 'Silikon' : locale === 'uk' ? 'силікон' : 'silicone')
     : null;
   const phone = girl.phone ? String(girl.phone) : null;
 

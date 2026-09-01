@@ -210,7 +210,7 @@ export default async function AdminNovaDivkaPage({
               <label htmlFor="bust_natural">Typ prsou</label>
               <select id="bust_natural" name="bust_natural" defaultValue={defaults.bust_natural}>
                 <option value="1">Přírodní</option>
-                <option value="0">Implantát</option>
+                <option value="0">Silikon</option>
               </select>
             </div>
             <div className="gf2-new-field">

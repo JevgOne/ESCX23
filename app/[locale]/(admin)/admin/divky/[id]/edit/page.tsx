@@ -590,7 +590,7 @@ export default async function AdminGirlEditPage({
               <label className="gf2-label" htmlFor="bust_natural">Typ prsou</label>
               <select id="bust_natural" name="bust_natural" defaultValue={String(g.bust_natural)}>
                 <option value="1">Přírodní</option>
-                <option value="0">Implantát</option>
+                <option value="0">Silikon</option>
               </select>
             </div>
           </div>

@@ -296,7 +296,7 @@ function field(label: string, value: string | number | null | undefined, fmt?: (
 
 function FieldsCard({ app }: { app: ApplicationRow }) {
   const bustNaturalLabel = app.bust_natural === 1 ? 'Přírodní'
-    : app.bust_natural === 0 ? 'Implantát'
+    : app.bust_natural === 0 ? 'Silikon'
     : null;
 
   return (
