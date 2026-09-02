@@ -447,16 +447,10 @@ nav.main-nav a:hover {
   color: #1a1420;
 }
 .girl-tag-pill.new {
-  background: var(--color-magenta);
-}
-.girl-tag-pill.new::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  background: var(--color-coral);
-  border-radius: 50%;
-  box-shadow: 0 0 6px var(--color-coral);
-  animation: pulse-green 2s infinite;
+  background: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  backdrop-filter: blur(8px);
 }
 .girl-tag-pill.top {
   background: rgba(245, 158, 11, 0.18);
