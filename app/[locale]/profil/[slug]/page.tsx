@@ -465,11 +465,11 @@ export default async function ProfilPage({ params, searchParams }: Props) {
       <ProfilStickyCta
         girl={girl as unknown as { name: unknown; age: unknown; phone: unknown; location?: unknown }}
         labels={{ ctaWhatsapp: labels.ctaWhatsapp, ctaTelegram: labels.ctaTelegram, ctaCall: labels.ctaCall }}
-        shiftFrom={schedule.shiftFrom}
-        shiftTo={schedule.shiftTo}
-        shiftStatus={schedule.status}
+        shiftFrom={todaySchedule.shiftFrom}
+        shiftTo={todaySchedule.shiftTo}
+        shiftStatus={todaySchedule.status}
         locale={locale}
-        scheduleLocation={schedule.scheduleLocation}
+        scheduleLocation={todaySchedule.scheduleLocation}
       />
     </main>
   );
