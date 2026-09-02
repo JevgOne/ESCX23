@@ -15433,10 +15433,7 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
     font-size: 16px !important; /* prevent iOS zoom */
   }
 
-  /* Hide mobile bottom bar in admin */
-  .mobile-bottom-bar {
-    display: none !important;
-  }
+  /* Mobile bottom bar is already not rendered on admin pages via layout.tsx */
 }
 /* ----- Extra mobile tweaks (≤480px) ----- */
 @media (max-width: 480px) {
