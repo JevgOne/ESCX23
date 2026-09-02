@@ -16048,7 +16048,7 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
     justify-content: center;
     gap: 4px;
     padding: 6px 4px;
-    color: var(--color-text-muted);
+    color: var(--color-coral);
     text-decoration: none;
     border-radius: 8px;
     transition: color 0.15s, background 0.15s;
