@@ -135,7 +135,6 @@ export default async function HomePage({
       <QuickLinks locale={locale} />
       <ContactSteps locale={locale} />
       <HomeIntro locale={locale} />
-      <HomeFaq locale={locale} />
       <FinalCta locale={locale} />
     </main>
   );

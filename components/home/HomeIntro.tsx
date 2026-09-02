@@ -23,7 +23,7 @@ export default async function HomeIntro({ locale }: { locale: string }) {
 
   const copy: Record<string, { h2: string; body: React.ReactNode; more: string }> = {
     en: {
-      h2: 'Prague Escort Agency — Verified Companions in Private Apartments',
+      h2: 'Escort in Prague, in our own apartments',
       more: 'Where you will meet',
       body: (
         <>
@@ -44,7 +44,7 @@ export default async function HomeIntro({ locale }: { locale: string }) {
       ),
     },
     cs: {
-      h2: 'Escort Praha — Ověřené společnice v privátních apartmánech',
+      h2: 'Escort v Praze, ve vlastních apartmánech',
       more: 'Kde se potkáme',
       body: (
         <>
@@ -65,7 +65,7 @@ export default async function HomeIntro({ locale }: { locale: string }) {
       ),
     },
     de: {
-      h2: 'Escort Prag — Verifizierte Begleiterinnen in privaten Apartments',
+      h2: 'Escort in Prag, in eigenen Apartments',
       more: 'Wo wir uns treffen',
       body: (
         <>
@@ -87,7 +87,7 @@ export default async function HomeIntro({ locale }: { locale: string }) {
       ),
     },
     uk: {
-      h2: 'Ескорт Прага — Перевірені супутниці у приватних апартаментах',
+      h2: 'Ескорт у Празі, у власних апартаментах',
       more: 'Де ми зустрінемось',
       body: (
         <>
