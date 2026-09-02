@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { applyDBOverride } from '@/lib/seo/db-override';
 import Hero from '@/components/home/Hero';
 import HomeIntro from '@/components/home/HomeIntro';
+import HomeFaq, { getHomeFaqItems } from '@/components/home/HomeFaq';
 import StoriesRow from '@/components/home/StoriesRow';
 import FeaturedNew from '@/components/home/FeaturedNew';
 import GirlsGridSection from '@/components/home/GirlsGridSection';
@@ -18,6 +19,7 @@ import {
   homepageLocalBusiness,
   organizationJsonLd,
   websiteJsonLd,
+  faqPageJsonLd,
 } from '@/lib/seo/jsonld';
 import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import { getHomepageStats } from '@/lib/queries';
@@ -100,6 +102,7 @@ export default async function HomePage({
   });
   const orgSchema = organizationJsonLd();
   const websiteSchema = websiteJsonLd(locale);
+  const faqSchema = faqPageJsonLd(getHomeFaqItems(locale), locale);
 
   return (
     <main>
@@ -115,6 +118,10 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <p data-geo-lead className="sr-only">{t('home_lead', { count: companionsCount })}</p>
       <Hero locale={locale} />
       <StoriesRow locale={locale} />
@@ -128,6 +135,7 @@ export default async function HomePage({
       <QuickLinks locale={locale} />
       <ContactSteps locale={locale} />
       <HomeIntro locale={locale} />
+      <HomeFaq locale={locale} />
       <FinalCta locale={locale} />
     </main>
   );

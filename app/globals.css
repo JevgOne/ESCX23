@@ -447,10 +447,11 @@ nav.main-nav a:hover {
   color: #1a1420;
 }
 .girl-tag-pill.new {
-  background: rgba(242, 125, 141, 0.22);
-  color: #f7a0b0;
-  border: 1px solid rgba(242, 125, 141, 0.4);
+  background: rgba(242, 125, 141, 0.45);
+  color: #fff;
+  border: 1px solid rgba(242, 125, 141, 0.6);
   backdrop-filter: blur(8px);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 .girl-tag-pill.top {
   background: rgba(245, 158, 11, 0.18);
@@ -8212,6 +8213,43 @@ body {
   .home-intro-inner { padding: 0 16px; }
   .home-intro-body { columns: 1; }
   .home-intro-links { align-items: flex-start; flex-direction: column; gap: 12px; }
+}
+
+/* ===== HOME FAQ ===== */
+.home-faq {
+  border-top: 1px solid var(--color-line);
+  padding: 48px 0 52px;
+}
+.home-faq-inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--container-pad, 24px);
+}
+.home-faq h2 {
+  font-family: var(--font-display);
+  font-size: clamp(21px, 2.4vw, 27px);
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+.home-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.home-faq-more {
+  margin-top: 18px;
+  text-align: right;
+  font-size: 14px;
+}
+.home-faq-more a {
+  color: var(--color-coral);
+  text-decoration: none;
+  font-weight: 600;
+}
+.home-faq-more a:hover { text-decoration: underline; }
+@media (max-width: 768px) {
+  .home-faq { padding: 38px 0 42px; }
+  .home-faq-inner { padding: 0 16px; }
 }
 
 /* ===== ADMIN LISTS — cards on phones =====

@@ -19,12 +19,6 @@ const PAUSED_LABEL: Record<string, string> = { cs: 'Dočasně nedostupná', en: 
 const LATER_LABEL: Record<string, string> = { cs: 'Později', en: 'Later', de: 'Später', uk: 'Пізніше' };
 const TMRW_LABEL: Record<string, string> = { cs: 'Zítra', en: 'Tmrw', de: 'Morgen', uk: 'Завтра' };
 const TODAY_LABEL: Record<string, string> = { cs: 'Dnes', en: 'Today', de: 'Heute', uk: 'Сьогодні' };
-const STAT_LABELS: Record<string, { height: string; breasts: string; weight: string; age: string }> = {
-  cs: { height: 'Výška', breasts: 'Prsa', weight: 'Váha', age: 'Věk' },
-  en: { height: 'Height', breasts: 'Breasts', weight: 'Weight', age: 'Age' },
-  de: { height: 'Größe', breasts: 'Brust', weight: 'Gewicht', age: 'Alter' },
-  uk: { height: 'Зріст', breasts: 'Груди', weight: 'Вага', age: 'Вік' },
-};
 const ALT_NOUN: Record<string, string> = {
   en: 'escort companion',
   cs: 'společnice',
@@ -78,7 +72,6 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
   const city = CITY[locale] ?? 'Prague';
   const laterLabel = LATER_LABEL[locale] ?? LATER_LABEL.en;
   const todayLabel = TODAY_LABEL[locale] ?? TODAY_LABEL.en;
-  const labels = STAT_LABELS[locale] ?? STAT_LABELS.en;
   const altNoun = ALT_NOUN[locale] ?? ALT_NOUN.en;
   const altText = `${girl.name}, ${girl.age}, ${city} ${altNoun}`;
   const isAway = girl.status === 'later';
@@ -181,24 +174,6 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
           <span>{girl.location ? translateLocation(girl.location, locale) : (CITY[locale] ?? CITY.en)}</span>
         </div>
 
-        <div className="girl-statline">
-          <div className="girl-stat-cell">
-            <span className="label">{labels.height}:</span>
-            <span className="num">{girl.height ?? '—'}</span>
-          </div>
-          <div className="girl-stat-cell">
-            <span className="label">{labels.breasts}:</span>
-            <span className="num">{girl.bust ?? '—'}</span>
-          </div>
-          <div className="girl-stat-cell">
-            <span className="label">{labels.weight}:</span>
-            <span className="num">{girl.weight ?? '—'}</span>
-          </div>
-          <div className="girl-stat-cell">
-            <span className="label">{labels.age}:</span>
-            <span className="num">{girl.age}</span>
-          </div>
-        </div>
 
         {(girl.languages.length > 0 || girl.rating > 0) && (
           <div className="girl-bottom-row">
