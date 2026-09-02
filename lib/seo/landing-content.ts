@@ -284,6 +284,156 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
     ],
     related: ['piercing-holky', 'sexy-holky', 'fit-holky'],
   },
+
+  'escort-prague': {
+    metaDesc: {
+      cs: 'Escort Praha — {count} ověřených společnic v privátních apartmánech v centru Prahy. Transparentní ceny, ověřené fotky, denně 10–22:30.',
+      en: 'Escort Prague — {count} verified companions in private central apartments. Transparent pricing, verified photos, daily 10–22:30. Cash only, no hidden fees.',
+      de: 'Escort Prag — {count} verifizierte Begleiterinnen in privaten Apartments im Zentrum. Transparente Preise, täglich 10–22:30.',
+      uk: 'Ескорт Прага — {count} перевірених супутниць у приватних апартаментах у центрі. Прозорі ціни, щодня 10–22:30.',
+    },
+    intro: {
+      cs: 'LovelyGirls je escort agentura v Praze s {count} osobně ověřenými společnicemi a třemi vlastními apartmány v centru — {districts}. Na fotkách je vždy ta žena, která vám otevře dveře. Pracujeme výhradně incall — navštívíte náš diskrétní apartmán. Programy od 30 do 120 minut za jednotné ceny, v ceně apartmán i sprcha. Kontaktujte nás přes WhatsApp nebo Telegram, dostupnost potvrdíme během minut. Platba hotově na místě, žádné zálohy ani příplatky.',
+      en: 'LovelyGirls is a Prague escort agency with {count} personally verified companions and three private apartments in the centre — {districts}. The photos always show the woman who opens the door. We work exclusively incall — you visit our discreet apartment. Programs from 30 to 120 minutes at flat rates, apartment and shower included. Contact us via WhatsApp or Telegram, we confirm availability within minutes. Cash on arrival, no deposits or hidden fees.',
+      de: 'LovelyGirls ist eine Escort-Agentur in Prag mit {count} persönlich verifizierten Begleiterinnen und drei privaten Apartments im Zentrum — {districts}. Auf den Fotos ist immer die Frau, die Ihnen die Tür öffnet. Ausschließlich Incall — Sie besuchen unser Apartment. Programme von 30 bis 120 Minuten zu Festpreisen, Apartment und Dusche inklusive. Kontakt via WhatsApp oder Telegram. Barzahlung vor Ort.',
+      uk: 'LovelyGirls — ескорт-агенція у Празі з {count} особисто перевіреними супутницями та трьома приватними апартаментами в центрі — {districts}. На фото завжди та жінка, яка відчинить двері. Працюємо виключно incall — ви відвідуєте наш апартамент. Програми від 30 до 120 хвилин за фіксованими цінами, апартамент і душ включені. Зв\'яжіться через WhatsApp або Telegram. Оплата готівкою на місці.',
+    },
+    faq: [
+      {
+        q: { cs: 'Jak si zarezervovat escort v Praze?', en: 'How do I book an escort in Prague?', de: 'Wie buche ich eine Escort in Prag?', uk: 'Як замовити ескорт у Празі?' },
+        a: { cs: 'Vyberte si společnici z galerie, zkontrolujte rozvrh a napište nám přes WhatsApp nebo Telegram. Potvrdíme dostupnost a pošleme adresu apartmánu. Žádná registrace ani záloha.', en: 'Pick a companion from the gallery, check the schedule, and message us on WhatsApp or Telegram. We confirm availability and send the apartment address. No registration or deposit needed.', de: 'Begleiterin aus der Galerie wählen, Zeitplan prüfen, via WhatsApp oder Telegram kontaktieren. Bestätigung und Adresse folgen sofort.', uk: 'Оберіть супутницю з галереї, перевірте графік і напишіть нам у WhatsApp або Telegram. Підтвердимо доступність і надішлемо адресу.' },
+      },
+      {
+        q: { cs: 'Kolik stojí escort v Praze?', en: 'How much does a Prague escort cost?', de: 'Was kostet eine Escort in Prag?', uk: 'Скільки коштує ескорт у Празі?' },
+        a: { cs: 'Ceny jsou za čas — programy od 30 do 120 minut. Jednotná sazba pro všechny společnice, v ceně apartmán a sprcha. Kompletní ceník na stránce Ceník. Platba hotově, žádné příplatky.', en: 'Pricing is time-based — programs from 30 to 120 minutes. Same rate for every companion, apartment and shower included. Full pricing on the Pricing page. Cash only, no surcharges.', de: 'Zeitbasierte Preise — Programme von 30 bis 120 Minuten. Gleicher Tarif für alle Begleiterinnen, Apartment und Dusche inklusive. Barzahlung, keine Zuschläge.', uk: 'Ціни за часом — програми від 30 до 120 хвилин. Однакова ставка для всіх супутниць, апартамент і душ включені. Оплата готівкою.' },
+      },
+      {
+        q: { cs: 'Jsou fotky escort společnic skutečné?', en: 'Are the escort photos real?', de: 'Sind die Escort-Fotos echt?', uk: 'Чи справжні фото ескорт-супутниць?' },
+        a: { cs: 'Ano. Každou společnici ověřujeme osobně. Na fotkách je ta žena, která vám otevře — žádné stock fotky, žádné úpravy postav.', en: 'Yes. Every companion is verified in person by our team. The photos show the woman who opens the door — no stock images, no body editing.', de: 'Ja. Jede Begleiterin wird persönlich verifiziert. Auf den Fotos ist die Frau, die Ihnen die Tür öffnet.', uk: 'Так. Кожну супутницю перевіряємо особисто. На фото — та жінка, яка відчинить двері.' },
+      },
+      {
+        q: { cs: 'Je escort v Praze legální?', en: 'Is escort legal in Prague?', de: 'Ist Escort in Prag legal?', uk: 'Чи легальний ескорт у Празі?' },
+        a: { cs: 'Ano. Námutí dospělé společnice je v České republice legální pro klienty od 18 let. LovelyGirls pracuje transparentně s ověřenými společnicemi a registrovanými prostory.', en: 'Yes. Hiring an adult companion is legal in the Czech Republic for clients aged 18+. LovelyGirls operates transparently with verified companions and registered premises.', de: 'Ja. Die Buchung einer Begleiterin ist in Tschechien für Kunden ab 18 legal. LovelyGirls arbeitet transparent.', uk: 'Так. Замовлення дорослої супутниці у Чехії легальне для клієнтів від 18 років.' },
+      },
+      {
+        q: { cs: 'Nabízíte outcall nebo návštěvy v hotelu?', en: 'Do you offer outcall or hotel visits?', de: 'Bieten Sie Outcall oder Hotelbesuche an?', uk: 'Чи є виїзд або візити в готель?' },
+        a: { cs: 'Ne. LovelyGirls pracuje výhradně incall — navštívíte náš apartmán v centru Prahy. Díky tomu garantujeme soukromí a kvalitu pro obě strany.', en: 'No. LovelyGirls works exclusively incall — you visit our apartment in central Prague. This ensures privacy and quality for both sides.', de: 'Nein. Ausschließlich Incall — Sie besuchen unser Apartment. Das sichert Privatsphäre und Qualität.', uk: 'Ні. Тільки incall — ви відвідуєте наш апартамент у центрі Праги.' },
+      },
+    ],
+    related: ['spolecnice-praha', 'sex-praha', 'vip-escort-praha', 'luxusni-spolecnice-praha', 'gfe-praha'],
+  },
+
+  'escort-praha': {
+    metaDesc: {
+      cs: 'Escort Praha — {count} ověřených společnic v privátních apartmánech. Ověřené fotky, jasné ceny od 2 000 Kč, denně 10–22:30.',
+      en: 'Escort Prague — {count} verified companions in private apartments. Verified photos, clear pricing from 2,000 CZK, daily 10–22:30.',
+      de: 'Escort Prag — {count} verifizierte Begleiterinnen in privaten Apartments. Ab 2.000 CZK, täglich 10–22:30.',
+      uk: 'Ескорт Прага — {count} перевірених супутниць у приватних апартаментах. Від 2 000 CZK, щодня 10–22:30.',
+    },
+    intro: {
+      cs: 'Hledáte escort v Praze? LovelyGirls je prémiová agentura s {count} osobně ověřenými společnicemi a třemi vlastními apartmány — {districts}. Každá společnice prochází osobním pohovorem a fotoverifikací. Pracujeme výhradně incall, programy od 30 do 120 minut za jednotné ceny. Kontaktujte nás přes WhatsApp nebo Telegram.',
+      en: 'Looking for escort in Prague? LovelyGirls is a premium agency with {count} personally verified companions and three private apartments — {districts}. Every companion is interviewed and photo-verified in person. Incall only, programs from 30 to 120 minutes at flat rates. Contact us via WhatsApp or Telegram.',
+      de: 'Escort in Prag gesucht? LovelyGirls ist eine Premium-Agentur mit {count} verifizierten Begleiterinnen und drei privaten Apartments — {districts}. Ausschließlich Incall, Programme von 30 bis 120 Minuten.',
+      uk: 'Шукаєте ескорт у Празі? LovelyGirls — преміальна агенція з {count} перевіреними супутницями та трьома приватними апартаментами — {districts}. Тільки incall, програми від 30 до 120 хвилин.',
+    },
+    faq: [
+      {
+        q: { cs: 'Kde se nachází apartmány pro escort v Praze?', en: 'Where are the Prague escort apartments?', de: 'Wo befinden sich die Escort-Apartments in Prag?', uk: 'Де знаходяться ескорт-апартаменти у Празі?' },
+        a: { cs: 'Tři privátní apartmány v centru — {districts}. Přesné adresy sdělujeme po domluvení schůzky. Všechny lokace jsou diskrétní a snadno dostupné metrem.', en: 'Three private apartments in the centre — {districts}. Exact addresses shared after booking. All locations are discreet and easily reached by metro.', de: 'Drei Apartments im Zentrum — {districts}. Adressen nach Buchung. Diskret, per Metro erreichbar.', uk: 'Три апартаменти в центрі — {districts}. Адреси — після бронювання. Дискретні, зручні для метро.' },
+      },
+      {
+        q: { cs: 'Jak rychle mohu domluvit schůzku?', en: 'How quickly can I arrange a meeting?', de: 'Wie schnell kann ich ein Treffen vereinbaren?', uk: 'Як швидко можна домовитися про зустріч?' },
+        a: { cs: 'Většinou do několika minut. Napište přes WhatsApp nebo Telegram, potvrdíme dostupnost a pošleme adresu. Některé společnice přijímají i klienty bez předchozí domluvy, ale doporučujeme kontaktovat nás alespoň 30 minut předem.', en: 'Usually within minutes. Message via WhatsApp or Telegram, we confirm and send the address. Some companions accept walk-ins, but we recommend contacting us at least 30 minutes ahead.', de: 'Meist innerhalb von Minuten via WhatsApp/Telegram. Mindestens 30 Minuten Vorlauf empfohlen.', uk: 'Зазвичай за кілька хвилин через WhatsApp або Telegram. Рекомендуємо зв\'язатися мінімум за 30 хвилин.' },
+      },
+      {
+        q: { cs: 'Jaké služby escort společnice nabízí?', en: 'What services do Prague escorts offer?', de: 'Welche Dienste bieten Prager Escorts an?', uk: 'Які послуги пропонують ескорт-супутниці?' },
+        a: { cs: 'Klasika, GFE, masáže, erotické masáže a další — kompletní seznam služeb najdete v profilu každé společnice. Služby se mohou lišit, vždy zkontrolujte profil.', en: 'Classic, GFE, massages, erotic massages, and more — full service list in each companion\'s profile. Services vary, always check the profile.', de: 'Klassik, GFE, Massagen und mehr — vollständige Liste im Profil jeder Begleiterin.', uk: 'Класика, GFE, масажі та інше — повний список у профілі кожної супутниці.' },
+      },
+    ],
+    related: ['escort-prague', 'spolecnice-praha', 'sex-praha', 'vip-escort-praha', 'gfe-praha'],
+  },
+
+  'sex-praha': {
+    metaDesc: {
+      cs: 'Sex Praha — {count} ověřených společnic v privátních apartmánech. Diskrétní setkání v centru Prahy, jasné ceny, žádné příplatky.',
+      en: 'Sex Prague — {count} verified companions in private apartments. Discreet meetings in central Prague, clear pricing, no hidden fees.',
+      de: 'Sex Prag — {count} verifizierte Begleiterinnen in privaten Apartments im Zentrum.',
+      uk: 'Секс Прага — {count} перевірених супутниць у приватних апартаментах у центрі.',
+    },
+    intro: {
+      cs: 'Hledáte diskrétní sex v Praze? LovelyGirls nabízí {count} osobně ověřených společnic ve třech privátních apartmánech v centru — {districts}. Žádné veřejné prostory, žádní prostředníci. Fotky odpovídají realitě, ceny jsou jasné a jednotné. Programy od 30 do 120 minut, v ceně apartmán a sprcha. Setkání domluvíte přes WhatsApp nebo Telegram, adresu sdělíme po potvrzení.',
+      en: 'Looking for discreet sex in Prague? LovelyGirls offers {count} personally verified companions in three private apartments in the centre — {districts}. No public venues, no middlemen. Photos match reality, pricing is clear and uniform. Programs from 30 to 120 minutes, apartment and shower included. Arrange via WhatsApp or Telegram, address shared after confirmation.',
+      de: 'Diskreter Sex in Prag? LovelyGirls bietet {count} verifizierte Begleiterinnen in drei privaten Apartments im Zentrum — {districts}. Keine öffentlichen Orte, keine Vermittler. Fotos entsprechen der Realität, transparente Preise. Programme von 30 bis 120 Minuten.',
+      uk: 'Шукаєте дискретний секс у Празі? LovelyGirls пропонує {count} перевірених супутниць у трьох приватних апартаментах у центрі — {districts}. Жодних публічних місць, жодних посередників. Фото відповідають реальності, ціни прозорі. Програми від 30 до 120 хвилин.',
+    },
+    faq: [
+      {
+        q: { cs: 'Je sex v Praze bezpečný?', en: 'Is sex in Prague safe?', de: 'Ist Sex in Prag sicher?', uk: 'Чи безпечний секс у Празі?' },
+        a: { cs: 'U LovelyGirls ano. Pracujeme ve vlastních apartmánech, všechny společnice jsou ověřené a pravidelně testované. Ochrana je vždy povinná.', en: 'At LovelyGirls, yes. We operate our own apartments, all companions are verified and regularly tested. Protection is always mandatory.', de: 'Bei LovelyGirls ja. Eigene Apartments, alle Begleiterinnen verifiziert und getestet. Schutz immer Pflicht.', uk: 'У LovelyGirls так. Власні апартаменти, всі супутниці перевірені та протестовані. Захист завжди обов\'язковий.' },
+      },
+      {
+        q: { cs: 'Kde probíhají setkání?', en: 'Where do meetings take place?', de: 'Wo finden die Treffen statt?', uk: 'Де проходять зустрічі?' },
+        a: { cs: 'Ve třech privátních apartmánech v centru Prahy — {districts}. Diskrétní, čisté, vybavené sprchou. Adresu sdělíme po domluvení schůzky.', en: 'In three private apartments in central Prague — {districts}. Discreet, clean, equipped with shower. Address shared after booking.', de: 'In drei privaten Apartments im Zentrum — {districts}. Diskret, sauber, mit Dusche.', uk: 'У трьох приватних апартаментах у центрі — {districts}. Дискретні, чисті, з душем.' },
+      },
+      {
+        q: { cs: 'Kolik stojí sex v Praze u LovelyGirls?', en: 'How much does it cost at LovelyGirls?', de: 'Was kostet es bei LovelyGirls?', uk: 'Скільки коштує у LovelyGirls?' },
+        a: { cs: 'Programy od 30 do 120 minut za jednotné ceny. V ceně apartmán i sprcha. Kompletní ceník na stránce Ceník. Hotově na místě.', en: 'Programs from 30 to 120 minutes at flat rates. Apartment and shower included. Full pricing on the Pricing page. Cash on arrival.', de: 'Programme von 30 bis 120 Minuten zu Festpreisen. Apartment und Dusche inklusive. Barzahlung vor Ort.', uk: 'Програми від 30 до 120 хвилин за фіксованими цінами. Апартамент і душ включені. Оплата готівкою.' },
+      },
+    ],
+    related: ['escort-prague', 'escort-praha', 'spolecnice-praha', 'gfe-praha', 'vip-escort-praha'],
+  },
+
+  'vip-escort-praha': {
+    metaDesc: {
+      cs: 'VIP Escort Praha — exkluzivní společnice v privátních apartmánech. Osobně ověřené, diskrétní, denně 10–22:30.',
+      en: 'VIP Escort Prague — exclusive companions in private apartments. Personally verified, discreet, daily 10–22:30.',
+      de: 'VIP Escort Prag — exklusive Begleiterinnen in privaten Apartments.',
+      uk: 'VIP Ескорт Прага — ексклюзивні супутниці у приватних апартаментах.',
+    },
+    intro: {
+      cs: 'VIP escort v Praze od LovelyGirls — {count} exkluzivních společnic v privátních apartmánech v centru Prahy — {districts}. Každá společnice prochází osobním pohovorem a fotoverifikací. VIP programy od 60 do 120 minut zahrnují apartmán, sprchu a plný komfort. Pro VIP klienty nabízíme prioritní rezervace a osobní přístup. Kontaktujte nás přes WhatsApp nebo Telegram.',
+      en: 'VIP escort in Prague by LovelyGirls — {count} exclusive companions in private central apartments — {districts}. Every companion is interviewed and photo-verified. VIP programs from 60 to 120 minutes include apartment, shower, and full comfort. Priority booking and personal service for VIP clients. Contact via WhatsApp or Telegram.',
+      de: 'VIP Escort in Prag von LovelyGirls — {count} exklusive Begleiterinnen in privaten Apartments im Zentrum — {districts}. VIP-Programme von 60 bis 120 Minuten. Prioritätsbuchung für VIP-Kunden.',
+      uk: 'VIP ескорт у Празі від LovelyGirls — {count} ексклюзивних супутниць у приватних апартаментах у центрі — {districts}. VIP програми від 60 до 120 хвилин. Пріоритетне бронювання для VIP клієнтів.',
+    },
+    faq: [
+      {
+        q: { cs: 'Co zahrnuje VIP escort program?', en: 'What does the VIP escort program include?', de: 'Was beinhaltet das VIP-Programm?', uk: 'Що включає VIP ескорт програму?' },
+        a: { cs: 'VIP programy zahrnují delší čas (60–120 min), privátní apartmán, sprchu a plné pohodlí. Konkrétní služby závisí na společnici — podrobnosti v profilu.', en: 'VIP programs include longer time (60–120 min), private apartment, shower, and full comfort. Specific services depend on the companion — details in her profile.', de: 'VIP-Programme: längere Zeit (60–120 Min), privates Apartment, Dusche, voller Komfort. Details im Profil.', uk: 'VIP програми: більше часу (60–120 хв), приватний апартамент, душ, повний комфорт. Деталі у профілі.' },
+      },
+      {
+        q: { cs: 'Jak se liší VIP od standardního programu?', en: 'How is VIP different from standard?', de: 'Wie unterscheidet sich VIP vom Standard?', uk: 'Чим VIP відрізняється від стандартного?' },
+        a: { cs: 'VIP klienti mají prioritní rezervace, delší programy a osobní přístup. Ceník je transparentní — rozdíl je v délce programu, ne v přirážkách.', en: 'VIP clients get priority booking, longer programs, and personal service. Pricing is transparent — the difference is in program length, not surcharges.', de: 'Prioritätsbuchung, längere Programme, persönlicher Service. Transparente Preise ohne Zuschläge.', uk: 'Пріоритетне бронювання, довші програми, персональний сервіс. Прозорі ціни без надбавок.' },
+      },
+    ],
+    related: ['escort-prague', 'luxusni-spolecnice-praha', 'gfe-praha', 'elegantni-holky'],
+  },
+
+  'luxusni-spolecnice-praha': {
+    metaDesc: {
+      cs: 'Luxusní společnice Praha — prémiové escort služby v privátních apartmánech. Ověřené profily, transparentní ceny.',
+      en: 'Luxury companions Prague — premium escort services in private apartments. Verified profiles, transparent pricing.',
+      de: 'Luxus-Begleiterinnen Prag — Premium-Escort in privaten Apartments.',
+      uk: 'Розкішні супутниці Прага — преміальний ескорт у приватних апартаментах.',
+    },
+    intro: {
+      cs: 'Luxusní společnice v Praze od LovelyGirls — {count} prémiových společnic ve vlastních apartmánech v centru — {districts}. Elegantní, vzdělané a osobně ověřené. Nabízíme programy od 30 do 120 minut, GFE (Girlfriend Experience), párové programy a další prémiové služby. Fotografie odpovídají realitě, ceny jasné a bez příplatků.',
+      en: 'Luxury companions in Prague by LovelyGirls — {count} premium companions in our own central apartments — {districts}. Elegant, educated, and personally verified. Programs from 30 to 120 minutes, GFE (Girlfriend Experience), couples programs, and more. Photos match reality, pricing clear with no surcharges.',
+      de: 'Luxus-Begleiterinnen in Prag — {count} Premium-Begleiterinnen in eigenen Apartments im Zentrum — {districts}. Elegant, gebildet, persönlich verifiziert. Programme von 30 bis 120 Minuten, GFE und mehr.',
+      uk: 'Розкішні супутниці у Празі від LovelyGirls — {count} преміальних супутниць у власних апартаментах у центрі — {districts}. Елегантні, освічені, особисто перевірені. Програми від 30 до 120 хвилин, GFE та інше.',
+    },
+    faq: [
+      {
+        q: { cs: 'Co dělá společnici luxusní?', en: 'What makes a companion luxury?', de: 'Was macht eine Begleiterin zur Luxus-Begleiterin?', uk: 'Що робить супутницю розкішною?' },
+        a: { cs: 'Osobní ověření, profesionální přístup, elegantní vzhled a široká nabídka služeb včetně GFE. Každá společnice u nás prochází osobním pohovorem.', en: 'Personal verification, professional approach, elegant appearance, and a wide range of services including GFE. Every companion at LovelyGirls is personally interviewed.', de: 'Persönliche Verifizierung, professioneller Ansatz, elegantes Auftreten und breites Serviceangebot.', uk: 'Особиста перевірка, професійний підхід, елегантний вигляд та широкий спектр послуг включаючи GFE.' },
+      },
+      {
+        q: { cs: 'Jaký je rozdíl mezi luxusní a běžnou společnicí?', en: 'What is the difference between luxury and standard?', de: 'Was ist der Unterschied zwischen Luxus und Standard?', uk: 'Яка різниця між розкішною та стандартною супутницею?' },
+        a: { cs: 'U LovelyGirls jsou všechny společnice na prémiové úrovni — ověřené, s profesionálním přístupem. Ceník je jednotný, rozdíly jsou v nabídce služeb a osobnosti.', en: 'At LovelyGirls, all companions are at a premium level — verified, with a professional approach. Pricing is uniform; differences are in services offered and personality.', de: 'Bei LovelyGirls sind alle Begleiterinnen auf Premium-Niveau. Einheitliche Preise, Unterschiede bei Services und Persönlichkeit.', uk: 'У LovelyGirls всі супутниці на преміальному рівні. Єдині ціни, відмінності у послугах та особистості.' },
+      },
+    ],
+    related: ['vip-escort-praha', 'escort-prague', 'elegantni-holky', 'gfe-praha', 'spolecnice-praha'],
+  },
 };
 
 /* ============================================================

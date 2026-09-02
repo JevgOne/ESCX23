@@ -47,8 +47,8 @@ const config: NextConfig = {
       { source: '/girls-cz', destination: '/cs/divky', permanent: true },
 
       // === B) Landing pages ===
-      { source: '/cs/landing/escort-prague', destination: '/cs/divky', permanent: true },
-      { source: '/cs/landing/escort-praha', destination: '/cs/divky', permanent: true },
+      { source: '/cs/landing/escort-prague', destination: '/cs/hashtag/escort-praha', permanent: true },
+      { source: '/cs/landing/escort-praha', destination: '/cs/hashtag/escort-praha', permanent: true },
       { source: '/cs/landing/companions-prague', destination: '/cs/divky', permanent: true },
       { source: '/cs/landing/spolecnice-praha', destination: '/cs/hashtag/spolecnice-praha', permanent: true },
       { source: '/cs/landing/blondynky', destination: '/cs/hashtag/blondynky-praha', permanent: true },
@@ -57,7 +57,7 @@ const config: NextConfig = {
       { source: '/cs/landing/studentky', destination: '/cs/hashtag/studentky-praha', permanent: true },
       { source: '/cs/landing/vinohrady', destination: '/cs/pobocka/praha-2', permanent: true },
       { source: '/cs/landing/zizkov', destination: '/cs/pobocka/praha-3', permanent: true },
-      { source: '/cs/landing/sex-praha', destination: '/cs/divky', permanent: true },
+      { source: '/cs/landing/sex-praha', destination: '/cs/hashtag/sex-praha', permanent: true },
       { source: '/cs/landing/privat-praha', destination: '/cs/divky', permanent: true },
       { source: '/cs/landing/girlfriend-experience-praha', destination: '/cs/hashtag/gfe-praha', permanent: true },
       { source: '/cs/landing/nonstop-escort-praha', destination: '/cs/rozvrh', permanent: true },
@@ -66,7 +66,7 @@ const config: NextConfig = {
       // to the service page instead of dumping it on the full listing.
       { source: '/cs/landing/duo-escort-praha', destination: '/cs/sluzba/threesome_fmf', permanent: true },
       { source: '/cs/landing/eroticke-masaze-praha', destination: '/cs/divky', permanent: true },
-      { source: '/cs/landing/vip-escort-praha', destination: '/cs/divky', permanent: true },
+      { source: '/cs/landing/vip-escort-praha', destination: '/cs/hashtag/vip-escort-praha', permanent: true },
       // landing catchall
       { source: '/cs/landing/:slug', destination: '/cs/', permanent: true },
 
@@ -99,8 +99,8 @@ const config: NextConfig = {
       { source: '/cz/faq', destination: '/cs/faq', permanent: true },
 
       // === E) WordPress-era / bare URLs ===
-      { source: '/escort-praha', destination: '/cs/divky', permanent: true },
-      { source: '/escort-prague', destination: '/en/girls', permanent: true },
+      { source: '/escort-praha', destination: '/cs/hashtag/escort-praha', permanent: true },
+      { source: '/escort-prague', destination: '/en/hashtag/escort-prague', permanent: true },
       { source: '/bdsm', destination: '/blog', permanent: true },
       { source: '/author/:slug', destination: '/cs/', permanent: true },
       { source: '/home', destination: '/', permanent: true },

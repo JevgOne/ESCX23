@@ -2305,6 +2305,9 @@ export async function getGirlsForListing(
   return { girls, total };
 }
 
+/** Slugs that show ALL active girls instead of filtering by hashtag. */
+const ALL_GIRLS_HASHTAGS = ['escort-prague', 'escort-praha', 'sex-praha', 'vip-escort-praha', 'luxusni-spolecnice-praha'];
+
 export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
   const dayOfWeek = pragueDayOfWeek();
   const today = pragueDateISO();
@@ -2335,9 +2338,9 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
-        AND g.hashtags IS NOT NULL
-        AND g.hashtags != '[]'
-        AND g.hashtags != ''
+        ${ALL_GIRLS_HASHTAGS.includes(slug)
+          ? ''
+          : `AND g.hashtags IS NOT NULL AND g.hashtags != '[]' AND g.hashtags != ''`}
       ORDER BY g.name
     `,
     args: [dayOfWeek, today, today],
@@ -2347,8 +2350,9 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
     .map((r): GirlCard | null => {
       if (r.exception_type === 'unavailable') return null;
 
+      // Generic landing slugs show ALL active girls (no hashtag filter)
       const tags = parseLangs(r.hashtags);
-      if (!tags.includes(slug)) return null;
+      if (!ALL_GIRLS_HASHTAGS.includes(slug) && !tags.includes(slug)) return null;
 
       let rawFrom: string | null = r.shift_from ? String(r.shift_from).substring(0, 5) : null;
       let rawTo: string | null = r.shift_to ? String(r.shift_to).substring(0, 5) : null;

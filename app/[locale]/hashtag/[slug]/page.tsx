@@ -58,6 +58,11 @@ const TAG_NAMES: Record<string, { cs: string; en: string; de: string; uk: string
   'krasne-holky': { cs: 'Krásné společnice', en: 'Beautiful companions', de: 'Schöne Begleiterinnen', uk: 'Красиві супутниці' },
   'hot-holky-praha': { cs: 'Hot společnice Praha', en: 'Hot companions Prague', de: 'Heiße Begleiterinnen Prag', uk: 'Гарячі супутниці Прага' },
   'dokonale-telo': { cs: 'Dokonalé tělo', en: 'Perfect body', de: 'Perfekter Körper', uk: 'Ідеальне тіло' },
+  'escort-prague': { cs: 'Escort Praha', en: 'Escort Prague', de: 'Escort Prag', uk: 'Ескорт Прага' },
+  'escort-praha': { cs: 'Escort Praha', en: 'Escort Prague', de: 'Escort Prag', uk: 'Ескорт Прага' },
+  'sex-praha': { cs: 'Sex Praha', en: 'Sex Prague', de: 'Sex Prag', uk: 'Секс Прага' },
+  'vip-escort-praha': { cs: 'VIP Escort Praha', en: 'VIP Escort Prague', de: 'VIP Escort Prag', uk: 'VIP Ескорт Прага' },
+  'luxusni-spolecnice-praha': { cs: 'Luxusní společnice Praha', en: 'Luxury Companions Prague', de: 'Luxus-Begleiterinnen Prag', uk: 'Розкішні супутниці Прага' },
 };
 
 function getTitle(slug: string, locale: string): string | null {
