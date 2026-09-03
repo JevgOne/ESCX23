@@ -6,6 +6,30 @@
 
 ---
 
+## TASK-018: Opravit design hashtag landing stránek
+Priorita: 1
+Stav: čeká
+Projekt: /Users/zen/Projects/ESCX23
+
+### Kompletní zadání:
+Uživatel říká: "tohle je hrozny po tom co kliknu na filtr, dole ty Escort Praha 2 3 atd to je katastrofa dole pod tim je hned na linka bez odstupu, nad tim ty kategorie dobry, nad tim who works today tady dole je linka oddelovač ten je bez odstupu nahoře ten text vypada uplne napíču"
+
+Problémy na hashtag stránkách (např. /en/hashtag/escort-prague, /en/hashtag/prirodni-poprsi):
+1. Sekce "Where to find us" (Escort Praha 2/3/5) — nemá dostatečný odstup od sekce Related categories nad ní
+2. Pod apartmány sekcí je hned FAQ bez dostatečného odstupu
+3. CTA tlačítka (View all companions / Who works today) — nemají dostatečný spacing
+4. Celkově chybí konzistentní border-top oddělovače + padding mezi sekcemi
+
+Referenční design: podívat se jak vypadají sekce na homepage (consistent spacing, border-top oddělovače, padding). Hashtag stránky musí mít STEJNÝ vizuální styl mezer a oddělovačů.
+
+### Kontext:
+- CSS: app/globals.css, třídy .lp-section, .lp-related, .lp-faq-section, .lp-cta-row, .lp-intro
+- Stránka: app/[locale]/hashtag/[slug]/page.tsx
+- Už přidán .lp-section { padding: 36px 0; border-top: 1px solid var(--color-line); } ale uživatel říká že to stále nevypadá dobře
+- NEMĚNIT obsah/text, pouze CSS spacing a vizuální konzistenci
+
+---
+
 ## TASK-012: Kompletní audit webu na nové doméně
 Priorita: 2
 Stav: čeká

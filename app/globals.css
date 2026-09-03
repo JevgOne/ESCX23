@@ -16175,15 +16175,17 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
   color: var(--color-text-muted);
 }
 
-.lp-grid-section { padding: 0 0 32px; }
+.lp-grid-section { padding: 0 0 40px; }
 
-.lp-section { padding: 36px 0; border-top: 1px solid var(--color-line); }
+.lp-section { padding: 48px 0; border-top: 1px solid var(--color-line); }
 
 .lp-cta-row {
   display: flex;
   gap: 12px;
   justify-content: center;
-  padding: 36px 0;
+  padding: 12px 0 48px;
+  margin-top: 8px;
+  border-top: 1px solid var(--color-line);
   flex-wrap: wrap;
 }
 .lp-btn {
@@ -16223,7 +16225,7 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
   letter-spacing: -0.01em;
 }
 
-.lp-related { padding: 36px 0; border-top: 1px solid var(--color-line); }
+.lp-related { padding: 48px 0; border-top: 1px solid var(--color-line); }
 .lp-related-chips {
   display: flex;
   flex-wrap: wrap;
@@ -16249,7 +16251,7 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
   background: rgba(242, 125, 141, 0.05);
 }
 
-.lp-faq-section { padding: 36px 0 56px; border-top: 1px solid var(--color-line); }
+.lp-faq-section { padding: 48px 0 56px; border-top: 1px solid var(--color-line); }
 .lp-faq-list {
   max-width: 760px;
   margin: 0 auto;
