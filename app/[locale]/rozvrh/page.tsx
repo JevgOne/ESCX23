@@ -4,7 +4,7 @@ import { applyDBOverride } from '@/lib/seo/db-override';
 import { redirect } from 'next/navigation';
 import { getGirlsForDay, getActiveLocations, type GirlCard } from '@/lib/queries';
 import { pragueDateISO, pragueDayOfWeek, type ShiftCategory } from '@/lib/utils';
-import { getCanonicalUrl, ogLocale } from '@/lib/seo/meta';
+import { getCanonicalUrl, getAlternates, ogLocale } from '@/lib/seo/meta';
 import { breadcrumbListJsonLd } from '@/lib/seo/jsonld';
 import GirlCardGrid from '@/components/girl/GirlCardGrid';
 import DayTabs from '@/components/rozvrh/DayTabs';
@@ -99,8 +99,7 @@ interface Props {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const path = CANONICAL_PATH[locale] ?? '/rozvrh';
-  const canonical = getCanonicalUrl(locale, path);
+  const canonical = getCanonicalUrl(locale, '/rozvrh');
   const { buildOgImages } = await import('@/lib/seo/og');
   const ogImages = await buildOgImages('rozvrh', locale, '/rozvrh', TITLES[locale] ?? TITLES.en);
 
@@ -110,13 +109,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     robots: { index: true, follow: true },
     alternates: {
       canonical,
-      languages: {
-        cs: getCanonicalUrl('cs', '/rozvrh'),
-        en: getCanonicalUrl('en', '/schedule'),
-        de: getCanonicalUrl('de', '/zeitplan'),
-        uk: getCanonicalUrl('uk', '/rozklad'),
-        'x-default': getCanonicalUrl('en', '/schedule'),
-      },
+      languages: getAlternates('/rozvrh'),
     },
     openGraph: {
       images: ogImages,

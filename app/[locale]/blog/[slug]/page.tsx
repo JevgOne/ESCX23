@@ -1,5 +1,5 @@
 import { getHashtagById } from '@/lib/hashtags';
-import { localePrefix, localeHref } from '@/lib/seo/meta';
+import { localePrefix, localeHref, ogLocale } from '@/lib/seo/meta';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -69,7 +69,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'article',
       url: canonical,
       siteName: brand,
-      locale: locale === 'cs' ? 'cs_CZ' : locale === 'de' ? 'de_DE' : locale === 'uk' ? 'uk_UA' : 'en_US',
+      locale: ogLocale(locale),
       publishedTime: publishDate,
       modifiedTime: publishDate,
       authors: [post.author],

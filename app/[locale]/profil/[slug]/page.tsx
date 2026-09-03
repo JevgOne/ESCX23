@@ -303,7 +303,8 @@ export default async function ProfilPage({ params, searchParams }: Props) {
   const personSchema = profilePersonJsonLd(
     girlWithStats as unknown as Parameters<typeof profilePersonJsonLd>[0],
     photoTyped as unknown as Parameters<typeof profilePersonJsonLd>[1],
-    reviewTyped as unknown as Parameters<typeof profilePersonJsonLd>[2]
+    reviewTyped as unknown as Parameters<typeof profilePersonJsonLd>[2],
+    locale
   );
 
   const girlsLabel = locale === 'cs' ? 'Dívky' : locale === 'de' ? 'Mädchen' : locale === 'uk' ? 'Дівчата' : 'Girls';

@@ -37,8 +37,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       type: 'website',
       url: canonical,
-      siteName: 'LovelyGirls Praha',
-      locale: locale === 'cs' ? 'cs_CZ' : 'en_US',
+      siteName: locale === 'cs' ? 'LovelyGirls Praha' : locale === 'de' ? 'LovelyGirls Prag' : locale === 'uk' ? 'LovelyGirls Прага' : 'LovelyGirls Prague',
+      locale: locale === 'cs' ? 'cs_CZ' : locale === 'de' ? 'de_DE' : locale === 'uk' ? 'uk_UA' : 'en_US',
     },
     twitter: {
       card: 'summary_large_image',

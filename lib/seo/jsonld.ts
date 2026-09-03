@@ -136,7 +136,8 @@ interface ReviewForSchema {
 export function profilePersonJsonLd(
   g: GirlForSchema,
   photos: PhotoForSchema[],
-  reviews: ReviewForSchema[]
+  reviews: ReviewForSchema[],
+  locale = 'cs'
 ) {
   const slug = String(g.slug ?? '');
   const name = String(g.name ?? '');
@@ -150,12 +151,13 @@ export function profilePersonJsonLd(
     .map((p) => String(p.url));
   const height = g.height ? `${Number(g.height)} cm` : undefined;
   const verifiedAt = g.verified ? String(g.verified) : undefined;
+  const profileUrl = locale === 'en' ? `${BASE}/profile/${slug}` : `${BASE}/${locale}/profil/${slug}`;
   const person: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    '@id': `${BASE}/profil/${slug}#person`,
+    '@id': `${profileUrl}#person`,
     name,
-    url: `${BASE}/profil/${slug}`,
+    url: profileUrl,
     image: primaryImages.length ? primaryImages : undefined,
     description: bio,
     height,
