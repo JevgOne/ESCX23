@@ -94,6 +94,7 @@ function buildHomeAlternates(): Record<string, string> {
 const HASHTAG_SLUGS = [
   'blondynky-praha', 'brunetky-praha', 'cernovlasky-praha', 'gfe-praha',
   'studentky-praha', 'spolecnice-praha', 'prirodni-poprsi', 'tetovani',
+  'escort-prague', 'escort-praha', 'sex-praha', 'vip-escort-praha', 'luxusni-spolecnice-praha',
 ];
 
 const STATIC_KEYS: Array<{ key: string; freq: 'daily' | 'hourly' | 'weekly' | 'monthly'; priority: number }> = [
