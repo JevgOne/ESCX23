@@ -35,6 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: ogImages,
       title: t('h1'),
       description: t('lead'),
+      url: canonical,
       locale: ogLocale(locale),
       type: 'website',
     },
