@@ -16163,25 +16163,24 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
 ============================================================ */
 .lp-intro {
   max-width: 760px;
-  margin: 28px auto 36px;
-  padding: 22px 26px;
-  background: linear-gradient(135deg, rgba(242, 125, 141, 0.04), rgba(200, 75, 139, 0.03));
-  border: 1px solid rgba(242, 125, 141, 0.14);
-  border-radius: 14px;
+  margin: 0 auto 32px;
+  padding: 0;
 }
 .lp-intro p {
-  font-size: 15.5px;
-  line-height: 1.7;
+  font-size: 14.5px;
+  line-height: 1.8;
   color: var(--color-text-muted);
 }
 
 .lp-grid-section { padding: 0 0 32px; }
 
+.lp-section { padding: 36px 0; border-top: 1px solid var(--color-line); }
+
 .lp-cta-row {
   display: flex;
   gap: 12px;
   justify-content: center;
-  margin-top: 28px;
+  padding: 36px 0;
   flex-wrap: wrap;
 }
 .lp-btn {

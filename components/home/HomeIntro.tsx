@@ -30,9 +30,8 @@ export default async function HomeIntro({ locale }: { locale: string }) {
           <p>
             LovelyGirls is a Prague escort agency with {companions} and three private
             apartments of its own — {districts}. Every profile is verified in person: the
-            photographs are of the woman who opens the door. Browse all{' '}
-            <Link href="/divky">verified Prague escorts</Link>, check who is
-            working today on the <Link href="/rozvrh">schedule</Link>.
+            photographs are of the woman who opens the door. We work incall only, and who is
+            working today is on the <Link href="/rozvrh">schedule</Link>.
           </p>
           <p>
             Prices depend on time, not on services — 30 to 120 minutes, the same for every
@@ -51,8 +50,7 @@ export default async function HomeIntro({ locale }: { locale: string }) {
           <p>
             LovelyGirls je pražská escort agentura — {companions} a tři vlastní privátní
             apartmány: {districts}. Každý profil ověřujeme osobně, na fotkách je ta žena,
-            která vám otevře. Prohlédněte si všechny{' '}
-            <Link href="/divky">ověřené společnice v Praze</Link>, kdo dnes pracuje najdete
+            která vám otevře. Pracujeme výhradně formou incall a kdo dnes pracuje, najdete
             v <Link href="/rozvrh">rozvrhu</Link>.
           </p>
           <p>
@@ -72,9 +70,8 @@ export default async function HomeIntro({ locale }: { locale: string }) {
           <p>
             LovelyGirls ist eine Prager Escort-Agentur mit {companions} und drei eigenen
             privaten Apartments im Zentrum. Jedes Profil wird persönlich verifiziert: Auf den
-            Fotos ist die Frau, die Ihnen die Tür öffnet. Alle{' '}
-            <Link href="/divky">verifizierten Begleiterinnen in Prag</Link> ansehen, oder
-            im <Link href="/rozvrh">Zeitplan</Link> nachsehen, wer heute arbeitet.
+            Fotos ist die Frau, die Ihnen die Tür öffnet, und die aufgeführten Leistungen sind
+            die, die sie anbietet. An der Tür wird nichts verhandelt.
           </p>
           <p>
             Bezahlt wird die Zeit, nicht die Leistung: Programme von 30 bis 120 Minuten, für
@@ -94,9 +91,8 @@ export default async function HomeIntro({ locale }: { locale: string }) {
           <p>
             LovelyGirls — празьке ескорт-агентство: {companions} і три власні приватні
             апартаменти в центрі. Кожен профіль перевіряємо особисто: на фото та жінка, яка
-            відчинить вам двері. Переглянути всіх{' '}
-            <Link href="/divky">перевірених супутниць у Празі</Link> або хто
-            працює сьогодні — у <Link href="/rozvrh">розкладі</Link>.
+            відчинить вам двері, а послуги в профілі — ті, які вона справді пропонує. На
+            місці нічого не узгоджується.
           </p>
           <p>
             Платите за час, а не за послуги: програми від 30 до 120 хвилин, однакові для всіх
