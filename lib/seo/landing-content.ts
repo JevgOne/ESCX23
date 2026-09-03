@@ -116,8 +116,20 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
     },
     faq: [
       {
-        q: { cs: 'Jak dlouhé je standardní setkání?', en: 'How long is a standard meeting?', de: 'Wie lang ist ein Standardtreffen?', uk: 'Скільки триває стандартна зустріч?' },
-        a: { cs: 'Programy začínají na 30 minutách. Nejoblíbenější je 60 minut. Kompletní ceník najdete na stránce Ceník.', en: 'Programs start at 30 minutes. Most popular is 60 minutes. Full pricing on the Pricing page.', de: 'Programme ab 30 Minuten. Beliebt: 60 Minuten.', uk: 'Програми від 30 хвилин. Найпопулярніше — 60 хвилин.' },
+        q: { cs: 'Kolik černovlásek máte aktuálně k dispozici?', en: 'How many dark-haired companions are currently available?', de: 'Wie viele schwarzhaarige Begleiterinnen sind verfügbar?', uk: 'Скільки темноволосих супутниць наразі доступно?' },
+        a: { cs: 'Aktuální počet a dnešní dostupnost černovlásek najdete přímo v rozvrhu — aktualizujeme denně.', en: 'Current availability of dark-haired companions is in the live schedule, updated daily.', de: 'Aktuelle Verfügbarkeit schwarzhaariger Begleiterinnen finden Sie im täglichen Zeitplan.', uk: 'Актуальна доступність темноволосих супутниць — у графіку, оновлюється щодня.' },
+      },
+      {
+        q: { cs: 'Jsou fotografie černovlásek skutečné?', en: 'Are the dark-haired companion photos real?', de: 'Sind die Fotos der schwarzhaarigen Begleiterinnen echt?', uk: 'Чи справжні фото темноволосих супутниць?' },
+        a: { cs: 'Ano. Každou společnici osobně ověřujeme včetně fotografií — žádné fake profily, žádný přehnaný retouching.', en: 'Yes. Every companion is personally verified including photos — no fake profiles, no excessive retouching.', de: 'Ja. Jede Begleiterin wird persönlich verifiziert, auch die Fotos.', uk: 'Так. Кожну супутницю особисто перевіряємо, включно з фотографіями.' },
+      },
+      {
+        q: { cs: 'Kde se s černovláskou potkám?', en: 'Where do I meet a dark-haired companion?', de: 'Wo treffe ich eine schwarzhaarige Begleiterin?', uk: 'Де я зустріну темноволосу супутницю?' },
+        a: { cs: 'V diskrétním privátním apartmánu v centru Prahy ({districts}). Přesnou adresu obdržíte po potvrzení termínu.', en: 'In a discreet private apartment in central Prague ({districts}). Exact address sent after booking confirmation.', de: 'In einem diskreten privaten Apartment im Zentrum von Prag ({districts}).', uk: 'У дискретному приватному апартаменті у центрі Праги ({districts}).' },
+      },
+      {
+        q: { cs: 'Nabízejí černovlásky GFE?', en: 'Do dark-haired companions offer GFE?', de: 'Bieten schwarzhaarige Begleiterinnen GFE an?', uk: 'Чи пропонують темноволосі супутниці GFE?' },
+        a: { cs: 'Většina ano. GFE (Girlfriend Experience) je v profilu každé společnice — podívejte se do sekce služby u vybrané černovlásky.', en: 'Most do. GFE (Girlfriend Experience) is listed in each companion\'s profile — check the services section of your chosen dark-haired companion.', de: 'Die meisten ja. GFE ist im Profil jeder Begleiterin unter Dienstleistungen aufgeführt.', uk: 'Більшість так. GFE вказано у профілі кожної супутниці в секції послуг.' },
       },
     ],
     related: ['brunetky-praha', 'blondynky-praha', 'exoticke-krasky'],
@@ -281,6 +293,14 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
         q: { cs: 'Jak rozsáhlé tetování společnice má?', en: 'How extensive are the tattoos?', de: 'Wie umfangreich sind die Tattoos?', uk: 'Наскільки великі татуювання?' },
         a: { cs: 'V profilu jsou 4 úrovně — diskrétní (do 5 %), viditelné (5–30 %), výrazné (30–70 %), rozsáhlé (70+ %).', en: '4 levels in profile — discreet (<5%), visible (5–30%), significant (30–70%), extensive (70+%).', de: '4 Stufen — dezent, sichtbar, auffällig, großflächig.', uk: '4 рівні — непомітне, видиме, значне, дуже значне.' },
       },
+      {
+        q: { cs: 'Mohu si vybrat společnici podle stylu tetování?', en: 'Can I choose a companion by tattoo style?', de: 'Kann ich eine Begleiterin nach Tattoo-Stil auswählen?', uk: 'Чи можу обрати супутницю за стилем татуювання?' },
+        a: { cs: 'Ano. V profilu každé společnice je popis tetování a fotogalerie, kde tetování uvidíte. Filtrujte podle hashtagu Tetování a prohlédněte si profily.', en: 'Yes. Each companion\'s profile includes a tattoo description and photo gallery where you can see the tattoos. Filter by the Tattoo hashtag and browse profiles.', de: 'Ja. Im Profil jeder Begleiterin finden Sie Tattoo-Beschreibung und Fotogalerie.', uk: 'Так. У профілі кожної супутниці є опис татуювань і фотогалерея.' },
+      },
+      {
+        q: { cs: 'Mají tetované společnice stejný ceník?', en: 'Do tattooed companions have the same pricing?', de: 'Haben tätowierte Begleiterinnen die gleichen Preise?', uk: 'Чи однакові ціни у татуйованих супутниць?' },
+        a: { cs: 'Ano. Ceník je jednotný pro všechny společnice bez ohledu na vzhled — od 2 000 Kč za 30 minut.', en: 'Yes. Pricing is the same for all companions regardless of appearance — from 2,000 CZK for 30 minutes.', de: 'Ja. Die Preise sind für alle Begleiterinnen gleich — ab 2.000 CZK für 30 Minuten.', uk: 'Так. Ціни єдині для всіх супутниць — від 2 000 CZK за 30 хвилин.' },
+      },
     ],
     related: ['piercing-holky', 'sexy-holky', 'fit-holky'],
   },
@@ -433,6 +453,168 @@ export const HASHTAG_CONTENT: Record<string, LandingContent> = {
       },
     ],
     related: ['vip-escort-praha', 'escort-prague', 'elegantni-holky', 'gfe-praha', 'spolecnice-praha'],
+  },
+
+  'fit-holky': {
+    metaDesc: {
+      cs: 'Fit společnice Praha — sportovní a atletické společnice s vytvarovanou postavou. Ověřené profily, diskrétní apartmány v centru.',
+      en: 'Fit companions Prague — athletic and toned escorts with sculpted bodies. Verified profiles, discreet central apartments.',
+      de: 'Sportliche Begleiterinnen Prag — athletisch und durchtrainiert. Verifizierte Profile, diskrete Apartments.',
+      uk: 'Спортивні супутниці Прага — атлетичні та підтягнуті. Перевірені профілі, дискретні апартаменти.',
+    },
+    intro: {
+      cs: 'Fit společnice v Praze — sportovní, atletické a s vytvarovanou postavou. Tyto společnice aktivně sportují a dbají na svou kondici, což se odráží v jejich vzhledu i energii. Každý profil je osobně ověřený, fotografie odpovídají realitě. Setkání probíhají v diskrétních apartmánech v centru Prahy.',
+      en: 'Fit companions in Prague — athletic, toned, and with sculpted bodies. These companions actively exercise and maintain their fitness, which shows in their appearance and energy. Every profile is personally verified, photos match reality. Meetings in discreet apartments in central Prague.',
+      de: 'Sportliche Begleiterinnen in Prag — athletisch, durchtrainiert und mit geformtem Körper. Jedes Profil ist persönlich verifiziert. Treffen in diskreten Apartments im Zentrum von Prag.',
+      uk: 'Спортивні супутниці у Празі — атлетичні, підтягнуті, з виліпленою фігурою. Кожен профіль особисто перевірений. Зустрічі у дискретних апартаментах у центрі Праги.',
+    },
+    faq: [
+      {
+        q: { cs: 'Jak poznám, že je společnice fit?', en: 'How do I know a companion is fit?', de: 'Woran erkenne ich eine sportliche Begleiterin?', uk: 'Як я дізнаюся, що супутниця спортивна?' },
+        a: { cs: 'V profilu každé společnice je uvedena postava a fotogalerie. Fit společnice mají štíhlou a atletickou postavu, kterou uvidíte na ověřených fotografiích.', en: 'Each companion\'s profile shows body type and photo gallery. Fit companions have a slim and athletic figure, visible in verified photos.', de: 'Im Profil jeder Begleiterin finden Sie Körpertyp und Fotogalerie.', uk: 'У профілі кожної супутниці вказано тип фігури і фотогалерея.' },
+      },
+      {
+        q: { cs: 'Kolik fit společnic máte k dispozici?', en: 'How many fit companions do you have?', de: 'Wie viele sportliche Begleiterinnen haben Sie?', uk: 'Скільки спортивних супутниць у вас є?' },
+        a: { cs: 'Aktuální počet a dostupnost fit společnic najdete v rozvrhu — aktualizujeme denně.', en: 'Current availability of fit companions is in the live schedule, updated daily.', de: 'Aktuelle Verfügbarkeit im täglichen Zeitplan.', uk: 'Актуальна доступність — у графіку, оновлюється щодня.' },
+      },
+      {
+        q: { cs: 'Mají fit společnice jiný ceník?', en: 'Do fit companions have different pricing?', de: 'Haben sportliche Begleiterinnen andere Preise?', uk: 'Чи мають спортивні супутниці інші ціни?' },
+        a: { cs: 'Ne. Ceník je jednotný pro všechny společnice bez ohledu na postavu — od 2 000 Kč za 30 minut.', en: 'No. Pricing is the same for all companions regardless of body type — from 2,000 CZK for 30 minutes.', de: 'Nein. Einheitliche Preise für alle Begleiterinnen — ab 2.000 CZK.', uk: 'Ні. Ціни єдині для всіх супутниць — від 2 000 CZK за 30 хвилин.' },
+      },
+    ],
+    related: ['stihla-postava', 'dokonale-telo', 'studentky-praha', 'prirodni-poprsi'],
+  },
+
+  'ceske-holky': {
+    metaDesc: {
+      cs: 'České společnice Praha — rodilé Češky s plynulou češtinou a angličtinou. Ověřené profily, diskrétní apartmány v centru Prahy.',
+      en: 'Czech companions Prague — native Czech escorts with fluent Czech and English. Verified profiles, discreet central apartments.',
+      de: 'Tschechische Begleiterinnen Prag — Muttersprachlerinnen mit fließendem Tschechisch und Englisch. Verifiziert.',
+      uk: 'Чеські супутниці Прага — чеські дівчата з вільною чеською та англійською. Перевірені профілі.',
+    },
+    intro: {
+      cs: 'České společnice v Praze — rodilé Češky, které perfektně rozumí české mentalitě a kultuře. Komunikace bez bariér, přirozený humor a bezprostřednost. Každá je osobně ověřená, fotografie odpovídají realitě. Setkání v diskrétních apartmánech v centru Prahy.',
+      en: 'Czech companions in Prague — native Czech women who perfectly understand local culture and mentality. Barrier-free communication, natural humour, and spontaneity. Every one personally verified, photos match reality. Meetings in discreet apartments in central Prague.',
+      de: 'Tschechische Begleiterinnen in Prag — einheimische Frauen, die die lokale Kultur und Mentalität perfekt verstehen. Jede persönlich verifiziert. Treffen in diskreten Apartments im Zentrum.',
+      uk: 'Чеські супутниці у Празі — місцеві дівчата, які чудово розуміють чеську культуру та менталітет. Кожна особисто перевірена. Зустрічі у дискретних апартаментах у центрі Праги.',
+    },
+    faq: [
+      {
+        q: { cs: 'Jakými jazyky české společnice mluví?', en: 'What languages do Czech companions speak?', de: 'Welche Sprachen sprechen tschechische Begleiterinnen?', uk: 'Якими мовами говорять чеські супутниці?' },
+        a: { cs: 'Všechny mluví plynně česky a většina i anglicky. Některé ovládají i němčinu nebo ruštinu. Jazyky najdete v profilu každé společnice.', en: 'All speak fluent Czech and most speak English too. Some also speak German or Russian. Languages are listed in each companion\'s profile.', de: 'Alle sprechen fließend Tschechisch, die meisten auch Englisch. Sprachen im Profil aufgeführt.', uk: 'Усі вільно говорять чеською, більшість і англійською. Мови вказані у профілі.' },
+      },
+      {
+        q: { cs: 'Kolik českých společnic máte?', en: 'How many Czech companions do you have?', de: 'Wie viele tschechische Begleiterinnen haben Sie?', uk: 'Скільки чеських супутниць у вас є?' },
+        a: { cs: 'Aktuální počet a dostupnost najdete v rozvrhu — aktualizujeme denně. České společnice tvoří významnou část našeho týmu.', en: 'Current availability is in the live schedule, updated daily. Czech companions make up a significant part of our team.', de: 'Aktuelle Verfügbarkeit im täglichen Zeitplan.', uk: 'Актуальна доступність — у графіку. Чеські супутниці складають значну частину нашого колективу.' },
+      },
+      {
+        q: { cs: 'Jsou české společnice dražší?', en: 'Are Czech companions more expensive?', de: 'Sind tschechische Begleiterinnen teurer?', uk: 'Чи дорожчі чеські супутниці?' },
+        a: { cs: 'Ne. Ceník je jednotný pro všechny společnice bez ohledu na národnost — od 2 000 Kč za 30 minut.', en: 'No. Pricing is the same for all companions regardless of nationality — from 2,000 CZK for 30 minutes.', de: 'Nein. Einheitliche Preise unabhängig von der Nationalität — ab 2.000 CZK.', uk: 'Ні. Ціни єдині незалежно від національності — від 2 000 CZK за 30 хвилин.' },
+      },
+      {
+        q: { cs: 'Kde se s českou společnicí potkám?', en: 'Where do I meet a Czech companion?', de: 'Wo treffe ich eine tschechische Begleiterin?', uk: 'Де я зустріну чеську супутницю?' },
+        a: { cs: 'V diskrétním privátním apartmánu v centru Prahy ({districts}). Přesnou adresu obdržíte po potvrzení termínu.', en: 'In a discreet private apartment in central Prague ({districts}). Exact address sent after booking confirmation.', de: 'In einem diskreten Apartment im Zentrum von Prag ({districts}).', uk: 'У дискретному апартаменті у центрі Праги ({districts}).' },
+      },
+    ],
+    related: ['spolecnice-praha', 'blondynky-praha', 'brunetky-praha', 'gfe-praha'],
+  },
+
+  'ukrajinske-holky': {
+    metaDesc: {
+      cs: 'Ukrajinské společnice Praha — krásné a elegantní Ukrajinky v centru Prahy. Ověřené profily, diskrétní apartmány.',
+      en: 'Ukrainian companions Prague — beautiful and elegant Ukrainian escorts in central Prague. Verified profiles, discreet apartments.',
+      de: 'Ukrainische Begleiterinnen Prag — schön und elegant. Verifizierte Profile, diskrete Apartments.',
+      uk: 'Українські супутниці Прага — красиві та елегантні українки у центрі Праги. Перевірені профілі.',
+    },
+    intro: {
+      cs: 'Ukrajinské společnice v Praze — elegantní, krásné a často vícejazyčné. Ukrajinky jsou oblíbené pro svůj exotický šarm, péči o vzhled a vstřícnou povahu. Každá je osobně ověřená, fotografie odpovídají realitě. Setkání probíhají v diskrétních apartmánech v centru Prahy.',
+      en: 'Ukrainian companions in Prague — elegant, beautiful, and often multilingual. Ukrainian women are popular for their exotic charm, attention to appearance, and welcoming personality. Every one personally verified, photos match reality. Meetings in discreet apartments in central Prague.',
+      de: 'Ukrainische Begleiterinnen in Prag — elegant, schön und oft mehrsprachig. Jede persönlich verifiziert. Treffen in diskreten Apartments im Zentrum.',
+      uk: 'Українські супутниці у Празі — елегантні, красиві та часто багатомовні. Українки популярні завдяки екзотичному шарму, увазі до зовнішності та привітному характеру. Кожна особисто перевірена. Зустрічі у дискретних апартаментах у центрі Праги.',
+    },
+    faq: [
+      {
+        q: { cs: 'Mluví ukrajinské společnice česky?', en: 'Do Ukrainian companions speak Czech?', de: 'Sprechen ukrainische Begleiterinnen Tschechisch?', uk: 'Чи говорять українські супутниці чеською?' },
+        a: { cs: 'Většina mluví česky na komunikativní úrovni a plynně anglicky nebo rusky. Jazyky najdete v profilu každé společnice.', en: 'Most speak Czech at conversational level and are fluent in English or Russian. Languages listed in each companion\'s profile.', de: 'Die meisten sprechen Tschechisch auf Konversationsniveau und fließend Englisch oder Russisch.', uk: 'Більшість говорять чеською на розмовному рівні та вільно англійською або російською. Мови вказані у профілі.' },
+      },
+      {
+        q: { cs: 'Kolik ukrajinských společnic máte k dispozici?', en: 'How many Ukrainian companions are available?', de: 'Wie viele ukrainische Begleiterinnen sind verfügbar?', uk: 'Скільки українських супутниць доступно?' },
+        a: { cs: 'Aktuální počet a dostupnost najdete v rozvrhu — aktualizujeme denně.', en: 'Current availability is in the live schedule, updated daily.', de: 'Aktuelle Verfügbarkeit im täglichen Zeitplan.', uk: 'Актуальна доступність — у графіку, оновлюється щодня.' },
+      },
+      {
+        q: { cs: 'Jsou fotografie ukrajinských společnic skutečné?', en: 'Are the Ukrainian companion photos real?', de: 'Sind die Fotos der ukrainischen Begleiterinnen echt?', uk: 'Чи справжні фото українських супутниць?' },
+        a: { cs: 'Ano. Každou společnici osobně ověřujeme včetně fotografií — žádné fake profily.', en: 'Yes. Every companion is personally verified including photos — no fake profiles.', de: 'Ja. Jede Begleiterin wird persönlich verifiziert, auch die Fotos.', uk: 'Так. Кожну супутницю перевіряємо особисто, включно з фотографіями.' },
+      },
+    ],
+    related: ['ruske-holky', 'exoticke-krasky', 'blondynky-praha', 'cernovlasky-praha'],
+  },
+
+  'luxusni-sluzby': {
+    metaDesc: {
+      cs: 'Luxusní escort služby Praha — prémiové programy, GFE, duo setkání a VIP doprovodné služby. Ověřené společnice, diskrétní apartmány.',
+      en: 'Luxury escort services Prague — premium programs, GFE, duo meetings, and VIP companion services. Verified escorts, discreet apartments.',
+      de: 'Luxus-Escort-Dienstleistungen Prag — Premium-Programme, GFE, Duo-Treffen. Verifizierte Begleiterinnen.',
+      uk: 'Розкішні ескорт-послуги Прага — преміальні програми, GFE, дуо-зустрічі. Перевірені супутниці.',
+    },
+    intro: {
+      cs: 'Luxusní escort služby v Praze od LovelyGirls — prémiové programy pro náročné klienty. GFE (Girlfriend Experience), duo setkání, delší programy a VIP doprovod. Každá společnice je osobně ověřená, apartmány v centru Prahy nabízejí plné soukromí a komfort.',
+      en: 'Luxury escort services in Prague by LovelyGirls — premium programs for discerning clients. GFE (Girlfriend Experience), duo meetings, extended programs, and VIP companionship. Every companion personally verified, central Prague apartments offer full privacy and comfort.',
+      de: 'Luxus-Escort-Dienstleistungen in Prag — Premium-Programme für anspruchsvolle Kunden. GFE, Duo-Treffen, verlängerte Programme. Jede Begleiterin persönlich verifiziert.',
+      uk: 'Розкішні ескорт-послуги у Празі від LovelyGirls — преміальні програми для вибагливих клієнтів. GFE, дуо-зустрічі, подовжені програми. Кожна супутниця особисто перевірена.',
+    },
+    faq: [
+      {
+        q: { cs: 'Jaké luxusní služby nabízíte?', en: 'What luxury services do you offer?', de: 'Welche Luxus-Dienstleistungen bieten Sie an?', uk: 'Які розкішні послуги ви пропонуєте?' },
+        a: { cs: 'GFE (Girlfriend Experience), duo setkání, delší programy 90–120 minut, erotickou masáž a další prémiové služby. Kompletní nabídku najdete v profilech společnic.', en: 'GFE (Girlfriend Experience), duo meetings, extended 90–120 minute programs, erotic massage, and more. Full range in companion profiles.', de: 'GFE, Duo-Treffen, verlängerte Programme 90–120 Minuten, erotische Massage und mehr.', uk: 'GFE, дуо-зустрічі, подовжені програми 90–120 хвилин, еротичний масаж та інше.' },
+      },
+      {
+        q: { cs: 'Kolik stojí luxusní program?', en: 'How much does a luxury program cost?', de: 'Was kostet ein Luxus-Programm?', uk: 'Скільки коштує розкішна програма?' },
+        a: { cs: 'Ceny jsou transparentní a začínají od 2 000 Kč za 30 minut. Delší a prémiové programy najdete v ceníku. Žádné skryté příplatky.', en: 'Pricing is transparent, starting from 2,000 CZK for 30 minutes. Extended and premium programs on the pricing page. No hidden surcharges.', de: 'Transparente Preise ab 2.000 CZK für 30 Minuten. Keine versteckten Zuschläge.', uk: 'Прозорі ціни від 2 000 CZK за 30 хвилин. Жодних прихованих доплат.' },
+      },
+      {
+        q: { cs: 'Jak si objednat luxusní službu?', en: 'How do I book a luxury service?', de: 'Wie buche ich eine Luxus-Dienstleistung?', uk: 'Як замовити розкішну послугу?' },
+        a: { cs: 'Kontaktujte nás přes WhatsApp nebo Telegram, sdělte jakou službu a program si přejete. Potvrdíme dostupnost a domluvíme termín.', en: 'Contact us via WhatsApp or Telegram, tell us which service and program you\'d like. We confirm availability and arrange the appointment.', de: 'Kontaktieren Sie uns via WhatsApp oder Telegram. Wir bestätigen Verfügbarkeit und vereinbaren einen Termin.', uk: 'Зв\'яжіться через WhatsApp або Telegram, вкажіть бажану послугу та програму. Підтвердимо доступність.' },
+      },
+      {
+        q: { cs: 'Nabízíte duo setkání?', en: 'Do you offer duo meetings?', de: 'Bieten Sie Duo-Treffen an?', uk: 'Чи пропонуєте дуо-зустрічі?' },
+        a: { cs: 'Ano. Duo setkání (dvě společnice najednou) je k dispozici pro vybrané páry. Podrobnosti a dostupnost sdělíme na požádání.', en: 'Yes. Duo meetings (two companions at once) are available for selected pairs. Details and availability on request.', de: 'Ja. Duo-Treffen (zwei Begleiterinnen) für ausgewählte Paare verfügbar. Details auf Anfrage.', uk: 'Так. Дуо-зустрічі (дві супутниці одночасно) доступні для обраних пар. Деталі за запитом.' },
+      },
+    ],
+    related: ['vip-escort-praha', 'luxusni-spolecnice-praha', 'gfe-praha', 'escort-prague'],
+  },
+
+  'elegantni-holky': {
+    metaDesc: {
+      cs: 'Elegantní společnice Praha — sofistikované a stylové společnice pro náročné klienty. Ověřené profily, diskrétní apartmány v centru.',
+      en: 'Elegant companions Prague — sophisticated and stylish escorts for discerning clients. Verified profiles, discreet central apartments.',
+      de: 'Elegante Begleiterinnen Prag — stilvoll und anspruchsvoll. Verifizierte Profile, diskrete Apartments.',
+      uk: 'Елегантні супутниці Прага — стильні та витончені. Перевірені профілі, дискретні апартаменти.',
+    },
+    intro: {
+      cs: 'Elegantní společnice v Praze — sofistikované, stylové a s výborným vystupováním. Tyto společnice jsou ideální pro klienty, kteří oceňují kultivovanost, inteligentní konverzaci a přirozený šarm. Každá je osobně ověřená, fotografie odpovídají realitě. Setkání v diskrétních apartmánech v centru Prahy.',
+      en: 'Elegant companions in Prague — sophisticated, stylish, and with excellent manners. These companions are ideal for clients who appreciate refinement, intelligent conversation, and natural charm. Every one personally verified, photos match reality. Meetings in discreet apartments in central Prague.',
+      de: 'Elegante Begleiterinnen in Prag — anspruchsvoll, stilvoll und mit ausgezeichneten Umgangsformen. Jede persönlich verifiziert. Treffen in diskreten Apartments im Zentrum.',
+      uk: 'Елегантні супутниці у Празі — стильні, витончені та з чудовими манерами. Ідеальні для клієнтів, які цінують вишуканість та інтелектуальну бесіду. Кожна особисто перевірена. Зустрічі у дискретних апартаментах у центрі Праги.',
+    },
+    faq: [
+      {
+        q: { cs: 'Co dělá společnici elegantní?', en: 'What makes a companion elegant?', de: 'Was macht eine Begleiterin elegant?', uk: 'Що робить супутницю елегантною?' },
+        a: { cs: 'Kultivované vystupování, stylový vzhled, inteligentní konverzace a přirozený šarm. Naše elegantní společnice jsou ideální pro GFE a delší programy.', en: 'Refined manners, stylish appearance, intelligent conversation, and natural charm. Our elegant companions are ideal for GFE and extended programs.', de: 'Kultiviertes Auftreten, stilvolles Erscheinungsbild, intelligente Konversation und natürlicher Charme.', uk: 'Вишукані манери, стильний вигляд, інтелектуальна бесіда та природний шарм.' },
+      },
+      {
+        q: { cs: 'Kolik elegantních společnic máte?', en: 'How many elegant companions do you have?', de: 'Wie viele elegante Begleiterinnen haben Sie?', uk: 'Скільки елегантних супутниць у вас є?' },
+        a: { cs: 'Aktuální počet a dostupnost najdete v rozvrhu — aktualizujeme denně.', en: 'Current availability is in the live schedule, updated daily.', de: 'Aktuelle Verfügbarkeit im täglichen Zeitplan.', uk: 'Актуальна доступність — у графіку, оновлюється щодня.' },
+      },
+      {
+        q: { cs: 'Nabízejí elegantní společnice GFE?', en: 'Do elegant companions offer GFE?', de: 'Bieten elegante Begleiterinnen GFE an?', uk: 'Чи пропонують елегантні супутниці GFE?' },
+        a: { cs: 'Většina ano. Elegantní společnice jsou pro GFE ideální — dokážou vytvořit atmosféru autentického rande. Podrobnosti v profilu každé společnice.', en: 'Most do. Elegant companions are ideal for GFE — they create the atmosphere of an authentic date. Details in each companion\'s profile.', de: 'Die meisten ja. Elegante Begleiterinnen sind ideal für GFE. Details im Profil.', uk: 'Більшість так. Елегантні супутниці ідеальні для GFE. Деталі у профілі.' },
+      },
+      {
+        q: { cs: 'Kde se s elegantní společnicí potkám?', en: 'Where do I meet an elegant companion?', de: 'Wo treffe ich eine elegante Begleiterin?', uk: 'Де я зустріну елегантну супутницю?' },
+        a: { cs: 'V diskrétním privátním apartmánu v centru Prahy ({districts}). Přesnou adresu obdržíte po potvrzení termínu.', en: 'In a discreet private apartment in central Prague ({districts}). Exact address sent after booking confirmation.', de: 'In einem diskreten Apartment im Zentrum von Prag ({districts}).', uk: 'У дискретному апартаменті у центрі Праги ({districts}).' },
+      },
+    ],
+    related: ['luxusni-spolecnice-praha', 'gfe-praha', 'spolecnice-praha', 'vip-escort-praha'],
   },
 };
 
