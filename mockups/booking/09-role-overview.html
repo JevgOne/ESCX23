@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Booking — Role Overview (Admin / Operatorka / Divka)</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --purple: #a78bfa;
+    --teal: #2dd4bf;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; padding: 20px; }
+
+  h1 { font-size: 22px; text-align: center; margin-bottom: 8px; }
+  .subtitle { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 30px; }
+
+  .section {
+    max-width: 960px; margin: 0 auto 40px;
+  }
+  .section-title {
+    font-size: 14px; color: var(--coral); text-transform: uppercase;
+    letter-spacing: 0.1em; font-weight: 700;
+    margin-bottom: 16px; padding-left: 12px;
+    border-left: 3px solid var(--coral);
+  }
+
+  /* ========== A) Permission table ========== */
+  .perm-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .perm-table th {
+    background: var(--bg-soft); padding: 10px 12px;
+    text-align: left; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--dim); font-weight: 700;
+    border-bottom: 2px solid var(--line);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .perm-table th.role-col { text-align: center; width: 140px; }
+  .perm-table th.role-admin { color: var(--coral); }
+  .perm-table th.role-op { color: var(--purple); }
+  .perm-table th.role-girl { color: var(--teal); }
+
+  .perm-table td {
+    padding: 10px 12px; border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  .perm-table td.func { font-weight: 600; }
+  .perm-table td.perm { text-align: center; font-size: 14px; }
+
+  .perm-table tr:hover { background: rgba(255,255,255,0.02); }
+
+  .p-yes { color: var(--green); }
+  .p-no { color: var(--dim); opacity: 0.4; }
+  .p-limited { color: var(--yellow); font-size: 11px; font-weight: 600; }
+
+  .perm-cat {
+    background: var(--bg-elev); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--dim); font-weight: 700;
+  }
+  .perm-cat td { padding: 8px 12px; }
+
+  /* ========== B) Role switching ========== */
+  .flow-row { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+
+  .flow-card {
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px; width: 280px;
+  }
+  .flow-card-title {
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .flow-card-title .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .flow-card-body { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .flow-card-body strong { color: var(--text); }
+
+  .flow-arrow {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: var(--dim); padding-top: 20px;
+  }
+
+  /* Login mockup */
+  .login-box {
+    background: var(--bg-soft); border: 1px solid var(--line);
+    border-radius: 16px; padding: 24px; max-width: 320px;
+    margin: 0 auto 20px; text-align: center;
+  }
+  .login-logo { font-size: 18px; font-weight: 800; color: var(--coral); margin-bottom: 16px; }
+  .login-input {
+    width: 100%; padding: 10px 12px; margin-bottom: 8px;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: 8px; color: var(--text); font-size: 13px;
+  }
+  .login-btn {
+    width: 100%; padding: 12px; margin-top: 8px;
+    background: var(--coral); color: #fff; border: none;
+    border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .login-hint { font-size: 11px; color: var(--dim); margin-top: 10px; }
+
+  /* Role routing diagram */
+  .route-diagram {
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    margin: 20px auto; max-width: 600px;
+  }
+  .rd-node {
+    padding: 10px 20px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; text-align: center;
+    max-width: 300px; width: 100%;
+  }
+  .rd-system { background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.3); color: var(--purple); }
+  .rd-arrow { width: 2px; height: 20px; background: var(--line); position: relative; }
+  .rd-arrow::after {
+    content: ''; position: absolute; bottom: -4px; left: -3px;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-top: 6px solid var(--line);
+  }
+  .rd-branch { display: flex; gap: 16px; width: 100%; justify-content: center; }
+  .rd-branch-path { display: flex; flex-direction: column; align-items: center; gap: 0; flex: 1; }
+  .rd-branch-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px; margin-bottom: 0;
+  }
+
+  /* ========== C) Navigation per role ========== */
+  .nav-compare { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+
+  .nav-mockup {
+    width: 280px; background: var(--bg-soft);
+    border: 1px solid var(--line); border-radius: 12px;
+    overflow: hidden;
+  }
+  .nav-mockup-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--line);
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; text-align: center;
+  }
+  .nav-mockup-body { min-height: 300px; position: relative; }
+
+  /* Sidebar nav */
+  .mock-sidebar {
+    width: 100%; padding: 12px 0;
+  }
+  .mock-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px; font-size: 12px; font-weight: 600;
+    color: var(--muted);
+  }
+  .mock-nav-item:hover { background: var(--bg-elev); }
+  .mock-nav-item.active { color: var(--coral); background: rgba(242,125,141,0.06); border-left: 2px solid var(--coral); }
+  .mock-nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .mock-nav-sep {
+    height: 1px; background: var(--line); margin: 8px 16px;
+  }
+  .mock-nav-section {
+    padding: 8px 16px 4px; font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--dim); font-weight: 700;
+  }
+
+  /* Mobile bottom nav */
+  .mock-bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    display: flex; border-top: 1px solid var(--line);
+    background: var(--bg-soft); padding-bottom: 8px;
+  }
+  .mock-bottom-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 8px 0 4px; gap: 2px;
+    font-size: 9px; color: var(--dim); font-weight: 600;
+  }
+  .mock-bottom-item.active { color: var(--coral); }
+  .mock-bottom-icon { font-size: 16px; }
+
+  /* Impersonate banner */
+  .imp-banner {
+    padding: 6px 12px; font-size: 10px; font-weight: 600;
+    text-align: center;
+    background: rgba(251,191,36,0.1); border-bottom: 1px solid rgba(251,191,36,0.3);
+    color: var(--yellow);
+  }
+
+  .mockup-label {
+    padding: 10px 16px; background: var(--bg-elev);
+    border-radius: 10px; font-size: 12px;
+    color: var(--muted); text-align: center;
+    max-width: 960px; margin: 16px auto;
+  }
+
+  .note-box {
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: 10px; padding: 14px 18px;
+    font-size: 12px; color: var(--muted); line-height: 1.6;
+    margin-top: 16px;
+  }
+  .note-box strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<h1>Role Overview — 3 urovne pristupu</h1>
+<div class="subtitle">Admin (sef) &middot; Operatorka &middot; Divka (Studio PWA)</div>
+
+<!-- ============================================================ -->
+<!-- ===== A) PERMISSION TABLE ================================== -->
+<!-- ============================================================ -->
+<div class="section">
+  <div class="section-title">A) Opravneni per role — co kdo vidi a muze</div>
+
+  <table class="perm-table">
+    <thead>
+      <tr>
+        <th>Funkce</th>
+        <th class="role-col role-admin">Admin (sef)</th>
+        <th class="role-col role-op">Operatorka</th>
+        <th class="role-col role-girl">Divka (Studio)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Booking -->
+      <tr class="perm-cat"><td colspan="4">Rezervace</td></tr>
+      <tr>
+        <td class="func">Kalendar vsech divek</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Svuj vlastni kalendar</td>
+        <td class="perm">&mdash;</td>
+        <td class="perm">&mdash;</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Vytvaret rezervace</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Potvrdit / odmitnout booking</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">"Klient dorazil" / Dokonceno</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Hodnoceni klienta</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Odesilat potvrzeni klientovi</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+
+      <!-- Klienti -->
+      <tr class="perm-cat"><td colspan="4">Klienti</td></tr>
+      <tr>
+        <td class="func">Klientske karty (plne — telefon, historie)</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Info o klientovi (omezene)</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-limited">Jen jmeno, typ, pocet navstev</span></td>
+      </tr>
+      <tr>
+        <td class="func">Rejection list (NE seznam)</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-limited">Muze pridat na svuj NE list</span></td>
+      </tr>
+
+      <!-- Rozvrh -->
+      <tr class="perm-cat"><td colspan="4">Rozvrh a smeny</td></tr>
+      <tr>
+        <td class="func">Rozvrh smen — vsechny divky</td>
+        <td class="perm"><span class="p-yes">&#10003; upravit</span></td>
+        <td class="perm"><span class="p-limited">Pouze videt</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Svuj vlastni rozvrh</td>
+        <td class="perm">&mdash;</td>
+        <td class="perm">&mdash;</td>
+        <td class="perm"><span class="p-limited">Pouze videt</span></td>
+      </tr>
+
+      <!-- Body / cile -->
+      <tr class="perm-cat"><td colspan="4">Body a cile</td></tr>
+      <tr>
+        <td class="func">Body vsech divek / denni cile</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Sve vlastni body / denni cil</td>
+        <td class="perm">&mdash;</td>
+        <td class="perm">&mdash;</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+      </tr>
+
+      <!-- Finance -->
+      <tr class="perm-cat"><td colspan="4">Finance a reporty</td></tr>
+      <tr>
+        <td class="func">Financni prehled / reporty</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Ceny / trzby / inkasa</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+
+      <!-- Admin -->
+      <tr class="perm-cat"><td colspan="4">Administrace</td></tr>
+      <tr>
+        <td class="func">Sprava divek (profily, foto)</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Sprava pobocek</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Nastaveni systemu</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Audit log</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Sprava uzivatelu (role, hesla)</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Telegram bot admin</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+
+      <!-- Notifikace -->
+      <tr class="perm-cat"><td colspan="4">Notifikace</td></tr>
+      <tr>
+        <td class="func">Nova rezervace / zruseni</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003; audio ping</span></td>
+        <td class="perm"><span class="p-yes">&#10003; PWA push</span></td>
+      </tr>
+      <tr>
+        <td class="func">Reminder pred bookingem</td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-yes">&#10003; 1h pred</span></td>
+      </tr>
+      <tr>
+        <td class="func">Zmena smeny</td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+      </tr>
+      <tr>
+        <td class="func">Timeout / expiry alert</td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-yes">&#10003;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+
+      <!-- Impersonace -->
+      <tr class="perm-cat"><td colspan="4">Specialni</td></tr>
+      <tr>
+        <td class="func">Impersonate (prepnout na jinou roli)</td>
+        <td class="perm"><span class="p-yes">&#10003; &rarr; Operatorka</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+        <td class="perm"><span class="p-no">&#10007;</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- ===== B) ROLE SWITCHING DIAGRAM ============================ -->
+<!-- ============================================================ -->
+<div class="section">
+  <div class="section-title">B) Role switching — jak se urcuje co kdo vidi</div>
+
+  <!-- Login screen -->
+  <div class="login-box">
+    <div class="login-logo">LovelyGirls</div>
+    <input class="login-input" type="text" placeholder="Email" value="operatorka@lovelygirls.cz">
+    <input class="login-input" type="password" placeholder="Heslo" value="**********">
+    <button class="login-btn">Prihlasit se</button>
+    <div class="login-hint">NextAuth v5 &middot; session cookie &middot; secure httpOnly</div>
+  </div>
+
+  <!-- Routing diagram -->
+  <div class="route-diagram">
+    <div class="rd-node rd-system">
+      System cte <strong>users.role</strong> z DB<br>
+      <span style="font-size:11px;color:var(--dim);">role: 'admin' | 'operator' | 'girl'</span>
+    </div>
+    <div class="rd-arrow"></div>
+
+    <div class="rd-branch">
+      <div class="rd-branch-path">
+        <div class="rd-branch-label" style="color:var(--coral);background:rgba(242,125,141,0.1);">role = admin</div>
+        <div class="rd-arrow"></div>
+        <div class="rd-node" style="background:rgba(242,125,141,0.08);border:1px solid rgba(242,125,141,0.3);color:var(--coral);">
+          <strong>/admin/dashboard</strong><br>
+          <span style="font-size:11px;">Full sidebar, vsechny moduly</span>
+        </div>
+      </div>
+      <div class="rd-branch-path">
+        <div class="rd-branch-label" style="color:var(--purple);background:rgba(167,139,250,0.1);">role = operator</div>
+        <div class="rd-arrow"></div>
+        <div class="rd-node" style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.3);color:var(--purple);">
+          <strong>/admin/calendar</strong><br>
+          <span style="font-size:11px;">Omezeny sidebar, bez financi/nastaveni</span>
+        </div>
+      </div>
+      <div class="rd-branch-path">
+        <div class="rd-branch-label" style="color:var(--teal);background:rgba(45,212,191,0.1);">role = girl</div>
+        <div class="rd-arrow"></div>
+        <div class="rd-node" style="background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.3);color:var(--teal);">
+          <strong>/studio</strong><br>
+          <span style="font-size:11px;">Mobilni PWA, spodni navigace</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>Impersonate (jen admin):</strong> Admin muze v headeru kliknout "Zobrazit jako operatorka" &rarr; vidi presne to co operatorka, ale s zlutym bannerem nahore: "Pohled operatorky — klikni pro navrat do admin". Divku admin impersonovat nemuze (oddelena appka /studio).<br><br>
+    <strong>Divka nema pristup do /admin/*:</strong> Middleware kontroluje session.role. Pokud girl pristoupi na /admin/* &rarr; redirect na /studio. Zadna navigace do admin panelu neexistuje v Studio UI.<br><br>
+    <strong>URL routing:</strong><br>
+    &bull; <code>/admin/*</code> — role admin + operator (operator ma omezene menu)<br>
+    &bull; <code>/studio/*</code> — role girl only<br>
+    &bull; <code>/login</code> — vsechny role
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ===== C) NAVIGACE PER ROLE ================================= -->
+<!-- ============================================================ -->
+<div class="section">
+  <div class="section-title">C) Navigace per role — vizualni porovnani</div>
+
+  <div class="nav-compare">
+
+    <!-- Admin sidebar -->
+    <div class="nav-mockup">
+      <div class="nav-mockup-header" style="color: var(--coral);">Admin (sef)</div>
+      <div class="nav-mockup-body">
+        <div class="mock-sidebar">
+          <div class="mock-nav-section">Booking</div>
+          <div class="mock-nav-item active"><span class="mock-nav-icon">&#128197;</span> Kalendar</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#128100;</span> Klienti</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#128336;</span> Rozvrh smen</div>
+          <div class="mock-nav-sep"></div>
+          <div class="mock-nav-section">Sprava</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#128105;</span> Divky</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#127968;</span> Pobocky</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#128202;</span> Reporty</div>
+          <div class="mock-nav-sep"></div>
+          <div class="mock-nav-section">System</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#9881;</span> Nastaveni</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#128220;</span> Audit log</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#128101;</span> Uzivatele</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#9992;</span> TG Bot</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Operator sidebar -->
+    <div class="nav-mockup">
+      <div class="nav-mockup-header" style="color: var(--purple);">Operatorka</div>
+      <div class="nav-mockup-body">
+        <div class="imp-banner" style="display:none;">Pohled operatorky — Klikni pro navrat</div>
+        <div class="mock-sidebar">
+          <div class="mock-nav-section">Booking</div>
+          <div class="mock-nav-item active"><span class="mock-nav-icon">&#128197;</span> Kalendar</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#128100;</span> Klienti</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#128336;</span> Rozvrh smen</div>
+          <div class="mock-nav-sep"></div>
+          <div style="padding: 20px 16px; font-size: 11px; color: var(--dim); text-align: center; line-height: 1.6;">
+            <div style="font-size: 20px; margin-bottom: 8px; opacity: 0.3;">&#128274;</div>
+            Sekce Sprava a System<br>nejsou dostupne pro operatorku
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Girl bottom nav -->
+    <div class="nav-mockup">
+      <div class="nav-mockup-header" style="color: var(--teal);">Divka (Studio PWA)</div>
+      <div class="nav-mockup-body" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 300px;">
+        <div style="padding: 20px; text-align: center;">
+          <div style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">Emily</div>
+          <div style="font-size: 11px; color: var(--muted);">So 13.9. &middot; Smena 11:00-22:00</div>
+          <div style="font-size: 11px; color: var(--dim);">Zizkov (Praha 3)</div>
+
+          <div style="margin-top: 20px; text-align: left;">
+            <div style="font-size: 10px; color: var(--dim); text-transform: uppercase; font-weight: 600; margin-bottom: 8px;">Dnesni bookings</div>
+            <div style="font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--line);">12:00 &middot; 60m &middot; <span style="color:var(--green)">Staly</span> <span style="opacity:0.4">&#10003;</span></div>
+            <div style="font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); color: var(--coral); font-weight: 600;">16:00 &middot; 60m &middot; <span style="color:var(--yellow)">VIP</span> &larr; dalsi</div>
+            <div style="font-size: 12px; padding: 6px 0;">19:30 &middot; 30m &middot; <span style="color:var(--blue)">Novy</span></div>
+          </div>
+
+          <div style="margin-top: 16px; font-size: 10px; color: var(--dim); text-align: center; line-height: 1.6;">
+            <div style="font-size: 20px; margin-bottom: 8px; opacity: 0.3;">&#128274;</div>
+            Zadna navigace do /admin<br>
+            Middleware: girl &rarr; redirect /studio
+          </div>
+        </div>
+
+        <div class="mock-bottom-nav">
+          <div class="mock-bottom-item active">
+            <span class="mock-bottom-icon">&#9776;</span>
+            Prehled
+          </div>
+          <div class="mock-bottom-item">
+            <span class="mock-bottom-icon">&#128197;</span>
+            Rozvrh
+          </div>
+          <div class="mock-bottom-item">
+            <span class="mock-bottom-icon">&#128276;</span>
+            Notifikace
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Impersonate example -->
+  <div style="margin-top: 24px;">
+    <div style="font-size: 12px; color: var(--dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center;">Admin impersonate &rarr; pohled operatorky</div>
+    <div class="nav-mockup" style="max-width: 400px; margin: 0 auto;">
+      <div class="imp-banner">&#9888; Pohled operatorky (Lucie) — <span style="text-decoration: underline; cursor: pointer;">Zpet do admin panelu</span></div>
+      <div class="nav-mockup-body" style="min-height: auto;">
+        <div class="mock-sidebar">
+          <div class="mock-nav-item active"><span class="mock-nav-icon">&#128197;</span> Kalendar</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#128100;</span> Klienti</div>
+          <div class="mock-nav-item"><span class="mock-nav-icon">&#128336;</span> Rozvrh smen</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mockup-label">
+  MOCKUP: Role Overview &mdash; A) Permission table (22 funkci &times; 3 role), B) Role switching (login &rarr; DB role check &rarr; routing, impersonate), C) Navigace per role (admin full sidebar, operatorka omezeny sidebar, divka mobilni bottom nav)
+</div>
+
+</body>
+</html>

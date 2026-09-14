@@ -18,9 +18,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonical = getCanonicalUrl(locale, '/kontakt');
   const ogImages = await buildOgImages('kontakt', locale, '/kontakt', t('h1'));
 
+  const metaDesc: Record<string, string> = {
+    cs: 'Kontaktujte LovelyGirls Praha přes WhatsApp, Telegram nebo telefon. Odpovídáme do 5 minut, žádná registrace. Plná diskrétnost zaručena.',
+    en: 'Contact LovelyGirls Prague via WhatsApp, Telegram or phone. We reply within 5 minutes, no registration needed. Complete discretion guaranteed.',
+    de: 'Kontaktieren Sie LovelyGirls Prag per WhatsApp, Telegram oder Telefon. Antwort innerhalb 5 Minuten, keine Registrierung. Volle Diskretion garantiert.',
+    uk: 'Зв\'яжіться з LovelyGirls Прага через WhatsApp, Telegram або телефон. Відповідаємо за 5 хвилин, без реєстрації. Повна дискретність гарантована.',
+  };
+  const desc = metaDesc[locale] ?? metaDesc.en;
+
   return applyDBOverride(`/${locale}/kontakt`, {
     title: t('h1'),
-    description: t('lead'),
+    description: desc,
     alternates: {
       canonical,
       languages: getAlternates('/kontakt'),
@@ -28,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       images: ogImages,
       title: t('h1'),
-      description: t('lead'),
+      description: desc,
       url: canonical,
       locale: ogLocale(locale),
     },

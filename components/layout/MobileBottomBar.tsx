@@ -1,4 +1,4 @@
-import { localePrefix } from '@/lib/seo/meta';
+import { Link } from '@/i18n/navigation';
 import { getActiveLocations } from '@/lib/queries';
 import { pragueDateISO } from '@/lib/utils';
 
@@ -49,9 +49,9 @@ export default async function MobileBottomBar({ locale }: MobileBottomBarProps) 
         </summary>
         <div className="mbb-dropdown">
           {locations.map((loc) => (
-            <a
+            <Link
               key={loc.id}
-              href={`${localePrefix(locale)}/pobocka/${loc.name}`}
+              href={{ pathname: '/pobocka/[slug]', params: { slug: loc.name } }}
               className="mbb-dropdown-item"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -59,7 +59,7 @@ export default async function MobileBottomBar({ locale }: MobileBottomBarProps) 
                 <circle cx="12" cy="10" r="3" />
               </svg>
               <span>{loc.displayName}{loc.district ? `, ${loc.district}` : ''}</span>
-            </a>
+            </Link>
           ))}
         </div>
       </details>

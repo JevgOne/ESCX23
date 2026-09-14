@@ -93,6 +93,7 @@ export const routing = defineRouting({
       de: '/standort/[slug]',
       uk: '/lokatsiya/[slug]',
     },
+    '/hashtag/[slug]': '/hashtag/[slug]',
     '/sluzba/[slug]': {
       cs: '/sluzba/[slug]',
       en: '/service/[slug]',

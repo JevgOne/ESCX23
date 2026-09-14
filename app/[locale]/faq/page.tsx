@@ -19,10 +19,10 @@ const TITLES: Record<string, string> = {
 };
 
 const DESCRIPTIONS: Record<string, string> = {
-  cs: 'Odpovědi na nejčastější otázky o escort službách v Praze. Jak rezervovat, platba hotově, diskrétnost, bezpečnost, legalita.',
-  en: 'Answers to common questions about escort services in Prague. How to book, cash payment, discretion, safety, legality.',
-  de: 'Antworten auf häufige Fragen über Escort-Services in Prag. Buchung, Barzahlung, Diskretion, Sicherheit, Legalität.',
-  uk: 'Відповіді на часті питання про ескорт послуги в Празі. Як замовити, оплата готівкою, дискретність, безпека, легальність.',
+  cs: 'Odpovědi na nejčastější otázky o escort službách LovelyGirls Praha. Jak rezervovat, platba hotově, diskrétnost, bezpečnost a legalita služeb v České republice.',
+  en: 'Answers to frequently asked questions about LovelyGirls Prague escort services. How to book, cash payment, discretion, safety and legality in the Czech Republic.',
+  de: 'Antworten auf häufig gestellte Fragen zu Escort-Services von LovelyGirls Prag. Buchung, Barzahlung, Diskretion, Sicherheit und Legalität in Tschechien.',
+  uk: 'Відповіді на часті питання про ескорт послуги LovelyGirls Прага. Як замовити, оплата готівкою, дискретність, безпека та легальність послуг у Чехії.',
 };
 
 const GEO_LEADS: Record<string, string> = {

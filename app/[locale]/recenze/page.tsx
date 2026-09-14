@@ -23,10 +23,10 @@ const TITLES: Record<string, string> = {
 };
 
 const DESCRIPTIONS: Record<string, string> = {
-  cs: 'Skutečné anonymní recenze klientů LovelyGirls Praha. Hodnocení, zkušenosti a doporučení. Průměr 4.8 z 5 hvězd.',
-  en: 'Real anonymous client reviews of LovelyGirls Prague. Ratings, experiences and recommendations. Average 4.8 out of 5 stars.',
-  de: 'Echte anonyme Kundenbewertungen von LovelyGirls Prag. Bewertungen und Empfehlungen. Durchschnitt 4.8 von 5 Sternen.',
-  uk: 'Справжні анонімні відгуки клієнтів LovelyGirls Прага. Оцінки та рекомендації. Середній бал 4.8 з 5 зірок.',
+  cs: 'Skutečné anonymní recenze klientů LovelyGirls Praha. Hodnocení, zkušenosti a doporučení našich společnic. Průměrné hodnocení 4.8 z 5 hvězd. Ověřené recenze.',
+  en: 'Real anonymous client reviews of LovelyGirls Prague. Ratings, experiences and recommendations for our companions. Average rating 4.8 out of 5 stars. Verified reviews.',
+  de: 'Echte anonyme Kundenbewertungen von LovelyGirls Prag. Bewertungen, Erfahrungen und Empfehlungen unserer Begleiterinnen. Durchschnitt 4.8 von 5 Sternen. Verifiziert.',
+  uk: 'Справжні анонімні відгуки клієнтів LovelyGirls Прага. Оцінки, досвід та рекомендації наших супутниць. Середній бал 4.8 з 5 зірок. Перевірені відгуки.',
 };
 
 const T: Record<string, {

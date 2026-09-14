@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Booking — Klientska karta (detail + seznam)</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --purple: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; background: var(--bg-soft); border-bottom: 1px solid var(--line);
+  }
+  .topbar-title { font-size: 18px; font-weight: 700; }
+  .topbar-right { display: flex; gap: 10px; }
+  .btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--coral); color: #fff; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+
+  /* Search bar */
+  .search-bar {
+    display: flex; gap: 10px; padding: 12px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .search-input {
+    flex: 1; padding: 10px 14px;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: 8px; color: var(--text); font-size: 14px; outline: none;
+  }
+  .search-input:focus { border-color: var(--coral); }
+  .filter-chip {
+    padding: 8px 14px; border-radius: 20px;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    color: var(--muted); font-size: 12px; cursor: pointer;
+    font-weight: 600;
+  }
+  .filter-chip.active { border-color: var(--coral); color: var(--coral); }
+
+  /* Client list */
+  .client-list { padding: 0 20px; }
+  .client-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .client-row:hover { background: rgba(242,125,141,0.04); margin: 0 -20px; padding: 12px 20px; }
+  .c-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--coral); font-size: 14px;
+    flex-shrink: 0;
+  }
+  .c-main { flex: 1; min-width: 0; }
+  .c-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-code { font-size: 12px; color: var(--muted); }
+  .c-stats { display: flex; gap: 16px; font-size: 12px; color: var(--dim); }
+  .c-stats .highlight { color: var(--text); font-weight: 600; }
+  .c-badge {
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .badge-vip { background: rgba(251,191,36,0.2); color: var(--yellow); }
+  .badge-regular { background: rgba(74,222,128,0.2); color: var(--green); }
+  .badge-new { background: rgba(96,165,250,0.2); color: var(--blue); }
+  .badge-untrusted { background: rgba(239,68,68,0.2); color: var(--red); }
+  .c-last { font-size: 11px; color: var(--dim); text-align: right; min-width: 80px; flex-shrink: 0; }
+
+  /* Detail panel */
+  .separator { text-align: center; padding: 30px 0; font-size: 14px; color: var(--dim); }
+
+  .detail-container { max-width: 700px; margin: 0 auto; padding: 20px; }
+
+  .detail-header {
+    display: flex; align-items: center; gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 20px;
+  }
+  .detail-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--bg-elev); border: 2px solid var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--coral); font-size: 22px;
+  }
+  .detail-name { font-size: 22px; font-weight: 700; }
+  .detail-code { font-size: 14px; color: var(--muted); }
+  .detail-actions { margin-left: auto; display: flex; gap: 8px; }
+
+  /* Stat cards */
+  .stat-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-num { font-size: 24px; font-weight: 700; font-family: Georgia, serif; }
+  .stat-num.coral { color: var(--coral); }
+  .stat-num.green { color: var(--green); }
+  .stat-num.yellow { color: var(--yellow); }
+  .stat-num.red { color: var(--red); }
+  .stat-lbl { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+  /* Info grid */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .info-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .info-card-title { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 600; }
+  .info-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+  .info-label { color: var(--muted); }
+  .info-value { font-weight: 600; }
+
+  /* Tabs */
+  .detail-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+  .detail-tab {
+    padding: 10px 0; font-size: 13px; font-weight: 600;
+    color: var(--muted); position: relative; cursor: pointer;
+  }
+  .detail-tab.active { color: var(--coral); }
+  .detail-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--coral); }
+
+  /* History table */
+  .history-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+  .history-table th { text-align: left; padding: 8px; font-size: 10px; color: var(--dim); text-transform: uppercase; border-bottom: 1px solid var(--line); font-weight: 600; letter-spacing: 0.05em; }
+  .history-table td { padding: 8px; border-bottom: 1px solid rgba(42,34,48,0.5); vertical-align: middle; }
+  .history-table tr:hover { background: rgba(242,125,141,0.04); }
+  .status-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 700;
+  }
+  .status-ok { background: rgba(74,222,128,0.15); color: var(--green); }
+  .status-noshow { background: rgba(239,68,68,0.15); color: var(--red); }
+  .status-pending { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .status-cancelled { background: rgba(106,94,114,0.2); color: var(--dim); }
+
+  .source-icon { font-size: 14px; }
+
+  /* Girl chips in detail */
+  .girl-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .girl-chip {
+    display: flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 16px;
+    background: var(--bg); border: 1px solid var(--line);
+    font-size: 11px; color: var(--muted);
+  }
+  .girl-chip .chip-count { font-weight: 700; color: var(--coral); }
+
+  .mockup-label { padding: 10px 16px; background: var(--bg-elev); border-radius: 10px; font-size: 12px; color: var(--muted); margin: 16px 20px; text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- ===== CLIENT LIST VIEW ===== -->
+<div class="topbar">
+  <span class="topbar-title">Klienti</span>
+  <div class="topbar-right">
+    <span style="font-size: 13px; color: var(--muted);">454 klientu</span>
+    <button class="btn btn-primary">+ Novy klient</button>
+  </div>
+</div>
+
+<div class="search-bar">
+  <input class="search-input" type="text" placeholder="Hledat podle jmena, kodu, telefonu...">
+  <div class="filter-chip active">Vsichni</div>
+  <div class="filter-chip">VIP</div>
+  <div class="filter-chip">Stali</div>
+  <div class="filter-chip">Novi</div>
+  <div class="filter-chip">Neduveryh.</div>
+</div>
+
+<div class="client-list">
+  <div class="client-row">
+    <div class="c-avatar">J</div>
+    <div class="c-main">
+      <div class="c-name">Josef</div>
+      <div class="c-code">KLIENT1211 (JozefN1211)</div>
+    </div>
+    <div class="c-stats">
+      <span><span class="highlight">6</span> navstev</span>
+      <span><span class="highlight">0</span> no-shows</span>
+    </div>
+    <span class="c-badge badge-vip">VIP</span>
+    <div class="c-last">9.9.2026</div>
+  </div>
+
+  <div class="client-row">
+    <div class="c-avatar">K</div>
+    <div class="c-main">
+      <div class="c-name">Klient04093</div>
+      <div class="c-code">KLIENT0409</div>
+    </div>
+    <div class="c-stats">
+      <span><span class="highlight">13</span> navstev</span>
+      <span><span class="highlight">0</span> no-shows</span>
+    </div>
+    <span class="c-badge badge-vip">VIP</span>
+    <div class="c-last">13.9.2026</div>
+  </div>
+
+  <div class="client-row">
+    <div class="c-avatar">C</div>
+    <div class="c-main">
+      <div class="c-name">Cizinec711</div>
+      <div class="c-code">KLIENT0711</div>
+    </div>
+    <div class="c-stats">
+      <span><span class="highlight">10</span> navstev</span>
+      <span><span class="highlight">1</span> no-show</span>
+    </div>
+    <span class="c-badge badge-regular">Staly</span>
+    <div class="c-last">7.9.2026</div>
+  </div>
+
+  <div class="client-row">
+    <div class="c-avatar">V</div>
+    <div class="c-main">
+      <div class="c-name">Vladimir</div>
+      <div class="c-code">KLIENT1806 (Vladimir1806)</div>
+    </div>
+    <div class="c-stats">
+      <span><span class="highlight">4</span> navstevy</span>
+      <span><span class="highlight">0</span> no-shows</span>
+    </div>
+    <span class="c-badge badge-regular">Staly</span>
+    <div class="c-last">5.9.2026</div>
+  </div>
+
+  <div class="client-row">
+    <div class="c-avatar">P</div>
+    <div class="c-main">
+      <div class="c-name">Petr</div>
+      <div class="c-code">PETR1309</div>
+    </div>
+    <div class="c-stats">
+      <span><span class="highlight">1</span> navsteva</span>
+      <span><span class="highlight">0</span> no-shows</span>
+    </div>
+    <span class="c-badge badge-new">Novy</span>
+    <div class="c-last">13.9.2026</div>
+  </div>
+
+  <div class="client-row">
+    <div class="c-avatar" style="border-color: var(--red);">M</div>
+    <div class="c-main">
+      <div class="c-name">Martin</div>
+      <div class="c-code">KLIENT2004</div>
+    </div>
+    <div class="c-stats">
+      <span><span class="highlight">5</span> navstev</span>
+      <span style="color: var(--red);"><span class="highlight" style="color: var(--red);">3</span> no-shows!</span>
+    </div>
+    <span class="c-badge badge-untrusted">Neduveryh.</span>
+    <div class="c-last">1.8.2026</div>
+  </div>
+</div>
+
+<div class="separator">&mdash;&mdash;&mdash; DETAIL KLIENTA (po kliknuti na radek) &mdash;&mdash;&mdash;</div>
+
+<!-- ===== CLIENT DETAIL VIEW ===== -->
+<div class="detail-container">
+  <div class="detail-header">
+    <div class="detail-avatar">J</div>
+    <div>
+      <div class="detail-name">Josef <span class="c-badge badge-vip" style="vertical-align: middle;">VIP</span></div>
+      <div class="detail-code">KLIENT1211 (JozefN1211) / +420 777 *** ***</div>
+    </div>
+    <div class="detail-actions">
+      <button class="btn btn-primary">+ Rezervace</button>
+      <button class="btn btn-ghost">Upravit</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-cards">
+    <div class="stat-card">
+      <div class="stat-num coral">6</div>
+      <div class="stat-lbl">Navstevy</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num green">0</div>
+      <div class="stat-lbl">No-shows</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num yellow">27 000</div>
+      <div class="stat-lbl">Utraceno Kc</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color: var(--text);">4.5</div>
+      <div class="stat-lbl">Hodnoceni</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num yellow">6 000</div>
+      <div class="stat-lbl">Body celkem</div>
+    </div>
+  </div>
+
+  <!-- Info cards -->
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-title">Kontakt</div>
+      <div class="info-row"><span class="info-label">Telefon</span><span class="info-value">+420 777 888 999</span></div>
+      <div class="info-row"><span class="info-label">Telegram</span><span class="info-value" style="color: #229ED9;">@josef_prg</span></div>
+      <div class="info-row"><span class="info-label">Email</span><span class="info-value" style="color: var(--dim);">—</span></div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-title">Statistiky</div>
+      <div class="info-row"><span class="info-label">Prvni navsteva</span><span class="info-value">12.11.2025</span></div>
+      <div class="info-row"><span class="info-label">Posledni navsteva</span><span class="info-value">9.9.2026</span></div>
+      <div class="info-row"><span class="info-label">Staly od</span><span class="info-value" style="color: var(--green);">3. navstevy</span></div>
+    </div>
+  </div>
+
+  <!-- Preferred girls -->
+  <div class="info-card" style="margin-bottom: 20px;">
+    <div class="info-card-title">Navstivene divky</div>
+    <div class="girl-chips">
+      <div class="girl-chip"><span class="chip-count">3</span> Emily</div>
+      <div class="girl-chip"><span class="chip-count">2</span> Nika</div>
+      <div class="girl-chip"><span class="chip-count">1</span> Nina</div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="info-card" style="margin-bottom: 20px;">
+    <div class="info-card-title">Interni poznamky</div>
+    <div style="font-size: 13px; color: var(--text);">Vzdy dochvilny, preferuje Emily. Ma Telegram bota. Pravidelne kazdy ctvrtek.</div>
+  </div>
+
+  <!-- Tabs: History / Ratings -->
+  <div class="detail-tabs">
+    <div class="detail-tab active">Historie (6)</div>
+    <div class="detail-tab">Hodnoceni (3)</div>
+  </div>
+
+  <!-- History table -->
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>Datum</th>
+        <th>Divka</th>
+        <th>Program</th>
+        <th>Zdroj</th>
+        <th>Status</th>
+        <th>Cena</th>
+        <th>Body</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>9.9.2026 16:00</td>
+        <td>Emily</td>
+        <td>60 min</td>
+        <td><span class="source-icon" title="Telegram">TG</span></td>
+        <td><span class="status-pill status-ok">Dokonceno</span></td>
+        <td>4 500 Kc</td>
+        <td style="color: var(--yellow); font-weight: 700;">1 000</td>
+      </tr>
+      <tr>
+        <td>2.9.2026 14:00</td>
+        <td>Nika</td>
+        <td>60 min</td>
+        <td><span class="source-icon" title="Telefon">TEL</span></td>
+        <td><span class="status-pill status-ok">Dokonceno</span></td>
+        <td>4 500 Kc</td>
+        <td style="color: var(--yellow); font-weight: 700;">1 000</td>
+      </tr>
+      <tr>
+        <td>25.8.2026 11:00</td>
+        <td>Nina</td>
+        <td>60 min</td>
+        <td><span class="source-icon" title="Telefon">TEL</span></td>
+        <td><span class="status-pill status-ok">Dokonceno</span></td>
+        <td>4 500 Kc</td>
+        <td style="color: var(--yellow); font-weight: 700;">1 000</td>
+      </tr>
+      <tr>
+        <td>15.8.2026 16:00</td>
+        <td>Emily</td>
+        <td>60 min</td>
+        <td><span class="source-icon" title="Telegram">TG</span></td>
+        <td><span class="status-pill status-ok">Dokonceno</span></td>
+        <td>4 500 Kc</td>
+        <td style="color: var(--yellow); font-weight: 700;">1 000</td>
+      </tr>
+      <tr>
+        <td>1.8.2026 15:00</td>
+        <td>Nika</td>
+        <td>90 min</td>
+        <td><span class="source-icon" title="Telefon">TEL</span></td>
+        <td><span class="status-pill status-ok">Dokonceno</span></td>
+        <td>6 500 Kc</td>
+        <td style="color: var(--yellow); font-weight: 700;">1 000</td>
+      </tr>
+      <tr>
+        <td>12.11.2025 14:00</td>
+        <td>Emily</td>
+        <td>60 min</td>
+        <td><span class="source-icon" title="Telefon">TEL</span></td>
+        <td><span class="status-pill status-ok">Dokonceno</span></td>
+        <td>4 500 Kc</td>
+        <td style="color: var(--yellow); font-weight: 700;">1 000</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="mockup-label">
+  MOCKUP: Klientska karta &mdash; seznam (filtry, vyhledavani) + detail (statistiky, bodovy system, historie s body, poznamky, navstivene divky)
+</div>
+
+</body>
+</html>

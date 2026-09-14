@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Booking — Calendar Week View</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --orange: #fb923c;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+
+    /* Girl colors */
+    --c-aneta: #4ade80;
+    --c-caty: #fbbf24;
+    --c-eliska: #c084fc;
+    --c-emily: #f27d8d;
+    --c-kim: #fb923c;
+    --c-luna: #60a5fa;
+    --c-natalie: #2dd4bf;
+    --c-nika: #a78bfa;
+    --c-nina: #f9a8d4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; overflow-x: hidden; }
+
+  /* ========== TOPBAR ========== */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; background: var(--bg-soft); border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .topbar-title { font-size: 18px; font-weight: 700; }
+  .topbar-date { font-size: 14px; color: var(--muted); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--coral); color: #fff; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .btn-ghost.active { color: var(--coral); border-color: var(--coral); }
+  .toggle-group { display: flex; }
+  .toggle-group .btn { border-radius: 0; }
+  .toggle-group .btn:first-child { border-radius: 8px 0 0 8px; }
+  .toggle-group .btn:last-child { border-radius: 0 8px 8px 0; }
+  /* ========== GRID ========== */
+  .week-grid {
+    display: grid;
+    grid-template-columns: 100px repeat(7, 1fr) 70px;
+    border-bottom: 1px solid var(--line);
+  }
+  .grid-header {
+    background: var(--bg-soft); padding: 10px 8px; text-align: center;
+    border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+    font-size: 12px; color: var(--muted);
+    position: sticky; top: 53px; z-index: 10;
+  }
+  .grid-header .day-num { font-size: 18px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .grid-header.today { background: var(--bg-elev); }
+  .grid-header.today .day-num { color: var(--coral); }
+  .grid-header.corner { font-size: 11px; display: flex; align-items: center; justify-content: center; color: var(--dim); }
+
+  .girl-row-header {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+    background: var(--bg-soft);
+  }
+  .girl-av {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .girl-nm { font-size: 12px; font-weight: 600; }
+
+  .day-cell {
+    border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+    padding: 2px 3px; min-height: 36px;
+  }
+  .day-cell.no-shift { background: rgba(0,0,0,0.2); }
+
+  .mini-booking {
+    border-radius: 3px; padding: 1px 4px;
+    font-size: 10px; line-height: 16px; margin-bottom: 1px;
+    border-left: 2px solid; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mini-booking:hover { opacity: 0.85; }
+  .mini-booking .mb-t { color: var(--muted); }
+  .mini-booking .mb-d { color: var(--dim); }
+  .mini-booking .mb-n { font-weight: 600; color: var(--text); }
+  /* Girl-colored mini-bookings */
+  .mini-booking.g-aneta   { background: rgba(74,222,128,0.10); border-left-color: var(--c-aneta); }
+  .mini-booking.g-caty    { background: rgba(251,191,36,0.10); border-left-color: var(--c-caty); }
+  .mini-booking.g-eliska  { background: rgba(192,132,252,0.10); border-left-color: var(--c-eliska); }
+  .mini-booking.g-emily   { background: rgba(242,125,141,0.10); border-left-color: var(--c-emily); }
+  .mini-booking.g-kim     { background: rgba(251,146,60,0.10); border-left-color: var(--c-kim); }
+  .mini-booking.g-luna    { background: rgba(96,165,250,0.10); border-left-color: var(--c-luna); }
+  .mini-booking.g-natalie { background: rgba(45,212,191,0.10); border-left-color: var(--c-natalie); }
+  .mini-booking.g-nika    { background: rgba(167,139,250,0.10); border-left-color: var(--c-nika); }
+  .mini-booking.g-nina    { background: rgba(249,168,212,0.10); border-left-color: var(--c-nina); }
+
+  /* shift-label and day-pts removed — info lives in summary row and girl-total */
+
+  .girl-total {
+    border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+    background: var(--bg-elev); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 4px;
+  }
+  .girl-total .gt-pts { font-size: 14px; font-weight: 700; color: var(--yellow); font-family: Georgia, serif; }
+  .girl-total .gt-cnt { font-size: 10px; color: var(--dim); }
+
+  .grid-summary-row {
+    display: grid;
+    grid-template-columns: 100px repeat(7, 1fr) 70px;
+    background: var(--bg-elev); border-top: 2px solid var(--line);
+  }
+  .gs-cell {
+    padding: 6px 8px; text-align: center; border-right: 1px solid var(--line);
+  }
+  .gs-cell .gs-rez { font-size: 14px; font-weight: 700; color: var(--coral); }
+  .gs-cell .gs-pts { font-size: 11px; color: var(--yellow); font-weight: 600; }
+  .gs-cell .gs-lbl { font-size: 9px; color: var(--dim); }
+  .gs-cell.corner { display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--dim); font-weight: 600; }
+
+  /* ========== Overlay ========== */
+  .overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); justify-content: center; align-items: flex-start; padding: 60px 20px; }
+  .overlay.open { display: flex; }
+  .overlay-panel {
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: 16px;
+    width: 420px; max-height: calc(100vh - 120px); overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: slideUp 0.15s ease-out;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .ov-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--bg-elev); border-radius: 16px 16px 0 0; }
+  .ov-header-title { font-size: 12px; font-weight: 600; color: var(--dim); }
+  .ov-close { font-size: 22px; color: var(--dim); cursor: pointer; background: none; border: none; line-height: 1; }
+  .ov-close:hover { color: var(--text); }
+  .ov-status { padding: 10px 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 6px; }
+  .ov-status.s-confirmed { background: rgba(74,222,128,0.1); color: var(--green); border-bottom: 1px solid rgba(74,222,128,0.15); }
+  .ov-status.s-pending { background: rgba(251,191,36,0.1); color: var(--yellow); border-bottom: 1px solid rgba(251,191,36,0.15); }
+  .ov-hero { padding: 20px 20px 16px; border-bottom: 1px solid var(--line); }
+  .ov-girl { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .ov-datetime { font-size: 17px; font-weight: 600; margin-bottom: 3px; }
+  .ov-program { font-size: 13px; color: var(--muted); }
+  .ov-meta { display: flex; gap: 14px; margin-top: 10px; font-size: 11px; color: var(--dim); }
+  .ov-meta .src { font-weight: 600; }
+  .ov-meta .src-telegram { color: #229ED9; }
+  .ov-meta .src-whatsapp { color: #25D366; }
+  .ov-meta .src-phone { color: var(--blue); }
+  .ov-meta .pts { color: var(--yellow); font-weight: 700; }
+  .ov-client { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+  .ov-client-av { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--coral); font-size: 12px; flex-shrink: 0; }
+  .ov-client-name { font-weight: 700; font-size: 13px; }
+  .ov-client-badge { padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; margin-left: 6px; }
+  .ov-client-badge.vip { background: rgba(251,191,36,0.2); color: var(--yellow); }
+  .ov-client-badge.new { background: rgba(96,165,250,0.2); color: var(--blue); }
+  .ov-client-badge.regular { background: rgba(167,139,250,0.2); color: #a78bfa; }
+  .ov-client-visits { font-size: 11px; color: var(--dim); margin-left: auto; }
+  .ov-actions { padding: 16px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ov-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 8px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 8px; color: var(--text); font-size: 11px; font-weight: 600; cursor: pointer; text-align: center; }
+  .ov-btn:hover { border-color: var(--coral); }
+  .ov-btn .ov-icon { font-size: 18px; }
+  .ov-btn.ov-primary { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.3); color: var(--green); grid-column: 1 / -1; }
+  .ov-btn.ov-danger { color: var(--red); }
+
+  .mockup-label { padding: 10px 16px; background: var(--bg-elev); border-radius: 10px; font-size: 12px; color: var(--muted); margin: 16px 20px; text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- ========== TOPBAR ========== -->
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-title">Rezervace</span>
+    <span class="topbar-date">Tyden 8. - 14. zari 2026</span>
+  </div>
+  <div class="topbar-right">
+    <div class="toggle-group">
+      <button class="btn btn-ghost">Den</button>
+      <button class="btn btn-ghost active">Tyden</button>
+    </div>
+    <button class="btn btn-primary">+ Nova rezervace</button>
+  </div>
+</div>
+
+<!-- ========== GRID ========== -->
+  <div class="week-grid">
+    <!-- Header -->
+    <div class="grid-header corner">Divka</div>
+    <div class="grid-header"><span>Po</span><div class="day-num">8</div></div>
+    <div class="grid-header"><span>Ut</span><div class="day-num">9</div></div>
+    <div class="grid-header"><span>St</span><div class="day-num">10</div></div>
+    <div class="grid-header"><span>Ct</span><div class="day-num">11</div></div>
+    <div class="grid-header"><span>Pa</span><div class="day-num">12</div></div>
+    <div class="grid-header today"><span>So</span><div class="day-num">13</div></div>
+    <div class="grid-header"><span>Ne</span><div class="day-num">14</div></div>
+    <div class="grid-header corner">Body</div>
+
+    <!-- Aneta — 5 rez, 4700b -->
+    <div class="girl-row-header"><div class="girl-av" style="background:var(--c-aneta)">A</div><div class="girl-nm">Aneta</div></div>
+    <div class="day-cell"><div class="mini-booking g-aneta" onclick="openBooking('Kl02310_Aneta')"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">Kl02310</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"><div class="mini-booking g-aneta" onclick="openBooking('Pavel0807_Aneta')"><span class="mb-t">13:00</span> <span class="mb-d">45m</span> <span class="mb-n">Pavel0807</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-aneta" onclick="openBooking('Klient04093_Aneta')"><span class="mb-t">12:00</span> <span class="mb-d">60m</span> <span class="mb-n">Klient04093</span></div><div class="mini-booking g-aneta" onclick="openBooking('Tom2205_Aneta')"><span class="mb-t">17:00</span> <span class="mb-d">60m</span> <span class="mb-n">Tom2205</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"><div class="mini-booking g-aneta" onclick="openBooking('NOVY1309_Aneta')"><span class="mb-t">14:00</span> <span class="mb-d">30m</span> <span class="mb-n">NOVY1309</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="girl-total"><div class="gt-pts">4 700</div><div class="gt-cnt">5 rez.</div></div>
+
+    <!-- Caty — 6 rez, 5700b -->
+    <div class="girl-row-header"><div class="girl-av" style="background:var(--c-caty);color:#000">C</div><div class="girl-nm">Caty</div></div>
+    <div class="day-cell"><div class="mini-booking g-caty" onclick="openBooking('Randy24')"><span class="mb-t">13:00</span> <span class="mb-d">60m</span> <span class="mb-n">Randy24</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-caty" onclick="openBooking('Sepp25')"><span class="mb-t">11:00</span> <span class="mb-d">60m</span> <span class="mb-n">Sepp25</span></div><div class="mini-booking g-caty" onclick="openBooking('Kl02310_Caty')"><span class="mb-t">17:00</span> <span class="mb-d">30m</span> <span class="mb-n">Kl02310</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-caty" onclick="openBooking('Vojta0506')"><span class="mb-t">15:00</span> <span class="mb-d">45m</span> <span class="mb-n">Vojta0506</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"><div class="mini-booking g-caty" onclick="openBooking('Martin05')"><span class="mb-t">12:00</span> <span class="mb-d">60m</span> <span class="mb-n">Martin05</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-caty" onclick="openBooking('Miloslav2208')"><span class="mb-t">13:00</span> <span class="mb-d">60m</span> <span class="mb-n">Miloslav2208</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="girl-total"><div class="gt-pts">5 700</div><div class="gt-cnt">6 rez.</div></div>
+
+    <!-- Eliska — 6 rez, 5600b -->
+    <div class="girl-row-header"><div class="girl-av" style="background:var(--c-eliska)">E</div><div class="girl-nm">Eliska</div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"><div class="mini-booking g-eliska" onclick="openBooking('Fritz0411')"><span class="mb-t">16:00</span> <span class="mb-d">60m</span> <span class="mb-n">Fritz0411</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-eliska" onclick="openBooking('Novy0910')"><span class="mb-t">15:00</span> <span class="mb-d">30m</span> <span class="mb-n">Novy0910</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-eliska" onclick="openBooking('Klient08116_El')"><span class="mb-t">14:30</span> <span class="mb-d">60m</span> <span class="mb-n">Klient08116</span></div><div class="mini-booking g-eliska" onclick="openBooking('JozefN1211_El')"><span class="mb-t">19:00</span> <span class="mb-d">45m</span> <span class="mb-n">JozefN1211</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-eliska" onclick="openBooking('Daniel291_El')"><span class="mb-t">16:00</span> <span class="mb-d">60m</span> <span class="mb-n">Daniel291</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"><div class="mini-booking g-eliska" onclick="openBooking('M.k0903_El')"><span class="mb-t">15:00</span> <span class="mb-d">45m</span> <span class="mb-n">M.k0903</span></div></div>
+    <div class="girl-total"><div class="gt-pts">5 600</div><div class="gt-cnt">6 rez.</div></div>
+
+    <!-- Emily — 14 rez, 13100b -->
+    <div class="girl-row-header"><div class="girl-av" style="background:var(--c-emily)">E</div><div class="girl-nm">Emily</div></div>
+    <div class="day-cell"><div class="mini-booking g-emily" onclick="openBooking('Klient04093_Po')"><span class="mb-t">11:00</span> <span class="mb-d">60m</span> <span class="mb-n">Klient04093</span></div><div class="mini-booking g-emily" onclick="openBooking('HynekSvoboda')"><span class="mb-t">16:00</span> <span class="mb-d">30m</span> <span class="mb-n">HynekSvoboda</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-emily" onclick="openBooking('Cizinec711')"><span class="mb-t">10:30</span> <span class="mb-d">60m</span> <span class="mb-n">Cizinec711</span></div><div class="mini-booking g-emily" onclick="openBooking('JozefN1211_Ut')"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">JozefN1211</span></div><div class="mini-booking g-emily" onclick="openBooking('LiborN2807')"><span class="mb-t">19:00</span> <span class="mb-d">45m</span> <span class="mb-n">LiborN2807</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-emily" onclick="openBooking('Cizinec140301')"><span class="mb-t">13:00</span> <span class="mb-d">60m</span> <span class="mb-n">Cizinec140301</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-emily" onclick="openBooking('Klient04093_Ct')"><span class="mb-t">11:00</span> <span class="mb-d">60m</span> <span class="mb-n">Klient04093</span></div><div class="mini-booking g-emily" onclick="openBooking('NO1018')"><span class="mb-t">17:00</span> <span class="mb-d">45m</span> <span class="mb-n">NO1018</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-emily" onclick="openBooking('Daniel291')"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">Daniel291</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-emily" onclick="openBooking('Klient04093_So')"><span class="mb-t">12:00</span> <span class="mb-d">60m</span> <span class="mb-n">Klient04093</span></div><div class="mini-booking g-emily" onclick="openBooking('JozefN1211_So')"><span class="mb-t">16:00</span> <span class="mb-d">60m</span> <span class="mb-n">JozefN1211</span></div><div class="mini-booking g-emily" onclick="openBooking('NOVY1309')"><span class="mb-t">19:30</span> <span class="mb-d">30m</span> <span class="mb-n">NOVY1309</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-emily" onclick="openBooking('Danek0110')"><span class="mb-t">12:00</span> <span class="mb-d">45m</span> <span class="mb-n">Danek0110</span></div><div class="mini-booking g-emily" onclick="openBooking('M.k0903')"><span class="mb-t">18:00</span> <span class="mb-d">30m</span> <span class="mb-n">M.k0903</span></div></div>
+    <div class="girl-total"><div class="gt-pts">13 100</div><div class="gt-cnt">14 rez.</div></div>
+
+    <!-- Kim — 1 rez, 1000b -->
+    <div class="girl-row-header"><div class="girl-av" style="background:var(--c-kim)">K</div><div class="girl-nm">Kim</div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"><div class="mini-booking g-kim" onclick="openBooking('Nov0412_Kim')"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">Nov0412</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell no-shift"></div>
+    <div class="girl-total"><div class="gt-pts">1 000</div><div class="gt-cnt">1 rez.</div></div>
+
+    <!-- Luna — 6 rez, 5700b -->
+    <div class="girl-row-header"><div class="girl-av" style="background:var(--c-luna)">L</div><div class="girl-nm">Luna</div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"><div class="mini-booking g-luna" onclick="openBooking('N0330_Ut')"><span class="mb-t">15:00</span> <span class="mb-d">60m</span> <span class="mb-n">N0330</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-luna" onclick="openBooking('Klient01066')"><span class="mb-t">16:00</span> <span class="mb-d">45m</span> <span class="mb-n">Klient01066</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-luna" onclick="openBooking('Novy23052')"><span class="mb-t">14:30</span> <span class="mb-d">60m</span> <span class="mb-n">Novy23052</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"><div class="mini-booking g-luna" onclick="openBooking('Kl1111')"><span class="mb-t">15:00</span> <span class="mb-d">30m</span> <span class="mb-n">Kl1111</span></div><div class="mini-booking g-luna" onclick="openBooking('N0330_So')"><span class="mb-t">18:00</span> <span class="mb-d">60m</span> <span class="mb-n">N0330</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-luna" onclick="openBooking('N1807')"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">N1807</span></div></div>
+    <div class="girl-total"><div class="gt-pts">5 700</div><div class="gt-cnt">6 rez.</div></div>
+
+    <!-- Natalie — 6 rez, 5500b -->
+    <div class="girl-row-header"><div class="girl-av" style="background:var(--c-natalie)">N</div><div class="girl-nm">Natalie</div></div>
+    <div class="day-cell"><div class="mini-booking g-natalie" onclick="openBooking('Lukas1102')"><span class="mb-t">15:00</span> <span class="mb-d">30m</span> <span class="mb-n">Lukas1102</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-natalie" onclick="openBooking('Stefan0706')"><span class="mb-t">13:00</span> <span class="mb-d">60m</span> <span class="mb-n">Stefan0706</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"><div class="mini-booking g-natalie" onclick="openBooking('Ondra2903_Ct')"><span class="mb-t">14:00</span> <span class="mb-d">45m</span> <span class="mb-n">Ondra2903</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-natalie" onclick="openBooking('Klient04093_Pa')"><span class="mb-t">13:00</span> <span class="mb-d">60m</span> <span class="mb-n">Klient04093</span></div><div class="mini-booking g-natalie" onclick="openBooking('Tom2205_Pa')"><span class="mb-t">18:00</span> <span class="mb-d">30m</span> <span class="mb-n">Tom2205</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-natalie" onclick="openBooking('HynekSvoboda_So')"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">HynekSvoboda</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="girl-total"><div class="gt-pts">5 500</div><div class="gt-cnt">6 rez.</div></div>
+
+    <!-- Nika — 7 rez, 6700b -->
+    <div class="girl-row-header"><div class="girl-av" style="background:var(--c-nika)">N</div><div class="girl-nm">Nika</div></div>
+    <div class="day-cell"><div class="mini-booking g-nika" onclick="openBooking('Nov0412')"><span class="mb-t">12:00</span> <span class="mb-d">60m</span> <span class="mb-n">Nov0412</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-nika" onclick="openBooking('Klient08116')"><span class="mb-t">15:00</span> <span class="mb-d">45m</span> <span class="mb-n">Klient08116</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"><div class="mini-booking g-nika" onclick="openBooking('L1307')"><span class="mb-t">11:00</span> <span class="mb-d">60m</span> <span class="mb-n">L1307</span></div><div class="mini-booking g-nika" onclick="openBooking('Vladimir1806')"><span class="mb-t">16:00</span> <span class="mb-d">60m</span> <span class="mb-n">Vladimir1806</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-nika" onclick="openBooking('Stefano1006')"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">Stefano1006</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-nika" onclick="openBooking('Martin2004')"><span class="mb-t">10:30</span> <span class="mb-d">30m</span> <span class="mb-n">Martin2004</span></div><div class="mini-booking g-nika" onclick="openBooking('Vladimir1806_So')"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">Vladimir1806</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="girl-total"><div class="gt-pts">6 700</div><div class="gt-cnt">7 rez.</div></div>
+
+    <!-- Nina — 6 rez, 5500b -->
+    <div class="girl-row-header"><div class="girl-av" style="background:var(--c-nina)">N</div><div class="girl-nm">Nina</div></div>
+    <div class="day-cell"></div>
+    <div class="day-cell"><div class="mini-booking g-nina" onclick="openBooking('Petr0503')"><span class="mb-t">15:00</span> <span class="mb-d">60m</span> <span class="mb-n">Petr0503</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-nina" onclick="openBooking('Jakub1204')"><span class="mb-t">16:00</span> <span class="mb-d">45m</span> <span class="mb-n">Jakub1204</span></div></div>
+    <div class="day-cell no-shift"></div>
+    <div class="day-cell"><div class="mini-booking g-nina" onclick="openBooking('Hans0812')"><span class="mb-t">17:00</span> <span class="mb-d">60m</span> <span class="mb-n">Hans0812</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-nina" onclick="openBooking('Klient04093_Nina')"><span class="mb-t">15:00</span> <span class="mb-d">60m</span> <span class="mb-n">Klient04093</span></div><div class="mini-booking g-nina" onclick="openBooking('Lukas1102_Nina')"><span class="mb-t">19:00</span> <span class="mb-d">30m</span> <span class="mb-n">Lukas1102</span></div></div>
+    <div class="day-cell"><div class="mini-booking g-nina" onclick="openBooking('Ondra2903')"><span class="mb-t">16:00</span> <span class="mb-d">30m</span> <span class="mb-n">Ondra2903</span></div></div>
+    <div class="girl-total"><div class="gt-pts">5 500</div><div class="gt-cnt">6 rez.</div></div>
+  </div>
+
+  <!-- Grid summary -->
+  <div class="grid-summary-row">
+    <div class="gs-cell corner">Celkem/den</div>
+    <div class="gs-cell"><div class="gs-rez">6</div><div class="gs-pts">5 600 b</div></div>
+    <div class="gs-cell"><div class="gs-rez">10</div><div class="gs-pts">9 600 b</div></div>
+    <div class="gs-cell"><div class="gs-rez">7</div><div class="gs-pts">6 400 b</div></div>
+    <div class="gs-cell"><div class="gs-rez">10</div><div class="gs-pts">9 700 b</div></div>
+    <div class="gs-cell"><div class="gs-rez">7</div><div class="gs-pts">6 800 b</div></div>
+    <div class="gs-cell"><div class="gs-rez" style="color:var(--coral)">12</div><div class="gs-pts">11 000 b</div></div>
+    <div class="gs-cell"><div class="gs-rez">5</div><div class="gs-pts">4 400 b</div></div>
+    <div class="gs-cell" style="background:rgba(251,191,36,0.08)"><div class="gs-rez" style="color:var(--yellow)">57</div><div class="gs-pts">53 500</div></div>
+  </div>
+
+<div class="mockup-label">
+  MOCKUP: Admin Booking Week View &mdash; grid divka&times;den, klikaci detail overlay, 57 rezervaci / 53 500 bodu
+</div>
+
+<!-- ========== SHARED: Booking detail overlay ========== -->
+<div class="overlay" id="bookingOverlay">
+  <div class="overlay-panel">
+    <div class="ov-header">
+      <span class="ov-header-title" id="ovId">Rezervace #247</span>
+      <button class="ov-close" onclick="closeOverlay()">&times;</button>
+    </div>
+    <div class="ov-status s-confirmed" id="ovStatus">Potvrzena</div>
+    <div class="ov-hero">
+      <div class="ov-girl" id="ovGirl">Emily</div>
+      <div class="ov-datetime" id="ovDatetime">Pa 13.9. &middot; 16:00 - 17:00</div>
+      <div class="ov-program" id="ovProgram">60 min / 4 500 Kc &middot; Vinohrady / Pokoj 1</div>
+      <div class="ov-meta">
+        <span class="src" id="ovSource">Telefon</span>
+        <span class="pts" id="ovPoints">1 000 b</span>
+      </div>
+    </div>
+    <div class="ov-client">
+      <div class="ov-client-av" id="ovClientAv">J</div>
+      <div>
+        <span class="ov-client-name" id="ovClientName">Josef</span>
+        <span class="ov-client-badge vip" id="ovClientBadge">VIP</span>
+      </div>
+      <span class="ov-client-visits" id="ovVisits">6 navstev</span>
+    </div>
+    <div class="ov-actions">
+      <button class="ov-btn ov-primary"><span class="ov-icon">&#10003;</span> Dokonceno</button>
+      <button class="ov-btn"><span class="ov-icon">&#8644;</span> Presunout</button>
+      <button class="ov-btn ov-danger"><span class="ov-icon">&#10007;</span> No-show</button>
+      <button class="ov-btn ov-danger"><span class="ov-icon">&#128465;</span> Zrusit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== SHARED BOOKING DATA (57 bookings) ==========
+var bookings = {
+  // Aneta (5)
+  'Kl02310_Aneta':     { id: 201, girl: 'Aneta', date: 'Po 8.9.', time: '14:00 - 15:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '1 000', client: 'Kl02310', badge: 'regular', visits: '3 navstevy', dayIdx: 0, startH: 14, startM: 0, durMin: 60 },
+  'Pavel0807_Aneta':   { id: 202, girl: 'Aneta', date: 'St 10.9.', time: '13:00 - 13:45', dur: '45m', prog: '45 min / 3 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '900', client: 'Pavel0807', badge: 'regular', visits: '2 navstevy', dayIdx: 2, startH: 13, startM: 0, durMin: 45 },
+  'Klient04093_Aneta': { id: 203, girl: 'Aneta', date: 'Ct 11.9.', time: '12:00 - 13:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '1 000', client: 'Klient04093', badge: 'vip', visits: '8 navstev', dayIdx: 3, startH: 12, startM: 0, durMin: 60 },
+  'Tom2205_Aneta':     { id: 204, girl: 'Aneta', date: 'Ct 11.9.', time: '17:00 - 18:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'telegram', pts: '1 000', client: 'Tom2205', badge: 'regular', visits: '4 navstevy', dayIdx: 3, startH: 17, startM: 0, durMin: 60 },
+  'NOVY1309_Aneta':    { id: 205, girl: 'Aneta', date: 'So 13.9.', time: '14:00 - 14:30', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Vinohrady', src: 'phone', pts: '800', client: 'NOVY1309', badge: 'new', visits: '1. navsteva', dayIdx: 5, startH: 14, startM: 0, durMin: 30 },
+  // Caty (6)
+  'Randy24':           { id: 211, girl: 'Caty', date: 'Po 8.9.', time: '13:00 - 14:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Karlin', src: 'phone', pts: '1 000', client: 'Randy24', badge: 'regular', visits: '3 navstevy', dayIdx: 0, startH: 13, startM: 0, durMin: 60 },
+  'Sepp25':            { id: 212, girl: 'Caty', date: 'Ut 9.9.', time: '11:00 - 12:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Karlin', src: 'phone', pts: '1 000', client: 'Sepp25', badge: 'regular', visits: '2 navstevy', dayIdx: 1, startH: 11, startM: 0, durMin: 60 },
+  'Kl02310_Caty':      { id: 213, girl: 'Caty', date: 'Ut 9.9.', time: '17:00 - 17:30', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Karlin', src: 'phone', pts: '800', client: 'Kl02310', badge: 'regular', visits: '3 navstevy', dayIdx: 1, startH: 17, startM: 0, durMin: 30 },
+  'Vojta0506':         { id: 214, girl: 'Caty', date: 'St 10.9.', time: '15:00 - 15:45', dur: '45m', prog: '45 min / 3 500 Kc \u00b7 Smichov', src: 'phone', pts: '900', client: 'Vojta0506', badge: 'regular', visits: '5 navstev', dayIdx: 2, startH: 15, startM: 0, durMin: 45 },
+  'Martin05':          { id: 215, girl: 'Caty', date: 'Pa 12.9.', time: '12:00 - 13:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Karlin', src: 'phone', pts: '1 000', client: 'Martin05', badge: 'regular', visits: '4 navstevy', dayIdx: 4, startH: 12, startM: 0, durMin: 60 },
+  'Miloslav2208':      { id: 216, girl: 'Caty', date: 'So 13.9.', time: '13:00 - 14:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Smichov', src: 'phone', pts: '1 000', client: 'Miloslav2208', badge: 'vip', visits: '12 navstev', dayIdx: 5, startH: 13, startM: 0, durMin: 60 },
+  // Eliska (6)
+  'Fritz0411':         { id: 221, girl: 'Eliska', date: 'Ut 9.9.', time: '16:00 - 17:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'whatsapp', pts: '1 000', client: 'Fritz0411', badge: 'regular', visits: '2 navstevy', dayIdx: 1, startH: 16, startM: 0, durMin: 60 },
+  'Novy0910':          { id: 222, girl: 'Eliska', date: 'St 10.9.', time: '15:00 - 15:30', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Vinohrady', src: 'phone', pts: '800', client: 'Novy0910', badge: 'new', visits: '1. navsteva', dayIdx: 2, startH: 15, startM: 0, durMin: 30 },
+  'Klient08116_El':    { id: 223, girl: 'Eliska', date: 'Ct 11.9.', time: '14:30 - 15:30', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '1 000', client: 'Klient08116', badge: 'regular', visits: '3 navstevy', dayIdx: 3, startH: 14, startM: 30, durMin: 60 },
+  'JozefN1211_El':     { id: 224, girl: 'Eliska', date: 'Ct 11.9.', time: '19:00 - 19:45', dur: '45m', prog: '45 min / 3 500 Kc \u00b7 Vinohrady', src: 'telegram', pts: '900', client: 'JozefN1211', badge: 'vip', visits: '6 navstev', dayIdx: 3, startH: 19, startM: 0, durMin: 45 },
+  'Daniel291_El':      { id: 225, girl: 'Eliska', date: 'Pa 12.9.', time: '16:00 - 17:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '1 000', client: 'Daniel291', badge: 'regular', visits: '4 navstevy', dayIdx: 4, startH: 16, startM: 0, durMin: 60 },
+  'M.k0903_El':        { id: 226, girl: 'Eliska', date: 'Ne 14.9.', time: '15:00 - 15:45', dur: '45m', prog: '45 min / 3 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '900', client: 'M.k0903', badge: 'regular', visits: '2 navstevy', dayIdx: 6, startH: 15, startM: 0, durMin: 45 },
+  // Emily (14)
+  'Klient04093_Po':    { id: 231, girl: 'Emily', date: 'Po 8.9.', time: '11:00 - 12:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady / Pokoj 1', src: 'phone', pts: '1 000', client: 'Klient04093', badge: 'vip', visits: '8 navstev', dayIdx: 0, startH: 11, startM: 0, durMin: 60 },
+  'HynekSvoboda':      { id: 232, girl: 'Emily', date: 'Po 8.9.', time: '16:00 - 16:30', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Vinohrady', src: 'phone', pts: '800', client: 'HynekSvoboda', badge: 'regular', visits: '3 navstevy', dayIdx: 0, startH: 16, startM: 0, durMin: 30 },
+  'Cizinec711':        { id: 233, girl: 'Emily', date: 'Ut 9.9.', time: '10:30 - 11:30', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '1 000', client: 'Cizinec711', badge: 'regular', visits: '2 navstevy', dayIdx: 1, startH: 10, startM: 30, durMin: 60 },
+  'JozefN1211_Ut':     { id: 234, girl: 'Emily', date: 'Ut 9.9.', time: '14:00 - 15:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady / Pokoj 1', src: 'telegram', pts: '1 000', client: 'JozefN1211', badge: 'vip', visits: '6 navstev', dayIdx: 1, startH: 14, startM: 0, durMin: 60 },
+  'LiborN2807':        { id: 235, girl: 'Emily', date: 'Ut 9.9.', time: '19:00 - 19:45', dur: '45m', prog: '45 min / 3 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '900', client: 'LiborN2807', badge: 'regular', visits: '4 navstevy', dayIdx: 1, startH: 19, startM: 0, durMin: 45 },
+  'Cizinec140301':     { id: 236, girl: 'Emily', date: 'St 10.9.', time: '13:00 - 14:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Zizkov', src: 'whatsapp', pts: '1 000', client: 'Cizinec140301', badge: 'regular', visits: '1 navsteva', dayIdx: 2, startH: 13, startM: 0, durMin: 60 },
+  'Klient04093_Ct':    { id: 237, girl: 'Emily', date: 'Ct 11.9.', time: '11:00 - 12:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady / Pokoj 1', src: 'phone', pts: '1 000', client: 'Klient04093', badge: 'vip', visits: '8 navstev', dayIdx: 3, startH: 11, startM: 0, durMin: 60 },
+  'NO1018':            { id: 238, girl: 'Emily', date: 'Ct 11.9.', time: '17:00 - 17:45', dur: '45m', prog: '45 min / 3 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '900', client: 'NO1018', badge: 'regular', visits: '2 navstevy', dayIdx: 3, startH: 17, startM: 0, durMin: 45 },
+  'Daniel291':         { id: 239, girl: 'Emily', date: 'Pa 12.9.', time: '14:00 - 15:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '1 000', client: 'Daniel291', badge: 'regular', visits: '4 navstevy', dayIdx: 4, startH: 14, startM: 0, durMin: 60 },
+  'Klient04093_So':    { id: 240, girl: 'Emily', date: 'So 13.9.', time: '12:00 - 13:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Zizkov / Pokoj 2', src: 'phone', pts: '1 000', client: 'Klient04093', badge: 'vip', visits: '8 navstev', dayIdx: 5, startH: 12, startM: 0, durMin: 60 },
+  'JozefN1211_So':     { id: 241, girl: 'Emily', date: 'So 13.9.', time: '16:00 - 17:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Zizkov / Pokoj 2', src: 'telegram', pts: '1 000', client: 'JozefN1211', badge: 'vip', visits: '6 navstev', dayIdx: 5, startH: 16, startM: 0, durMin: 60 },
+  'NOVY1309':          { id: 242, girl: 'Emily', date: 'So 13.9.', time: '19:30 - 20:00', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Zizkov', src: 'phone', pts: '800', client: 'NOVY1309', badge: 'new', visits: '1. navsteva', dayIdx: 5, startH: 19, startM: 30, durMin: 30 },
+  'Danek0110':         { id: 243, girl: 'Emily', date: 'Ne 14.9.', time: '12:00 - 12:45', dur: '45m', prog: '45 min / 3 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '900', client: 'Danek0110', badge: 'regular', visits: '5 navstev', dayIdx: 6, startH: 12, startM: 0, durMin: 45 },
+  'M.k0903':           { id: 244, girl: 'Emily', date: 'Ne 14.9.', time: '18:00 - 18:30', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Vinohrady', src: 'phone', pts: '800', client: 'M.k0903', badge: 'regular', visits: '2 navstevy', dayIdx: 6, startH: 18, startM: 0, durMin: 30 },
+  // Kim (1)
+  'Nov0412_Kim':       { id: 251, girl: 'Kim', date: 'St 10.9.', time: '14:00 - 15:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Smichov', src: 'phone', pts: '1 000', client: 'Nov0412', badge: 'regular', visits: '3 navstevy', dayIdx: 2, startH: 14, startM: 0, durMin: 60 },
+  // Luna (6)
+  'N0330_Ut':          { id: 261, girl: 'Luna', date: 'Ut 9.9.', time: '15:00 - 16:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '1 000', client: 'N0330', badge: 'regular', visits: '3 navstevy', dayIdx: 1, startH: 15, startM: 0, durMin: 60 },
+  'Klient01066':       { id: 262, girl: 'Luna', date: 'St 10.9.', time: '16:00 - 16:45', dur: '45m', prog: '45 min / 3 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '900', client: 'Klient01066', badge: 'regular', visits: '2 navstevy', dayIdx: 2, startH: 16, startM: 0, durMin: 45 },
+  'Novy23052':         { id: 263, girl: 'Luna', date: 'Ct 11.9.', time: '14:30 - 15:30', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '1 000', client: 'Novy23052', badge: 'new', visits: '1. navsteva', dayIdx: 3, startH: 14, startM: 30, durMin: 60 },
+  'Kl1111':            { id: 264, girl: 'Luna', date: 'So 13.9.', time: '15:00 - 15:30', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Vinohrady', src: 'phone', pts: '800', client: 'Kl1111', badge: 'regular', visits: '4 navstevy', dayIdx: 5, startH: 15, startM: 0, durMin: 30 },
+  'N0330_So':          { id: 265, girl: 'Luna', date: 'So 13.9.', time: '18:00 - 19:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '1 000', client: 'N0330', badge: 'regular', visits: '3 navstevy', dayIdx: 5, startH: 18, startM: 0, durMin: 60 },
+  'N1807':             { id: 266, girl: 'Luna', date: 'Ne 14.9.', time: '14:00 - 15:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '1 000', client: 'N1807', badge: 'regular', visits: '2 navstevy', dayIdx: 6, startH: 14, startM: 0, durMin: 60 },
+  // Natalie (6)
+  'Lukas1102':         { id: 271, girl: 'Natalie', date: 'Po 8.9.', time: '15:00 - 15:30', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Zizkov', src: 'phone', pts: '800', client: 'Lukas1102', badge: 'regular', visits: '2 navstevy', dayIdx: 0, startH: 15, startM: 0, durMin: 30 },
+  'Stefan0706':        { id: 272, girl: 'Natalie', date: 'Ut 9.9.', time: '13:00 - 14:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Zizkov', src: 'whatsapp', pts: '1 000', client: 'Stefan0706', badge: 'regular', visits: '3 navstevy', dayIdx: 1, startH: 13, startM: 0, durMin: 60 },
+  'Ondra2903_Ct':      { id: 273, girl: 'Natalie', date: 'Ct 11.9.', time: '14:00 - 14:45', dur: '45m', prog: '45 min / 3 500 Kc \u00b7 Zizkov', src: 'phone', pts: '900', client: 'Ondra2903', badge: 'regular', visits: '4 navstevy', dayIdx: 3, startH: 14, startM: 0, durMin: 45 },
+  'Klient04093_Pa':    { id: 274, girl: 'Natalie', date: 'Pa 12.9.', time: '13:00 - 14:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Zizkov', src: 'phone', pts: '1 000', client: 'Klient04093', badge: 'vip', visits: '8 navstev', dayIdx: 4, startH: 13, startM: 0, durMin: 60 },
+  'Tom2205_Pa':        { id: 275, girl: 'Natalie', date: 'Pa 12.9.', time: '18:00 - 18:30', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Zizkov', src: 'telegram', pts: '800', client: 'Tom2205', badge: 'regular', visits: '4 navstevy', dayIdx: 4, startH: 18, startM: 0, durMin: 30 },
+  'HynekSvoboda_So':   { id: 276, girl: 'Natalie', date: 'So 13.9.', time: '14:00 - 15:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Zizkov', src: 'phone', pts: '1 000', client: 'HynekSvoboda', badge: 'regular', visits: '3 navstevy', dayIdx: 5, startH: 14, startM: 0, durMin: 60 },
+  // Nika (7)
+  'Nov0412':           { id: 281, girl: 'Nika', date: 'Po 8.9.', time: '12:00 - 13:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Smichov', src: 'phone', pts: '1 000', client: 'Nov0412', badge: 'regular', visits: '3 navstevy', dayIdx: 0, startH: 12, startM: 0, durMin: 60 },
+  'Klient08116':       { id: 282, girl: 'Nika', date: 'Ut 9.9.', time: '15:00 - 15:45', dur: '45m', prog: '45 min / 3 500 Kc \u00b7 Smichov', src: 'phone', pts: '900', client: 'Klient08116', badge: 'regular', visits: '3 navstevy', dayIdx: 1, startH: 15, startM: 0, durMin: 45 },
+  'L1307':             { id: 283, girl: 'Nika', date: 'Ct 11.9.', time: '11:00 - 12:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'phone', pts: '1 000', client: 'L1307', badge: 'regular', visits: '2 navstevy', dayIdx: 3, startH: 11, startM: 0, durMin: 60 },
+  'Vladimir1806':      { id: 284, girl: 'Nika', date: 'Ct 11.9.', time: '16:00 - 17:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Vinohrady', src: 'whatsapp', pts: '1 000', client: 'Vladimir1806', badge: 'vip', visits: '7 navstev', dayIdx: 3, startH: 16, startM: 0, durMin: 60 },
+  'Stefano1006':       { id: 285, girl: 'Nika', date: 'Pa 12.9.', time: '14:00 - 15:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Smichov', src: 'phone', pts: '1 000', client: 'Stefano1006', badge: 'regular', visits: '2 navstevy', dayIdx: 4, startH: 14, startM: 0, durMin: 60 },
+  'Martin2004':        { id: 286, girl: 'Nika', date: 'So 13.9.', time: '10:30 - 11:00', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Smichov', src: 'phone', pts: '800', client: 'Martin2004', badge: 'regular', visits: '4 navstevy', dayIdx: 5, startH: 10, startM: 30, durMin: 30 },
+  'Vladimir1806_So':   { id: 287, girl: 'Nika', date: 'So 13.9.', time: '14:00 - 15:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Smichov', src: 'whatsapp', pts: '1 000', client: 'Vladimir1806', badge: 'vip', visits: '7 navstev', dayIdx: 5, startH: 14, startM: 0, durMin: 60 },
+  // Nina (6)
+  'Petr0503':          { id: 291, girl: 'Nina', date: 'Ut 9.9.', time: '15:00 - 16:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Karlin', src: 'phone', pts: '1 000', client: 'Petr0503', badge: 'regular', visits: '3 navstevy', dayIdx: 1, startH: 15, startM: 0, durMin: 60 },
+  'Jakub1204':         { id: 292, girl: 'Nina', date: 'St 10.9.', time: '16:00 - 16:45', dur: '45m', prog: '45 min / 3 500 Kc \u00b7 Karlin', src: 'phone', pts: '900', client: 'Jakub1204', badge: 'regular', visits: '2 navstevy', dayIdx: 2, startH: 16, startM: 0, durMin: 45 },
+  'Hans0812':          { id: 293, girl: 'Nina', date: 'Pa 12.9.', time: '17:00 - 18:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Karlin', src: 'whatsapp', pts: '1 000', client: 'Hans0812', badge: 'regular', visits: '2 navstevy', dayIdx: 4, startH: 17, startM: 0, durMin: 60 },
+  'Klient04093_Nina':  { id: 294, girl: 'Nina', date: 'So 13.9.', time: '15:00 - 16:00', dur: '60m', prog: '60 min / 4 500 Kc \u00b7 Karlin', src: 'phone', pts: '1 000', client: 'Klient04093', badge: 'vip', visits: '8 navstev', dayIdx: 5, startH: 15, startM: 0, durMin: 60 },
+  'Lukas1102_Nina':    { id: 295, girl: 'Nina', date: 'So 13.9.', time: '19:00 - 19:30', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Karlin', src: 'telegram', pts: '800', client: 'Lukas1102', badge: 'regular', visits: '2 navstevy', dayIdx: 5, startH: 19, startM: 0, durMin: 30 },
+  'Ondra2903':         { id: 296, girl: 'Nina', date: 'Ne 14.9.', time: '16:00 - 16:30', dur: '30m', prog: '30 min / 3 000 Kc \u00b7 Karlin', src: 'phone', pts: '800', client: 'Ondra2903', badge: 'regular', visits: '4 navstevy', dayIdx: 6, startH: 16, startM: 0, durMin: 30 }
+};
+
+// ========== Overlay ==========
+function openBooking(key) {
+  var b = bookings[key];
+  if (!b) return;
+  document.getElementById('ovId').textContent = 'Rezervace #' + b.id;
+  var st = document.getElementById('ovStatus');
+  st.textContent = b.badge === 'new' ? 'Ceka na potvrzeni' : 'Potvrzena';
+  st.className = 'ov-status ' + (b.badge === 'new' ? 's-pending' : 's-confirmed');
+  document.getElementById('ovGirl').textContent = b.girl;
+  document.getElementById('ovDatetime').textContent = b.date + ' \u00b7 ' + b.time;
+  document.getElementById('ovProgram').textContent = b.prog;
+  var srcEl = document.getElementById('ovSource');
+  srcEl.textContent = b.src === 'telegram' ? 'Telegram' : b.src === 'whatsapp' ? 'WhatsApp' : 'Telefon';
+  srcEl.className = 'src src-' + b.src;
+  document.getElementById('ovPoints').textContent = b.pts + ' b';
+  document.getElementById('ovClientAv').textContent = b.client.charAt(0).toUpperCase();
+  document.getElementById('ovClientName').textContent = b.client;
+  var badge = document.getElementById('ovClientBadge');
+  badge.textContent = b.badge === 'vip' ? 'VIP' : b.badge === 'new' ? 'Novy' : 'Staly';
+  badge.className = 'ov-client-badge ' + b.badge;
+  document.getElementById('ovVisits').textContent = b.visits;
+  document.getElementById('bookingOverlay').classList.add('open');
+}
+function closeOverlay() { document.getElementById('bookingOverlay').classList.remove('open'); }
+document.getElementById('bookingOverlay').addEventListener('click', function(e) { if (e.target === this) closeOverlay(); });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeOverlay(); });
+
+</script>
+
+</body>
+</html>

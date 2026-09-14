@@ -57,7 +57,6 @@ export default async function SiteFooter() {
     getActiveLocations().catch(() => []),
     getSiteFacts(),
   ]);
-  const localePrefix = locale === 'en' ? '' : `/${locale}`;
   // Blog only has CS/EN content — DE/UK would just link to a redirect.
   const showBlog = locale === 'cs' || locale === 'en';
 
@@ -149,9 +148,9 @@ export default async function SiteFooter() {
                     const label = `${loc.city ?? 'Praha'}${loc.district ? ` · ${loc.district}` : ''}${loc.displayName && loc.displayName !== loc.district ? ` (${loc.displayName})` : ''}`;
                     return (
                       <li key={loc.id}>
-                        <a href={`${localePrefix}/pobocka/${loc.name}`}>
+                        <Link href={{ pathname: '/pobocka/[slug]', params: { slug: loc.name } }}>
                           {label}{isUpcoming ? ` — ${loc.openingDate ? new Date(loc.openingDate + 'T00:00:00').toLocaleDateString(locale === 'cs' ? 'cs-CZ' : locale === 'de' ? 'de-DE' : locale === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'numeric', year: 'numeric' }) : soonLbl}` : ''}
-                        </a>
+                        </Link>
                       </li>
                     );
                   })}
@@ -163,10 +162,10 @@ export default async function SiteFooter() {
           <div className="footer-col">
             <h4>{popularLbl}</h4>
             <ul>
-              <li><a href={`${localePrefix}/hashtag/blondynky-praha`}>{locale === 'en' ? 'Blondes Prague' : locale === 'de' ? 'Blondinen Prag' : locale === 'uk' ? 'Блондинки Прага' : 'Blondýnky Praha'}</a></li>
-              <li><a href={`${localePrefix}/hashtag/brunetky-praha`}>{locale === 'en' ? 'Brunettes Prague' : locale === 'de' ? 'Brünetten Prag' : locale === 'uk' ? 'Брюнетки Прага' : 'Brunetky Praha'}</a></li>
-              <li><a href={`${localePrefix}/hashtag/gfe-praha`}>{locale === 'en' ? 'GFE Prague' : locale === 'de' ? 'GFE Prag' : locale === 'uk' ? 'GFE Прага' : 'GFE Praha'}</a></li>
-              <li><a href={`${localePrefix}/hashtag/studentky-praha`}>{locale === 'en' ? 'Students Prague' : locale === 'de' ? 'Studentinnen Prag' : locale === 'uk' ? 'Студентки Прага' : 'Studentky Praha'}</a></li>
+              <li><Link href={{ pathname: '/hashtag/[slug]', params: { slug: 'blondynky-praha' } }}>{locale === 'en' ? 'Blondes Prague' : locale === 'de' ? 'Blondinen Prag' : locale === 'uk' ? 'Блондинки Прага' : 'Blondýnky Praha'}</Link></li>
+              <li><Link href={{ pathname: '/hashtag/[slug]', params: { slug: 'brunetky-praha' } }}>{locale === 'en' ? 'Brunettes Prague' : locale === 'de' ? 'Brünetten Prag' : locale === 'uk' ? 'Брюнетки Прага' : 'Brunetky Praha'}</Link></li>
+              <li><Link href={{ pathname: '/hashtag/[slug]', params: { slug: 'gfe-praha' } }}>{locale === 'en' ? 'GFE Prague' : locale === 'de' ? 'GFE Prag' : locale === 'uk' ? 'GFE Прага' : 'GFE Praha'}</Link></li>
+              <li><Link href={{ pathname: '/hashtag/[slug]', params: { slug: 'studentky-praha' } }}>{locale === 'en' ? 'Students Prague' : locale === 'de' ? 'Studentinnen Prag' : locale === 'uk' ? 'Студентки Прага' : 'Studentky Praha'}</Link></li>
               <li><Link href={{ pathname: '/sluzba/[slug]', params: { slug: 'classic' } }}>{locale === 'en' ? 'Classic service' : locale === 'de' ? 'Classic Service' : locale === 'uk' ? 'Класичний сервіс' : 'Služba Classic'}</Link></li>
               <li><Link href={{ pathname: '/sluzba/[slug]', params: { slug: 'massage' } }}>{locale === 'en' ? 'Massage service' : locale === 'de' ? 'Massage Service' : locale === 'uk' ? 'Масаж' : 'Služba Massage'}</Link></li>
               {showBlog && <li><Link href="/blog">{nav('blog')}</Link></li>}

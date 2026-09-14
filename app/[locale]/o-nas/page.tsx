@@ -18,9 +18,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonical = getCanonicalUrl(locale, '/o-nas');
   const ogImages = await buildOgImages('o-nas', locale, '/o-nas', t('h1'));
 
+  const metaDesc: Record<string, string> = {
+    cs: 'LovelyGirls Praha — prémiová escort agentura v centru Prahy. Ověřené společnice, soukromé apartmány, diskrétnost a transparentnost bez skrytých poplatků.',
+    en: 'LovelyGirls Prague — premium escort agency in central Prague. Verified companions, private apartments, discretion and transparency with no hidden fees.',
+    de: 'LovelyGirls Prag — Premium-Escort-Agentur im Zentrum Prags. Verifizierte Begleiterinnen, private Apartments, Diskretion und Transparenz ohne versteckte Gebühren.',
+    uk: 'LovelyGirls Прага — преміум ескорт-агентство у центрі Праги. Перевірені супутниці, приватні апартаменти, дискретність і прозорість без прихованих платежів.',
+  };
+  const desc = metaDesc[locale] ?? metaDesc.en;
+
   return applyDBOverride(`/${locale}/o-nas`, {
     title: t('h1'),
-    description: t('lead'),
+    description: desc,
     alternates: {
       canonical,
       languages: getAlternates('/o-nas'),
@@ -28,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       images: ogImages,
       title: t('h1'),
-      description: t('lead'),
+      description: desc,
       url: canonical,
       locale: ogLocale(locale),
     },

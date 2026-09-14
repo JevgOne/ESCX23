@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Booking — Flow Diagram (cely proces)</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --purple: #a78bfa;
+    --teal: #2dd4bf;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; padding: 20px; }
+
+  h1 { font-size: 22px; text-align: center; margin-bottom: 30px; }
+
+  .flow-section { max-width: 800px; margin: 0 auto 40px; }
+  .flow-title {
+    font-size: 14px; color: var(--coral); text-transform: uppercase;
+    letter-spacing: 0.1em; font-weight: 700;
+    margin-bottom: 16px; padding-left: 12px;
+    border-left: 3px solid var(--coral);
+  }
+
+  /* Flow nodes */
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; position: relative; }
+
+  .node {
+    position: relative; padding: 12px 20px; border-radius: 10px;
+    font-size: 13px; text-align: center; max-width: 360px; width: 100%; z-index: 2;
+  }
+  .node-start { background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); color: var(--blue); }
+  .node-action { background: var(--bg-elev); border: 1px solid var(--line); }
+  .node-system { background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.3); color: var(--purple); }
+  .node-end { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: var(--green); font-weight: 600; }
+  .node-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+  .node-tg { background: rgba(34,158,217,0.1); border: 1px solid rgba(34,158,217,0.3); color: #229ED9; }
+  .node-warn { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); color: var(--yellow); }
+  .node-teal { background: rgba(45,212,191,0.1); border: 1px solid rgba(45,212,191,0.3); color: var(--teal); }
+
+  .node-label { font-size: 10px; color: var(--dim); text-transform: uppercase; margin-bottom: 4px; }
+  .node-text { font-weight: 600; }
+  .node-detail { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .arrow {
+    width: 2px; height: 24px; background: var(--line); position: relative; z-index: 1;
+  }
+  .arrow::after {
+    content: ''; position: absolute; bottom: -4px; left: -3px;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-top: 6px solid var(--line);
+  }
+  .arrow-label {
+    font-size: 10px; color: var(--dim);
+    position: absolute; left: 12px; top: 4px; white-space: nowrap;
+  }
+
+  /* Branch */
+  .branch { display: flex; gap: 20px; align-items: flex-start; width: 100%; justify-content: center; }
+  .branch-3 { gap: 12px; }
+  .branch-path { display: flex; flex-direction: column; align-items: center; gap: 0; flex: 1; max-width: 300px; }
+  .branch-label { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 4px; margin-bottom: 0; }
+  .branch-label.yes { color: var(--green); background: rgba(74,222,128,0.1); }
+  .branch-label.no { color: var(--red); background: rgba(239,68,68,0.1); }
+  .branch-label.warn { color: var(--yellow); background: rgba(251,191,36,0.1); }
+  .branch-label.teal { color: var(--teal); background: rgba(45,212,191,0.1); }
+
+  /* Timeline */
+  .timeline {
+    max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 0;
+    position: relative; padding-left: 60px;
+  }
+  .timeline::before {
+    content: ''; position: absolute; left: 28px; top: 0; bottom: 0;
+    width: 2px; background: var(--line);
+  }
+  .tl-item { position: relative; padding: 12px 0 12px 20px; }
+  .tl-dot {
+    position: absolute; left: -40px; top: 14px;
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--line); background: var(--bg); z-index: 2;
+  }
+  .tl-dot.active { border-color: var(--coral); background: var(--coral); }
+  .tl-dot.done { border-color: var(--green); background: var(--green); }
+  .tl-dot.warn { border-color: var(--yellow); background: var(--yellow); }
+  .tl-time {
+    position: absolute; left: -88px; top: 14px;
+    font-size: 11px; color: var(--dim); text-align: right; width: 40px;
+  }
+  .tl-title { font-weight: 600; font-size: 13px; }
+  .tl-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .tl-channel {
+    display: inline-block; padding: 1px 6px;
+    border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 6px;
+  }
+  .ch-admin { background: rgba(167,139,250,0.2); color: var(--purple); }
+  .ch-tg { background: rgba(34,158,217,0.2); color: #229ED9; }
+  .ch-system { background: rgba(74,222,128,0.2); color: var(--green); }
+  .ch-cron { background: rgba(251,191,36,0.2); color: var(--yellow); }
+
+  .mockup-label { padding: 10px 16px; background: var(--bg-elev); border-radius: 10px; font-size: 12px; color: var(--muted); text-align: center; max-width: 800px; margin: 16px auto; }
+
+  /* State machine pre block */
+  .sm-box {
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: 10px;
+    padding: 20px; max-width: 750px; width: 100%; margin: 0 auto;
+  }
+  .sm-box pre {
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; line-height: 1.8; color: var(--muted);
+    overflow-x: auto;
+  }
+
+  /* No-show escalation table */
+  .esc-table {
+    width: 100%; max-width: 700px; margin: 10px auto;
+    border-collapse: collapse; font-size: 12px;
+  }
+  .esc-table th {
+    background: var(--bg-soft); color: var(--dim); text-transform: uppercase;
+    font-size: 10px; letter-spacing: 0.05em; padding: 8px 12px; text-align: left;
+    border-bottom: 1px solid var(--line);
+  }
+  .esc-table td {
+    padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top;
+  }
+  .esc-table .esc-level { font-weight: 700; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<h1>Booking System — Flow Diagram</h1>
+
+<!-- ============================================================ -->
+<!-- ===== STATUS STATE MACHINE (moved to top for reference) ==== -->
+<!-- ============================================================ -->
+<div class="flow-section">
+  <div class="flow-title">Status State Machine</div>
+  <div class="sm-box">
+    <pre>
+  <span style="color:var(--blue)">PENDING</span> ─────────────────────────────────────┐
+     │                                          │
+     ├─ operatorka potvrdi ──────► <span style="color:var(--green)">CONFIRMED</span>     │
+     │                               │          │
+     │                               ├─ klient dorazi ──────────► <span style="color:var(--teal)">IN_PROGRESS</span>
+     │                               │                                  │
+     │                               │                                  └─ dokonceno ──► <span style="color:var(--green)">COMPLETED</span>
+     │                               │                                       (body priciteny)
+     │                               │
+     │                               ├─ klient nedorazi (15 min grace) ──► <span style="color:var(--red)">NO_SHOW</span>
+     │                               │
+     │                               ├─ klient zrusi predem ──► <span style="color:var(--yellow)">CANCELLED_CLIENT</span>
+     │                               │    (zadna penalizace)
+     │                               │
+     │                               ├─ divka zrusi (nemoc) ──► <span style="color:var(--coral)">CANCELLED_GIRL</span>
+     │                               │    (system nabidne nahradu)
+     │                               │
+     │                               ├─ presun casu ──► <span style="color:var(--yellow)">RESCHEDULED</span> ──► <span style="color:var(--green)">CONFIRMED</span>
+     │                               │
+     │                               └─ zmena divky ──► <span style="color:var(--purple)">REASSIGNED</span> ──► <span style="color:var(--green)">CONFIRMED</span>
+     │
+     ├─ operatorka odmitne ──► <span style="color:var(--dim)">DECLINED</span>
+     │
+     └─ timeout 60 min ──► <span style="color:var(--red)">EXPIRED</span>
+           (auto, klient dostane notifikaci)
+
+  Zdroje: <span style="color:var(--blue)">admin</span> | <span style="color:#229ED9">telegram_bot</span> | <span style="color:var(--blue)">phone</span> | <span style="color:var(--blue)">sms</span> | <span style="color:var(--green)">whatsapp</span></pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ===== FLOW A: Novy klient (telefon) ======================== -->
+<!-- ============================================================ -->
+<div class="flow-section">
+  <div class="flow-title">Flow A: Novy klient (telefon / SMS / WhatsApp)</div>
+  <div class="flow">
+    <div class="node node-start">
+      <div class="node-label">Vstup</div>
+      <div class="node-text">Klient vidi inzerat na externi platforme</div>
+      <div class="node-detail">Roskosgirls, Czechescort, Instagram, doporuceni...</div>
+    </div>
+    <div class="arrow"></div>
+    <div class="node node-action">
+      <div class="node-text">Zavola / napise na cislo operatorky</div>
+      <div class="node-detail">+420 XXX XXX XXX (jedno centralni cislo)</div>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- Girl rejection check -->
+    <div class="node node-system">
+      <div class="node-label">System Check</div>
+      <div class="node-text">Kontrola girl rejection list</div>
+      <div class="node-detail">Ma divka klienta na "NE" seznamu? Pokud ANO &rarr; operatorka nabidne alternativu</div>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- Admin booking form -->
+    <div class="node node-action" style="border-color:var(--purple);background:rgba(167,139,250,0.08)">
+      <div class="node-label">Admin Panel</div>
+      <div class="node-text">Operatorka zadava rezervaci</div>
+      <div class="node-detail">4 kroky: Klient (novy) &rarr; Divka &rarr; Cas+Program &rarr; Souhrn<br>Nebo Quick Booking: jeden formular (divka + cas + klient)</div>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- Collision check -->
+    <div class="node node-warn">
+      <div class="node-label">System Check</div>
+      <div class="node-text">Kolize check — je slot obsazeny?</div>
+      <div class="node-detail">Kontrola pending + confirmed bookings ve stejnem case. Pokud kolize &rarr; nabidnout dalsi volny slot</div>
+    </div>
+    <div class="arrow"></div>
+
+    <div class="node node-system">
+      <div class="node-label">System</div>
+      <div class="node-text">Auto: vytvori klientskou kartu</div>
+      <div class="node-detail">PETR1309 = Jmeno + DDMM prvniho kontaktu, type: "new"</div>
+    </div>
+    <div class="arrow"></div>
+    <div class="node node-system">
+      <div class="node-label">System</div>
+      <div class="node-text">Auto: odesle mestskou cast (Praha 2)</div>
+      <div class="node-detail">Krok 1 dvoustupnove adresy &rarr; operatorka sdeluje po telefonu</div>
+    </div>
+    <div class="arrow"></div>
+    <div class="node node-action">
+      <div class="node-text">Operatorka potvrdi rezervaci v admin panelu</div>
+      <div class="node-detail">Status: PENDING &rarr; CONFIRMED</div>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- Auto reminder -->
+    <div class="node node-system">
+      <div class="node-label">Cron (1h pred)</div>
+      <div class="node-text">Auto reminder + presna adresa</div>
+      <div class="node-detail">SMS/notifikace s adresou (Legerova 42, Praha 2). Link na adresu expiruje po navsteve.</div>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- 3-way branch: dorazi / zrusi / nedorazi -->
+    <div class="branch branch-3">
+      <div class="branch-path">
+        <div class="branch-label yes">Klient dorazi</div>
+        <div class="arrow"></div>
+        <div class="node node-teal">
+          <div class="node-text">IN_PROGRESS</div>
+          <div class="node-detail">Klient dorazil, rezervace probiha</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-end">
+          <div class="node-text">COMPLETED</div>
+          <div class="node-detail">Body priciteny, daily progress aktualizovan.<br>total_visits++, auto-upgrade na "regular" po 3. navsteve</div>
+        </div>
+      </div>
+      <div class="branch-path">
+        <div class="branch-label warn">Klient zrusi predem</div>
+        <div class="arrow"></div>
+        <div class="node node-warn">
+          <div class="node-text">CANCELLED_CLIENT</div>
+          <div class="node-detail">Zadna penalizace. Slot se uvolni, divka notifikovana.</div>
+        </div>
+      </div>
+      <div class="branch-path">
+        <div class="branch-label no">Klient nedorazi</div>
+        <div class="arrow"></div>
+        <div class="node node-action">
+          <div class="node-text">Grace period: 15 min</div>
+          <div class="node-detail">Do 15 min = OK, ceka se. Po 15 min = operatorka rozhodne.</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-error">
+          <div class="node-text">NO_SHOW</div>
+          <div class="node-detail">no_show_count++, eskalace viz Flow D</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ===== FLOW B: Staly klient (Telegram bot) ================== -->
+<!-- ============================================================ -->
+<div class="flow-section">
+  <div class="flow-title">Flow B: Staly klient (Telegram bot)</div>
+  <div class="flow">
+    <div class="node node-start">
+      <div class="node-label">Podminka</div>
+      <div class="node-text">Klient ma 3+ navstev + dostal link na TG bota</div>
+      <div class="node-detail">Aktivoval pres deep link: t.me/LovelyGirlsPrahaBot?start=TOKEN</div>
+    </div>
+    <div class="arrow"></div>
+    <div class="node node-tg">
+      <div class="node-label">Telegram Bot</div>
+      <div class="node-text">Klient posle /booking (nebo /rebook)</div>
+      <div class="node-detail">/booking = novy vyber. /rebook = "jako minule" shortcut (stejna divka, dalsi volny slot)</div>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- Girl rejection filter -->
+    <div class="node node-system">
+      <div class="node-label">System Filter</div>
+      <div class="node-text">Girl rejection check</div>
+      <div class="node-detail">Divky s "NE" pro tohoto klienta se NEzobrazi v nabidce. Klient vidi jen dostupne.</div>
+    </div>
+    <div class="arrow"></div>
+
+    <div class="node node-tg">
+      <div class="node-text">Bot nabidne: Divka &rarr; Den &rarr; Cas &rarr; Program</div>
+      <div class="node-detail">Inline keyboard buttons. Cas: jen volne sloty (bez kolizi).</div>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- Collision check -->
+    <div class="node node-warn">
+      <div class="node-label">System Check</div>
+      <div class="node-text">Kolize check — slot zablokovan pri PENDING</div>
+      <div class="node-detail">Slot je reserved na 60 min pro tento booking. Jiny klient vidi slot jako obsazeny.</div>
+    </div>
+    <div class="arrow"></div>
+
+    <div class="node node-system">
+      <div class="node-label">System</div>
+      <div class="node-text">Booking vytvoren (status: PENDING)</div>
+      <div class="node-detail">source: "telegram_bot", timeout: 60 min</div>
+    </div>
+    <div class="arrow"></div>
+    <div class="node node-action" style="border-color:var(--purple);background:rgba(167,139,250,0.08)">
+      <div class="node-label">Admin Panel</div>
+      <div class="node-text">Operatorka vidi novy pending booking</div>
+      <div class="node-detail">Audio ping + barevne zvyrazneni v kalendari</div>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- 3-way branch: potvrzeno / odmitnuto / timeout -->
+    <div class="branch branch-3">
+      <div class="branch-path">
+        <div class="branch-label yes">Potvrzeno</div>
+        <div class="arrow"></div>
+        <div class="node node-tg">
+          <div class="node-text">Bot posle potvrzeni klientovi</div>
+          <div class="node-detail">"Emily / Pa 13.9. / 16:00-17:00 / Praha 2"</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-tg">
+          <div class="node-text">Bot notifikuje divku</div>
+          <div class="node-detail">"Nova rezervace: 16:00, 60 min, VIP klient"</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-system">
+          <div class="node-label">Cron (1h pred)</div>
+          <div class="node-text">Auto reminder + expiring link na adresu</div>
+          <div class="node-detail">Bot posle adresu klientovi (link expiruje po navsteve) + reminder divce</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-teal">
+          <div class="node-text">IN_PROGRESS</div>
+          <div class="node-detail">Klient dorazil</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-end">
+          <div class="node-text">COMPLETED</div>
+          <div class="node-detail">Body priciteny, daily progress aktualizovan</div>
+        </div>
+      </div>
+      <div class="branch-path">
+        <div class="branch-label no">Odmitnuto</div>
+        <div class="arrow"></div>
+        <div class="node node-tg">
+          <div class="node-text">Bot posle alternativy</div>
+          <div class="node-detail">"Bohuzel obsazeno. Nabizime: 17:30 nebo So 14.9."</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-action">
+          <div class="node-text">Klient vybere alternativu</div>
+          <div class="node-detail">Novy PENDING loop &rarr; znovu na operatorku</div>
+        </div>
+      </div>
+      <div class="branch-path">
+        <div class="branch-label warn">Timeout (60 min)</div>
+        <div class="arrow"></div>
+        <div class="node node-system">
+          <div class="node-text">30 min: upozorneni operatorce</div>
+          <div class="node-detail">"Booking #247 ceka 30 min na potvrzeni!"</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-error">
+          <div class="node-text">EXPIRED</div>
+          <div class="node-detail">Auto po 60 min. Bot posle klientovi: "Omlouvame se, termin nebyl potvrzen. Zkuste znovu."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ===== FLOW C: Storno ======================================= -->
+<!-- ============================================================ -->
+<div class="flow-section">
+  <div class="flow-title">Flow C: Storno (klient i divka)</div>
+  <div class="flow">
+
+    <!-- Branch: klient vs divka -->
+    <div class="branch">
+      <div class="branch-path">
+        <div class="branch-label warn">Klient zrusi predem</div>
+        <div class="arrow"></div>
+        <div class="node node-action">
+          <div class="node-text">Klient vola / TG /zrusit</div>
+          <div class="node-detail">Telegram: /zrusit &rarr; bot zobrazi aktivni bookings, klient vybere</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-system">
+          <div class="node-label">System</div>
+          <div class="node-text">Status &rarr; CANCELLED_CLIENT</div>
+          <div class="node-detail">Zadna penalizace. Slot se okamzite uvolni.</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-tg">
+          <div class="node-text">Notifikace divce</div>
+          <div class="node-detail">"Zrusena rezervace: Pa 13.9. 16:00. Duvod: klient zrusil"</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-action">
+          <div class="node-text">Operatorka vidi v admin panelu</div>
+          <div class="node-detail">Cervene zvyrazneni v kalendari, audit log zaznam</div>
+        </div>
+      </div>
+
+      <div class="branch-path">
+        <div class="branch-label" style="color:var(--coral);background:rgba(242,125,141,0.1)">Divka zrusi (nemoc)</div>
+        <div class="arrow"></div>
+        <div class="node node-action" style="border-color:var(--purple);background:rgba(167,139,250,0.08)">
+          <div class="node-label">Admin Panel</div>
+          <div class="node-text">Operatorka zada storno za divku</div>
+          <div class="node-detail">Duvod: nemoc / nouzova situace / osobni duvody</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-system">
+          <div class="node-label">System</div>
+          <div class="node-text">Status &rarr; CANCELLED_GIRL</div>
+          <div class="node-detail">Audit log: kdo zrusil, duvod, cas</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node node-warn">
+          <div class="node-label">System</div>
+          <div class="node-text">Nabidka nahrady klientovi</div>
+          <div class="node-detail">Operatorka kontaktuje klienta s alternativou (jina divka / jiny cas)</div>
+        </div>
+        <div class="arrow"></div>
+
+        <div class="branch">
+          <div class="branch-path">
+            <div class="branch-label yes">Prijme nahradu</div>
+            <div class="arrow"></div>
+            <div class="node node-system">
+              <div class="node-text">Novy booking (REASSIGNED)</div>
+              <div class="node-detail">Puvodni cancelled, novy CONFIRMED</div>
+            </div>
+          </div>
+          <div class="branch-path">
+            <div class="branch-label no">Odmitne</div>
+            <div class="arrow"></div>
+            <div class="node node-action">
+              <div class="node-text">Ukonceno</div>
+              <div class="node-detail">Zadna penalizace pro klienta</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ===== FLOW D: No-show eskalace ============================= -->
+<!-- ============================================================ -->
+<div class="flow-section">
+  <div class="flow-title">Flow D: No-show eskalace</div>
+
+  <table class="esc-table">
+    <thead>
+      <tr>
+        <th>Level</th>
+        <th>Podminka</th>
+        <th>Akce</th>
+        <th>Vizual</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="esc-level" style="color:var(--yellow)">1x No-show</td>
+        <td>Prvni no-show</td>
+        <td>Zluty badge v klientske karte. Operatorka vidi upozorneni pri dalsim bookingu.</td>
+        <td><span style="background:rgba(251,191,36,0.2);color:var(--yellow);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">1x NS</span></td>
+      </tr>
+      <tr>
+        <td class="esc-level" style="color:var(--orange)">2x No-show</td>
+        <td>Druhy no-show</td>
+        <td>System vyzaduje potvrzeni 2h predem (TG tlacitko "Potvrzuji prichod"). Bez potvrzeni = auto-cancel.</td>
+        <td><span style="background:rgba(251,146,60,0.2);color:var(--orange);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">2x NS</span></td>
+      </tr>
+      <tr>
+        <td class="esc-level" style="color:var(--red)">3x No-show</td>
+        <td>Treti no-show</td>
+        <td>type: "untrusted". TG bot zakazan (prikaz /booking odmitnut). Booking jen pres telefon + operatorka.</td>
+        <td><span style="background:rgba(239,68,68,0.2);color:var(--red);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">UNTRUSTED</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="flow" style="margin-top: 20px;">
+    <div class="node node-action">
+      <div class="node-text">No-show zaznamena operatorka v admin panelu</div>
+      <div class="node-detail">Po grace period 15 min (klient nedorazil, nekomunikuje)</div>
+    </div>
+    <div class="arrow"></div>
+    <div class="node node-system">
+      <div class="node-label">System</div>
+      <div class="node-text">no_show_count++ &rarr; kontrola eskalacniho levelu</div>
+      <div class="node-detail">Audit log: booking ID, divka, cas, "no_show"</div>
+    </div>
+    <div class="arrow"></div>
+
+    <div class="branch branch-3">
+      <div class="branch-path">
+        <div class="branch-label warn">1x</div>
+        <div class="arrow"></div>
+        <div class="node node-warn">
+          <div class="node-text">Zluty badge</div>
+          <div class="node-detail">Varovani pri dalsim bookingu:<br>"Klient ma 1 no-show"</div>
+        </div>
+      </div>
+      <div class="branch-path">
+        <div class="branch-label" style="color:var(--orange);background:rgba(251,146,60,0.1)">2x</div>
+        <div class="arrow"></div>
+        <div class="node node-action" style="border-color:var(--orange)">
+          <div class="node-text">Povinne potvrzeni 2h predem</div>
+          <div class="node-detail">TG bot posle: "Potvrd prichod do 2h"<br>Bez odpovedi = auto CANCELLED_CLIENT</div>
+        </div>
+      </div>
+      <div class="branch-path">
+        <div class="branch-label no">3x</div>
+        <div class="arrow"></div>
+        <div class="node node-error">
+          <div class="node-text">type: "untrusted"</div>
+          <div class="node-detail">TG bot zakazan. /booking &rarr; "Kontaktujte nas telefonicky."<br>Booking jen pres operatorku.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ===== TIMELINE: Zivotni cyklus ============================= -->
+<!-- ============================================================ -->
+<div class="flow-section">
+  <div class="flow-title">Timeline: Zivotni cyklus jedne rezervace (kompletni)</div>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot done"></div>
+      <div class="tl-time">12:15</div>
+      <div class="tl-title">Vytvorena (PENDING) <span class="tl-channel ch-tg">TG Bot</span></div>
+      <div class="tl-desc">Klient JozefN1211 &rarr; Emily / Pa 13.9. 16:00 / 60 min. Timeout: 60 min.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot done"></div>
+      <div class="tl-time">12:28</div>
+      <div class="tl-title">Potvrzena (CONFIRMED) <span class="tl-channel ch-admin">Admin</span></div>
+      <div class="tl-desc">Operatorka schvalila v admin panelu (za 13 min, pod 60 min limitem)</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot done"></div>
+      <div class="tl-time">12:28</div>
+      <div class="tl-title">Potvrzeni odeslano <span class="tl-channel ch-tg">TG Bot</span></div>
+      <div class="tl-desc">Klient dostal: "Emily / Pa 13.9. / 16:00-17:00 / Praha 2"</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot done"></div>
+      <div class="tl-time">12:30</div>
+      <div class="tl-title">Divka notifikovana <span class="tl-channel ch-tg">TG Bot</span></div>
+      <div class="tl-desc">Emily dostala: "Nova rezervace: 16:00, 60 min, VIP klient (6 navstev, 0 no-shows), Pokoj 1"</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot done"></div>
+      <div class="tl-time">15:00</div>
+      <div class="tl-title">Auto reminder (1h pred) <span class="tl-channel ch-cron">Cron</span></div>
+      <div class="tl-desc">Klient: reminder + expiring link na adresu (Legerova 42). Divka: "Za 1h: 16:00, Pokoj 1"</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot done"></div>
+      <div class="tl-time">15:02</div>
+      <div class="tl-title">Klient potvrdil prichod <span class="tl-channel ch-tg">TG Bot</span></div>
+      <div class="tl-desc">Tlacitko "Potvrzuji" v reminder zprave. Emily notifikovana: "Klient potvrzen"</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot active"></div>
+      <div class="tl-time">16:00</div>
+      <div class="tl-title">IN_PROGRESS <span class="tl-channel ch-admin">Admin</span></div>
+      <div class="tl-desc">Klient dorazil. Operatorka oznacila jako IN_PROGRESS. Adresni link expiroval.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot warn"></div>
+      <div class="tl-time">17:00</div>
+      <div class="tl-title">COMPLETED <span class="tl-channel ch-admin">Admin</span></div>
+      <div class="tl-desc">Dokonceno. Body: +1 000 b Emily, daily progress: 1 900 &rarr; 2 900 / 4 500 cil</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-time">17:00</div>
+      <div class="tl-title">Klient upgradovan <span class="tl-channel ch-system">System</span></div>
+      <div class="tl-desc">total_visits: 6&rarr;7, VIP status zachovan</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-time">17:05</div>
+      <div class="tl-title">Divka ohodnotila klienta <span class="tl-channel ch-admin">Admin</span></div>
+      <div class="tl-desc">Rating: 5/5, poznamka: "Dochvilny, klidny"</div>
+    </div>
+  </div>
+</div>
+
+<div class="mockup-label">
+  MOCKUP: Flow Diagram &mdash; State machine (10 stavu), Flow A (telefon + rejection/kolize/grace period), Flow B (TG bot + timeout/rebook/expired), Flow C (storno klient + divka), Flow D (no-show eskalace 3 levely), Timeline (kompletni s IN_PROGRESS + body)
+</div>
+
+</body>
+</html>

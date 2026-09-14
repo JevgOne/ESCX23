@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Booking — Nova rezervace (4 kroky)</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --magenta: #c84b8b;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; }
+
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+  }
+  .modal {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    width: 520px; max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close { font-size: 20px; color: var(--dim); cursor: pointer; background: none; border: none; }
+
+  /* Steps indicator */
+  .steps {
+    display: flex; gap: 0; padding: 0 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .step {
+    flex: 1; padding: 12px 0;
+    text-align: center; font-size: 11px; font-weight: 600;
+    color: var(--dim); position: relative;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .step.active { color: var(--coral); }
+  .step.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--coral); }
+  .step.done { color: var(--green); }
+  .step .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    font-size: 10px; margin-right: 4px;
+  }
+  .step.active .step-num { background: var(--coral); color: #fff; border-color: var(--coral); }
+  .step.done .step-num { background: var(--green); color: #000; border-color: var(--green); }
+
+  .modal-body { padding: 20px; }
+
+  /* Form elements */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; font-weight: 600; }
+  .form-input, .form-select {
+    width: 100%; padding: 10px 12px;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--coral); }
+  .form-input::placeholder { color: var(--dim); }
+
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+
+  /* Client search */
+  .client-search-result {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .client-found {
+    padding: 12px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .client-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--bg); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--coral); font-size: 14px;
+    flex-shrink: 0;
+  }
+  .client-info { flex: 1; }
+  .client-name { font-weight: 600; font-size: 14px; }
+  .client-code { font-size: 12px; color: var(--muted); }
+  .client-stats { display: flex; gap: 12px; font-size: 11px; color: var(--dim); margin-top: 4px; }
+  .client-badge {
+    padding: 2px 6px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+  }
+  .badge-vip { background: rgba(251,191,36,0.2); color: var(--yellow); }
+  .badge-regular { background: rgba(74,222,128,0.2); color: var(--green); }
+  .badge-new { background: rgba(96,165,250,0.2); color: var(--blue); }
+  .badge-untrusted { background: rgba(239,68,68,0.2); color: var(--red); }
+
+  .client-warning {
+    padding: 8px 12px;
+    background: rgba(239,68,68,0.1);
+    border-top: 1px solid rgba(239,68,68,0.2);
+    font-size: 11px; color: var(--red);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .client-history {
+    padding: 8px 12px;
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+    font-size: 11px; color: var(--muted);
+  }
+  .client-history-item { padding: 3px 0; display: flex; justify-content: space-between; }
+
+  /* Girl selection */
+  .girl-options { display: flex; flex-direction: column; gap: 6px; }
+  .girl-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .girl-option:hover { border-color: var(--coral); }
+  .girl-option.selected { border-color: var(--coral); background: rgba(242,125,141,0.08); }
+  .girl-option.unavailable { opacity: 0.35; cursor: not-allowed; }
+  .girl-option .g-av { width: 32px; height: 32px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--coral); font-size: 12px; }
+  .girl-option .g-name { font-weight: 600; font-size: 13px; }
+  .girl-option .g-shift { font-size: 11px; color: var(--muted); }
+  .girl-option .g-status { margin-left: auto; font-size: 10px; }
+  .girl-option .g-status.avail { color: var(--green); }
+  .girl-option .g-status.busy { color: var(--red); }
+  .girl-option .g-status.off { color: var(--dim); }
+
+  /* Time slots */
+  .time-slots { display: flex; flex-wrap: wrap; gap: 6px; }
+  .time-slot-btn {
+    padding: 8px 14px; border-radius: 8px;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    color: var(--text); font-size: 13px; cursor: pointer;
+  }
+  .time-slot-btn:hover { border-color: var(--coral); }
+  .time-slot-btn.selected { background: var(--coral); color: #fff; border-color: var(--coral); }
+  .time-slot-btn.taken { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
+
+  /* Summary */
+  .summary-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+  .summary-label { color: var(--muted); }
+  .summary-value { font-weight: 600; }
+  .summary-divider { border-top: 1px solid var(--line); margin: 8px 0; }
+  .summary-total { font-size: 18px; }
+  .summary-total .summary-value { color: var(--coral); }
+
+  /* Buttons */
+  .modal-footer {
+    display: flex; justify-content: space-between;
+    padding: 16px 20px;
+    border-top: 1px solid var(--line);
+  }
+  .btn { padding: 10px 20px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-primary { background: var(--coral); color: #fff; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .btn-success { background: var(--green); color: #000; }
+
+  /* Source selector */
+  .source-btns { display: flex; gap: 6px; }
+  .source-btn {
+    flex: 1; padding: 10px 8px; border-radius: 8px;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    color: var(--muted); font-size: 12px; text-align: center;
+    cursor: pointer; font-weight: 600;
+  }
+  .source-btn.selected { border-color: var(--coral); color: var(--coral); background: rgba(242,125,141,0.08); }
+
+  .mockup-label { padding: 10px 16px; background: var(--bg-elev); border-radius: 10px; font-size: 12px; color: var(--muted); margin: 16px 20px; text-align: center; }
+
+  .separator { text-align: center; padding: 30px 0; font-size: 14px; color: var(--dim); }
+</style>
+</head>
+<body>
+
+<!-- ===== KROK 1: Klient ===== -->
+<div class="modal-overlay" style="position: relative; padding: 30px 0;">
+<div class="modal">
+  <div class="modal-header">
+    <span class="modal-title">Nova rezervace</span>
+    <button class="modal-close">&times;</button>
+  </div>
+  <div class="steps">
+    <div class="step active"><span class="step-num">1</span> Klient</div>
+    <div class="step"><span class="step-num">2</span> Divka</div>
+    <div class="step"><span class="step-num">3</span> Cas</div>
+    <div class="step"><span class="step-num">4</span> Souhrn</div>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label class="form-label">Vyhledat klienta (telefon / kod / jmeno)</label>
+      <input class="form-input" type="text" placeholder="Zadejte telefon, KLIENT1309 nebo jmeno..." value="+420 777 888 999">
+    </div>
+
+    <!-- Found existing client -->
+    <div class="client-search-result">
+      <div class="client-found">
+        <div class="client-avatar">J</div>
+        <div class="client-info">
+          <div class="client-name">Josef <span class="client-badge badge-vip">VIP</span></div>
+          <div class="client-code">KLIENT1211 (JozefN1211)</div>
+          <div class="client-stats">
+            <span>6 navstev</span>
+            <span>0 no-shows</span>
+            <span>Posl. 9.9.2026</span>
+          </div>
+        </div>
+      </div>
+      <div class="client-history">
+        <div style="font-weight: 600; margin-bottom: 4px; color: var(--text);">Posledni 3 navstevy:</div>
+        <div class="client-history-item"><span>9.9. Emily (60 min)</span><span style="color: var(--green);">OK</span></div>
+        <div class="client-history-item"><span>2.9. Nika (60 min)</span><span style="color: var(--green);">OK</span></div>
+        <div class="client-history-item"><span>25.8. Nina (60 min)</span><span style="color: var(--green);">OK</span></div>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top: 16px;">
+      <label class="form-label">Zdroj rezervace</label>
+      <div class="source-btns">
+        <div class="source-btn selected">Telefon</div>
+        <div class="source-btn">SMS</div>
+        <div class="source-btn">WhatsApp</div>
+        <div class="source-btn">Telegram</div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost">Zrusit</button>
+    <button class="btn btn-primary">Dalsi: Divka &rarr;</button>
+  </div>
+</div>
+</div>
+
+<div class="separator">&mdash;&mdash;&mdash; KROK 2: Vyber divku &mdash;&mdash;&mdash;</div>
+
+<!-- ===== KROK 2: Divka ===== -->
+<div class="modal-overlay" style="position: relative; padding: 30px 0;">
+<div class="modal">
+  <div class="modal-header">
+    <span class="modal-title">Nova rezervace</span>
+    <button class="modal-close">&times;</button>
+  </div>
+  <div class="steps">
+    <div class="step done"><span class="step-num">&#10003;</span> Klient</div>
+    <div class="step active"><span class="step-num">2</span> Divka</div>
+    <div class="step"><span class="step-num">3</span> Cas</div>
+    <div class="step"><span class="step-num">4</span> Souhrn</div>
+  </div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Datum</label>
+        <input class="form-input" type="text" value="13.9.2026">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cas (priblizny)</label>
+        <input class="form-input" type="text" value="16:00">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dostupne divky pro 13.9. kolem 16:00</label>
+      <div class="girl-options">
+        <div class="girl-option selected">
+          <div class="g-av">E</div>
+          <div>
+            <div class="g-name">Emily</div>
+            <div class="g-shift">Smena 11:00 - 22:00 / Vinohrady</div>
+          </div>
+          <div class="g-status avail">Volna 15:15+</div>
+        </div>
+        <div class="girl-option">
+          <div class="g-av">N</div>
+          <div>
+            <div class="g-name">Nika</div>
+            <div class="g-shift">Smena 10:00 - 20:00 / Vinohrady</div>
+          </div>
+          <div class="g-status avail">Volna 15:00+</div>
+        </div>
+        <div class="girl-option">
+          <div class="g-av">L</div>
+          <div>
+            <div class="g-name">Luna</div>
+            <div class="g-shift">Smena 14:00 - 22:00 / Vinohrady</div>
+          </div>
+          <div class="g-status avail">Volna 16:00+</div>
+        </div>
+        <div class="girl-option">
+          <div class="g-av">C</div>
+          <div>
+            <div class="g-name">Caty</div>
+            <div class="g-shift">Smena 11:00 - 21:00 / Vinohrady</div>
+          </div>
+          <div class="g-status busy">14:00-15:00 obsaz.</div>
+        </div>
+        <div class="girl-option unavailable">
+          <div class="g-av">K</div>
+          <div>
+            <div class="g-name">Kim</div>
+            <div class="g-shift">Nepracuje 13.9.</div>
+          </div>
+          <div class="g-status off">Nedostupna</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost">&larr; Zpet</button>
+    <button class="btn btn-primary">Dalsi: Cas &rarr;</button>
+  </div>
+</div>
+</div>
+
+<div class="separator">&mdash;&mdash;&mdash; KROK 3: Presny cas + program &mdash;&mdash;&mdash;</div>
+
+<!-- ===== KROK 3: Cas + Program ===== -->
+<div class="modal-overlay" style="position: relative; padding: 30px 0;">
+<div class="modal">
+  <div class="modal-header">
+    <span class="modal-title">Nova rezervace</span>
+    <button class="modal-close">&times;</button>
+  </div>
+  <div class="steps">
+    <div class="step done"><span class="step-num">&#10003;</span> Klient</div>
+    <div class="step done"><span class="step-num">&#10003;</span> Divka</div>
+    <div class="step active"><span class="step-num">3</span> Cas</div>
+    <div class="step"><span class="step-num">4</span> Souhrn</div>
+  </div>
+  <div class="modal-body">
+    <div style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">
+      Emily / Pa 13.9.2026 / Smena 11:00 - 22:00
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Dostupne casy (po 30 min, obsazene preskoceny)</label>
+      <div class="time-slots">
+        <div class="time-slot-btn taken">15:00</div>
+        <div class="time-slot-btn">15:30</div>
+        <div class="time-slot-btn selected">16:00</div>
+        <div class="time-slot-btn">16:30</div>
+        <div class="time-slot-btn">17:00</div>
+        <div class="time-slot-btn">17:30</div>
+        <div class="time-slot-btn">18:00</div>
+        <div class="time-slot-btn">18:30</div>
+        <div class="time-slot-btn">19:00</div>
+        <div class="time-slot-btn taken">19:30</div>
+        <div class="time-slot-btn">20:00</div>
+        <div class="time-slot-btn">20:30</div>
+        <div class="time-slot-btn">21:00</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Program</label>
+      <select class="form-select">
+        <option>30 min</option>
+        <option>45 min</option>
+        <option selected>60 min</option>
+        <option>90 min</option>
+        <option>120 min</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Lokace (z rozvrhu)</label>
+      <div class="form-input" style="color: var(--muted); cursor: default; user-select: none;">Vinohrady (Praha 2)</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Poznamky (interni)</label>
+      <input class="form-input" type="text" placeholder="Volitelna poznamka pro operatorku...">
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost">&larr; Zpet</button>
+    <button class="btn btn-primary">Dalsi: Souhrn &rarr;</button>
+  </div>
+</div>
+</div>
+
+<div class="separator">&mdash;&mdash;&mdash; KROK 4: Souhrn + Potvrzeni &mdash;&mdash;&mdash;</div>
+
+<!-- ===== KROK 4: Souhrn ===== -->
+<div class="modal-overlay" style="position: relative; padding: 30px 0;">
+<div class="modal">
+  <div class="modal-header">
+    <span class="modal-title">Nova rezervace</span>
+    <button class="modal-close">&times;</button>
+  </div>
+  <div class="steps">
+    <div class="step done"><span class="step-num">&#10003;</span> Klient</div>
+    <div class="step done"><span class="step-num">&#10003;</span> Divka</div>
+    <div class="step done"><span class="step-num">&#10003;</span> Cas</div>
+    <div class="step active"><span class="step-num">4</span> Souhrn</div>
+  </div>
+  <div class="modal-body">
+    <div class="summary-card">
+      <div class="summary-row">
+        <span class="summary-label">Klient</span>
+        <span class="summary-value">Josef (KLIENT1211) <span class="client-badge badge-vip" style="font-size: 9px;">VIP</span></span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Divka</span>
+        <span class="summary-value">Emily</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Datum + cas</span>
+        <span class="summary-value">Pa 13.9.2026 / 16:00 - 17:00</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Program</span>
+        <span class="summary-value">60 min</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Lokace</span>
+        <span class="summary-value">Vinohrady (Praha 2)</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Zdroj</span>
+        <span class="summary-value">Telefon</span>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-row summary-total">
+        <span class="summary-label">Cena</span>
+        <span class="summary-value">4 500 Kc</span>
+      </div>
+    </div>
+
+    <!-- Odeslat potvrzeni: TELEFON/SMS/WHATSAPP varianta -->
+    <div style="margin-top: 16px;">
+      <div class="form-group">
+        <label class="form-label">Odeslat potvrzeni klientovi</label>
+        <div style="display: flex; gap: 8px; margin-top: 4px;">
+          <button class="btn btn-ghost" style="flex: 1; font-size: 12px; border-color: var(--blue); color: var(--blue);">
+            &#9993; SMS
+          </button>
+          <button class="btn btn-ghost" style="flex: 1; font-size: 12px; border-color: #25D366; color: #25D366;">
+            &#9742; WhatsApp
+          </button>
+          <button class="btn btn-ghost" style="flex: 1; font-size: 12px;">
+            &#128203; Kopirovat text
+          </button>
+        </div>
+      </div>
+      <div style="background: var(--bg-elev); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5;">
+        Potvrzeni rezervace: Emily, Pa 13.9. 16:00-17:00, Praha 2 - Vinohrady. Adresa bude zaslana 1h pred terminem.
+      </div>
+      <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="confirmSent" style="width: 16px; height: 16px; accent-color: var(--green);">
+        <label for="confirmSent" style="font-size: 12px; color: var(--muted); cursor: pointer;">Potvrzeni odeslano</label>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost">&larr; Zpet</button>
+    <button class="btn btn-success" style="font-size: 14px; padding: 12px 28px;">Vytvorit rezervaci</button>
+  </div>
+</div>
+</div>
+
+<div class="separator">&mdash;&mdash;&mdash; KROK 4 VARIANTA: Telegram klient &mdash;&mdash;&mdash;</div>
+
+<!-- ===== KROK 4: Souhrn — Telegram klient ===== -->
+<div class="modal-overlay" style="position: relative; padding: 30px 0;">
+<div class="modal">
+  <div class="modal-header">
+    <span class="modal-title">Nova rezervace</span>
+    <button class="modal-close">&times;</button>
+  </div>
+  <div class="steps">
+    <div class="step done"><span class="step-num">&#10003;</span> Klient</div>
+    <div class="step done"><span class="step-num">&#10003;</span> Divka</div>
+    <div class="step done"><span class="step-num">&#10003;</span> Cas</div>
+    <div class="step active"><span class="step-num">4</span> Souhrn</div>
+  </div>
+  <div class="modal-body">
+    <div class="summary-card">
+      <div class="summary-row">
+        <span class="summary-label">Klient</span>
+        <span class="summary-value">Josef (KLIENT1211) <span class="client-badge badge-vip" style="font-size: 9px;">VIP</span></span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Divka</span>
+        <span class="summary-value">Emily</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Datum + cas</span>
+        <span class="summary-value">Pa 13.9.2026 / 16:00 - 17:00</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Program</span>
+        <span class="summary-value">60 min</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Lokace</span>
+        <span class="summary-value">Vinohrady (Praha 2)</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Zdroj</span>
+        <span class="summary-value" style="color: #229ED9;">Telegram</span>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-row summary-total">
+        <span class="summary-label">Cena</span>
+        <span class="summary-value">4 500 Kc</span>
+      </div>
+    </div>
+
+    <!-- Odeslat potvrzeni: TELEGRAM varianta -->
+    <div style="margin-top: 16px;">
+      <div class="form-group">
+        <label class="form-label">Odeslat potvrzeni klientovi</label>
+        <div style="margin-top: 4px;">
+          <button class="btn btn-ghost" style="width: 100%; font-size: 13px; border-color: #229ED9; color: #229ED9; padding: 12px; justify-content: center;">
+            &#9992; Odeslat pres Telegram bota
+          </button>
+        </div>
+      </div>
+      <div style="background: var(--bg-elev); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5;">
+        Potvrzeni rezervace: Emily, Pa 13.9. 16:00-17:00, Praha 2 - Vinohrady. Adresa bude zaslana 1h pred terminem.
+      </div>
+      <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="confirmSentTg" checked style="width: 16px; height: 16px; accent-color: var(--green);">
+        <label for="confirmSentTg" style="font-size: 12px; color: var(--green); cursor: pointer;">Potvrzeni odeslano automaticky</label>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost">&larr; Zpet</button>
+    <button class="btn btn-success" style="font-size: 14px; padding: 12px 28px;">Vytvorit rezervaci</button>
+  </div>
+</div>
+</div>
+
+<div class="separator">&mdash;&mdash;&mdash; KROK 3 VARIANTA: Novy klient — omezeny program &mdash;&mdash;&mdash;</div>
+
+<!-- ===== KROK 3 variant: New client = max 60 min ===== -->
+<div class="modal-overlay" style="position: relative; padding: 30px 0;">
+<div class="modal">
+  <div class="modal-header">
+    <span class="modal-title">Nova rezervace</span>
+    <button class="modal-close">&times;</button>
+  </div>
+  <div class="steps">
+    <div class="step done"><span class="step-num">&#10003;</span> Klient</div>
+    <div class="step done"><span class="step-num">&#10003;</span> Divka</div>
+    <div class="step active"><span class="step-num">3</span> Cas</div>
+    <div class="step"><span class="step-num">4</span> Souhrn</div>
+  </div>
+  <div class="modal-body">
+    <div style="font-size: 13px; color: var(--muted); margin-bottom: 8px;">
+      Emily / So 13.9.2026 / Smena 11:00 - 22:00
+    </div>
+
+    <div style="background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 11px; color: var(--yellow); display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 16px;">&#9888;</span>
+      <span><strong>Novy klient (PETR1309)</strong> — max 60 min. Pro 90/120 min musi byt staly nebo VIP.</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Dostupne casy</label>
+      <div class="time-slots">
+        <div class="time-slot-btn">15:30</div>
+        <div class="time-slot-btn selected">16:00</div>
+        <div class="time-slot-btn">16:30</div>
+        <div class="time-slot-btn">17:00</div>
+        <div class="time-slot-btn">17:30</div>
+        <div class="time-slot-btn">18:00</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Program</label>
+      <select class="form-select">
+        <option>30 min</option>
+        <option>45 min</option>
+        <option selected>60 min</option>
+      </select>
+      <div style="font-size: 10px; color: var(--dim); margin-top: 4px;">90 min a 120 min nejsou dostupne pro nove klienty</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Lokace (z rozvrhu)</label>
+      <div class="form-input" style="color: var(--muted); cursor: default; user-select: none;">Vinohrady (Praha 2)</div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost">&larr; Zpet</button>
+    <button class="btn btn-primary">Dalsi: Souhrn &rarr;</button>
+  </div>
+</div>
+</div>
+
+<div class="separator">&mdash;&mdash;&mdash; ALTERNATIVA: Novy klient (neni v DB) &mdash;&mdash;&mdash;</div>
+
+<!-- ===== New client variant ===== -->
+<div class="modal-overlay" style="position: relative; padding: 30px 0;">
+<div class="modal">
+  <div class="modal-header">
+    <span class="modal-title">Nova rezervace — Novy klient</span>
+    <button class="modal-close">&times;</button>
+  </div>
+  <div class="steps">
+    <div class="step active"><span class="step-num">1</span> Klient</div>
+    <div class="step"><span class="step-num">2</span> Divka</div>
+    <div class="step"><span class="step-num">3</span> Cas</div>
+    <div class="step"><span class="step-num">4</span> Souhrn</div>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label class="form-label">Vyhledat klienta</label>
+      <input class="form-input" type="text" value="+420 666 555 444">
+    </div>
+
+    <div style="background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 12px; color: var(--blue);">
+      Klient nenalezen. Vytvorit novou kartu?
+    </div>
+
+    <div style="background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 11px; color: var(--yellow); display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 16px;">&#9888;</span>
+      <span><strong>Novy klient — max 60 min.</strong> Programy 90/120 min jsou dostupne az pro stale a VIP klienty.</span>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Jmeno</label>
+        <input class="form-input" type="text" placeholder="Petr" value="Petr">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kod (auto)</label>
+        <input class="form-input" type="text" value="PETR1309" readonly style="color: var(--coral); font-weight: 700;">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Telefon</label>
+      <input class="form-input" type="text" value="+420 666 555 444">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Zdroj</label>
+      <div class="source-btns">
+        <div class="source-btn selected">Telefon</div>
+        <div class="source-btn">SMS</div>
+        <div class="source-btn">WhatsApp</div>
+        <div class="source-btn">Telegram</div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost">Zrusit</button>
+    <button class="btn btn-primary">Vytvorit + Dalsi &rarr;</button>
+  </div>
+</div>
+</div>
+
+<div class="mockup-label">
+  MOCKUP: Nova rezervace &mdash; 4 kroky (Klient &rarr; Divka &rarr; Cas+Program &rarr; Souhrn), varianty: novy klient (max 60 min), Krok 4 telefon (SMS/WhatsApp/Kopirovat) vs Telegram (auto bot)
+</div>
+
+</body>
+</html>

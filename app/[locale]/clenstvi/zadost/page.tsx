@@ -113,6 +113,7 @@ export async function generateMetadata({
   return applyDBOverride(`/${locale}/clenstvi/zadost`, {
     title: M.title,
     description: M.description,
+    robots: { index: false, follow: false },
     alternates: {
       canonical: getCanonicalUrl(locale, '/clenstvi/zadost'),
       languages: getAlternates('/clenstvi/zadost'),

@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Studio — Pohled divky (Emily)</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --purple: #a78bfa;
+    --teal: #2dd4bf;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; padding: 20px; display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; }
+
+  /* Phone frame */
+  .phone {
+    width: 390px;
+    min-height: 700px;
+    background: var(--bg-soft);
+    border: 2px solid var(--line);
+    border-radius: 32px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 24px 6px;
+    font-size: 12px; font-weight: 600; color: var(--muted);
+  }
+
+  /* App header */
+  .app-header {
+    padding: 8px 20px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .app-header-top { display: flex; justify-content: space-between; align-items: center; }
+  .app-logo { font-size: 16px; font-weight: 800; color: var(--coral); letter-spacing: -0.02em; }
+  .app-user { font-size: 12px; color: var(--muted); }
+
+  /* Content area */
+  .content { flex: 1; overflow-y: auto; padding-bottom: 70px; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    display: flex; border-top: 1px solid var(--line);
+    background: var(--bg-soft);
+    padding-bottom: 20px; /* safe area */
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 10px 0 4px; gap: 3px;
+    font-size: 10px; color: var(--dim); font-weight: 600;
+  }
+  .nav-item.active { color: var(--coral); }
+  .nav-icon { font-size: 20px; }
+  .nav-badge {
+    position: absolute; top: 4px; right: calc(50% - 18px);
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--coral); color: #fff;
+    font-size: 9px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* === SCREEN 1: Prehled dne === */
+  .shift-banner {
+    background: var(--bg-elev); padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .shift-date { font-size: 18px; font-weight: 800; }
+  .shift-info { font-size: 12px; color: var(--muted); margin-top: 4px; display: flex; gap: 12px; }
+  .shift-tag { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+  .shift-tag.loc { background: rgba(96,165,250,0.15); color: var(--blue); }
+  .shift-tag.time { background: rgba(74,222,128,0.15); color: var(--green); }
+
+  /* Points progress */
+  .points-bar {
+    padding: 12px 20px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .points-track {
+    flex: 1; height: 8px; border-radius: 4px;
+    background: var(--bg-elev); overflow: hidden;
+  }
+  .points-fill { height: 100%; border-radius: 4px; background: var(--yellow); }
+  .points-label { font-size: 13px; font-weight: 700; color: var(--yellow); white-space: nowrap; }
+  .points-goal { font-size: 10px; color: var(--dim); white-space: nowrap; }
+
+  /* Booking list */
+  .section-label {
+    padding: 12px 20px 6px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--dim); font-weight: 700;
+  }
+
+  .booking-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .booking-item.next { background: rgba(242,125,141,0.06); border-left: 3px solid var(--coral); }
+  .booking-item.done { opacity: 0.45; }
+
+  .bi-time {
+    width: 52px; text-align: center; flex-shrink: 0;
+  }
+  .bi-time-h { font-size: 16px; font-weight: 800; }
+  .bi-time-dur { font-size: 10px; color: var(--dim); }
+
+  .bi-info { flex: 1; }
+  .bi-client { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .bi-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .bi-note { font-size: 10px; color: var(--yellow); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+
+  .bi-badge {
+    padding: 2px 6px; border-radius: 4px;
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+  }
+  .bi-badge.vip { background: rgba(251,191,36,0.2); color: var(--yellow); }
+  .bi-badge.regular { background: rgba(74,222,128,0.2); color: var(--green); }
+  .bi-badge.new { background: rgba(96,165,250,0.2); color: var(--blue); }
+
+  .bi-status { flex-shrink: 0; font-size: 10px; font-weight: 600; }
+  .bi-status.s-done { color: var(--green); }
+  .bi-status.s-next { color: var(--coral); }
+  .bi-status.s-later { color: var(--dim); }
+
+  .bi-countdown {
+    font-size: 11px; color: var(--coral); font-weight: 700;
+    margin-top: 2px;
+  }
+
+  /* === SCREEN 2: Dalsi booking detail === */
+  .next-detail { padding: 20px; }
+  .nd-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); font-weight: 700; margin-bottom: 12px; }
+  .nd-countdown {
+    font-size: 32px; font-weight: 900; color: var(--coral);
+    text-align: center; margin-bottom: 16px;
+  }
+  .nd-countdown-sub { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .nd-card {
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px;
+  }
+  .nd-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+  .nd-row-label { color: var(--muted); }
+  .nd-row-value { font-weight: 600; }
+  .nd-note-box {
+    margin-top: 12px; padding: 10px 12px;
+    background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 8px; font-size: 12px; color: var(--yellow);
+  }
+  .nd-actions { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .nd-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px; border-radius: 10px; border: none;
+    font-size: 14px; font-weight: 700; cursor: pointer; width: 100%;
+  }
+  .nd-btn-primary { background: var(--green); color: #000; }
+  .nd-btn-secondary { background: var(--bg-elev); border: 1px solid var(--line); color: var(--text); font-size: 13px; font-weight: 600; }
+
+  /* === SCREEN 3: Hodnoceni klienta === */
+  .rating-screen { padding: 20px; text-align: center; }
+  .rating-done-icon { font-size: 48px; margin-bottom: 8px; }
+  .rating-done-text { font-size: 18px; font-weight: 800; color: var(--green); margin-bottom: 4px; }
+  .rating-done-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+
+  .rating-card {
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px; text-align: left;
+  }
+  .rating-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 10px; }
+  .rating-stars { display: flex; gap: 8px; margin-bottom: 16px; }
+  .star {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; cursor: pointer;
+    background: var(--bg); border: 1px solid var(--line);
+  }
+  .star.filled { background: rgba(251,191,36,0.2); border-color: var(--yellow); }
+  .rating-textarea {
+    width: 100%; padding: 10px 12px;
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; color: var(--text); font-size: 13px;
+    resize: none; height: 60px; outline: none;
+    font-family: inherit;
+  }
+  .rating-textarea::placeholder { color: var(--dim); }
+  .rating-submit {
+    margin-top: 12px; width: 100%; padding: 12px;
+    border-radius: 10px; border: none;
+    background: var(--coral); color: #fff;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+
+  /* === SCREEN 4: Tydenni rozvrh === */
+  .week-schedule { padding: 16px 20px; }
+  .ws-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+  .ws-day {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--line);
+  }
+  .ws-day-name { width: 32px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .ws-day-name.today { color: var(--coral); }
+  .ws-day-date { width: 24px; font-size: 12px; color: var(--dim); }
+  .ws-day-shift {
+    flex: 1; font-size: 12px; padding: 6px 10px;
+    border-radius: 6px;
+  }
+  .ws-day-shift.on { background: rgba(74,222,128,0.08); color: var(--green); }
+  .ws-day-shift.off { background: rgba(0,0,0,0.15); color: var(--dim); }
+  .ws-day-count { font-size: 11px; font-weight: 700; color: var(--coral); width: 44px; text-align: right; }
+
+  /* === SCREEN 5: Notifikace === */
+  .notif-item {
+    display: flex; gap: 12px; padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .notif-item.unread { background: rgba(242,125,141,0.04); }
+  .notif-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    margin-top: 5px; flex-shrink: 0;
+  }
+  .notif-dot.new-booking { background: var(--green); }
+  .notif-dot.cancelled { background: var(--red); }
+  .notif-dot.reminder { background: var(--yellow); }
+  .notif-dot.schedule { background: var(--blue); }
+  .notif-text { font-size: 13px; line-height: 1.4; }
+  .notif-time { font-size: 10px; color: var(--dim); margin-top: 3px; }
+  .notif-bold { font-weight: 700; }
+
+  .phone-label {
+    width: 390px; text-align: center; font-size: 11px;
+    color: var(--dim); margin-top: -20px; margin-bottom: 10px;
+  }
+
+  .mockup-label {
+    width: 100%; max-width: 840px;
+    padding: 10px 16px; background: var(--bg-elev);
+    border-radius: 10px; font-size: 12px;
+    color: var(--muted); text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== SCREEN 1: Prehled dne (hlavni dashboard) ===== -->
+<div>
+<div class="phone-label">SCREEN 1: Prehled dne</div>
+<div class="phone">
+  <div class="status-bar">
+    <span>14:32</span>
+    <span>LTE &#9679; 87%</span>
+  </div>
+
+  <div class="app-header">
+    <div class="app-header-top">
+      <div class="app-logo">LovelyGirls Studio</div>
+      <div class="app-user">Emily</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Shift banner -->
+    <div class="shift-banner">
+      <div class="shift-date">Sobota 13.9.2026</div>
+      <div class="shift-info">
+        <span class="shift-tag time">11:00 - 22:00</span>
+        <span class="shift-tag loc">Zizkov (Praha 3)</span>
+      </div>
+    </div>
+
+    <!-- Points progress -->
+    <div class="points-bar">
+      <div class="points-label">2 800</div>
+      <div class="points-track"><div class="points-fill" style="width: 62%;"></div></div>
+      <div class="points-goal">/ 4 500</div>
+    </div>
+
+    <!-- Today bookings -->
+    <div class="section-label">Dnesni rezervace (3)</div>
+
+    <div class="booking-item done">
+      <div class="bi-time">
+        <div class="bi-time-h">12:00</div>
+        <div class="bi-time-dur">60 min</div>
+      </div>
+      <div class="bi-info">
+        <div class="bi-client">Klient04093 <span class="bi-badge regular">Staly</span></div>
+        <div class="bi-meta">6 navstev</div>
+      </div>
+      <div class="bi-status s-done">&#10003; Hotovo</div>
+    </div>
+
+    <div class="booking-item next">
+      <div class="bi-time">
+        <div class="bi-time-h">16:00</div>
+        <div class="bi-time-dur">60 min</div>
+      </div>
+      <div class="bi-info">
+        <div class="bi-client">Josef <span class="bi-badge vip">VIP</span></div>
+        <div class="bi-meta">12 navstev</div>
+        <div class="bi-countdown">za 1h 28min</div>
+      </div>
+      <div class="bi-status s-next">Dalsi</div>
+    </div>
+
+    <div class="booking-item">
+      <div class="bi-time">
+        <div class="bi-time-h">19:30</div>
+        <div class="bi-time-dur">30 min</div>
+      </div>
+      <div class="bi-info">
+        <div class="bi-client">NOVY1309 <span class="bi-badge new">Novy</span></div>
+        <div class="bi-meta">1. navsteva</div>
+        <div class="bi-note">&#9888; Prvni navsteva, overit</div>
+      </div>
+      <div class="bi-status s-later">19:30</div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <span class="nav-icon">&#9776;</span>
+      Prehled
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">&#128197;</span>
+      Rozvrh
+    </div>
+    <div class="nav-item" style="position:relative;">
+      <span class="nav-icon">&#128276;</span>
+      <span class="nav-badge">2</span>
+      Notifikace
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== SCREEN 2: Detail dalsiho bookingu + countdown ===== -->
+<div>
+<div class="phone-label">SCREEN 2: Detail dalsi rezervace</div>
+<div class="phone">
+  <div class="status-bar">
+    <span>14:32</span>
+    <span>LTE &#9679; 87%</span>
+  </div>
+
+  <div class="app-header">
+    <div class="app-header-top">
+      <div class="app-logo">LovelyGirls Studio</div>
+      <div class="app-user">Emily</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="next-detail">
+      <div class="nd-label">Dalsi rezervace</div>
+
+      <div class="nd-countdown">
+        1h 28min
+        <div class="nd-countdown-sub">do dalsiho bookingu</div>
+      </div>
+
+      <div class="nd-card">
+        <div class="nd-row">
+          <span class="nd-row-label">Klient</span>
+          <span class="nd-row-value">Josef <span class="bi-badge vip" style="font-size:9px;">VIP</span></span>
+        </div>
+        <div class="nd-row">
+          <span class="nd-row-label">Navstevy</span>
+          <span class="nd-row-value">12</span>
+        </div>
+        <div class="nd-row">
+          <span class="nd-row-label">Cas</span>
+          <span class="nd-row-value">16:00 - 17:00</span>
+        </div>
+        <div class="nd-row">
+          <span class="nd-row-label">Delka</span>
+          <span class="nd-row-value">60 min</span>
+        </div>
+        <div class="nd-row">
+          <span class="nd-row-label">Lokace</span>
+          <span class="nd-row-value">Zizkov (Praha 3)</span>
+        </div>
+      </div>
+
+      <div class="nd-actions">
+        <button class="nd-btn nd-btn-primary">&#10003; Klient dorazil</button>
+        <button class="nd-btn nd-btn-secondary">&#9888; Problem — kontaktovat operatorku</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <span class="nav-icon">&#9776;</span>
+      Prehled
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">&#128197;</span>
+      Rozvrh
+    </div>
+    <div class="nav-item" style="position:relative;">
+      <span class="nav-icon">&#128276;</span>
+      <span class="nav-badge">2</span>
+      Notifikace
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== SCREEN 3: Hodnoceni klienta (po dokonceni) ===== -->
+<div>
+<div class="phone-label">SCREEN 3: Dokonceno + hodnoceni klienta</div>
+<div class="phone">
+  <div class="status-bar">
+    <span>17:02</span>
+    <span>LTE &#9679; 84%</span>
+  </div>
+
+  <div class="app-header">
+    <div class="app-header-top">
+      <div class="app-logo">LovelyGirls Studio</div>
+      <div class="app-user">Emily</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="rating-screen">
+      <div class="rating-done-icon">&#10003;</div>
+      <div class="rating-done-text">Dokonceno</div>
+      <div class="rating-done-sub">Josef / 16:00 - 17:00 / 60 min</div>
+
+      <div class="rating-card">
+        <div class="rating-label">Ohodnot klienta</div>
+        <div class="rating-stars">
+          <div class="star filled">&#9733;</div>
+          <div class="star filled">&#9733;</div>
+          <div class="star filled">&#9733;</div>
+          <div class="star filled">&#9733;</div>
+          <div class="star filled">&#9733;</div>
+        </div>
+
+        <div class="rating-label" style="margin-top: 8px;">Kratka poznamka (volitelne)</div>
+        <textarea class="rating-textarea" placeholder="Dochvilny, klidny, gentlemansky...">Dochvilny, klidny</textarea>
+
+        <button class="rating-submit">Odeslat hodnoceni</button>
+      </div>
+
+      <div style="margin-top: 20px;">
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">Body za tuto navstevu</div>
+        <div style="font-size: 28px; font-weight: 900; color: var(--yellow);">+1 000</div>
+        <div style="font-size: 11px; color: var(--dim); margin-top: 4px;">Denni celkem: 3 800 / 4 500</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <span class="nav-icon">&#9776;</span>
+      Prehled
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">&#128197;</span>
+      Rozvrh
+    </div>
+    <div class="nav-item" style="position:relative;">
+      <span class="nav-icon">&#128276;</span>
+      Notifikace
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== SCREEN 4: Tydenni rozvrh ===== -->
+<div>
+<div class="phone-label">SCREEN 4: Tydenni rozvrh</div>
+<div class="phone">
+  <div class="status-bar">
+    <span>14:32</span>
+    <span>LTE &#9679; 87%</span>
+  </div>
+
+  <div class="app-header">
+    <div class="app-header-top">
+      <div class="app-logo">LovelyGirls Studio</div>
+      <div class="app-user">Emily</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="week-schedule">
+      <div class="ws-title">Rozvrh — tyden 8. - 14.9.2026</div>
+
+      <div class="ws-day">
+        <div class="ws-day-name">Po</div>
+        <div class="ws-day-date">8</div>
+        <div class="ws-day-shift on">11:00 - 22:00 / Vinohrady</div>
+        <div class="ws-day-count">2 rez.</div>
+      </div>
+      <div class="ws-day">
+        <div class="ws-day-name">Ut</div>
+        <div class="ws-day-date">9</div>
+        <div class="ws-day-shift on">10:00 - 22:00 / Vinohrady</div>
+        <div class="ws-day-count">3 rez.</div>
+      </div>
+      <div class="ws-day">
+        <div class="ws-day-name">St</div>
+        <div class="ws-day-date">10</div>
+        <div class="ws-day-shift on">11:00 - 20:00 / Zizkov</div>
+        <div class="ws-day-count">1 rez.</div>
+      </div>
+      <div class="ws-day">
+        <div class="ws-day-name">Ct</div>
+        <div class="ws-day-date">11</div>
+        <div class="ws-day-shift on">11:00 - 22:00 / Vinohrady</div>
+        <div class="ws-day-count">2 rez.</div>
+      </div>
+      <div class="ws-day">
+        <div class="ws-day-name">Pa</div>
+        <div class="ws-day-date">12</div>
+        <div class="ws-day-shift on">11:00 - 22:00 / Vinohrady</div>
+        <div class="ws-day-count">1 rez.</div>
+      </div>
+      <div class="ws-day">
+        <div class="ws-day-name today">So</div>
+        <div class="ws-day-date" style="color:var(--coral);font-weight:700;">13</div>
+        <div class="ws-day-shift on" style="border:1px solid rgba(242,125,141,0.3);">11:00 - 22:00 / Zizkov</div>
+        <div class="ws-day-count" style="color:var(--coral);">3 rez.</div>
+      </div>
+      <div class="ws-day">
+        <div class="ws-day-name">Ne</div>
+        <div class="ws-day-date">14</div>
+        <div class="ws-day-shift on">12:00 - 20:00 / Vinohrady</div>
+        <div class="ws-day-count">2 rez.</div>
+      </div>
+
+      <div style="margin-top: 16px; padding: 12px; background: var(--bg-elev); border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-size: 10px; color: var(--dim); text-transform: uppercase; font-weight: 600;">Tento tyden</div>
+          <div style="font-size: 18px; font-weight: 800; color: var(--coral);">14 rez.</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 10px; color: var(--dim); text-transform: uppercase; font-weight: 600;">Body celkem</div>
+          <div style="font-size: 18px; font-weight: 800; color: var(--yellow);">13 100</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item">
+      <span class="nav-icon">&#9776;</span>
+      Prehled
+    </div>
+    <div class="nav-item active">
+      <span class="nav-icon">&#128197;</span>
+      Rozvrh
+    </div>
+    <div class="nav-item" style="position:relative;">
+      <span class="nav-icon">&#128276;</span>
+      <span class="nav-badge">2</span>
+      Notifikace
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== SCREEN 5: Notifikace ===== -->
+<div>
+<div class="phone-label">SCREEN 5: Notifikace</div>
+<div class="phone">
+  <div class="status-bar">
+    <span>14:32</span>
+    <span>LTE &#9679; 87%</span>
+  </div>
+
+  <div class="app-header">
+    <div class="app-header-top">
+      <div class="app-logo">LovelyGirls Studio</div>
+      <div class="app-user">Emily</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="section-label">Dnes</div>
+
+    <div class="notif-item unread">
+      <div class="notif-dot reminder"></div>
+      <div>
+        <div class="notif-text"><span class="notif-bold">Reminder:</span> Za 1h 28min — Josef (VIP), 16:00-17:00, 60 min</div>
+        <div class="notif-time">14:32</div>
+      </div>
+    </div>
+
+    <div class="notif-item unread">
+      <div class="notif-dot new-booking"></div>
+      <div>
+        <div class="notif-text"><span class="notif-bold">Nova rezervace:</span> NOVY1309, dnes 19:30-20:00, 30 min. Pozn: "Prvni navsteva, overit"</div>
+        <div class="notif-time">12:45</div>
+      </div>
+    </div>
+
+    <div class="notif-item">
+      <div class="notif-dot new-booking"></div>
+      <div>
+        <div class="notif-text"><span class="notif-bold">Nova rezervace:</span> Josef (VIP), dnes 16:00-17:00, 60 min</div>
+        <div class="notif-time">vcera 12:28</div>
+      </div>
+    </div>
+
+    <div class="notif-item">
+      <div class="notif-dot cancelled"></div>
+      <div>
+        <div class="notif-text"><span class="notif-bold">Zrusena rezervace:</span> Klient02310, dnes 14:00-15:00. Duvod: klient zrusil</div>
+        <div class="notif-time">vcera 18:30</div>
+      </div>
+    </div>
+
+    <div class="notif-item">
+      <div class="notif-dot schedule"></div>
+      <div>
+        <div class="notif-text"><span class="notif-bold">Zmena smeny:</span> Ne 14.9. presunuta z Zizkov na Vinohrady. Cas beze zmeny (12:00-20:00).</div>
+        <div class="notif-time">vcera 10:15</div>
+      </div>
+    </div>
+
+    <div class="section-label">Starsi</div>
+
+    <div class="notif-item">
+      <div class="notif-dot new-booking"></div>
+      <div>
+        <div class="notif-text"><span class="notif-bold">Nova rezervace:</span> Klient04093 (staly), So 13.9. 12:00-13:00, 60 min</div>
+        <div class="notif-time">St 10.9. 15:20</div>
+      </div>
+    </div>
+
+    <div class="notif-item">
+      <div class="notif-dot reminder"></div>
+      <div>
+        <div class="notif-text"><span class="notif-bold">Reminder:</span> Zitra smena 11:00-22:00, Zizkov. 3 rezervace.</div>
+        <div class="notif-time">Pa 12.9. 20:00</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item">
+      <span class="nav-icon">&#9776;</span>
+      Prehled
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">&#128197;</span>
+      Rozvrh
+    </div>
+    <div class="nav-item active" style="position:relative;">
+      <span class="nav-icon">&#128276;</span>
+      Notifikace
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="mockup-label">
+  MOCKUP: Studio — Pohled divky (Emily, mobil). 5 screenu: Prehled dne (smena + bookings + body), Detail dalsi rezervace (countdown + "Klient dorazil"), Hodnoceni klienta (hvezdicky + poznamka), Tydenni rozvrh (smeny + pocty), Notifikace (nova rez / zrusena / reminder / zmena smeny). Bezpecnost: zadne telefony, prijmeni, adresy, ceny, jine divky.
+</div>
+
+</body>
+</html>

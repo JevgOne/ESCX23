@@ -24,10 +24,10 @@ const TITLES: Record<string, string> = {
 };
 
 const DESCRIPTIONS: Record<string, string> = {
-  cs: 'Kdo dnes pracuje u LovelyGirls Praha? Rozvrh společnic na celý týden. Filtrujte podle pobočky. Aktualizováno v reálném čase.',
-  en: 'Who\'s working at LovelyGirls Prague today? Weekly companion schedule. Filter by apartment location. Updated in real time.',
-  de: 'Wer arbeitet heute bei LovelyGirls Prag? Wöchentlicher Zeitplan. Nach Apartment filtern. Echtzeit-Aktualisierung.',
-  uk: 'Хто працює у LovelyGirls Прага сьогодні? Тижневий розклад. Фільтруйте за локацією. Оновлення в реальному часі.',
+  cs: 'Kdo dnes pracuje u LovelyGirls Praha? Rozvrh společnic na celý týden dopředu. Filtrujte podle pobočky a apartmánu. Aktualizováno v reálném čase.',
+  en: 'Who is working at LovelyGirls Prague today? Weekly companion schedule for the next 7 days. Filter by apartment location. Updated in real time.',
+  de: 'Wer arbeitet heute bei LovelyGirls Prag? Wöchentlicher Zeitplan der Begleiterinnen für die nächsten 7 Tage. Nach Apartment filtern. Echtzeit-Aktualisierung.',
+  uk: 'Хто працює у LovelyGirls Прага сьогодні? Тижневий розклад супутниць на 7 днів наперед. Фільтруйте за локацією. Оновлення в реальному часі.',
 };
 
 const CANONICAL_PATH: Record<string, string> = {

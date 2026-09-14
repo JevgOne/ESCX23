@@ -24,9 +24,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonical = getCanonicalUrl(locale, '/novinky');
   const ogImages = await buildOgImages('novinky', locale, '/novinky', t('h1'));
 
+  const metaDesc: Record<string, string> = {
+    cs: 'Novinky z LovelyGirls Praha — nové fotky, videa, recenze klientů a aktualizace profilů společnic. Sledujte, co je nového v naší agentuře.',
+    en: 'Latest updates from LovelyGirls Prague — new photos, videos, client reviews and companion profile changes. Stay up to date with our agency.',
+    de: 'Neuigkeiten von LovelyGirls Prag — neue Fotos, Videos, Kundenbewertungen und Profiländerungen der Begleiterinnen. Bleiben Sie auf dem Laufenden.',
+    uk: 'Новини LovelyGirls Прага — нові фото, відео, відгуки клієнтів та оновлення профілів супутниць. Слідкуйте за останніми змінами в нашій агенції.',
+  };
+  const desc = metaDesc[locale] ?? metaDesc.en;
+
   return applyDBOverride(`/${locale}/novinky`, {
     title: t('h1'),
-    description: t('lead'),
+    description: desc,
     alternates: {
       canonical,
       languages: getAlternates('/novinky'),
@@ -34,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       images: ogImages,
       title: t('h1'),
-      description: t('lead'),
+      description: desc,
       url: canonical,
       locale: ogLocale(locale),
       type: 'website',

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Booking — Calendar Day View</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --magenta: #c84b8b;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --orange: #fb923c;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --purple: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; min-height: 100vh; }
+
+  /* Top bar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .topbar-title { font-size: 18px; font-weight: 700; }
+  .topbar-date { font-size: 14px; color: var(--muted); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  .btn {
+    padding: 8px 16px; border-radius: 8px; border: none;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--coral); color: #fff; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .btn-ghost.active { color: var(--coral); border-color: var(--coral); }
+
+  .toggle-group { display: flex; gap: 0; }
+  .toggle-group .btn { border-radius: 0; }
+  .toggle-group .btn:first-child { border-radius: 8px 0 0 8px; }
+  .toggle-group .btn:last-child { border-radius: 0 8px 8px 0; }
+
+  /* Date picker bar */
+  .date-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--line);
+  }
+  .date-nav { font-size: 18px; color: var(--muted); cursor: pointer; padding: 4px 8px; }
+  .date-nav:hover { color: var(--coral); }
+  .date-days { display: flex; gap: 4px; flex: 1; justify-content: center; }
+  .date-day {
+    width: 48px; text-align: center; padding: 6px 4px;
+    border-radius: 10px; cursor: pointer;
+    font-size: 11px; color: var(--muted);
+  }
+  .date-day .num { font-size: 16px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .date-day.active { background: var(--coral); }
+  .date-day.active .num, .date-day.active { color: #fff; }
+  .date-day.today { border: 1px solid var(--coral); }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex; gap: 24px;
+    padding: 10px 20px;
+    background: var(--bg-elev);
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+  }
+  .stat-item { display: flex; align-items: center; gap: 6px; }
+  .stat-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .stat-val { font-weight: 700; color: var(--text); }
+
+  /* Calendar grid */
+  .cal-wrapper {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 20px;
+  }
+
+  /* Time column */
+  .time-col {
+    width: 60px; min-width: 60px;
+    padding-top: 44px; /* header height */
+    flex-shrink: 0;
+  }
+  .time-slot {
+    height: 40px;
+    display: flex; align-items: flex-start; justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 11px; color: var(--dim);
+  }
+
+  /* Girl column */
+  .girl-col {
+    min-width: 160px;
+    flex: 1;
+    border-left: 1px solid var(--line);
+    position: relative;
+  }
+  .girl-header {
+    height: 44px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-soft);
+    position: sticky; top: 82px; z-index: 10;
+  }
+  .girl-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--bg-elev);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    color: var(--coral);
+    border: 1px solid var(--line);
+  }
+  .girl-name { font-size: 13px; font-weight: 600; }
+  .girl-status { font-size: 10px; }
+  .girl-status.online { color: var(--green); }
+  .girl-status.offline { color: var(--dim); }
+
+  .girl-slots { position: relative; }
+  .slot-row {
+    height: 40px;
+    border-bottom: 1px solid rgba(42, 34, 48, 0.3);
+  }
+  .slot-row:nth-child(even) {
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* Shift background */
+  .shift-bg {
+    position: absolute;
+    left: 0; right: 0;
+    background: rgba(74, 222, 128, 0.04);
+    border-left: 2px solid rgba(74, 222, 128, 0.3);
+  }
+
+  /* Booking block */
+  .booking {
+    position: absolute;
+    left: 4px; right: 4px;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    overflow: hidden;
+    z-index: 5;
+    border-left: 3px solid;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .booking:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    z-index: 20;
+  }
+
+  /* Source colors */
+  .booking.src-phone {
+    background: rgba(96, 165, 250, 0.15);
+    border-left-color: var(--blue);
+  }
+  .booking.src-telegram {
+    background: rgba(96, 165, 250, 0.15);
+    border-left-color: #229ED9;
+  }
+  .booking.src-whatsapp {
+    background: rgba(74, 222, 128, 0.15);
+    border-left-color: #25D366;
+  }
+  .booking.src-admin {
+    background: rgba(167, 139, 250, 0.15);
+    border-left-color: var(--purple);
+  }
+
+  /* Status variants */
+  .booking.status-pending {
+    background: rgba(251, 191, 36, 0.12);
+    border-left-color: var(--yellow);
+  }
+  .booking.status-noshow {
+    background: rgba(239, 68, 68, 0.12);
+    border-left-color: var(--red);
+    opacity: 0.6;
+  }
+
+  .booking-client { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .booking-meta { color: var(--muted); font-size: 10px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .booking-badge {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-left: 4px;
+  }
+  .badge-vip { background: rgba(251, 191, 36, 0.2); color: var(--yellow); }
+  .badge-new { background: rgba(74, 222, 128, 0.2); color: var(--green); }
+  .badge-tg { background: rgba(34, 158, 217, 0.2); color: #229ED9; }
+  .badge-pending { background: rgba(251, 191, 36, 0.2); color: var(--yellow); }
+
+  /* Current time line */
+  .now-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: var(--coral);
+    z-index: 15;
+  }
+  .now-line::before {
+    content: '';
+    position: absolute;
+    left: -4px; top: -3px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--coral);
+  }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    padding: 12px 20px;
+    border-top: 1px solid var(--line);
+    font-size: 11px; color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; border-left: 3px solid; }
+
+  /* No-shift overlay */
+  .no-shift {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      135deg,
+      transparent,
+      transparent 5px,
+      rgba(42, 34, 48, 0.2) 5px,
+      rgba(42, 34, 48, 0.2) 10px
+    );
+  }
+
+  /* Points progress bar */
+  .girl-points-bar {
+    height: 28px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-soft);
+    font-size: 10px;
+  }
+  .pts-track {
+    flex: 1; height: 6px; border-radius: 3px;
+    background: rgba(42,34,48,0.6);
+    position: relative; overflow: hidden;
+  }
+  .pts-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+  .pts-fill.under { background: var(--red); }
+  .pts-fill.over { background: var(--green); }
+  .pts-label { color: var(--dim); white-space: nowrap; }
+  .pts-label .pts-val { font-weight: 700; }
+  .pts-label .pts-val.under { color: var(--red); }
+  .pts-label .pts-val.ok { color: var(--green); }
+  .pts-target-mark {
+    position: absolute; right: 0; top: -2px; bottom: -2px;
+    width: 2px; background: var(--yellow); border-radius: 1px;
+  }
+
+  /* Label */
+  .mockup-label {
+    padding: 10px 16px;
+    background: var(--bg-elev);
+    border-radius: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    margin: 16px 20px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-title">Rezervace</span>
+    <span class="topbar-date">Patek 13. zari 2026</span>
+  </div>
+  <div class="topbar-right">
+    <div class="toggle-group">
+      <button class="btn btn-ghost active">Den</button>
+      <button class="btn btn-ghost">Tyden</button>
+    </div>
+    <button class="btn btn-primary">+ Nova rezervace</button>
+  </div>
+</div>
+
+<!-- Date picker -->
+<div class="date-bar">
+  <span class="date-nav">&lt;</span>
+  <div class="date-days">
+    <div class="date-day"><span>Po</span><div class="num">8</div></div>
+    <div class="date-day"><span>Ut</span><div class="num">9</div></div>
+    <div class="date-day"><span>St</span><div class="num">10</div></div>
+    <div class="date-day"><span>Ct</span><div class="num">11</div></div>
+    <div class="date-day"><span>Pa</span><div class="num">12</div></div>
+    <div class="date-day today active"><span>Pa</span><div class="num">13</div></div>
+    <div class="date-day"><span>So</span><div class="num">14</div></div>
+  </div>
+  <span class="date-nav">&gt;</span>
+</div>
+
+<!-- Stats bar -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <span class="stat-val">7</span> rezervaci dnes
+  </div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background: var(--green);"></div>
+    <span class="stat-val">4</span> pracuji
+  </div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background: var(--yellow);"></div>
+    <span class="stat-val">1</span> ceka na potvrzeni
+  </div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background: var(--blue);"></div>
+    <span class="stat-val">5</span> potvrzenych
+  </div>
+</div>
+
+<!-- Calendar Grid -->
+<div class="cal-wrapper">
+
+  <!-- Time column -->
+  <div class="time-col">
+    <div class="time-slot">10:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">11:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">12:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">13:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">14:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">15:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">16:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">17:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">18:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">19:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">20:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">21:00</div>
+    <div class="time-slot"></div>
+    <div class="time-slot">22:00</div>
+    <div class="time-slot"></div>
+  </div>
+
+  <!-- Emily — 3000b / 4500 = 67% -->
+  <div class="girl-col">
+    <div class="girl-header">
+      <div class="girl-avatar">E</div>
+      <div>
+        <div class="girl-name">Emily</div>
+        <div class="girl-status online">11:00 - 22:00</div>
+      </div>
+    </div>
+    <div class="girl-points-bar">
+      <div class="pts-label"><span class="pts-val under">3 000</span> / 4 500</div>
+      <div class="pts-track">
+        <div class="pts-fill under" style="width: 67%;"></div>
+        <div class="pts-target-mark"></div>
+      </div>
+    </div>
+    <div class="girl-slots">
+      <!-- Shift background: 11:00-22:00 = slot 2 to 24, top: 2*40=80, height: 22*40=880 -->
+      <div class="shift-bg" style="top: 80px; height: 880px;"></div>
+
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 10:00, 10:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 11:00, 11:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 12:00, 12:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 13:00, 13:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 14:00, 14:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 15:00, 15:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 16:00, 16:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 17:00, 17:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 18:00, 18:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 19:00, 19:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 20:00, 20:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 21:00, 21:30 -->
+      <div class="slot-row"></div><div class="slot-row"></div><!-- 22:00, 22:30 -->
+
+      <!-- Booking: 12:00-14:00 = top: 4*40=160, height: 4*40=160 -->
+      <div class="booking src-phone" style="top: 164px; height: 156px;">
+        <div class="booking-client">Klient04093 <span class="booking-badge badge-vip">VIP</span></div>
+        <div class="booking-meta">12:00 - 14:00 (120 min)</div>
+        <div class="booking-meta">Pokoj 3 / Vinohrady</div>
+      </div>
+
+      <!-- Booking: 16:00-17:00 = top: 12*40=480, height: 2*40=80 -->
+      <div class="booking src-telegram" style="top: 484px; height: 76px;">
+        <div class="booking-client">JozefN1211 <span class="booking-badge badge-tg">TG</span></div>
+        <div class="booking-meta">16:00 - 17:00 (60 min)</div>
+        <div class="booking-meta">Pokoj 1 / Vinohrady</div>
+      </div>
+
+      <!-- Booking: 19:30-20:30 = top: 19*40=760, height: 2*40=80 -->
+      <div class="booking status-pending" style="top: 764px; height: 76px;">
+        <div class="booking-client">NOVY1309 <span class="booking-badge badge-new">Novy</span> <span class="booking-badge badge-pending">Ceka</span></div>
+        <div class="booking-meta">19:30 - 20:30 (60 min)</div>
+        <div class="booking-meta">Zatim nepotvrzeno</div>
+      </div>
+
+      <!-- Now line at ~15:15 = slot 10.5, top: 10.5*40+80=500 -->
+      <div class="now-line" style="top: 420px;"></div>
+    </div>
+  </div>
+
+  <!-- Nika — 2000b / 4500 = 44% -->
+  <div class="girl-col">
+    <div class="girl-header">
+      <div class="girl-avatar">N</div>
+      <div>
+        <div class="girl-name">Nika</div>
+        <div class="girl-status online">10:00 - 20:00</div>
+      </div>
+    </div>
+    <div class="girl-points-bar">
+      <div class="pts-label"><span class="pts-val under">2 000</span> / 4 500</div>
+      <div class="pts-track">
+        <div class="pts-fill under" style="width: 44%;"></div>
+        <div class="pts-target-mark"></div>
+      </div>
+    </div>
+    <div class="girl-slots">
+      <div class="shift-bg" style="top: 0px; height: 800px;"></div>
+
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+
+      <!-- Booking: 10:30-11:30 -->
+      <div class="booking src-phone" style="top: 44px; height: 76px;">
+        <div class="booking-client">Martin2004</div>
+        <div class="booking-meta">10:30 - 11:30 (60 min)</div>
+        <div class="booking-meta">Pokoj 2 / Vinohrady</div>
+      </div>
+
+      <!-- Booking: 14:00-15:00 -->
+      <div class="booking src-whatsapp" style="top: 324px; height: 76px;">
+        <div class="booking-client">Vladimir1806</div>
+        <div class="booking-meta">14:00 - 15:00 (60 min)</div>
+        <div class="booking-meta">Pokoj 1 / Vinohrady</div>
+      </div>
+
+      <div class="now-line" style="top: 420px;"></div>
+    </div>
+  </div>
+
+  <!-- Luna — 2000b / 4500 = 44% -->
+  <div class="girl-col">
+    <div class="girl-header">
+      <div class="girl-avatar">L</div>
+      <div>
+        <div class="girl-name">Luna</div>
+        <div class="girl-status online">14:00 - 22:00</div>
+      </div>
+    </div>
+    <div class="girl-points-bar">
+      <div class="pts-label"><span class="pts-val under">2 000</span> / 4 500</div>
+      <div class="pts-track">
+        <div class="pts-fill under" style="width: 44%;"></div>
+        <div class="pts-target-mark"></div>
+      </div>
+    </div>
+    <div class="girl-slots">
+      <div class="shift-bg" style="top: 320px; height: 640px;"></div>
+
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+
+      <!-- Booking: 15:00-16:00 -->
+      <div class="booking src-phone" style="top: 404px; height: 76px;">
+        <div class="booking-client">Kl1111</div>
+        <div class="booking-meta">15:00 - 16:00 (60 min)</div>
+        <div class="booking-meta">Pokoj 2 / Vinohrady</div>
+      </div>
+
+      <!-- Booking: 18:00-19:00 -->
+      <div class="booking src-phone" style="top: 644px; height: 76px;">
+        <div class="booking-client">N0330</div>
+        <div class="booking-meta">18:00 - 19:00 (60 min)</div>
+        <div class="booking-meta">Pokoj 3 / Vinohrady</div>
+      </div>
+
+      <div class="now-line" style="top: 420px;"></div>
+    </div>
+  </div>
+
+  <!-- Kim — no shift -->
+  <div class="girl-col">
+    <div class="girl-header">
+      <div class="girl-avatar">K</div>
+      <div>
+        <div class="girl-name">Kim</div>
+        <div class="girl-status offline">Nepracuje dnes</div>
+      </div>
+    </div>
+    <div class="girl-points-bar" style="opacity: 0.3;">
+      <div class="pts-label"><span class="pts-val" style="color: var(--dim);">—</span></div>
+      <div class="pts-track">
+        <div class="pts-target-mark"></div>
+      </div>
+    </div>
+    <div class="girl-slots">
+      <div class="no-shift"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+    </div>
+  </div>
+
+  <!-- Caty — 1000b / 4500 = 22% -->
+  <div class="girl-col">
+    <div class="girl-header">
+      <div class="girl-avatar">C</div>
+      <div>
+        <div class="girl-name">Caty</div>
+        <div class="girl-status online">11:00 - 21:00</div>
+      </div>
+    </div>
+    <div class="girl-points-bar">
+      <div class="pts-label"><span class="pts-val under">1 000</span> / 4 500</div>
+      <div class="pts-track">
+        <div class="pts-fill under" style="width: 22%;"></div>
+        <div class="pts-target-mark"></div>
+      </div>
+    </div>
+    <div class="girl-slots">
+      <div class="shift-bg" style="top: 80px; height: 800px;"></div>
+
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+      <div class="slot-row"></div><div class="slot-row"></div>
+
+      <!-- Booking: 13:00-14:00 -->
+      <div class="booking src-phone" style="top: 244px; height: 76px;">
+        <div class="booking-client">Miloslav2208</div>
+        <div class="booking-meta">13:00 - 14:00 (60 min)</div>
+        <div class="booking-meta">Pokoj 1 / Vinohrady</div>
+      </div>
+
+      <div class="now-line" style="top: 420px;"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background: rgba(96,165,250,0.15); border-left-color: var(--blue);"></div> Telefon</div>
+  <div class="legend-item"><div class="legend-swatch" style="background: rgba(96,165,250,0.15); border-left-color: #229ED9;"></div> Telegram</div>
+  <div class="legend-item"><div class="legend-swatch" style="background: rgba(74,222,128,0.15); border-left-color: #25D366;"></div> WhatsApp</div>
+  <div class="legend-item"><div class="legend-swatch" style="background: rgba(167,139,250,0.15); border-left-color: var(--purple);"></div> Admin</div>
+  <div class="legend-item"><div class="legend-swatch" style="background: rgba(251,191,36,0.12); border-left-color: var(--yellow);"></div> Ceka na potvrzeni</div>
+  <div class="legend-item"><div class="legend-swatch" style="background: rgba(74,222,128,0.04); border-left-color: rgba(74,222,128,0.3);"></div> Smena</div>
+</div>
+
+<div class="mockup-label">
+  MOCKUP: Admin Calendar Day View &mdash; multi-staff grid, booking source barvy, shift background, now-line, bodovy progress bar (cil 4500b/den)
+</div>
+
+</body>
+</html>

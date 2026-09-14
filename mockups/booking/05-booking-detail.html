@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Booking — Detail rezervace (zjednoduseny)</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --purple: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; display: flex; align-items: flex-start; justify-content: center; min-height: 100vh; padding: 30px; gap: 30px; flex-wrap: wrap; }
+
+  .panel {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    width: 440px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-elev);
+  }
+  .panel-title { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .panel-close { font-size: 20px; color: var(--dim); cursor: pointer; background: none; border: none; }
+
+  /* Status banner */
+  .status-banner {
+    padding: 12px 24px;
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .status-banner.confirmed { background: rgba(74,222,128,0.1); color: var(--green); border-bottom: 1px solid rgba(74,222,128,0.15); }
+  .status-banner.pending { background: rgba(251,191,36,0.1); color: var(--yellow); border-bottom: 1px solid rgba(251,191,36,0.15); }
+
+  .panel-body { padding: 0; }
+
+  /* Hero section — the BIG info */
+  .hero {
+    padding: 24px 24px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero-girl {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .hero-datetime {
+    font-size: 20px; font-weight: 600; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .hero-program {
+    font-size: 14px; color: var(--muted);
+  }
+  .hero-meta {
+    display: flex; gap: 16px; margin-top: 12px;
+    font-size: 12px; color: var(--dim);
+  }
+  .hero-meta span { display: flex; align-items: center; gap: 4px; }
+  .hero-source { color: #229ED9; font-weight: 600; }
+  .hero-points { color: var(--yellow); font-weight: 700; }
+
+  /* Client strip — minimal */
+  .client-strip {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .client-strip:hover { background: rgba(242,125,141,0.03); }
+  .cs-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--coral); font-size: 13px;
+    flex-shrink: 0;
+  }
+  .cs-name { font-weight: 700; font-size: 14px; }
+  .cs-badge {
+    padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    margin-left: 6px;
+  }
+  .badge-vip { background: rgba(251,191,36,0.2); color: var(--yellow); }
+  .badge-new { background: rgba(96,165,250,0.2); color: var(--blue); }
+  .cs-visits { font-size: 12px; color: var(--dim); margin-left: auto; }
+  .cs-arrow { color: var(--dim); font-size: 16px; margin-left: 4px; }
+
+  /* Address — prominent buttons */
+  .address-section {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .address-title {
+    font-size: 10px; color: var(--dim); text-transform: uppercase;
+    letter-spacing: 0.08em; font-weight: 700; margin-bottom: 12px;
+  }
+  .address-btns { display: flex; gap: 10px; }
+  .addr-btn {
+    flex: 1; padding: 14px 12px;
+    border-radius: 10px;
+    border: 2px solid;
+    font-size: 12px; font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    background: transparent;
+    line-height: 1.3;
+  }
+  .addr-btn .addr-status { display: block; font-size: 10px; font-weight: 600; margin-top: 4px; }
+  .addr-btn.sent {
+    border-color: var(--green); color: var(--green);
+    background: rgba(74,222,128,0.06);
+    cursor: default;
+  }
+  .addr-btn.ready {
+    border-color: var(--coral); color: var(--coral);
+    background: rgba(242,125,141,0.06);
+  }
+  .addr-btn.ready:hover { background: rgba(242,125,141,0.12); }
+  .addr-btn.locked {
+    border-color: var(--line); color: var(--dim);
+    cursor: not-allowed; opacity: 0.4;
+  }
+
+  /* Quick actions — big buttons */
+  .actions {
+    padding: 20px 24px;
+  }
+  .action-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .action-btn {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 6px;
+    padding: 16px 8px;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+  }
+  .action-btn:hover { border-color: var(--coral); }
+  .action-btn .action-icon { font-size: 22px; }
+  .action-btn.primary {
+    background: rgba(74,222,128,0.1);
+    border-color: rgba(74,222,128,0.3);
+    color: var(--green);
+    grid-column: 1 / -1;
+  }
+  .action-btn.primary:hover { border-color: var(--green); background: rgba(74,222,128,0.15); }
+  .action-btn.danger { color: var(--red); }
+  .action-btn.danger:hover { border-color: var(--red); }
+
+  /* Collapsible audit log */
+  details.audit-log {
+    border-top: 1px solid var(--line);
+  }
+  details.audit-log summary {
+    padding: 12px 24px;
+    font-size: 11px; font-weight: 600; color: var(--dim);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    cursor: pointer;
+    list-style: none;
+    display: flex; align-items: center; gap: 6px;
+  }
+  details.audit-log summary::before { content: '\25B6'; font-size: 8px; transition: transform 0.15s; }
+  details.audit-log[open] summary::before { transform: rotate(90deg); }
+  details.audit-log summary::-webkit-details-marker { display: none; }
+  .log-entries { padding: 0 24px 16px; }
+  .log-entry { display: flex; gap: 10px; padding: 4px 0; font-size: 11px; }
+  .log-time { color: var(--dim); min-width: 42px; flex-shrink: 0; }
+  .log-text { color: var(--muted); }
+
+  .mockup-label { padding: 10px 16px; background: var(--bg-elev); border-radius: 10px; font-size: 12px; color: var(--muted); text-align: center; width: 100%; max-width: 940px; }
+</style>
+</head>
+<body>
+
+<!-- ===== PANEL 1: Confirmed booking ===== -->
+<div class="panel">
+  <div class="panel-header">
+    <span class="panel-title">Rezervace #247</span>
+    <button class="panel-close">&times;</button>
+  </div>
+  <div class="status-banner confirmed">Potvrzena</div>
+  <div class="panel-body">
+
+    <!-- HERO: KDO, KDY, KDE — velke, okamzite citelne -->
+    <div class="hero">
+      <div class="hero-girl">Emily</div>
+      <div class="hero-datetime">Pa 13.9. &middot; 16:00 - 17:00</div>
+      <div class="hero-program">60 min / 4 500 Kc &middot; Vinohrady / Pokoj 1</div>
+      <div class="hero-meta">
+        <span class="hero-source">Telegram</span>
+        <span class="hero-points">1 000 b</span>
+      </div>
+    </div>
+
+    <!-- KLIENT: jen badge + pocet navstev, detail az po kliknuti -->
+    <div class="client-strip">
+      <div class="cs-avatar">J</div>
+      <div>
+        <span class="cs-name">Josef</span>
+        <span class="cs-badge badge-vip">VIP</span>
+      </div>
+      <span class="cs-visits">6 navstev</span>
+      <span class="cs-arrow">&rsaquo;</span>
+    </div>
+
+    <!-- ADRESA: velka tlacitka, jasny stav -->
+    <div class="address-section">
+      <div class="address-title">Adresa</div>
+      <div class="address-btns">
+        <button class="addr-btn sent">
+          Mestska cast
+          <span class="addr-status">&#10003; Praha 2 — 12:30</span>
+        </button>
+        <button class="addr-btn ready">
+          Presna adresa
+          <span class="addr-status">Poslat klientovi</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- AKCE: velka tlacitka v gridu -->
+    <div class="actions">
+      <div class="action-grid">
+        <button class="action-btn primary"><span class="action-icon">&#10003;</span> Dokonceno</button>
+        <button class="action-btn"><span class="action-icon">&#8644;</span> Presunout</button>
+        <button class="action-btn danger"><span class="action-icon">&#10007;</span> No-show</button>
+        <button class="action-btn danger"><span class="action-icon">&#128465;</span> Zrusit</button>
+      </div>
+    </div>
+
+    <!-- AUDIT LOG: skryty, rozbalitelny -->
+    <details class="audit-log">
+      <summary>Audit log (3)</summary>
+      <div class="log-entries">
+        <div class="log-entry"><span class="log-time">12:30</span><span class="log-text">Mestska cast odeslana (admin)</span></div>
+        <div class="log-entry"><span class="log-time">12:28</span><span class="log-text">Potvrzena (admin)</span></div>
+        <div class="log-entry"><span class="log-time">12:15</span><span class="log-text">Vytvorena z Telegram bota</span></div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- ===== PANEL 2: Pending booking ===== -->
+<div class="panel">
+  <div class="panel-header">
+    <span class="panel-title">Rezervace #249</span>
+    <button class="panel-close">&times;</button>
+  </div>
+  <div class="status-banner pending">Ceka na potvrzeni</div>
+  <div class="panel-body">
+
+    <div class="hero">
+      <div class="hero-girl">Emily</div>
+      <div class="hero-datetime">Pa 13.9. &middot; 19:30 - 20:30</div>
+      <div class="hero-program">60 min / 4 500 Kc &middot; Vinohrady</div>
+      <div class="hero-meta">
+        <span>Telefon</span>
+        <span class="hero-points">1 000 b</span>
+      </div>
+    </div>
+
+    <div class="client-strip">
+      <div class="cs-avatar" style="color: var(--blue);">N</div>
+      <div>
+        <span class="cs-name">NOVY1309</span>
+        <span class="cs-badge badge-new">Novy</span>
+      </div>
+      <span class="cs-visits">1. navsteva</span>
+      <span class="cs-arrow">&rsaquo;</span>
+    </div>
+
+    <div class="address-section">
+      <div class="address-title">Adresa</div>
+      <div class="address-btns">
+        <button class="addr-btn ready">
+          Mestska cast
+          <span class="addr-status">Poslat (Praha 2)</span>
+        </button>
+        <button class="addr-btn locked">
+          Presna adresa
+          <span class="addr-status">Az po potvrzeni</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <div class="action-grid">
+        <button class="action-btn primary"><span class="action-icon">&#10003;</span> Potvrdit</button>
+        <button class="action-btn"><span class="action-icon">&#8644;</span> Jiny cas</button>
+        <button class="action-btn danger" style="grid-column: 1 / -1;"><span class="action-icon">&#10007;</span> Odmitnout</button>
+      </div>
+    </div>
+
+    <details class="audit-log">
+      <summary>Audit log (1)</summary>
+      <div class="log-entries">
+        <div class="log-entry"><span class="log-time">14:22</span><span class="log-text">Vytvorena operatorkou (telefon)</span></div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<div class="mockup-label">
+  MOCKUP: Detail rezervace &mdash; zjednoduseny: velke hero info (divka/cas), minimalni klient strip, vyrazne adresni tlacitka, grid akci, skryty audit log
+</div>
+
+</body>
+</html>
