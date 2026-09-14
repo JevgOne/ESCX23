@@ -274,6 +274,51 @@ async function runMigrations(client: Client) {
     // Table already exists — OK
   }
 
+  // Telegram AI — conversation message history
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS telegram_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        chat_id TEXT NOT NULL,
+        role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'tool_use', 'tool_result')),
+        content TEXT NOT NULL,
+        tool_name TEXT,
+        tool_use_id TEXT,
+        tokens_in INTEGER DEFAULT 0,
+        tokens_out INTEGER DEFAULT 0,
+        model TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch {
+    // Table already exists — OK
+  }
+
+  try {
+    await client.execute(
+      'CREATE INDEX IF NOT EXISTS idx_tm_chat ON telegram_messages(chat_id)'
+    );
+    await client.execute(
+      'CREATE INDEX IF NOT EXISTS idx_tm_chat_created ON telegram_messages(chat_id, created_at)'
+    );
+  } catch {
+    // OK
+  }
+
+  // Telegram AI — rate limiting sliding windows
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS telegram_rate_limits (
+        chat_id TEXT NOT NULL,
+        window_start DATETIME NOT NULL,
+        message_count INTEGER NOT NULL DEFAULT 1,
+        PRIMARY KEY (chat_id, window_start)
+      )
+    `);
+  } catch {
+    // Table already exists — OK
+  }
+
   // Legacy slugs confirmed 404ing in production (GSC export, /Users/lunagroup/Downloads/
   // lovelygirls-3/Tabulka.csv, cross-checked against production with curl) from before
   // this table existed.
