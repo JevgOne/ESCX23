@@ -125,6 +125,39 @@ async function runMigrations(client: Client) {
     // Table already exists — OK
   }
 
+  // Telegram bot — girl linking table
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS telegram_links (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        girl_id INTEGER NOT NULL UNIQUE,
+        chat_id TEXT NOT NULL,
+        username TEXT,
+        linked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        is_active INTEGER DEFAULT 1,
+        FOREIGN KEY (girl_id) REFERENCES girls(id) ON DELETE CASCADE
+      )
+    `);
+  } catch {
+    // Table already exists — OK
+  }
+
+  // Schedule reminders — clients want to be notified when new week schedule is published
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS schedule_reminders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_telegram_id TEXT NOT NULL,
+        girl_id INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(client_telegram_id, girl_id),
+        FOREIGN KEY (girl_id) REFERENCES girls(id) ON DELETE CASCADE
+      )
+    `);
+  } catch {
+    // Table already exists — OK
+  }
+
   // Review listing queries do correlated subqueries on reviews per row — index the lookup.
   try {
     await client.execute(

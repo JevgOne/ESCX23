@@ -176,41 +176,7 @@
   .nd-btn-primary { background: var(--green); color: #000; }
   .nd-btn-secondary { background: var(--bg-elev); border: 1px solid var(--line); color: var(--text); font-size: 13px; font-weight: 600; }
 
-  /* === SCREEN 3: Hodnoceni klienta === */
-  .rating-screen { padding: 20px; text-align: center; }
-  .rating-done-icon { font-size: 48px; margin-bottom: 8px; }
-  .rating-done-text { font-size: 18px; font-weight: 800; color: var(--green); margin-bottom: 4px; }
-  .rating-done-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
-
-  .rating-card {
-    background: var(--bg-elev); border: 1px solid var(--line);
-    border-radius: 12px; padding: 16px; text-align: left;
-  }
-  .rating-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 10px; }
-  .rating-stars { display: flex; gap: 8px; margin-bottom: 16px; }
-  .star {
-    width: 40px; height: 40px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; cursor: pointer;
-    background: var(--bg); border: 1px solid var(--line);
-  }
-  .star.filled { background: rgba(251,191,36,0.2); border-color: var(--yellow); }
-  .rating-textarea {
-    width: 100%; padding: 10px 12px;
-    background: var(--bg); border: 1px solid var(--line);
-    border-radius: 8px; color: var(--text); font-size: 13px;
-    resize: none; height: 60px; outline: none;
-    font-family: inherit;
-  }
-  .rating-textarea::placeholder { color: var(--dim); }
-  .rating-submit {
-    margin-top: 12px; width: 100%; padding: 12px;
-    border-radius: 10px; border: none;
-    background: var(--coral); color: #fff;
-    font-size: 14px; font-weight: 700; cursor: pointer;
-  }
-
-  /* === SCREEN 4: Tydenni rozvrh === */
+  /* === SCREEN 3: Tydenni rozvrh === */
   .week-schedule { padding: 16px 20px; }
   .ws-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
   .ws-day {
@@ -228,7 +194,7 @@
   .ws-day-shift.off { background: rgba(0,0,0,0.15); color: var(--dim); }
   .ws-day-count { font-size: 11px; font-weight: 700; color: var(--coral); width: 44px; text-align: right; }
 
-  /* === SCREEN 5: Notifikace === */
+  /* === SCREEN 4: Notifikace === */
   .notif-item {
     display: flex; gap: 12px; padding: 14px 20px;
     border-bottom: 1px solid var(--line);
@@ -272,7 +238,7 @@
 
   <div class="app-header">
     <div class="app-header-top">
-      <div class="app-logo">LovelyGirls Studio</div>
+      <div class="app-logo">STUDIOFLOW</div>
       <div class="app-user">Emily</div>
     </div>
   </div>
@@ -366,7 +332,7 @@
 
   <div class="app-header">
     <div class="app-header-top">
-      <div class="app-logo">LovelyGirls Studio</div>
+      <div class="app-logo">STUDIOFLOW</div>
       <div class="app-user">Emily</div>
     </div>
   </div>
@@ -428,72 +394,9 @@
 </div>
 </div>
 
-<!-- ===== SCREEN 3: Hodnoceni klienta (po dokonceni) ===== -->
+<!-- ===== SCREEN 3: Tydenni rozvrh ===== -->
 <div>
-<div class="phone-label">SCREEN 3: Dokonceno + hodnoceni klienta</div>
-<div class="phone">
-  <div class="status-bar">
-    <span>17:02</span>
-    <span>LTE &#9679; 84%</span>
-  </div>
-
-  <div class="app-header">
-    <div class="app-header-top">
-      <div class="app-logo">LovelyGirls Studio</div>
-      <div class="app-user">Emily</div>
-    </div>
-  </div>
-
-  <div class="content">
-    <div class="rating-screen">
-      <div class="rating-done-icon">&#10003;</div>
-      <div class="rating-done-text">Dokonceno</div>
-      <div class="rating-done-sub">Josef / 16:00 - 17:00 / 60 min</div>
-
-      <div class="rating-card">
-        <div class="rating-label">Ohodnot klienta</div>
-        <div class="rating-stars">
-          <div class="star filled">&#9733;</div>
-          <div class="star filled">&#9733;</div>
-          <div class="star filled">&#9733;</div>
-          <div class="star filled">&#9733;</div>
-          <div class="star filled">&#9733;</div>
-        </div>
-
-        <div class="rating-label" style="margin-top: 8px;">Kratka poznamka (volitelne)</div>
-        <textarea class="rating-textarea" placeholder="Dochvilny, klidny, gentlemansky...">Dochvilny, klidny</textarea>
-
-        <button class="rating-submit">Odeslat hodnoceni</button>
-      </div>
-
-      <div style="margin-top: 20px;">
-        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">Body za tuto navstevu</div>
-        <div style="font-size: 28px; font-weight: 900; color: var(--yellow);">+1 000</div>
-        <div style="font-size: 11px; color: var(--dim); margin-top: 4px;">Denni celkem: 3 800 / 4 500</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="bottom-nav">
-    <div class="nav-item active">
-      <span class="nav-icon">&#9776;</span>
-      Prehled
-    </div>
-    <div class="nav-item">
-      <span class="nav-icon">&#128197;</span>
-      Rozvrh
-    </div>
-    <div class="nav-item" style="position:relative;">
-      <span class="nav-icon">&#128276;</span>
-      Notifikace
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- ===== SCREEN 4: Tydenni rozvrh ===== -->
-<div>
-<div class="phone-label">SCREEN 4: Tydenni rozvrh</div>
+<div class="phone-label">SCREEN 3: Tydenni rozvrh</div>
 <div class="phone">
   <div class="status-bar">
     <span>14:32</span>
@@ -502,7 +405,7 @@
 
   <div class="app-header">
     <div class="app-header-top">
-      <div class="app-logo">LovelyGirls Studio</div>
+      <div class="app-logo">STUDIOFLOW</div>
       <div class="app-user">Emily</div>
     </div>
   </div>
@@ -585,9 +488,9 @@
 </div>
 </div>
 
-<!-- ===== SCREEN 5: Notifikace ===== -->
+<!-- ===== SCREEN 4: Notifikace ===== -->
 <div>
-<div class="phone-label">SCREEN 5: Notifikace</div>
+<div class="phone-label">SCREEN 4: Notifikace</div>
 <div class="phone">
   <div class="status-bar">
     <span>14:32</span>
@@ -596,7 +499,7 @@
 
   <div class="app-header">
     <div class="app-header-top">
-      <div class="app-logo">LovelyGirls Studio</div>
+      <div class="app-logo">STUDIOFLOW</div>
       <div class="app-user">Emily</div>
     </div>
   </div>
@@ -681,7 +584,7 @@
 </div>
 
 <div class="mockup-label">
-  MOCKUP: Studio — Pohled divky (Emily, mobil). 5 screenu: Prehled dne (smena + bookings + body), Detail dalsi rezervace (countdown + "Klient dorazil"), Hodnoceni klienta (hvezdicky + poznamka), Tydenni rozvrh (smeny + pocty), Notifikace (nova rez / zrusena / reminder / zmena smeny). Bezpecnost: zadne telefony, prijmeni, adresy, ceny, jine divky.
+  MOCKUP: Studio — Pohled divky (Emily, mobil). 4 screeny: Prehled dne (smena + bookings + body), Detail dalsi rezervace (countdown + "Klient dorazil"), Tydenni rozvrh (smeny + pocty), Notifikace (nova rez / zrusena / reminder / zmena smeny). Bezpecnost: zadne telefony, prijmeni, adresy, ceny, jine divky. Divka NEMUZE odmitat bookings — to resi operatorka. Zadne hodnoceni klienta.
 </div>
 
 </body>

@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STUDIOFLOW — Booking (/booking + /studio)</title>
+<style>
+  :root {
+    --bg: #0c0a0e;
+    --bg-soft: #15101a;
+    --bg-elev: #1f1726;
+    --bg-sidebar: #110d15;
+    --line: #2a2230;
+    --text: #f4eef4;
+    --muted: #a89cb0;
+    --dim: #6a5e72;
+    --coral: #f27d8d;
+    --magenta: #c84b8b;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --orange: #fb923c;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --purple: #a78bfa;
+    --teal: #2dd4bf;
+    --telegram: #229ED9;
+    --whatsapp: #25D366;
+
+    /* Girl colors */
+    --c-aneta: #4ade80;
+    --c-caty: #fbbf24;
+    --c-eliska: #c084fc;
+    --c-emily: #f27d8d;
+    --c-kim: #fb923c;
+    --c-luna: #60a5fa;
+    --c-natalie: #2dd4bf;
+    --c-nika: #a78bfa;
+    --c-nina: #f9a8d4;
+
+    --sidebar-w: 240px;
+    --topbar-h: 56px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; overflow: hidden; height: 100vh; }
+  button { font-family: inherit; }
+  input, select, textarea { font-family: inherit; }
+
+  /* ========== LOGIN SCREEN ========== */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+  #login-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  .login-card {
+    width: 380px; padding: 40px 36px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+    text-align: center;
+  }
+  .login-logo {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.03em;
+    margin-bottom: 4px;
+  }
+  .login-logo span { color: var(--coral); }
+  .login-subtitle { font-size: 13px; color: var(--dim); margin-bottom: 32px; }
+  .login-field { margin-bottom: 16px; text-align: left; }
+  .login-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  .login-input {
+    width: 100%; padding: 12px 14px;
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: 10px;
+    color: var(--text); font-size: 14px; outline: none;
+    transition: border-color 0.15s;
+  }
+  .login-input:focus { border-color: var(--coral); }
+  .login-input::placeholder { color: var(--dim); }
+  .login-btn {
+    width: 100%; padding: 14px; margin-top: 8px;
+    background: var(--coral); color: #fff; border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .login-btn:hover { background: #e06a7a; }
+  .login-hint { font-size: 11px; color: var(--dim); margin-top: 20px; line-height: 1.5; }
+  .login-hint code {
+    background: var(--bg-elev); padding: 2px 6px; border-radius: 4px;
+    font-size: 11px; color: var(--muted);
+  }
+
+  /* ========== ROLE TOGGLE (demo bar) ========== */
+  .demo-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 800;
+    height: 36px;
+    background: linear-gradient(135deg, #1a1220, #1f1726);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 11px; color: var(--dim);
+  }
+  .demo-bar .demo-label { font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-right: 8px; }
+  .role-btn {
+    padding: 5px 14px; border-radius: 6px; border: 1px solid var(--line);
+    background: transparent; color: var(--muted); font-size: 11px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .role-btn:hover { border-color: var(--coral); color: var(--text); }
+  .role-btn.active { background: var(--coral); border-color: var(--coral); color: #fff; }
+  .demo-bar .demo-sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+  .demo-bar .demo-logout {
+    padding: 4px 10px; border-radius: 5px; border: 1px solid rgba(239,68,68,0.3);
+    background: transparent; color: var(--red); font-size: 10px; font-weight: 600;
+    cursor: pointer; margin-left: 12px;
+  }
+  .demo-bar .demo-logout:hover { background: rgba(239,68,68,0.1); }
+
+  /* ========== APP SHELL (admin/operator) ========== */
+  #app-shell {
+    display: none; position: fixed; inset: 0;
+    padding-top: 36px; /* demo bar */
+  }
+  #app-shell.visible { display: flex; }
+
+  /* Sidebar */
+  .sidebar {
+    width: var(--sidebar-w); height: 100%;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .sidebar-logo-text { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .sidebar-logo-text span { color: var(--coral); }
+  .sidebar-logo-sub { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .sidebar-section { padding: 0 12px; margin-bottom: 4px; }
+  .sidebar-section-label {
+    font-size: 9px; font-weight: 700; color: var(--dim);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 8px 12px 4px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; margin: 1px 0;
+    border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 500; color: var(--muted);
+    transition: all 0.12s;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: rgba(242,125,141,0.06); color: var(--text); }
+  .nav-item.active { background: rgba(242,125,141,0.12); color: var(--coral); }
+  .nav-item .nav-icon { width: 20px; text-align: center; font-size: 16px; flex-shrink: 0; }
+  .nav-item .nav-badge {
+    margin-left: auto; padding: 2px 7px; border-radius: 10px;
+    background: var(--coral); color: #fff; font-size: 10px; font-weight: 700;
+  }
+  .nav-item.locked { opacity: 0.3; cursor: not-allowed; }
+  .nav-item.locked:hover { background: transparent; color: var(--muted); }
+
+  .sidebar-footer {
+    padding: 12px 16px; border-top: 1px solid var(--line);
+    font-size: 11px; color: var(--dim);
+  }
+  .sidebar-footer-user { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .sidebar-footer-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--coral); font-size: 11px; flex-shrink: 0;
+  }
+  .sidebar-footer-name { font-weight: 600; color: var(--text); font-size: 12px; }
+  .sidebar-footer-role {
+    display: inline-block; padding: 1px 6px; border-radius: 4px;
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    margin-left: 6px;
+  }
+  .sidebar-footer-role.admin { background: rgba(242,125,141,0.2); color: var(--coral); }
+  .sidebar-footer-role.operator { background: rgba(96,165,250,0.2); color: var(--blue); }
+
+  /* Main area */
+  .main-area {
+    flex: 1; display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Top bar */
+  .app-topbar {
+    height: var(--topbar-h); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--line);
+  }
+  .app-topbar-left { display: flex; align-items: center; gap: 16px; }
+  .app-topbar-title { font-size: 18px; font-weight: 700; }
+  .app-topbar-subtitle { font-size: 13px; color: var(--muted); }
+  .app-topbar-right { display: flex; align-items: center; gap: 12px; }
+
+  .btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.12s; }
+  .btn-primary { background: var(--coral); color: #fff; }
+  .btn-primary:hover { background: #e06a7a; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--coral); color: var(--text); }
+  .btn-ghost.active { color: var(--coral); border-color: var(--coral); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-icon { width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; position: relative; }
+  .btn-icon:hover { border-color: var(--coral); color: var(--text); }
+  .btn-icon .notif-dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--coral); }
+
+  .toggle-group { display: flex; }
+  .toggle-group .btn { border-radius: 0; }
+  .toggle-group .btn:first-child { border-radius: 8px 0 0 8px; }
+  .toggle-group .btn:last-child { border-radius: 0 8px 8px 0; }
+
+  /* Content area */
+  .content {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    background: var(--bg);
+  }
+
+  /* Page visibility */
+  .page { display: none; height: 100%; }
+  .page.active { display: block; }
+
+  /* ========== DASHBOARD PAGE ========== */
+  .dash-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    padding: 24px;
+  }
+  .dash-card {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative; overflow: hidden;
+  }
+  .dash-card.span-2 { grid-column: span 2; }
+  .dash-card.span-3 { grid-column: span 3; }
+  .dash-card.span-4 { grid-column: span 4; }
+  .dash-card-label { font-size: 11px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .dash-card-value { font-size: 36px; font-weight: 800; font-family: Georgia, 'Times New Roman', serif; letter-spacing: -0.02em; }
+  .dash-card-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .dash-card-icon { position: absolute; top: 16px; right: 16px; font-size: 28px; opacity: 0.15; }
+
+  .dash-section-title { font-size: 14px; font-weight: 700; padding: 0 24px 12px; margin-top: 8px; }
+
+  /* Quick actions */
+  .quick-actions {
+    display: flex; gap: 10px; padding: 0 24px 24px;
+  }
+  .quick-action {
+    flex: 1; display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px;
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: 12px;
+    cursor: pointer; transition: all 0.12s;
+  }
+  .quick-action:hover { border-color: var(--coral); }
+  .quick-action .qa-icon { font-size: 20px; }
+  .quick-action .qa-text { font-size: 13px; font-weight: 600; }
+
+  /* Pending bookings list */
+  .pending-list { padding: 0 24px 24px; }
+  .pending-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .pending-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .pending-dot.tg { background: var(--telegram); }
+  .pending-dot.phone { background: var(--blue); }
+  .pending-info { flex: 1; }
+  .pending-info .pi-main { font-size: 13px; font-weight: 600; }
+  .pending-info .pi-sub { font-size: 11px; color: var(--dim); }
+  .pending-actions { display: flex; gap: 6px; }
+  .pending-btn { padding: 5px 10px; border-radius: 6px; border: none; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .pending-btn.accept { background: rgba(74,222,128,0.15); color: var(--green); }
+  .pending-btn.reject { background: rgba(239,68,68,0.1); color: var(--red); }
+  .pending-btn:hover { opacity: 0.8; }
+
+  /* Weekly chart placeholder */
+  .chart-placeholder {
+    height: 200px; display: flex; align-items: flex-end; gap: 6px;
+    padding: 16px 20px;
+  }
+  .chart-bar {
+    flex: 1; border-radius: 4px 4px 0 0;
+    position: relative; min-height: 8px;
+    transition: height 0.3s;
+  }
+  .chart-bar-label {
+    position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: var(--dim); white-space: nowrap;
+  }
+  .chart-bar-value {
+    position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; font-weight: 700; color: var(--yellow);
+  }
+
+  /* ========== CALENDAR PAGE (embedded from 02) ========== */
+  .week-grid {
+    display: grid;
+    grid-template-columns: 100px repeat(7, 1fr) 70px;
+    border-bottom: 1px solid var(--line);
+  }
+  .grid-header {
+    background: var(--bg-soft); padding: 10px 8px; text-align: center;
+    border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+    font-size: 12px; color: var(--muted);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .grid-header .day-num { font-size: 18px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .grid-header.today { background: var(--bg-elev); }
+  .grid-header.today .day-num { color: var(--coral); }
+  .grid-header.corner { font-size: 11px; display: flex; align-items: center; justify-content: center; color: var(--dim); }
+
+  .girl-row-header {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+    background: var(--bg-soft);
+  }
+  .girl-av {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .girl-nm { font-size: 12px; font-weight: 600; }
+
+  .day-cell {
+    border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+    padding: 2px 3px; min-height: 36px;
+  }
+  .day-cell.no-shift { background: rgba(0,0,0,0.2); }
+
+  .mini-booking {
+    border-radius: 3px; padding: 1px 4px;
+    font-size: 10px; line-height: 16px; margin-bottom: 1px;
+    border-left: 2px solid; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mini-booking:hover { opacity: 0.85; }
+  .mini-booking .mb-t { color: var(--muted); }
+  .mini-booking .mb-d { color: var(--dim); }
+  .mini-booking .mb-n { font-weight: 600; color: var(--text); }
+  .mini-booking.g-aneta   { background: rgba(74,222,128,0.10); border-left-color: var(--c-aneta); }
+  .mini-booking.g-caty    { background: rgba(251,191,36,0.10); border-left-color: var(--c-caty); }
+  .mini-booking.g-eliska  { background: rgba(192,132,252,0.10); border-left-color: var(--c-eliska); }
+  .mini-booking.g-emily   { background: rgba(242,125,141,0.10); border-left-color: var(--c-emily); }
+  .mini-booking.g-kim     { background: rgba(251,146,60,0.10); border-left-color: var(--c-kim); }
+  .mini-booking.g-luna    { background: rgba(96,165,250,0.10); border-left-color: var(--c-luna); }
+  .mini-booking.g-natalie { background: rgba(45,212,191,0.10); border-left-color: var(--c-natalie); }
+  .mini-booking.g-nika    { background: rgba(167,139,250,0.10); border-left-color: var(--c-nika); }
+  .mini-booking.g-nina    { background: rgba(249,168,212,0.10); border-left-color: var(--c-nina); }
+
+  .girl-total {
+    border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+    background: var(--bg-elev); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 4px;
+  }
+  .girl-total .gt-pts { font-size: 14px; font-weight: 700; color: var(--yellow); font-family: Georgia, serif; }
+  .girl-total .gt-cnt { font-size: 10px; color: var(--dim); }
+
+  .grid-summary-row {
+    display: grid;
+    grid-template-columns: 100px repeat(7, 1fr) 70px;
+    background: var(--bg-elev); border-top: 2px solid var(--line);
+  }
+  .gs-cell {
+    padding: 6px 8px; text-align: center; border-right: 1px solid var(--line);
+  }
+  .gs-cell .gs-rez { font-size: 14px; font-weight: 700; color: var(--coral); }
+  .gs-cell .gs-pts { font-size: 11px; color: var(--yellow); font-weight: 600; }
+  .gs-cell .gs-lbl { font-size: 9px; color: var(--dim); }
+  .gs-cell.corner { display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--dim); font-weight: 600; }
+
+  /* ========== CLIENTS PAGE (embedded from 04) ========== */
+  .search-bar {
+    display: flex; gap: 10px; padding: 12px 20px;
+    border-bottom: 1px solid var(--line); background: var(--bg-soft);
+  }
+  .search-input {
+    flex: 1; padding: 10px 14px;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: 8px; color: var(--text); font-size: 14px; outline: none;
+  }
+  .search-input:focus { border-color: var(--coral); }
+  .filter-chip {
+    padding: 8px 14px; border-radius: 20px;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    color: var(--muted); font-size: 12px; cursor: pointer; font-weight: 600;
+  }
+  .filter-chip.active { border-color: var(--coral); color: var(--coral); }
+
+  .client-list { padding: 0 20px; }
+  .client-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .client-row:hover { background: rgba(242,125,141,0.04); margin: 0 -20px; padding: 12px 20px; }
+  .c-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--coral); font-size: 14px; flex-shrink: 0;
+  }
+  .c-main { flex: 1; min-width: 0; }
+  .c-name { font-weight: 600; font-size: 14px; }
+  .c-code { font-size: 12px; color: var(--muted); }
+  .c-stats { display: flex; gap: 16px; font-size: 12px; color: var(--dim); }
+  .c-stats .highlight { color: var(--text); font-weight: 600; }
+  .c-badge { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; flex-shrink: 0; }
+  .badge-vip { background: rgba(251,191,36,0.2); color: var(--yellow); }
+  .badge-regular { background: rgba(74,222,128,0.2); color: var(--green); }
+  .badge-new { background: rgba(96,165,250,0.2); color: var(--blue); }
+  .badge-untrusted { background: rgba(239,68,68,0.2); color: var(--red); }
+  .c-last { font-size: 11px; color: var(--dim); text-align: right; min-width: 80px; flex-shrink: 0; }
+
+  /* ========== GIRLS PAGE ========== */
+  .girls-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;
+    padding: 20px 24px;
+  }
+  .girl-card {
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px; cursor: pointer; transition: all 0.12s;
+  }
+  .girl-card:hover { border-color: var(--coral); }
+  .girl-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .girl-card-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; color: #fff; font-size: 16px; flex-shrink: 0;
+    overflow: hidden;
+  }
+  .girl-card-avatar img {
+    width: 44px; height: 44px; border-radius: 50%;
+    object-fit: cover; display: block;
+  }
+  .girl-card-name { font-size: 16px; font-weight: 700; }
+  .girl-card-status { font-size: 11px; margin-top: 2px; }
+  .girl-card-status.online { color: var(--green); }
+  .girl-card-status.offline { color: var(--dim); }
+  .girl-card-stats { display: flex; gap: 12px; font-size: 11px; color: var(--dim); }
+  .girl-card-stats span { display: flex; align-items: center; gap: 4px; }
+  .girl-card-stats .val { color: var(--text); font-weight: 600; }
+
+  /* ========== SCHEDULE PAGE ========== */
+  .schedule-grid {
+    display: grid; grid-template-columns: 100px repeat(7, 1fr);
+    border-bottom: 1px solid var(--line);
+    margin: 0;
+  }
+  .sch-header {
+    background: var(--bg-soft); padding: 12px 8px; text-align: center;
+    border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+    font-size: 12px; color: var(--muted);
+  }
+  .sch-header .sch-day-num { font-size: 16px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .sch-header.today .sch-day-num { color: var(--coral); }
+  .sch-header.corner { display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--dim); }
+  .sch-name {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 10px; background: var(--bg-soft);
+    border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+    font-size: 12px; font-weight: 600;
+  }
+  .sch-cell {
+    border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+    padding: 6px 8px; font-size: 11px; min-height: 42px;
+  }
+  .sch-cell.off { background: rgba(0,0,0,0.2); }
+  .sch-shift { color: var(--green); font-weight: 600; font-size: 11px; }
+  .sch-loc { color: var(--dim); font-size: 10px; }
+
+  /* ========== REPORTS PAGE ========== */
+  .reports-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 24px; }
+  .report-card {
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px;
+  }
+  .report-card-title { font-size: 12px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .report-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid rgba(42,34,48,0.4); }
+  .report-row:last-child { border-bottom: none; }
+  .report-val { font-weight: 700; }
+
+  /* ========== SETTINGS PAGE ========== */
+  .settings-container { max-width: 600px; padding: 24px; }
+  .settings-section { margin-bottom: 24px; }
+  .settings-section-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+  .settings-label { font-size: 13px; color: var(--muted); }
+  .settings-value { font-size: 13px; font-weight: 600; }
+  .toggle-switch {
+    width: 40px; height: 22px; border-radius: 11px;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    position: relative; cursor: pointer;
+  }
+  .toggle-switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--dim); transition: all 0.15s;
+  }
+  .toggle-switch.on { background: rgba(242,125,141,0.3); border-color: var(--coral); }
+  .toggle-switch.on::after { left: 20px; background: var(--coral); }
+
+  /* ========== NEW BOOKING MODAL ========== */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg-soft); border: 1px solid var(--line);
+    border-radius: 16px; width: 480px; max-height: 80vh;
+    overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    animation: slideUp 0.15s ease-out;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--line);
+  }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close { font-size: 22px; color: var(--dim); cursor: pointer; background: none; border: none; line-height: 1; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  .form-input, .form-select {
+    width: 100%; padding: 10px 14px;
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: 8px;
+    color: var(--text); font-size: 14px; outline: none;
+  }
+  .form-select { appearance: auto; cursor: pointer; }
+  .form-input:focus, .form-select:focus { border-color: var(--coral); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-footer { padding: 16px 20px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 10px; }
+
+  /* ========== STUDIO (Girl view) ========== */
+  #studio-shell {
+    display: none; position: fixed; inset: 0;
+    padding-top: 36px;
+    justify-content: center; align-items: flex-start;
+    background: var(--bg);
+  }
+  #studio-shell.visible { display: flex; }
+
+  .studio-frame {
+    width: 100%; max-width: 420px; height: calc(100vh - 36px);
+    background: var(--bg-soft);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+
+  .studio-topbar {
+    height: 52px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--line);
+  }
+  .studio-topbar-left { display: flex; align-items: center; gap: 10px; }
+  .studio-topbar-logo { font-size: 15px; font-weight: 800; }
+  .studio-topbar-logo span { color: var(--coral); }
+  .studio-topbar-right { display: flex; align-items: center; gap: 8px; }
+  .studio-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--c-emily), var(--magenta));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff; font-size: 12px;
+    overflow: hidden;
+  }
+  .studio-avatar img {
+    width: 30px; height: 30px; border-radius: 50%;
+    object-fit: cover; display: block;
+  }
+
+  .studio-content { flex: 1; overflow-y: auto; padding: 16px; }
+
+  .studio-bottom-nav {
+    height: 54px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-around;
+    background: var(--bg-sidebar);
+    border-top: 1px solid var(--line);
+  }
+  .studio-nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-size: 10px; font-weight: 600; color: var(--dim);
+    cursor: pointer; padding: 6px 16px;
+    border: none; background: none;
+  }
+  .studio-nav-item.active { color: var(--coral); }
+  .studio-nav-item .sni-icon { font-size: 20px; }
+
+  /* Studio dashboard cards */
+  .studio-shift-banner {
+    background: linear-gradient(135deg, rgba(242,125,141,0.15), rgba(200,75,139,0.1));
+    border: 1px solid rgba(242,125,141,0.2);
+    border-radius: 14px; padding: 16px; margin-bottom: 14px;
+  }
+  .studio-shift-day { font-size: 13px; color: var(--muted); }
+  .studio-shift-time { font-size: 22px; font-weight: 800; margin: 4px 0; }
+  .studio-shift-loc { font-size: 12px; color: var(--coral); }
+
+  .studio-points-bar {
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px; margin-bottom: 14px;
+  }
+  .studio-points-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .studio-points-label { font-size: 12px; color: var(--muted); }
+  .studio-points-value { font-size: 18px; font-weight: 700; color: var(--yellow); font-family: Georgia, serif; }
+  .studio-points-track { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .studio-points-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--coral), var(--yellow)); }
+
+  .studio-booking-card {
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px; margin-bottom: 8px; cursor: pointer;
+    transition: border-color 0.12s;
+  }
+  .studio-booking-card:hover { border-color: var(--coral); }
+  .studio-booking-card.next { border-color: rgba(242,125,141,0.4); }
+  .studio-booking-card.done { opacity: 0.5; }
+  .studio-booking-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .studio-booking-time { font-size: 16px; font-weight: 700; }
+  .studio-booking-dur { font-size: 11px; color: var(--dim); }
+  .studio-booking-client { font-size: 13px; color: var(--muted); }
+  .studio-booking-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 9px; font-weight: 700; text-transform: uppercase; margin-left: 6px;
+  }
+  .studio-booking-note {
+    margin-top: 6px; padding: 6px 10px;
+    background: rgba(251,191,36,0.08); border-left: 2px solid var(--yellow);
+    border-radius: 0 6px 6px 0; font-size: 11px; color: var(--yellow);
+  }
+  .studio-countdown {
+    display: inline-block; padding: 2px 8px; border-radius: 6px;
+    background: rgba(242,125,141,0.15); color: var(--coral);
+    font-size: 11px; font-weight: 700;
+  }
+
+  /* Studio schedule */
+  .studio-schedule-day {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--line);
+  }
+  .studio-schedule-day.today { background: rgba(242,125,141,0.05); margin: 0 -16px; padding: 10px 16px; border-radius: 8px; }
+  .studio-sch-label { width: 40px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .studio-sch-label.today-label { color: var(--coral); }
+  .studio-sch-info { flex: 1; }
+  .studio-sch-shift { font-size: 13px; font-weight: 600; }
+  .studio-sch-loc { font-size: 11px; color: var(--dim); }
+  .studio-sch-off { font-size: 12px; color: var(--dim); }
+
+  /* Studio notifications */
+  .studio-notif-group-title { font-size: 11px; font-weight: 600; color: var(--dim); text-transform: uppercase; margin: 14px 0 8px; letter-spacing: 0.06em; }
+  .studio-notif {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid rgba(42,34,48,0.5);
+  }
+  .studio-notif-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .studio-notif-text { font-size: 13px; line-height: 1.4; }
+  .studio-notif-time { font-size: 10px; color: var(--dim); margin-top: 2px; }
+
+  /* Studio page visibility */
+  .studio-page { display: none; }
+  .studio-page.active { display: block; }
+
+  /* ========== LOCKED MESSAGE ========== */
+  .locked-msg {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 300px; text-align: center; color: var(--dim);
+  }
+  .locked-msg .lock-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+  .locked-msg .lock-text { font-size: 14px; }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 900px) {
+    .sidebar { width: 60px; }
+    .nav-item span:not(.nav-icon):not(.nav-badge) { display: none; }
+    .sidebar-logo-text, .sidebar-logo-sub, .sidebar-footer-name, .sidebar-footer-role, .sidebar-section-label { display: none; }
+    .sidebar-logo { padding: 16px 12px; }
+    .nav-item { justify-content: center; padding: 10px; }
+    .nav-item .nav-icon { width: auto; }
+    .nav-item .nav-badge { display: none; }
+    .dash-grid { grid-template-columns: repeat(2, 1fr); }
+    .dash-card.span-2 { grid-column: span 2; }
+    .dash-card.span-3 { grid-column: span 2; }
+    .dash-card.span-4 { grid-column: span 2; }
+    .reports-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== LOGIN SCREEN ========== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">STUDIO<span>FLOW</span></div>
+    <div class="login-subtitle">STUDIOFLOW &nbsp;|&nbsp; <span style="color:var(--dim); font-size:11px;">/booking</span></div>
+
+    <div class="login-field">
+      <label class="login-label">Email</label>
+      <input class="login-input" type="email" id="login-email" placeholder="email@lovelygirls.cz" value="admin@lovelygirls.cz">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Heslo</label>
+      <input class="login-input" type="password" id="login-pass" placeholder="********" value="demo1234">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Prihlasit se</button>
+
+    <div class="login-hint">
+      Jeden login pro vsechny role (<code>/booking</code>).<br>
+      System pozna roli z DB a presmeruje automaticky.<br><br>
+      <code>admin@lovelygirls.cz</code> — Admin → /booking/dashboard<br>
+      <code>operatorka@lovelygirls.cz</code> — Operatorka → /booking/calendar<br>
+      <code>emily@lovelygirls.cz</code> — Divka → /studio
+    </div>
+  </div>
+</div>
+
+<!-- ========== DEMO ROLE BAR ========== -->
+<div class="demo-bar" id="demo-bar" style="display:none;">
+  <span class="demo-label">Role:</span>
+  <button class="role-btn active" data-role="admin" onclick="switchRole('admin')">Admin</button>
+  <button class="role-btn" data-role="operator" onclick="switchRole('operator')">Operatorka</button>
+  <button class="role-btn" data-role="girl" onclick="switchRole('girl')">Divka (Studio)</button>
+  <span class="demo-sep"></span>
+  <button class="demo-logout" onclick="doLogout()">Odhlasit</button>
+</div>
+
+<!-- ========== APP SHELL (/booking — Admin + Operatorka) ========== -->
+<div id="app-shell">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">STUDIO<span>FLOW</span></div>
+      <div class="sidebar-logo-sub">Booking</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="sidebar-section">
+        <button class="nav-item active" data-page="dashboard" onclick="navTo('dashboard')">
+          <span class="nav-icon">&#9632;</span>
+          <span>Prehled</span>
+        </button>
+        <button class="nav-item" data-page="calendar" onclick="navTo('calendar')">
+          <span class="nav-icon">&#128197;</span>
+          <span>Kalendar</span>
+          <span class="nav-badge">57</span>
+        </button>
+        <button class="nav-item" data-page="clients" onclick="navTo('clients')">
+          <span class="nav-icon">&#128100;</span>
+          <span>Klienti</span>
+        </button>
+      </div>
+      <div class="sidebar-section" id="nav-admin-only">
+        <div class="sidebar-section-label">Sprava</div>
+        <button class="nav-item" data-page="girls" onclick="navTo('girls')">
+          <span class="nav-icon">&#128131;</span>
+          <span>Divky</span>
+        </button>
+        <button class="nav-item" data-page="schedule" onclick="navTo('schedule')">
+          <span class="nav-icon">&#128339;</span>
+          <span>Rozvrh</span>
+        </button>
+        <button class="nav-item" data-page="locations" onclick="navTo('locations')">
+          <span class="nav-icon">&#127968;</span>
+          <span>Pobocky</span>
+        </button>
+        <button class="nav-item" data-page="reports" onclick="navTo('reports')">
+          <span class="nav-icon">&#128200;</span>
+          <span>Reporty</span>
+        </button>
+      </div>
+      <div class="sidebar-section" id="nav-admin-extra">
+        <div class="sidebar-section-label">System</div>
+        <button class="nav-item" data-page="settings" onclick="navTo('settings')">
+          <span class="nav-icon">&#9881;</span>
+          <span>Nastaveni</span>
+        </button>
+        <button class="nav-item" data-page="audit" onclick="navTo('audit')">
+          <span class="nav-icon">&#128220;</span>
+          <span>Audit log</span>
+        </button>
+        <button class="nav-item" data-page="users" onclick="navTo('users')">
+          <span class="nav-icon">&#128101;</span>
+          <span>Uzivatele</span>
+        </button>
+        <button class="nav-item" data-page="tgbot" onclick="navTo('tgbot')">
+          <span class="nav-icon">&#129302;</span>
+          <span>TG Bot</span>
+        </button>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-user">
+        <div class="sidebar-footer-avatar" id="sidebar-user-avatar">M</div>
+        <div>
+          <span class="sidebar-footer-name" id="sidebar-user-name">Marketa</span>
+          <span class="sidebar-footer-role admin" id="sidebar-user-role">Admin</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main area -->
+  <div class="main-area">
+    <div class="app-topbar" id="app-topbar">
+      <div class="app-topbar-left">
+        <span class="app-topbar-title" id="topbar-title">Prehled</span>
+        <span class="app-topbar-subtitle" id="topbar-subtitle">Sobota 13. zari 2026</span>
+      </div>
+      <div class="app-topbar-right">
+        <button class="btn-icon" title="Notifikace">&#128276;<span class="notif-dot"></span></button>
+        <button class="btn btn-primary" onclick="openNewBooking()">+ Nova rezervace</button>
+      </div>
+    </div>
+
+    <div class="content" id="content">
+
+      <!-- ===== DASHBOARD PAGE ===== -->
+      <div class="page active" id="page-dashboard">
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-card-label">Dnesni rezervace</div>
+            <div class="dash-card-value" style="color: var(--coral);">12</div>
+            <div class="dash-card-sub">z toho 3 pending</div>
+            <div class="dash-card-icon">&#128197;</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Dnesni body</div>
+            <div class="dash-card-value" style="color: var(--yellow);">11 400</div>
+            <div class="dash-card-sub">prumer 1 425 / divka</div>
+            <div class="dash-card-icon">&#11088;</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Divky pracuji</div>
+            <div class="dash-card-value" style="color: var(--green);">8</div>
+            <div class="dash-card-sub">z 9 aktivnich</div>
+            <div class="dash-card-icon">&#128131;</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">TG Bot pending</div>
+            <div class="dash-card-value" style="color: var(--telegram);">2</div>
+            <div class="dash-card-sub">ceka na potvrzeni</div>
+            <div class="dash-card-icon">&#129302;</div>
+          </div>
+        </div>
+
+        <!-- Pending bookings -->
+        <div class="dash-section-title">Cekajici na potvrzeni</div>
+        <div class="pending-list">
+          <div class="pending-item">
+            <div class="pending-dot tg"></div>
+            <div class="pending-info">
+              <div class="pi-main">Emily / JozefN1211 — 16:00 (60 min)</div>
+              <div class="pi-sub">Telegram bot / pred 12 min</div>
+            </div>
+            <div class="pending-actions">
+              <button class="pending-btn accept">&#10003; Potvrdit</button>
+              <button class="pending-btn reject">&#10005;</button>
+            </div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-dot phone"></div>
+            <div class="pending-info">
+              <div class="pi-main">Nika / NOVY1309 — 19:30 (30 min)</div>
+              <div class="pi-sub">Telefon / pred 45 min</div>
+            </div>
+            <div class="pending-actions">
+              <button class="pending-btn accept">&#10003; Potvrdit</button>
+              <button class="pending-btn reject">&#10005;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly chart -->
+        <div class="dash-section-title">Body tento tyden</div>
+        <div class="dash-card span-4" style="margin: 0 24px 24px; grid-column: unset;">
+          <div class="chart-placeholder">
+            <div class="chart-bar" style="height: 65%; background: linear-gradient(0deg, rgba(242,125,141,0.3), rgba(242,125,141,0.6));">
+              <div class="chart-bar-label">Po</div>
+              <div class="chart-bar-value">8 200</div>
+            </div>
+            <div class="chart-bar" style="height: 85%; background: linear-gradient(0deg, rgba(242,125,141,0.3), rgba(242,125,141,0.6));">
+              <div class="chart-bar-label">Ut</div>
+              <div class="chart-bar-value">10 800</div>
+            </div>
+            <div class="chart-bar" style="height: 55%; background: linear-gradient(0deg, rgba(242,125,141,0.3), rgba(242,125,141,0.6));">
+              <div class="chart-bar-label">St</div>
+              <div class="chart-bar-value">6 900</div>
+            </div>
+            <div class="chart-bar" style="height: 78%; background: linear-gradient(0deg, rgba(242,125,141,0.3), rgba(242,125,141,0.6));">
+              <div class="chart-bar-label">Ct</div>
+              <div class="chart-bar-value">9 600</div>
+            </div>
+            <div class="chart-bar" style="height: 70%; background: linear-gradient(0deg, rgba(242,125,141,0.3), rgba(242,125,141,0.6));">
+              <div class="chart-bar-label">Pa</div>
+              <div class="chart-bar-value">8 800</div>
+            </div>
+            <div class="chart-bar" style="height: 92%; background: linear-gradient(0deg, var(--coral), rgba(242,125,141,0.8));">
+              <div class="chart-bar-label" style="color: var(--coral); font-weight:700;">So</div>
+              <div class="chart-bar-value">11 400</div>
+            </div>
+            <div class="chart-bar" style="height: 20%; background: linear-gradient(0deg, rgba(106,94,114,0.2), rgba(106,94,114,0.3));">
+              <div class="chart-bar-label">Ne</div>
+              <div class="chart-bar-value" style="color: var(--dim);">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="dash-section-title">Rychle akce</div>
+        <div class="quick-actions">
+          <div class="quick-action" onclick="openNewBooking()">
+            <span class="qa-icon">&#128197;</span>
+            <span class="qa-text">Nova rezervace</span>
+          </div>
+          <div class="quick-action" onclick="navTo('calendar')">
+            <span class="qa-icon">&#128200;</span>
+            <span class="qa-text">Zobrazit kalendar</span>
+          </div>
+          <div class="quick-action" onclick="navTo('clients')">
+            <span class="qa-icon">&#128100;</span>
+            <span class="qa-text">Hledat klienta</span>
+          </div>
+          <div class="quick-action" onclick="navTo('schedule')">
+            <span class="qa-icon">&#128339;</span>
+            <span class="qa-text">Upravit rozvrh</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CALENDAR PAGE ===== -->
+      <div class="page" id="page-calendar">
+        <div class="week-grid">
+          <!-- Header -->
+          <div class="grid-header corner">Divka</div>
+          <div class="grid-header"><span>Po</span><div class="day-num">8</div></div>
+          <div class="grid-header"><span>Ut</span><div class="day-num">9</div></div>
+          <div class="grid-header"><span>St</span><div class="day-num">10</div></div>
+          <div class="grid-header"><span>Ct</span><div class="day-num">11</div></div>
+          <div class="grid-header"><span>Pa</span><div class="day-num">12</div></div>
+          <div class="grid-header today"><span>So</span><div class="day-num">13</div></div>
+          <div class="grid-header"><span>Ne</span><div class="day-num">14</div></div>
+          <div class="grid-header corner">Body</div>
+
+          <!-- Aneta -->
+          <div class="girl-row-header"><div class="girl-av" style="background:var(--c-aneta)">A</div><div class="girl-nm">Aneta</div></div>
+          <div class="day-cell"><div class="mini-booking g-aneta"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">Kl02310</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="day-cell"><div class="mini-booking g-aneta"><span class="mb-t">13:00</span> <span class="mb-d">45m</span> <span class="mb-n">Pavel0807</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-aneta"><span class="mb-t">12:00</span> <span class="mb-d">60m</span> <span class="mb-n">Klient04093</span></div><div class="mini-booking g-aneta"><span class="mb-t">17:00</span> <span class="mb-d">60m</span> <span class="mb-n">Tom2205</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="day-cell"><div class="mini-booking g-aneta"><span class="mb-t">14:00</span> <span class="mb-d">30m</span> <span class="mb-n">NOVY1309</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="girl-total"><div class="gt-pts">4 700</div><div class="gt-cnt">5 rez.</div></div>
+
+          <!-- Caty -->
+          <div class="girl-row-header"><div class="girl-av" style="background:var(--c-caty);color:#000">C</div><div class="girl-nm">Caty</div></div>
+          <div class="day-cell"><div class="mini-booking g-caty"><span class="mb-t">13:00</span> <span class="mb-d">60m</span> <span class="mb-n">Randy24</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-caty"><span class="mb-t">11:00</span> <span class="mb-d">60m</span> <span class="mb-n">Sepp25</span></div><div class="mini-booking g-caty"><span class="mb-t">17:00</span> <span class="mb-d">30m</span> <span class="mb-n">Kl02310</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-caty"><span class="mb-t">15:00</span> <span class="mb-d">45m</span> <span class="mb-n">Vojta0506</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="day-cell"><div class="mini-booking g-caty"><span class="mb-t">12:00</span> <span class="mb-d">60m</span> <span class="mb-n">Martin05</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-caty"><span class="mb-t">13:00</span> <span class="mb-d">60m</span> <span class="mb-n">Miloslav2208</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="girl-total"><div class="gt-pts">5 700</div><div class="gt-cnt">6 rez.</div></div>
+
+          <!-- Emily -->
+          <div class="girl-row-header"><div class="girl-av" style="background:var(--c-emily)">E</div><div class="girl-nm">Emily</div></div>
+          <div class="day-cell"><div class="mini-booking g-emily"><span class="mb-t">11:00</span> <span class="mb-d">60m</span> <span class="mb-n">Klient04093</span></div><div class="mini-booking g-emily"><span class="mb-t">16:00</span> <span class="mb-d">30m</span> <span class="mb-n">HynekSvoboda</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-emily"><span class="mb-t">10:30</span> <span class="mb-d">60m</span> <span class="mb-n">Cizinec711</span></div><div class="mini-booking g-emily"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">JozefN1211</span></div><div class="mini-booking g-emily"><span class="mb-t">19:00</span> <span class="mb-d">45m</span> <span class="mb-n">LiborN2807</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-emily"><span class="mb-t">13:00</span> <span class="mb-d">60m</span> <span class="mb-n">Cizinec140301</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-emily"><span class="mb-t">11:00</span> <span class="mb-d">60m</span> <span class="mb-n">Klient04093</span></div><div class="mini-booking g-emily"><span class="mb-t">17:00</span> <span class="mb-d">45m</span> <span class="mb-n">NO1018</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-emily"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">Daniel291</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-emily"><span class="mb-t">12:00</span> <span class="mb-d">60m</span> <span class="mb-n">Klient04093</span></div><div class="mini-booking g-emily"><span class="mb-t">16:00</span> <span class="mb-d">60m</span> <span class="mb-n">JozefN1211</span></div><div class="mini-booking g-emily"><span class="mb-t">19:30</span> <span class="mb-d">30m</span> <span class="mb-n">NOVY1309</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="girl-total"><div class="gt-pts">13 100</div><div class="gt-cnt">14 rez.</div></div>
+
+          <!-- Nika -->
+          <div class="girl-row-header"><div class="girl-av" style="background:var(--c-nika)">N</div><div class="girl-nm">Nika</div></div>
+          <div class="day-cell"><div class="mini-booking g-nika"><span class="mb-t">15:00</span> <span class="mb-d">60m</span> <span class="mb-n">Josef1211</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-nika"><span class="mb-t">12:00</span> <span class="mb-d">45m</span> <span class="mb-n">Petr0602</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="day-cell"><div class="mini-booking g-nika"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">Cizinec711</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-nika"><span class="mb-t">11:00</span> <span class="mb-d">60m</span> <span class="mb-n">Randy24</span></div><div class="mini-booking g-nika"><span class="mb-t">16:00</span> <span class="mb-d">45m</span> <span class="mb-n">Marek0501</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-nika"><span class="mb-t">13:00</span> <span class="mb-d">60m</span> <span class="mb-n">Kl02310</span></div><div class="mini-booking g-nika"><span class="mb-t">19:30</span> <span class="mb-d">30m</span> <span class="mb-n">NOVY1309</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="girl-total"><div class="gt-pts">7 200</div><div class="gt-cnt">8 rez.</div></div>
+
+          <!-- Luna -->
+          <div class="girl-row-header"><div class="girl-av" style="background:var(--c-luna)">L</div><div class="girl-nm">Luna</div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="day-cell"><div class="mini-booking g-luna"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">Vladimir1806</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-luna"><span class="mb-t">12:00</span> <span class="mb-d">45m</span> <span class="mb-n">Tom2205</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-luna"><span class="mb-t">15:00</span> <span class="mb-d">60m</span> <span class="mb-n">NO1018</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-luna"><span class="mb-t">13:00</span> <span class="mb-d">45m</span> <span class="mb-n">Fritz0411</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-luna"><span class="mb-t">11:00</span> <span class="mb-d">60m</span> <span class="mb-n">Petr0602</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="girl-total"><div class="gt-pts">5 500</div><div class="gt-cnt">5 rez.</div></div>
+
+          <!-- Kim -->
+          <div class="girl-row-header"><div class="girl-av" style="background:var(--c-kim)">K</div><div class="girl-nm">Kim</div></div>
+          <div class="day-cell"><div class="mini-booking g-kim"><span class="mb-t">12:00</span> <span class="mb-d">60m</span> <span class="mb-n">Marek0501</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="day-cell"><div class="mini-booking g-kim"><span class="mb-t">14:00</span> <span class="mb-d">60m</span> <span class="mb-n">HynekSvoboda</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-kim"><span class="mb-t">11:00</span> <span class="mb-d">45m</span> <span class="mb-n">Sepp25</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="day-cell"><div class="mini-booking g-kim"><span class="mb-t">15:00</span> <span class="mb-d">60m</span> <span class="mb-n">LiborN2807</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="girl-total"><div class="gt-pts">4 900</div><div class="gt-cnt">4 rez.</div></div>
+
+          <!-- Natalie -->
+          <div class="girl-row-header"><div class="girl-av" style="background:var(--c-natalie)">N</div><div class="girl-nm">Natalie</div></div>
+          <div class="day-cell"><div class="mini-booking g-natalie"><span class="mb-t">11:00</span> <span class="mb-d">45m</span> <span class="mb-n">Fritz0411</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-natalie"><span class="mb-t">13:00</span> <span class="mb-d">60m</span> <span class="mb-n">Vojta0506</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-natalie"><span class="mb-t">16:00</span> <span class="mb-d">60m</span> <span class="mb-n">Daniel291</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="day-cell"><div class="mini-booking g-natalie"><span class="mb-t">14:00</span> <span class="mb-d">45m</span> <span class="mb-n">Vladimir1806</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-natalie"><span class="mb-t">12:00</span> <span class="mb-d">60m</span> <span class="mb-n">Pavel0807</span></div><div class="mini-booking g-natalie"><span class="mb-t">18:00</span> <span class="mb-d">30m</span> <span class="mb-n">Petr1309</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="girl-total"><div class="gt-pts">5 800</div><div class="gt-cnt">7 rez.</div></div>
+
+          <!-- Nina -->
+          <div class="girl-row-header"><div class="girl-av" style="background:var(--c-nina)">N</div><div class="girl-nm">Nina</div></div>
+          <div class="day-cell"><div class="mini-booking g-nina"><span class="mb-t">13:00</span> <span class="mb-d">60m</span> <span class="mb-n">LiborN2807</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="day-cell"><div class="mini-booking g-nina"><span class="mb-t">11:00</span> <span class="mb-d">45m</span> <span class="mb-n">Marek0501</span></div><div class="mini-booking g-nina"><span class="mb-t">17:00</span> <span class="mb-d">60m</span> <span class="mb-n">Randy24</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-nina"><span class="mb-t">14:00</span> <span class="mb-d">30m</span> <span class="mb-n">Martin05</span></div></div>
+          <div class="day-cell no-shift"></div>
+          <div class="day-cell"><div class="mini-booking g-nina"><span class="mb-t">16:00</span> <span class="mb-d">60m</span> <span class="mb-n">Cizinec140301</span></div></div>
+          <div class="day-cell"><div class="mini-booking g-nina"><span class="mb-t">12:00</span> <span class="mb-d">45m</span> <span class="mb-n">Tom2205</span></div></div>
+          <div class="girl-total"><div class="gt-pts">5 500</div><div class="gt-cnt">6 rez.</div></div>
+        </div>
+
+        <!-- Summary row -->
+        <div class="grid-summary-row">
+          <div class="gs-cell corner">Celkem</div>
+          <div class="gs-cell"><div class="gs-rez">8</div><div class="gs-pts">7 600</div></div>
+          <div class="gs-cell"><div class="gs-rez">9</div><div class="gs-pts">8 300</div></div>
+          <div class="gs-cell"><div class="gs-rez">9</div><div class="gs-pts">8 100</div></div>
+          <div class="gs-cell"><div class="gs-rez">8</div><div class="gs-pts">7 500</div></div>
+          <div class="gs-cell"><div class="gs-rez">7</div><div class="gs-pts">6 700</div></div>
+          <div class="gs-cell"><div class="gs-rez">11</div><div class="gs-pts">10 200</div></div>
+          <div class="gs-cell"><div class="gs-rez">1</div><div class="gs-pts">900</div></div>
+          <div class="gs-cell corner"><div class="gs-rez" style="font-size:16px;">57</div><div class="gs-pts">52 400</div></div>
+        </div>
+      </div>
+
+      <!-- ===== CLIENTS PAGE ===== -->
+      <div class="page" id="page-clients">
+        <div class="search-bar">
+          <input class="search-input" type="text" placeholder="Hledat podle jmena, kodu, telefonu...">
+          <div class="filter-chip active">Vsichni</div>
+          <div class="filter-chip">VIP</div>
+          <div class="filter-chip">Stali</div>
+          <div class="filter-chip">Novi</div>
+          <div class="filter-chip">Neduveryh.</div>
+        </div>
+        <div class="client-list">
+          <div class="client-row">
+            <div class="c-avatar">J</div>
+            <div class="c-main"><div class="c-name">Josef</div><div class="c-code">KLIENT1211 (JozefN1211)</div></div>
+            <div class="c-stats"><span><span class="highlight">6</span> navstev</span><span><span class="highlight">0</span> no-shows</span></div>
+            <span class="c-badge badge-vip">VIP</span>
+            <div class="c-last">9.9.2026</div>
+          </div>
+          <div class="client-row">
+            <div class="c-avatar">K</div>
+            <div class="c-main"><div class="c-name">Klient04093</div><div class="c-code">KLIENT0409</div></div>
+            <div class="c-stats"><span><span class="highlight">13</span> navstev</span><span><span class="highlight">0</span> no-shows</span></div>
+            <span class="c-badge badge-vip">VIP</span>
+            <div class="c-last">13.9.2026</div>
+          </div>
+          <div class="client-row">
+            <div class="c-avatar">C</div>
+            <div class="c-main"><div class="c-name">Cizinec711</div><div class="c-code">KLIENT0711</div></div>
+            <div class="c-stats"><span><span class="highlight">10</span> navstev</span><span><span class="highlight">1</span> no-show</span></div>
+            <span class="c-badge badge-regular">Staly</span>
+            <div class="c-last">7.9.2026</div>
+          </div>
+          <div class="client-row">
+            <div class="c-avatar">V</div>
+            <div class="c-main"><div class="c-name">Vladimir</div><div class="c-code">KLIENT1806 (Vladimir1806)</div></div>
+            <div class="c-stats"><span><span class="highlight">4</span> navstevy</span><span><span class="highlight">0</span> no-shows</span></div>
+            <span class="c-badge badge-regular">Staly</span>
+            <div class="c-last">5.9.2026</div>
+          </div>
+          <div class="client-row">
+            <div class="c-avatar">P</div>
+            <div class="c-main"><div class="c-name">Petr</div><div class="c-code">PETR1309</div></div>
+            <div class="c-stats"><span><span class="highlight">1</span> navsteva</span><span><span class="highlight">0</span> no-shows</span></div>
+            <span class="c-badge badge-new">Novy</span>
+            <div class="c-last">13.9.2026</div>
+          </div>
+          <div class="client-row">
+            <div class="c-avatar" style="border-color: var(--red);">M</div>
+            <div class="c-main"><div class="c-name">Martin</div><div class="c-code">KLIENT2004</div></div>
+            <div class="c-stats"><span><span class="highlight">5</span> navstev</span><span style="color:var(--red);"><span class="highlight" style="color:var(--red);">3</span> no-shows!</span></div>
+            <span class="c-badge badge-untrusted">Neduveryh.</span>
+            <div class="c-last">1.8.2026</div>
+          </div>
+          <div class="client-row">
+            <div class="c-avatar">D</div>
+            <div class="c-main"><div class="c-name">Daniel291</div><div class="c-code">KLIENT0291</div></div>
+            <div class="c-stats"><span><span class="highlight">8</span> navstev</span><span><span class="highlight">0</span> no-shows</span></div>
+            <span class="c-badge badge-regular">Staly</span>
+            <div class="c-last">12.9.2026</div>
+          </div>
+          <div class="client-row">
+            <div class="c-avatar">R</div>
+            <div class="c-main"><div class="c-name">Randy24</div><div class="c-code">KLIENT0024</div></div>
+            <div class="c-stats"><span><span class="highlight">7</span> navstev</span><span><span class="highlight">0</span> no-shows</span></div>
+            <span class="c-badge badge-regular">Staly</span>
+            <div class="c-last">10.9.2026</div>
+          </div>
+          <div class="client-row">
+            <div class="c-avatar">H</div>
+            <div class="c-main"><div class="c-name">HynekSvoboda</div><div class="c-code">KLIENT0508</div></div>
+            <div class="c-stats"><span><span class="highlight">3</span> navstevy</span><span><span class="highlight">0</span> no-shows</span></div>
+            <span class="c-badge badge-regular">Staly</span>
+            <div class="c-last">8.9.2026</div>
+          </div>
+          <div class="client-row">
+            <div class="c-avatar">L</div>
+            <div class="c-main"><div class="c-name">LiborN2807</div><div class="c-code">KLIENT2807</div></div>
+            <div class="c-stats"><span><span class="highlight">5</span> navstev</span><span><span class="highlight">0</span> no-shows</span></div>
+            <span class="c-badge badge-regular">Staly</span>
+            <div class="c-last">9.9.2026</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== GIRLS PAGE ===== -->
+      <div class="page" id="page-girls">
+        <div style="padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: var(--bg-soft);">
+          <span style="font-size: 13px; color: var(--muted);">9 aktivnich divek</span>
+          <button class="btn btn-primary btn-sm">+ Pridat divku</button>
+        </div>
+        <div class="girls-grid">
+          <div class="girl-card">
+            <div class="girl-card-top">
+              <div class="girl-card-avatar" style="background: var(--c-emily);"><img src="https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/28/1766928171377.jpg" alt="Emily"></div>
+              <div><div class="girl-card-name">Emily</div><div class="girl-card-status online">&#9679; Pracuje (11:00-22:00)</div></div>
+            </div>
+            <div class="girl-card-stats">
+              <span><span class="val">14</span> rez./tyden</span>
+              <span><span class="val" style="color:var(--yellow);">13 100</span> b.</span>
+              <span>Zizkov</span>
+            </div>
+          </div>
+          <div class="girl-card">
+            <div class="girl-card-top">
+              <div class="girl-card-avatar" style="background: var(--c-nika);"><img src="https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/25/1781852134764-27ecbb5e-4b5d-4166-be0d-af06b0ac2cd8.jpg" alt="Nika"></div>
+              <div><div class="girl-card-name">Nika</div><div class="girl-card-status online">&#9679; Pracuje (12:00-22:00)</div></div>
+            </div>
+            <div class="girl-card-stats">
+              <span><span class="val">8</span> rez./tyden</span>
+              <span><span class="val" style="color:var(--yellow);">7 200</span> b.</span>
+              <span>Vinohrady</span>
+            </div>
+          </div>
+          <div class="girl-card">
+            <div class="girl-card-top">
+              <div class="girl-card-avatar" style="background: var(--c-caty);"><img src="https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/31/1766987005779.jpg" alt="Caty"></div>
+              <div><div class="girl-card-name">Caty</div><div class="girl-card-status online">&#9679; Pracuje (11:00-20:00)</div></div>
+            </div>
+            <div class="girl-card-stats">
+              <span><span class="val">6</span> rez./tyden</span>
+              <span><span class="val" style="color:var(--yellow);">5 700</span> b.</span>
+              <span>Zizkov</span>
+            </div>
+          </div>
+          <div class="girl-card">
+            <div class="girl-card-top">
+              <div class="girl-card-avatar" style="background: var(--c-natalie);"><img src="https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/26/1766927460248.jpg" alt="Natalie"></div>
+              <div><div class="girl-card-name">Natalie</div><div class="girl-card-status online">&#9679; Pracuje (10:00-21:00)</div></div>
+            </div>
+            <div class="girl-card-stats">
+              <span><span class="val">7</span> rez./tyden</span>
+              <span><span class="val" style="color:var(--yellow);">5 800</span> b.</span>
+              <span>Vinohrady</span>
+            </div>
+          </div>
+          <div class="girl-card">
+            <div class="girl-card-top">
+              <div class="girl-card-avatar" style="background: var(--c-aneta);"><img src="https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/41/1781886676034-237b1200-7c66-4c09-a881-2a429b15bfec.webp" alt="Aneta"></div>
+              <div><div class="girl-card-name">Aneta</div><div class="girl-card-status online">&#9679; Pracuje (12:00-20:00)</div></div>
+            </div>
+            <div class="girl-card-stats">
+              <span><span class="val">5</span> rez./tyden</span>
+              <span><span class="val" style="color:var(--yellow);">4 700</span> b.</span>
+              <span>Zizkov</span>
+            </div>
+          </div>
+          <div class="girl-card">
+            <div class="girl-card-top">
+              <div class="girl-card-avatar" style="background: var(--c-luna);"><img src="https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/22/1766737202940.jpeg" alt="Luna"></div>
+              <div><div class="girl-card-name">Luna</div><div class="girl-card-status online">&#9679; Pracuje (11:00-21:00)</div></div>
+            </div>
+            <div class="girl-card-stats">
+              <span><span class="val">5</span> rez./tyden</span>
+              <span><span class="val" style="color:var(--yellow);">5 500</span> b.</span>
+              <span>Vinohrady</span>
+            </div>
+          </div>
+          <div class="girl-card">
+            <div class="girl-card-top">
+              <div class="girl-card-avatar" style="background: var(--c-eliska);"><img src="https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/44/1779557426027.png" alt="Eliska"></div>
+              <div><div class="girl-card-name">Eliska</div><div class="girl-card-status online">&#9679; Pracuje (13:00-22:00)</div></div>
+            </div>
+            <div class="girl-card-stats">
+              <span><span class="val">6</span> rez./tyden</span>
+              <span><span class="val" style="color:var(--yellow);">5 600</span> b.</span>
+              <span>Zizkov</span>
+            </div>
+          </div>
+          <div class="girl-card">
+            <div class="girl-card-top">
+              <div class="girl-card-avatar" style="background: var(--c-kim);"><img src="https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/46/1779618571371.jpg" alt="Kim"></div>
+              <div><div class="girl-card-name">Kim</div><div class="girl-card-status online">&#9679; Pracuje (11:00-19:00)</div></div>
+            </div>
+            <div class="girl-card-stats">
+              <span><span class="val">4</span> rez./tyden</span>
+              <span><span class="val" style="color:var(--yellow);">4 900</span> b.</span>
+              <span>Vinohrady</span>
+            </div>
+          </div>
+          <div class="girl-card">
+            <div class="girl-card-top">
+              <div class="girl-card-avatar" style="background: var(--c-nina);"><img src="https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/56/1787423439144-91fb48af-d84b-480a-b55f-624f3c047b39.webp" alt="Nina"></div>
+              <div><div class="girl-card-name">Nina</div><div class="girl-card-status offline">&#9679; Nepracuje dnes</div></div>
+            </div>
+            <div class="girl-card-stats">
+              <span><span class="val">6</span> rez./tyden</span>
+              <span><span class="val" style="color:var(--yellow);">5 500</span> b.</span>
+              <span>Zizkov</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SCHEDULE PAGE ===== -->
+      <div class="page" id="page-schedule">
+        <div class="schedule-grid">
+          <div class="sch-header corner">Divka</div>
+          <div class="sch-header"><span>Po 8</span></div>
+          <div class="sch-header"><span>Ut 9</span></div>
+          <div class="sch-header"><span>St 10</span></div>
+          <div class="sch-header"><span>Ct 11</span></div>
+          <div class="sch-header"><span>Pa 12</span></div>
+          <div class="sch-header today"><span>So 13</span></div>
+          <div class="sch-header"><span>Ne 14</span></div>
+
+          <div class="sch-name"><div class="girl-av" style="background:var(--c-emily)">E</div> Emily</div>
+          <div class="sch-cell"><div class="sch-shift">11:00-22:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell"><div class="sch-shift">10:00-21:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell"><div class="sch-shift">12:00-20:00</div><div class="sch-loc">Vinohrady</div></div>
+          <div class="sch-cell"><div class="sch-shift">11:00-22:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell"><div class="sch-shift">12:00-22:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell"><div class="sch-shift">11:00-22:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell off"></div>
+
+          <div class="sch-name"><div class="girl-av" style="background:var(--c-nika)">N</div> Nika</div>
+          <div class="sch-cell"><div class="sch-shift">14:00-22:00</div><div class="sch-loc">Vinohrady</div></div>
+          <div class="sch-cell"><div class="sch-shift">12:00-20:00</div><div class="sch-loc">Vinohrady</div></div>
+          <div class="sch-cell off"></div>
+          <div class="sch-cell"><div class="sch-shift">12:00-22:00</div><div class="sch-loc">Vinohrady</div></div>
+          <div class="sch-cell"><div class="sch-shift">11:00-20:00</div><div class="sch-loc">Vinohrady</div></div>
+          <div class="sch-cell"><div class="sch-shift">12:00-22:00</div><div class="sch-loc">Vinohrady</div></div>
+          <div class="sch-cell off"></div>
+
+          <div class="sch-name"><div class="girl-av" style="background:var(--c-caty); color:#000">C</div> Caty</div>
+          <div class="sch-cell"><div class="sch-shift">11:00-20:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell"><div class="sch-shift">11:00-20:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell"><div class="sch-shift">13:00-20:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell off"></div>
+          <div class="sch-cell"><div class="sch-shift">11:00-20:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell"><div class="sch-shift">11:00-20:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell off"></div>
+
+          <div class="sch-name"><div class="girl-av" style="background:var(--c-aneta)">A</div> Aneta</div>
+          <div class="sch-cell"><div class="sch-shift">12:00-20:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell off"></div>
+          <div class="sch-cell"><div class="sch-shift">12:00-20:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell"><div class="sch-shift">11:00-20:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell off"></div>
+          <div class="sch-cell"><div class="sch-shift">12:00-20:00</div><div class="sch-loc">Zizkov</div></div>
+          <div class="sch-cell off"></div>
+
+          <div class="sch-name"><div class="girl-av" style="background:var(--c-luna)">L</div> Luna</div>
+          <div class="sch-cell off"></div>
+          <div class="sch-cell"><div class="sch-shift">12:00-21:00</div><div class="sch-loc">Vinohrady</div></div>
+          <div class="sch-cell"><div class="sch-shift">11:00-20:00</div><div class="sch-loc">Vinohrady</div></div>
+          <div class="sch-cell"><div class="sch-shift">12:00-21:00</div><div class="sch-loc">Vinohrady</div></div>
+          <div class="sch-cell"><div class="sch-shift">11:00-21:00</div><div class="sch-loc">Vinohrady</div></div>
+          <div class="sch-cell"><div class="sch-shift">11:00-21:00</div><div class="sch-loc">Vinohrady</div></div>
+          <div class="sch-cell off"></div>
+        </div>
+      </div>
+
+      <!-- ===== LOCATIONS PAGE ===== -->
+      <div class="page" id="page-locations">
+        <div style="padding: 24px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="dash-card">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(242,125,141,0.15); display: flex; align-items: center; justify-content: center; font-size: 22px;">&#127968;</div>
+                <div><div style="font-size: 16px; font-weight: 700;">Zizkov</div><div style="font-size: 12px; color: var(--muted);">Praha 3</div></div>
+              </div>
+              <div style="font-size: 12px; color: var(--dim); line-height: 1.6;">
+                <div>Adresa: <span style="color: var(--text);">Husitska 42, Praha 3</span></div>
+                <div>Pokoje: <span style="color: var(--text);">3</span></div>
+                <div>Dnes pracuje: <span style="color: var(--green);">5 divek</span></div>
+                <div>Dnesni rez.: <span style="color: var(--coral);">7</span></div>
+              </div>
+            </div>
+            <div class="dash-card">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(96,165,250,0.15); display: flex; align-items: center; justify-content: center; font-size: 22px;">&#127968;</div>
+                <div><div style="font-size: 16px; font-weight: 700;">Vinohrady</div><div style="font-size: 12px; color: var(--muted);">Praha 2</div></div>
+              </div>
+              <div style="font-size: 12px; color: var(--dim); line-height: 1.6;">
+                <div>Adresa: <span style="color: var(--text);">Legerova 42, Praha 2</span></div>
+                <div>Pokoje: <span style="color: var(--text);">2</span></div>
+                <div>Dnes pracuje: <span style="color: var(--green);">3 divky</span></div>
+                <div>Dnesni rez.: <span style="color: var(--coral);">5</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== REPORTS PAGE ===== -->
+      <div class="page" id="page-reports">
+        <div class="reports-grid">
+          <div class="report-card">
+            <div class="report-card-title">Tento tyden</div>
+            <div class="report-row"><span>Celkem rezervaci</span><span class="report-val" style="color:var(--coral);">57</span></div>
+            <div class="report-row"><span>Splneno</span><span class="report-val" style="color:var(--green);">48</span></div>
+            <div class="report-row"><span>Pending</span><span class="report-val" style="color:var(--yellow);">5</span></div>
+            <div class="report-row"><span>Zruseno</span><span class="report-val" style="color:var(--red);">3</span></div>
+            <div class="report-row"><span>No-shows</span><span class="report-val" style="color:var(--red);">1</span></div>
+          </div>
+          <div class="report-card">
+            <div class="report-card-title">Body — divky</div>
+            <div class="report-row"><span>Emily</span><span class="report-val" style="color:var(--yellow);">13 100</span></div>
+            <div class="report-row"><span>Nika</span><span class="report-val">7 200</span></div>
+            <div class="report-row"><span>Natalie</span><span class="report-val">5 800</span></div>
+            <div class="report-row"><span>Caty</span><span class="report-val">5 700</span></div>
+            <div class="report-row"><span>Eliska</span><span class="report-val">5 600</span></div>
+          </div>
+          <div class="report-card">
+            <div class="report-card-title">Zdroje</div>
+            <div class="report-row"><span>Telegram bot</span><span class="report-val" style="color:var(--telegram);">62%</span></div>
+            <div class="report-row"><span>Telefon</span><span class="report-val" style="color:var(--blue);">28%</span></div>
+            <div class="report-row"><span>WhatsApp</span><span class="report-val" style="color:var(--whatsapp);">10%</span></div>
+          </div>
+          <div class="report-card">
+            <div class="report-card-title">Top klienti (tyden)</div>
+            <div class="report-row"><span>Klient04093 <span class="c-badge badge-vip" style="font-size:8px;">VIP</span></span><span class="report-val">4 navstevy</span></div>
+            <div class="report-row"><span>JozefN1211 <span class="c-badge badge-vip" style="font-size:8px;">VIP</span></span><span class="report-val">3 navstevy</span></div>
+            <div class="report-row"><span>Daniel291</span><span class="report-val">2 navstevy</span></div>
+            <div class="report-row"><span>NOVY1309 <span class="c-badge badge-new" style="font-size:8px;">Novy</span></span><span class="report-val">2 navstevy</span></div>
+          </div>
+          <div class="report-card">
+            <div class="report-card-title">Pobocky</div>
+            <div class="report-row"><span>Zizkov (Praha 3)</span><span class="report-val" style="color:var(--coral);">34 rez.</span></div>
+            <div class="report-row"><span>Vinohrady (Praha 2)</span><span class="report-val" style="color:var(--blue);">23 rez.</span></div>
+          </div>
+          <div class="report-card">
+            <div class="report-card-title">Casove rozmezi</div>
+            <div class="report-row"><span>Prumer delka</span><span class="report-val">52 min</span></div>
+            <div class="report-row"><span>Nejcastejsi</span><span class="report-val">60 min (58%)</span></div>
+            <div class="report-row"><span>Peak hodina</span><span class="report-val">14:00-16:00</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SETTINGS PAGE ===== -->
+      <div class="page" id="page-settings">
+        <div class="settings-container">
+          <div class="settings-section">
+            <div class="settings-section-title">Obecne</div>
+            <div class="settings-row"><span class="settings-label">Nazev agentury</span><span class="settings-value">STUDIOFLOW</span></div>
+            <div class="settings-row"><span class="settings-label">Jazyk</span><span class="settings-value">Cestina</span></div>
+            <div class="settings-row"><span class="settings-label">Casova zona</span><span class="settings-value">Europe/Prague</span></div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-title">Notifikace</div>
+            <div class="settings-row"><span class="settings-label">Nova rezervace (TG)</span><div class="toggle-switch on"></div></div>
+            <div class="settings-row"><span class="settings-label">Reminder 1h pred</span><div class="toggle-switch on"></div></div>
+            <div class="settings-row"><span class="settings-label">No-show alert</span><div class="toggle-switch on"></div></div>
+            <div class="settings-row"><span class="settings-label">Denni souhrn (email)</span><div class="toggle-switch"></div></div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-title">Telegram Bot</div>
+            <div class="settings-row"><span class="settings-label">Bot aktivni</span><div class="toggle-switch on"></div></div>
+            <div class="settings-row"><span class="settings-label">Bot username</span><span class="settings-value" style="color: var(--telegram);">@StudioFlowBot</span></div>
+            <div class="settings-row"><span class="settings-label">Auto-potvrzeni VIP</span><div class="toggle-switch"></div></div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-title">Bodovy system</div>
+            <div class="settings-row"><span class="settings-label">30 min</span><span class="settings-value" style="color: var(--yellow);">800 bodu</span></div>
+            <div class="settings-row"><span class="settings-label">45 min</span><span class="settings-value" style="color: var(--yellow);">900 bodu</span></div>
+            <div class="settings-row"><span class="settings-label">60 min</span><span class="settings-value" style="color: var(--yellow);">1 000 bodu</span></div>
+            <div class="settings-row"><span class="settings-label">90 min</span><span class="settings-value" style="color: var(--yellow);">1 400 bodu</span></div>
+            <div class="settings-row"><span class="settings-label">120 min</span><span class="settings-value" style="color: var(--yellow);">1 800 bodu</span></div>
+            <div class="settings-row"><span class="settings-label">Denni cil</span><span class="settings-value" style="color: var(--coral);">4 500 bodu</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== AUDIT LOG PAGE ===== -->
+      <div class="page" id="page-audit">
+        <div style="padding: 20px;">
+          <div style="font-size: 12px; color: var(--dim); margin-bottom: 12px;">Poslednich 10 zaznamu</div>
+          <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--line);">
+                <th style="text-align:left; padding: 8px; font-size:10px; color:var(--dim); text-transform:uppercase; font-weight:600;">Cas</th>
+                <th style="text-align:left; padding: 8px; font-size:10px; color:var(--dim); text-transform:uppercase; font-weight:600;">Uzivatel</th>
+                <th style="text-align:left; padding: 8px; font-size:10px; color:var(--dim); text-transform:uppercase; font-weight:600;">Akce</th>
+                <th style="text-align:left; padding: 8px; font-size:10px; color:var(--dim); text-transform:uppercase; font-weight:600;">Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);"><td style="padding:8px; color:var(--dim);">13:45</td><td style="padding:8px;">Marketa</td><td style="padding:8px; color:var(--green);">Potvrdila rez.</td><td style="padding:8px; color:var(--muted);">Emily / JozefN1211 — 16:00</td></tr>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);"><td style="padding:8px; color:var(--dim);">13:32</td><td style="padding:8px;">TG Bot</td><td style="padding:8px; color:var(--telegram);">Nova rez. (TG)</td><td style="padding:8px; color:var(--muted);">Emily / JozefN1211 — 16:00</td></tr>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);"><td style="padding:8px; color:var(--dim);">12:15</td><td style="padding:8px;">Marketa</td><td style="padding:8px; color:var(--green);">Potvrdila rez.</td><td style="padding:8px; color:var(--muted);">Nika / Kl02310 — 13:00</td></tr>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);"><td style="padding:8px; color:var(--dim);">11:50</td><td style="padding:8px;">Marketa</td><td style="padding:8px; color:var(--blue);">Vytvorila rez.</td><td style="padding:8px; color:var(--muted);">Natalie / Petr1309 — 18:00 (tel.)</td></tr>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);"><td style="padding:8px; color:var(--dim);">11:20</td><td style="padding:8px;">Marketa</td><td style="padding:8px; color:var(--red);">Zrusila rez.</td><td style="padding:8px; color:var(--muted);">Caty / Martin05 — 15:00 (klient zrusil)</td></tr>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);"><td style="padding:8px; color:var(--dim);">10:05</td><td style="padding:8px;">System</td><td style="padding:8px; color:var(--yellow);">Reminder odeslan</td><td style="padding:8px; color:var(--muted);">Emily / Klient04093 — 11:00</td></tr>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);"><td style="padding:8px; color:var(--dim);">09:30</td><td style="padding:8px;">Marketa</td><td style="padding:8px; color:var(--purple);">Upravila rozvrh</td><td style="padding:8px; color:var(--muted);">Luna — So: 11:00-21:00</td></tr>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);"><td style="padding:8px; color:var(--dim);">09:00</td><td style="padding:8px;">System</td><td style="padding:8px; color:var(--dim);">Cron cleanup</td><td style="padding:8px; color:var(--muted);">Smazano 4 expired overrides</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== USERS PAGE ===== -->
+      <div class="page" id="page-users">
+        <div style="padding: 20px;">
+          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <button class="btn btn-primary btn-sm">+ Novy uzivatel</button>
+          </div>
+          <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--line);">
+                <th style="text-align:left; padding:10px; font-size:10px; color:var(--dim); text-transform:uppercase; font-weight:600;">Jmeno</th>
+                <th style="text-align:left; padding:10px; font-size:10px; color:var(--dim); text-transform:uppercase; font-weight:600;">Email</th>
+                <th style="text-align:left; padding:10px; font-size:10px; color:var(--dim); text-transform:uppercase; font-weight:600;">Role</th>
+                <th style="text-align:left; padding:10px; font-size:10px; color:var(--dim); text-transform:uppercase; font-weight:600;">Posledni login</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);">
+                <td style="padding:10px; font-weight:600;">Marketa</td>
+                <td style="padding:10px; color:var(--muted);">admin@lovelygirls.cz</td>
+                <td style="padding:10px;"><span class="c-badge" style="background:rgba(242,125,141,0.2); color:var(--coral);">Admin</span></td>
+                <td style="padding:10px; color:var(--dim);">Dnes 13:45</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);">
+                <td style="padding:10px; font-weight:600;">Tereza</td>
+                <td style="padding:10px; color:var(--muted);">operatorka@lovelygirls.cz</td>
+                <td style="padding:10px;"><span class="c-badge" style="background:rgba(96,165,250,0.2); color:var(--blue);">Operatorka</span></td>
+                <td style="padding:10px; color:var(--dim);">Dnes 12:30</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);">
+                <td style="padding:10px; font-weight:600;">Emily</td>
+                <td style="padding:10px; color:var(--muted);">emily@lovelygirls.cz</td>
+                <td style="padding:10px;"><span class="c-badge" style="background:rgba(167,139,250,0.2); color:var(--purple);">Divka</span></td>
+                <td style="padding:10px; color:var(--dim);">Dnes 11:00</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(42,34,48,0.4);">
+                <td style="padding:10px; font-weight:600;">Nika</td>
+                <td style="padding:10px; color:var(--muted);">nika@lovelygirls.cz</td>
+                <td style="padding:10px;"><span class="c-badge" style="background:rgba(167,139,250,0.2); color:var(--purple);">Divka</span></td>
+                <td style="padding:10px; color:var(--dim);">Dnes 12:00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== TG BOT PAGE ===== -->
+      <div class="page" id="page-tgbot">
+        <div style="padding: 24px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+            <div class="dash-card">
+              <div class="dash-card-label">Bot status</div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--green);"></div>
+                <span style="font-size: 16px; font-weight: 700; color: var(--green);">Online</span>
+              </div>
+              <div class="dash-card-sub">@StudioFlowBot</div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-card-label">Dnesni konverzace</div>
+              <div class="dash-card-value" style="color: var(--telegram);">8</div>
+              <div class="dash-card-sub">3 booking pokusy, 2 potvrzeny</div>
+            </div>
+          </div>
+          <div class="dash-section-title" style="padding-left:0;">Posledni aktivita</div>
+          <div style="font-size: 12px;">
+            <div style="display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(42,34,48,0.4); align-items: center;">
+              <span style="color: var(--dim); min-width: 40px;">13:32</span>
+              <span style="color: var(--telegram);">&#129302;</span>
+              <span>JozefN1211 zahajil /booking — Emily Pa 13.9. 16:00</span>
+              <span class="c-badge" style="background:rgba(251,191,36,0.15); color:var(--yellow); margin-left:auto;">Pending</span>
+            </div>
+            <div style="display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(42,34,48,0.4); align-items: center;">
+              <span style="color: var(--dim); min-width: 40px;">12:10</span>
+              <span style="color: var(--telegram);">&#129302;</span>
+              <span>Kl02310 zahajil /booking — Nika So 13.9. 13:00</span>
+              <span class="c-badge" style="background:rgba(74,222,128,0.15); color:var(--green); margin-left:auto;">Potvrzeno</span>
+            </div>
+            <div style="display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(42,34,48,0.4); align-items: center;">
+              <span style="color: var(--dim); min-width: 40px;">10:05</span>
+              <span style="color: var(--green);">&#10003;</span>
+              <span>Klient04093 potvrdil reminder — Emily So 11:00</span>
+              <span class="c-badge" style="background:rgba(74,222,128,0.15); color:var(--green); margin-left:auto;">OK</span>
+            </div>
+            <div style="display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(42,34,48,0.4); align-items: center;">
+              <span style="color: var(--dim); min-width: 40px;">09:45</span>
+              <span style="color: var(--telegram);">&#129302;</span>
+              <span>Miloslav2208 zahajil /booking — Caty So 13:00</span>
+              <span class="c-badge" style="background:rgba(74,222,128,0.15); color:var(--green); margin-left:auto;">Potvrzeno</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== LOCKED PAGE (for operator) ===== -->
+      <div class="page" id="page-locked">
+        <div class="locked-msg">
+          <div class="lock-icon">&#128274;</div>
+          <div class="lock-text">Tato sekce neni dostupna pro vasi roli.</div>
+          <div style="font-size: 12px; color: var(--dim); margin-top: 8px;">Kontaktujte administratora pro pristup.</div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main-area -->
+</div><!-- /app-shell -->
+
+<!-- ========== STUDIO SHELL (Girl view) ========== -->
+<div id="studio-shell">
+  <div class="studio-frame">
+    <div class="studio-topbar">
+      <div class="studio-topbar-left">
+        <div class="studio-topbar-logo">STUDIO<span>FLOW</span> <span style="font-weight: 400; font-size: 12px; color: var(--dim);">Studio</span></div>
+      </div>
+      <div class="studio-topbar-right">
+        <span style="font-size: 12px; color: var(--muted);">Emily</span>
+        <div class="studio-avatar"><img src="https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/28/1766928171377.jpg" alt="Emily"></div>
+      </div>
+    </div>
+
+    <div class="studio-content" id="studio-content">
+      <!-- Studio Dashboard -->
+      <div class="studio-page active" id="studio-page-dashboard">
+        <div class="studio-shift-banner">
+          <div class="studio-shift-day">Sobota 13. zari 2026</div>
+          <div class="studio-shift-time">11:00 — 22:00</div>
+          <div class="studio-shift-loc">&#128205; Zizkov (Praha 3)</div>
+        </div>
+
+        <div class="studio-points-bar">
+          <div class="studio-points-top">
+            <span class="studio-points-label">Dnesni body</span>
+            <span class="studio-points-value">2 800 / 4 500</span>
+          </div>
+          <div class="studio-points-track">
+            <div class="studio-points-fill" style="width: 62%;"></div>
+          </div>
+          <div style="text-align: right; font-size: 10px; color: var(--dim); margin-top: 4px;">62% — chybi 1 700 bodu</div>
+        </div>
+
+        <div style="font-size: 12px; font-weight: 600; color: var(--dim); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em;">Dnesni rezervace</div>
+
+        <div class="studio-booking-card done">
+          <div class="studio-booking-top">
+            <span class="studio-booking-time">12:00 — 13:00</span>
+            <span style="font-size: 11px; color: var(--green);">&#10003; Dokonceno</span>
+          </div>
+          <div class="studio-booking-client">Klient04093 <span class="studio-booking-badge badge-vip">VIP</span></div>
+          <div class="studio-booking-dur">60 min</div>
+        </div>
+
+        <div class="studio-booking-card next">
+          <div class="studio-booking-top">
+            <span class="studio-booking-time">16:00 — 17:00</span>
+            <span class="studio-countdown">za 1h 28min</span>
+          </div>
+          <div class="studio-booking-client">JozefN1211 <span class="studio-booking-badge badge-vip">VIP</span> <span style="font-size: 10px; color: var(--dim);">12 navstev</span></div>
+          <div class="studio-booking-dur">60 min</div>
+        </div>
+
+        <div class="studio-booking-card">
+          <div class="studio-booking-top">
+            <span class="studio-booking-time">19:30 — 20:00</span>
+            <span style="font-size: 11px; color: var(--dim);">vecer</span>
+          </div>
+          <div class="studio-booking-client">NOVY1309 <span class="studio-booking-badge badge-new">Novy</span></div>
+          <div class="studio-booking-dur">30 min</div>
+          <div class="studio-booking-note">&#9888; Prvni navsteva — overit u operatorky</div>
+        </div>
+      </div>
+
+      <!-- Studio Schedule -->
+      <div class="studio-page" id="studio-page-schedule">
+        <div style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Tydenni rozvrh</div>
+
+        <div class="studio-schedule-day">
+          <div class="studio-sch-label">Po</div>
+          <div class="studio-sch-info"><div class="studio-sch-shift">11:00 — 22:00</div><div class="studio-sch-loc">Zizkov — 2 rez.</div></div>
+        </div>
+        <div class="studio-schedule-day">
+          <div class="studio-sch-label">Ut</div>
+          <div class="studio-sch-info"><div class="studio-sch-shift">10:00 — 21:00</div><div class="studio-sch-loc">Zizkov — 3 rez.</div></div>
+        </div>
+        <div class="studio-schedule-day">
+          <div class="studio-sch-label">St</div>
+          <div class="studio-sch-info"><div class="studio-sch-shift">12:00 — 20:00</div><div class="studio-sch-loc">Vinohrady — 1 rez.</div></div>
+        </div>
+        <div class="studio-schedule-day">
+          <div class="studio-sch-label">Ct</div>
+          <div class="studio-sch-info"><div class="studio-sch-shift">11:00 — 22:00</div><div class="studio-sch-loc">Zizkov — 2 rez.</div></div>
+        </div>
+        <div class="studio-schedule-day">
+          <div class="studio-sch-label">Pa</div>
+          <div class="studio-sch-info"><div class="studio-sch-shift">12:00 — 22:00</div><div class="studio-sch-loc">Zizkov — 1 rez.</div></div>
+        </div>
+        <div class="studio-schedule-day today">
+          <div class="studio-sch-label today-label">So</div>
+          <div class="studio-sch-info"><div class="studio-sch-shift" style="color:var(--coral);">11:00 — 22:00</div><div class="studio-sch-loc" style="color:var(--coral);">Zizkov — 3 rez. (dnes)</div></div>
+        </div>
+        <div class="studio-schedule-day">
+          <div class="studio-sch-label">Ne</div>
+          <div class="studio-sch-info"><div class="studio-sch-off">Volno</div></div>
+        </div>
+
+        <div style="margin-top: 16px; padding: 12px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 13px;">
+            <span style="color: var(--muted);">Tydenni souhrn</span>
+            <span style="font-weight: 700;">14 rez. / <span style="color: var(--yellow);">13 100 bodu</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Studio Notifications -->
+      <div class="studio-page" id="studio-page-notifications">
+        <div style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">Notifikace</div>
+
+        <div class="studio-notif-group-title">Dnes</div>
+
+        <div class="studio-notif">
+          <div class="studio-notif-dot" style="background: var(--green);"></div>
+          <div>
+            <div class="studio-notif-text">Nova rezervace: <strong>JozefN1211</strong> — 16:00-17:00 (60 min)</div>
+            <div class="studio-notif-time">pred 12 min</div>
+          </div>
+        </div>
+        <div class="studio-notif">
+          <div class="studio-notif-dot" style="background: var(--yellow);"></div>
+          <div>
+            <div class="studio-notif-text">Reminder: <strong>JozefN1211</strong> za 1 hodinu (16:00)</div>
+            <div class="studio-notif-time">pred 32 min</div>
+          </div>
+        </div>
+        <div class="studio-notif">
+          <div class="studio-notif-dot" style="background: var(--green);"></div>
+          <div>
+            <div class="studio-notif-text">Nova rezervace: <strong>NOVY1309</strong> — 19:30-20:00 (30 min)</div>
+            <div class="studio-notif-time">pred 2h</div>
+          </div>
+        </div>
+        <div class="studio-notif">
+          <div class="studio-notif-dot" style="background: var(--red);"></div>
+          <div>
+            <div class="studio-notif-text">Zrusena rezervace: <strong>Martin05</strong> — 15:00 (klient zrusil)</div>
+            <div class="studio-notif-time">pred 3h</div>
+          </div>
+        </div>
+
+        <div class="studio-notif-group-title">Vcera</div>
+
+        <div class="studio-notif">
+          <div class="studio-notif-dot" style="background: var(--blue);"></div>
+          <div>
+            <div class="studio-notif-text">Zmena rozvrhu: So 13.9. — <strong>11:00-22:00</strong> (Zizkov)</div>
+            <div class="studio-notif-time">vcera 18:30</div>
+          </div>
+        </div>
+        <div class="studio-notif">
+          <div class="studio-notif-dot" style="background: var(--green);"></div>
+          <div>
+            <div class="studio-notif-text">Nova rezervace: <strong>Klient04093</strong> — St 17.9. 14:00</div>
+            <div class="studio-notif-time">vcera 14:20</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="studio-bottom-nav">
+      <button class="studio-nav-item active" data-studio-page="dashboard" onclick="studioNav('dashboard')">
+        <span class="sni-icon">&#9632;</span>
+        Prehled
+      </button>
+      <button class="studio-nav-item" data-studio-page="schedule" onclick="studioNav('schedule')">
+        <span class="sni-icon">&#128197;</span>
+        Rozvrh
+      </button>
+      <button class="studio-nav-item" data-studio-page="notifications" onclick="studioNav('notifications')">
+        <span class="sni-icon">&#128276;</span>
+        Notifikace
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== NEW BOOKING MODAL ========== -->
+<div class="modal-overlay" id="booking-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Nova rezervace</span>
+      <button class="modal-close" onclick="closeNewBooking()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Divka</label>
+        <select class="form-select">
+          <option value="">Vybrat divku...</option>
+          <option selected>Emily</option>
+          <option>Nika</option>
+          <option>Caty</option>
+          <option>Aneta</option>
+          <option>Luna</option>
+          <option>Kim</option>
+          <option>Natalie</option>
+          <option>Eliska</option>
+          <option>Nina</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Klient</label>
+        <input class="form-input" type="text" placeholder="Hledat klienta nebo zadat noveho..." value="JozefN1211">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Datum</label>
+          <input class="form-input" type="date" value="2026-09-13">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cas</label>
+          <input class="form-input" type="time" value="16:00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Program</label>
+          <select class="form-select">
+            <option>30 min</option>
+            <option>45 min</option>
+            <option selected>60 min</option>
+            <option>90 min</option>
+            <option>120 min</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lokace (z rozvrhu)</label>
+          <div class="form-input" style="color: var(--muted); cursor: default; user-select: none;">Zizkov (Praha 3)</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Zdroj</label>
+        <select class="form-select">
+          <option>Telefon</option>
+          <option>WhatsApp</option>
+          <option selected>Telegram</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Poznamka (vnitrni)</label>
+        <input class="form-input" type="text" placeholder="Nepovinne...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeNewBooking()">Zrusit</button>
+      <button class="btn btn-primary" onclick="closeNewBooking()">Vytvorit rezervaci</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== STATE ==========
+let currentRole = 'admin';
+let currentPage = 'dashboard';
+let currentStudioPage = 'dashboard';
+
+// ========== LOGIN ==========
+function doLogin() {
+  const email = document.getElementById('login-email').value;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('demo-bar').style.display = 'flex';
+
+  // One login URL, role from DB → auto redirect:
+  // admin → dashboard, operator → calendar, girl → studio
+  if (email.includes('emily') || email.includes('divka')) {
+    switchRole('girl');
+  } else if (email.includes('operator')) {
+    currentPage = 'calendar';
+    switchRole('operator');
+  } else {
+    currentPage = 'dashboard';
+    switchRole('admin');
+  }
+}
+
+function doLogout() {
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('demo-bar').style.display = 'none';
+  document.getElementById('app-shell').classList.remove('visible');
+  document.getElementById('studio-shell').classList.remove('visible');
+}
+
+// ========== ROLE SWITCHING ==========
+function switchRole(role) {
+  currentRole = role;
+
+  // Update role buttons
+  document.querySelectorAll('.role-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.role === role);
+  });
+
+  if (role === 'girl') {
+    document.getElementById('app-shell').classList.remove('visible');
+    document.getElementById('studio-shell').classList.add('visible');
+    studioNav('dashboard');
+  } else {
+    document.getElementById('studio-shell').classList.remove('visible');
+    document.getElementById('app-shell').classList.add('visible');
+
+    // Admin sections visibility
+    const adminOnly = document.getElementById('nav-admin-only');
+    const adminExtra = document.getElementById('nav-admin-extra');
+
+    if (role === 'operator') {
+      adminOnly.style.display = 'none';
+      adminExtra.style.display = 'none';
+      document.getElementById('sidebar-user-name').textContent = 'Tereza';
+      document.getElementById('sidebar-user-avatar').textContent = 'T';
+      document.getElementById('sidebar-user-role').textContent = 'Operatorka';
+      document.getElementById('sidebar-user-role').className = 'sidebar-footer-role operator';
+
+      // Add schedule to operator nav (it's in admin section)
+      // Operator can see: Dashboard, Calendar, Clients, Schedule
+    } else {
+      adminOnly.style.display = 'block';
+      adminExtra.style.display = 'block';
+      document.getElementById('sidebar-user-name').textContent = 'Marketa';
+      document.getElementById('sidebar-user-avatar').textContent = 'M';
+      document.getElementById('sidebar-user-role').textContent = 'Admin';
+      document.getElementById('sidebar-user-role').className = 'sidebar-footer-role admin';
+    }
+
+    // Navigate based on role — operator lands on calendar, admin on dashboard
+    const allowedForOperator = ['dashboard', 'calendar', 'clients'];
+    if (role === 'operator' && !allowedForOperator.includes(currentPage)) {
+      navTo('calendar');
+    } else if (role === 'admin') {
+      navTo(currentPage);
+    } else {
+      navTo(currentPage);
+    }
+  }
+}
+
+// ========== NAVIGATION ==========
+const pageTitles = {
+  dashboard: 'Prehled',
+  calendar: 'Kalendar',
+  clients: 'Klienti',
+  girls: 'Divky',
+  schedule: 'Rozvrh smen',
+  locations: 'Pobocky',
+  reports: 'Reporty',
+  settings: 'Nastaveni',
+  audit: 'Audit log',
+  users: 'Uzivatele',
+  tgbot: 'Telegram Bot'
+};
+
+const pageSubtitles = {
+  dashboard: 'Sobota 13. zari 2026',
+  calendar: 'Tyden 8. — 14. zari 2026',
+  clients: '454 klientu',
+  girls: '9 aktivnich divek',
+  schedule: 'Tyden 8. — 14. zari 2026',
+  locations: '2 pobocky',
+  reports: 'Tento tyden',
+  settings: '',
+  audit: 'Poslednich 24 hodin',
+  users: '4 uzivatele',
+  tgbot: 'Stav a aktivita'
+};
+
+function navTo(page) {
+  // Check operator restrictions
+  if (currentRole === 'operator') {
+    const allowed = ['dashboard', 'calendar', 'clients'];
+    if (!allowed.includes(page)) {
+      page = 'locked';
+    }
+  }
+
+  currentPage = (page === 'locked') ? currentPage : page;
+
+  // Update nav items
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === page);
+  });
+
+  // Show page
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+
+  // Update topbar
+  const title = pageTitles[page] || page;
+  const subtitle = pageSubtitles[page] || '';
+  document.getElementById('topbar-title').textContent = title;
+  document.getElementById('topbar-subtitle').textContent = subtitle;
+}
+
+// ========== STUDIO NAVIGATION ==========
+function studioNav(page) {
+  currentStudioPage = page;
+  document.querySelectorAll('.studio-nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.studioPage === page);
+  });
+  document.querySelectorAll('.studio-page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('studio-page-' + page);
+  if (target) target.classList.add('active');
+}
+
+// ========== MODAL ==========
+function openNewBooking() {
+  document.getElementById('booking-modal').classList.add('open');
+}
+function closeNewBooking() {
+  document.getElementById('booking-modal').classList.remove('open');
+}
+
+// Close modal on overlay click
+document.getElementById('booking-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeNewBooking();
+});
+
+// Keyboard shortcut
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeNewBooking();
+});
+</script>
+
+</body>
+</html>

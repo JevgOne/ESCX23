@@ -112,6 +112,164 @@
 
   .mockup-label { padding: 10px 16px; background: var(--bg-elev); border-radius: 10px; font-size: 12px; color: var(--muted); text-align: center; max-width: 800px; margin: 16px auto; }
 
+  /* ===== FLOW E: Real-time sync two-column layout ===== */
+  .sync-container { max-width: 800px; margin: 0 auto; }
+  .sync-scenario {
+    margin-bottom: 28px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .sync-scenario-title {
+    padding: 12px 18px;
+    font-size: 13px; font-weight: 700;
+    background: var(--bg-elev);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sync-columns {
+    display: grid; grid-template-columns: 1fr 40px 1fr;
+    gap: 0;
+  }
+  .sync-col {
+    padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .sync-col-header {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 6px 10px;
+    border-radius: 6px; text-align: center; margin-bottom: 4px;
+  }
+  .sync-col-header.bot { background: rgba(34,158,217,0.15); color: #229ED9; }
+  .sync-col-header.cal { background: rgba(167,139,250,0.15); color: var(--purple); }
+
+  .sync-middle {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; padding: 14px 0;
+  }
+  .sync-arrow {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-size: 10px; color: var(--coral); font-weight: 700;
+  }
+  .sync-arrow-line {
+    width: 28px; height: 2px; background: var(--coral);
+    position: relative;
+  }
+  .sync-arrow-line.right::after {
+    content: ''; position: absolute; right: -3px; top: -3px;
+    border-left: 5px solid var(--coral); border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+  .sync-arrow-line.left::after {
+    content: ''; position: absolute; left: -3px; top: -3px;
+    border-right: 5px solid var(--coral); border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+
+  .sync-step {
+    padding: 10px 12px; border-radius: 8px;
+    font-size: 12px; line-height: 1.5;
+    border: 1px solid var(--line);
+    background: var(--bg-elev);
+  }
+  .sync-step.draft { border-color: rgba(251,191,36,0.4); border-style: dashed; }
+  .sync-step.pending { border-color: rgba(251,191,36,0.5); background: rgba(251,191,36,0.06); }
+  .sync-step.confirmed { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.06); }
+  .sync-step.expired { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.06); }
+  .sync-step.conflict { border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.08); }
+  .sync-step.block { border-color: rgba(167,139,250,0.4); background: rgba(167,139,250,0.06); }
+
+  .sync-step-num {
+    display: inline-flex; width: 18px; height: 18px; border-radius: 50%;
+    align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; margin-right: 4px;
+    background: var(--bg); border: 1px solid var(--line); color: var(--muted);
+  }
+  .sync-badge {
+    display: inline-block; padding: 2px 6px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; margin-left: 4px;
+  }
+  .sync-badge.draft { background: rgba(251,191,36,0.2); color: var(--yellow); }
+  .sync-badge.pending { background: rgba(251,191,36,0.3); color: var(--yellow); }
+  .sync-badge.confirmed { background: rgba(74,222,128,0.2); color: var(--green); }
+  .sync-badge.expired { background: rgba(239,68,68,0.2); color: var(--red); }
+  .sync-badge.blocked { background: rgba(167,139,250,0.2); color: var(--purple); }
+  .sync-badge.conflict { background: rgba(239,68,68,0.2); color: var(--red); }
+
+  .sync-timer {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--yellow); font-weight: 600;
+    margin-top: 6px;
+  }
+  .sync-timer-bar {
+    flex: 1; height: 4px; border-radius: 2px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .sync-timer-fill {
+    height: 100%; border-radius: 2px;
+    background: var(--yellow);
+  }
+
+  /* Calendar block simulation */
+  .cal-block {
+    padding: 8px 10px; border-radius: 6px;
+    font-size: 11px; line-height: 1.4;
+    margin-top: 6px;
+  }
+  .cal-block.draft {
+    background: rgba(251,191,36,0.1);
+    border: 2px dashed rgba(251,191,36,0.4);
+    color: var(--yellow);
+  }
+  .cal-block.pending {
+    background: rgba(251,191,36,0.15);
+    border: 2px solid rgba(251,191,36,0.5);
+    color: var(--yellow);
+  }
+  .cal-block.confirmed {
+    background: rgba(74,222,128,0.1);
+    border: 2px solid rgba(74,222,128,0.4);
+    color: var(--green);
+  }
+  .cal-block.expired {
+    background: rgba(239,68,68,0.05);
+    border: 2px dashed rgba(239,68,68,0.2);
+    color: var(--dim);
+    text-decoration: line-through;
+  }
+  .cal-block.manual {
+    background: rgba(167,139,250,0.1);
+    border: 2px solid rgba(167,139,250,0.4);
+    color: var(--purple);
+  }
+
+  /* Race condition diagram */
+  .race-diagram {
+    display: grid; grid-template-columns: 1fr 60px 1fr;
+    gap: 0; padding: 16px;
+    font-size: 12px;
+  }
+  .race-col { display: flex; flex-direction: column; gap: 8px; }
+  .race-center {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4px;
+  }
+  .race-clash {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(239,68,68,0.15); border: 2px solid var(--red);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .race-result {
+    padding: 10px 14px; border-radius: 8px;
+    font-size: 12px; line-height: 1.5;
+    text-align: center;
+  }
+  .race-result.win { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: var(--green); }
+  .race-result.lose { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+
   /* State machine pre block */
   .sm-box {
     background: var(--bg-elev); border: 1px solid var(--line); border-radius: 10px;
@@ -149,9 +307,16 @@
   <div class="flow-title">Status State Machine</div>
   <div class="sm-box">
     <pre>
-  <span style="color:var(--blue)">PENDING</span> ─────────────────────────────────────┐
-     │                                          │
-     ├─ operatorka potvrdi ──────► <span style="color:var(--green)">CONFIRMED</span>     │
+  <span style="color:var(--yellow)">DRAFT</span> ──────────────────────────────────────────┐
+     │                                             │
+     ├─ klient dokoncil booking ──► <span style="color:var(--blue)">PENDING</span>          │
+     │                                │             │
+     └─ timeout 30 min ──────────► <span style="color:var(--red)">EXPIRED</span>          │
+          (slot se uvolni)             │             │
+                                       │             │
+  <span style="color:var(--blue)">PENDING</span> ◄──────────────────────────┘             │
+     │                                              │
+     ├─ operatorka potvrdi ──────► <span style="color:var(--green)">CONFIRMED</span>         │
      │                               │          │
      │                               ├─ klient dorazi ──────────► <span style="color:var(--teal)">IN_PROGRESS</span>
      │                               │                                  │
@@ -296,7 +461,7 @@
     <div class="node node-start">
       <div class="node-label">Podminka</div>
       <div class="node-text">Klient ma 3+ navstev + dostal link na TG bota</div>
-      <div class="node-detail">Aktivoval pres deep link: t.me/LovelyGirlsPrahaBot?start=TOKEN</div>
+      <div class="node-detail">Aktivoval pres deep link: t.me/StudioFlowBot?start=TOKEN</div>
     </div>
     <div class="arrow"></div>
     <div class="node node-tg">
@@ -623,17 +788,317 @@
       <div class="tl-title">Klient upgradovan <span class="tl-channel ch-system">System</span></div>
       <div class="tl-desc">total_visits: 6&rarr;7, VIP status zachovan</div>
     </div>
-    <div class="tl-item">
-      <div class="tl-dot"></div>
-      <div class="tl-time">17:05</div>
-      <div class="tl-title">Divka ohodnotila klienta <span class="tl-channel ch-admin">Admin</span></div>
-      <div class="tl-desc">Rating: 5/5, poznamka: "Dochvilny, klidny"</div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ===== FLOW E: Real-time synchronizace (Bot <-> Operatorka) = -->
+<!-- ============================================================ -->
+<div class="flow-section">
+  <div class="flow-title">Flow E: Real-time synchronizace (Bot &#8596; Operatorka)</div>
+
+  <div class="sync-container">
+
+    <!-- ===== Scenario 1: Klient rezervuje pres bota ===== -->
+    <div class="sync-scenario">
+      <div class="sync-scenario-title">
+        <span style="font-size: 16px;">&#9889;</span>
+        Scenar 1: Klient rezervuje pres Telegram bota
+      </div>
+      <div class="sync-columns">
+        <!-- LEFT: Bot -->
+        <div class="sync-col">
+          <div class="sync-col-header bot">&#128241; Telegram Bot</div>
+
+          <div class="sync-step">
+            <span class="sync-step-num">1</span>
+            Klient: <strong>/booking</strong><br>
+            Vybral: <strong>Emily</strong>
+          </div>
+
+          <div class="sync-step">
+            <span class="sync-step-num">2</span>
+            Vybral den: <strong>Pa 13.9.</strong>
+            <div class="sync-timer">
+              &#9202; 30:00 zbyvajici
+              <div class="sync-timer-bar"><div class="sync-timer-fill" style="width: 100%;"></div></div>
+            </div>
+          </div>
+
+          <div class="sync-step">
+            <span class="sync-step-num">3</span>
+            Vybral cas: <strong>16:00</strong><br>
+            Delka: <strong>60 min</strong>
+            <div class="sync-timer">
+              &#9202; 22:15 zbyvajici
+              <div class="sync-timer-bar"><div class="sync-timer-fill" style="width: 74%;"></div></div>
+            </div>
+          </div>
+
+          <div class="sync-step confirmed">
+            <span class="sync-step-num">4</span>
+            <strong>Souhrn odeslan</strong> &#10003;<br>
+            Emily / Pa 13.9. / 16:00-17:00
+            <span class="sync-badge confirmed">PENDING</span>
+          </div>
+        </div>
+
+        <!-- MIDDLE: Arrows -->
+        <div class="sync-middle">
+          <div class="sync-arrow">
+            <div class="sync-arrow-line right"></div>
+            <span style="font-size: 8px;">&#9889;</span>
+          </div>
+          <div class="sync-arrow">
+            <div class="sync-arrow-line right"></div>
+            <span style="font-size: 8px;">&#9889;</span>
+          </div>
+          <div class="sync-arrow">
+            <div class="sync-arrow-line right"></div>
+            <span style="font-size: 8px;">&#9889;</span>
+          </div>
+          <div class="sync-arrow">
+            <div class="sync-arrow-line right"></div>
+            <span style="font-size: 8px;">&#9889;</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: Calendar -->
+        <div class="sync-col">
+          <div class="sync-col-header cal">&#128187; Kalendar operatorky</div>
+
+          <div class="sync-step draft">
+            Kalendar: Emily / Pa 13.9.
+            <div class="cal-block draft">
+              &#128993; ROZPRACOVANA<br>
+              Klient Josef<br>
+              <em style="font-size:10px;">cas zatim neznam</em>
+            </div>
+          </div>
+
+          <div class="sync-step draft">
+            Blok se zpresnil:
+            <div class="cal-block draft">
+              &#128993; DRAFT<br>
+              Josef / Emily<br>
+              Pa 13.9. / ?:?? - ?:??
+              <div style="font-size:10px; margin-top:4px; color:var(--dim);">&#9202; odpocet 30 min</div>
+            </div>
+          </div>
+
+          <div class="sync-step pending">
+            Blok ma presny cas:
+            <div class="cal-block pending">
+              &#128992; DRAFT<br>
+              Josef / Emily<br>
+              Pa 13.9. / 16:00 - 17:00 / 60 min
+              <div style="font-size:10px; margin-top:4px; color:var(--dim);">&#9202; 22:15 zbyva</div>
+            </div>
+          </div>
+
+          <div class="sync-step confirmed">
+            Blok zmeni barvu:
+            <div class="cal-block pending">
+              &#128992; PENDING<br>
+              Josef / Emily<br>
+              Pa 13.9. / 16:00 - 17:00<br>
+              <strong>Ceka na potvrzeni!</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeout subscenario -->
+      <div style="padding: 14px 18px; border-top: 1px solid var(--line); background: rgba(239,68,68,0.04);">
+        <div style="font-size: 12px; font-weight: 700; color: var(--red); margin-bottom: 8px;">
+          &#10060; Alternativa: Klient nedokonci (timeout 30 min)
+        </div>
+        <div class="sync-columns" style="gap:0;">
+          <div class="sync-col" style="padding: 8px 16px;">
+            <div class="sync-step expired">
+              Bot: <em>"Cas na dokonceni rezervace vyprsel. Zacni znovu: /booking"</em>
+              <span class="sync-badge expired">EXPIRED</span>
+            </div>
+          </div>
+          <div class="sync-middle" style="padding: 8px 0;">
+            <div class="sync-arrow">
+              <div class="sync-arrow-line right"></div>
+            </div>
+          </div>
+          <div class="sync-col" style="padding: 8px 16px;">
+            <div class="sync-step expired">
+              Blok zmizi z kalendare:
+              <div class="cal-block expired">
+                Josef / Emily / Pa 13.9.<br>
+                EXPIRED — slot uvolnen
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- ===== Scenario 2: Operatorka rucne blokuje slot ===== -->
+    <div class="sync-scenario">
+      <div class="sync-scenario-title">
+        <span style="font-size: 16px;">&#128274;</span>
+        Scenar 2: Operatorka rucne blokuje slot
+      </div>
+      <div class="sync-columns">
+        <!-- LEFT: Bot -->
+        <div class="sync-col">
+          <div class="sync-col-header bot">&#128241; Telegram Bot</div>
+
+          <div class="sync-step">
+            <span class="sync-step-num">1</span>
+            Klient vybira: Emily / Pa 13.9.<br>
+            Bot nabizi volne casy: <strong>15:30, 16:00, 16:30, 17:00...</strong>
+          </div>
+
+          <div class="sync-step" style="border-color: rgba(239,68,68,0.3);">
+            <span class="sync-step-num">2</span>
+            Bot aktualizuje nabidku:<br>
+            <span style="text-decoration: line-through; color: var(--dim);">16:00</span> <span style="color: var(--red); font-size: 11px;">(prave obsazeno)</span><br>
+            <strong>15:30, 16:30, 17:00...</strong>
+          </div>
+
+          <div class="sync-step conflict" style="margin-top: 6px;">
+            <span style="font-size: 11px; color: var(--red);">Pokud klient PRAVE vybiral 16:00:</span><br>
+            Bot: <em>"Bohuzel, termin 16:00 byl prave obsazen. Vyber jiny:"</em>
+            <span class="sync-badge conflict">SLOT OBSAZEN</span>
+          </div>
+        </div>
+
+        <!-- MIDDLE: Arrows -->
+        <div class="sync-middle">
+          <div class="sync-arrow">
+            <div class="sync-arrow-line left"></div>
+            <span style="font-size: 8px;">&#9889;</span>
+          </div>
+          <div class="sync-arrow">
+            <div class="sync-arrow-line left"></div>
+            <span style="font-size: 8px;">&#9889;</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: Calendar -->
+        <div class="sync-col">
+          <div class="sync-col-header cal">&#128187; Kalendar operatorky</div>
+
+          <div class="sync-step block">
+            <span class="sync-step-num">1</span>
+            Operatorka rucne zadava rezervaci:<br>
+            <strong>Emily / Pa 13.9. / 16:00</strong>
+            <div class="cal-block manual">
+              &#128995; CONFIRMED<br>
+              Milan / Emily<br>
+              Pa 13.9. / 16:00 - 17:00<br>
+              <em style="font-size:10px;">zadano rucne</em>
+            </div>
+          </div>
+
+          <div class="sync-step block">
+            <span class="sync-step-num">2</span>
+            Slot 16:00 okamzite <strong>zablokovan</strong> pro bota
+            <span class="sync-badge blocked">BLOKOVAN</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Scenario 3: Kolize (race condition) ===== -->
+    <div class="sync-scenario">
+      <div class="sync-scenario-title">
+        <span style="font-size: 16px;">&#9888;</span>
+        Scenar 3: Kolize — oba chtejici stejny slot (race condition)
+      </div>
+
+      <div class="race-diagram">
+        <div class="race-col">
+          <div class="sync-col-header bot">&#128241; Klient A (bot)</div>
+          <div class="sync-step" style="text-align: center;">
+            Emily / Pa 16:00<br>
+            <strong>"Potvrzuji"</strong><br>
+            <span style="font-size: 10px; color: var(--dim);">18:31:42.103</span>
+          </div>
+        </div>
+
+        <div class="race-center">
+          <div class="race-clash">&#9889;</div>
+          <div style="font-size: 10px; color: var(--red); font-weight: 700;">KOLIZE</div>
+        </div>
+
+        <div class="race-col">
+          <div class="sync-col-header cal">&#128187; Operatorka (rucne)</div>
+          <div class="sync-step" style="text-align: center;">
+            Emily / Pa 16:00<br>
+            <strong>"Ulozit"</strong><br>
+            <span style="font-size: 10px; color: var(--dim);">18:31:42.287</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 0 18px 16px; text-align: center;">
+        <div style="font-size: 13px; font-weight: 800; color: var(--coral); margin-bottom: 12px;">
+          PRAVIDLO: First-Write-Wins
+        </div>
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">
+          Kdo prvni ulozi do DB, ten ma slot. Druhy dostane notifikaci.
+        </div>
+
+        <div style="display: flex; gap: 16px; justify-content: center;">
+          <div class="race-result win" style="flex: 1; max-width: 200px;">
+            <div style="font-size: 16px; margin-bottom: 4px;">&#10003;</div>
+            <strong>Klient A vyhraje</strong><br>
+            <span style="font-size: 11px; color: var(--muted);">(write: 18:31:42.103)</span><br>
+            <span style="font-size: 11px;">Booking → PENDING</span>
+          </div>
+          <div class="race-result lose" style="flex: 1; max-width: 200px;">
+            <div style="font-size: 16px; margin-bottom: 4px;">&#10060;</div>
+            <strong>Operatorka prohrava</strong><br>
+            <span style="font-size: 11px; color: var(--muted);">(write: 18:31:42.287)</span><br>
+            <span style="font-size: 11px;">"Slot prave obsazen"</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tech note -->
+      <div style="padding: 12px 18px; border-top: 1px solid var(--line); background: var(--bg-elev);">
+        <div style="font-size: 11px; color: var(--dim); line-height: 1.6;">
+          <strong style="color: var(--muted);">Technicke reseni:</strong>
+          Optimistic locking — kazdy slot ma <code style="color:var(--coral);">version</code> counter.
+          UPDATE ... WHERE slot_id = X AND version = Y.
+          Pokud rows_affected = 0 → slot uz nekdo zabral → rollback + notifikace.
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Legend: Calendar block colors ===== -->
+    <div style="background: var(--bg-soft); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-top: 8px;">
+      <div style="font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
+        Barevne kodovani v kalendari
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div class="cal-block draft" style="margin: 0;">
+          &#128993; <strong>DRAFT</strong> — klient rozpracovava (dashed okraj, 30 min timeout)
+        </div>
+        <div class="cal-block pending" style="margin: 0;">
+          &#128992; <strong>PENDING</strong> — ceka na potvrzeni operatorky
+        </div>
+        <div class="cal-block confirmed" style="margin: 0;">
+          &#128994; <strong>CONFIRMED</strong> — potvrzeno, probehl
+        </div>
+        <div class="cal-block expired" style="margin: 0;">
+          &#128308; <strong>EXPIRED</strong> — timeout, slot uvolnen (preskrtnuto)
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <div class="mockup-label">
-  MOCKUP: Flow Diagram &mdash; State machine (10 stavu), Flow A (telefon + rejection/kolize/grace period), Flow B (TG bot + timeout/rebook/expired), Flow C (storno klient + divka), Flow D (no-show eskalace 3 levely), Timeline (kompletni s IN_PROGRESS + body)
+  MOCKUP: Flow Diagram &mdash; State machine (11 stavu + DRAFT), Flow A (telefon + rejection/kolize/grace period), Flow B (TG bot + timeout/rebook/expired), Flow C (storno klient + divka), Flow D (no-show eskalace 3 levely), <strong>Flow E (real-time sync Bot ↔ Operatorka: 3 scenare — bot booking s DRAFT, rucni blokace, race condition + first-write-wins)</strong>, Timeline (kompletni s IN_PROGRESS + body)
 </div>
 
 </body>
