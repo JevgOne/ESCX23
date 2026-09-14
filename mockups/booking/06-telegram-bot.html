@@ -212,27 +212,15 @@
     </div>
 
     <div class="msg msg-bot">
-      <strong>Souhrn:</strong>
+      &#10003; <strong>Rezervace potvrzena!</strong>
+
       Emily
       Pa 13.9.2026 / 16:00 - 17:00
       60 min / 4 500 Kc
       Oblast: Praha 2 — Vinohrady
 
-      <em>Pozadavek odeslan operatorce. Potvrzeni obdrzite do 30 minut.</em>
-      <div class="msg-time">18:32</div>
-    </div>
-
-    <div class="msg-system">Patek 13. zari</div>
-
-    <div class="msg msg-bot">
-      &#10003; <strong>Rezervace potvrzena!</strong>
-
-      Emily
-      DNES Pa 13.9. / 16:00 - 17:00
-      60 min
-
       Adresa vam bude zaslana 1 hodinu pred terminem.
-      <div class="msg-time">09:15</div>
+      <div class="msg-time">18:32</div>
     </div>
 
   </div>
@@ -363,8 +351,161 @@
   </div>
 </div>
 
+<!-- ===== FLOW 5: Tydenni omezeni rozvrhu ===== -->
+<div class="section-title">Flow 5: Rozvrh jen aktualny tyden (Po 0:00 - Ne 23:59)</div>
+
+<div class="chat">
+  <div class="chat-header">
+    <div class="chat-avatar">LG</div>
+    <div>
+      <div class="chat-name">LovelyGirls Praha</div>
+      <div class="chat-status">bot</div>
+    </div>
+  </div>
+  <div class="chat-body">
+
+    <div class="msg-system">Nedele 15. zari (posledni den tydne)</div>
+
+    <div class="msg msg-user">
+      /booking
+      <div class="msg-time">20:15</div>
+    </div>
+
+    <div class="msg msg-bot">
+      Ahoj Josefe! Chces si objednat?
+
+      Vyber si divku:
+      <div class="tg-buttons">
+        <div class="tg-btn">Emily</div>
+        <div class="tg-btn">Nika</div>
+        <div class="tg-btn">Luna</div>
+        <div class="tg-btn">Caty</div>
+      </div>
+      <div class="msg-time">20:15</div>
+    </div>
+
+    <div class="msg msg-user">
+      <em style="color: #7da8c9;">[Emily]</em>
+      <div class="msg-time">20:15</div>
+    </div>
+
+    <div class="msg msg-bot">
+      Emily — dostupne terminy tento tyden:
+
+      <strong>Ne 15.9.</strong> — nepracuje
+
+      <em>Tento tyden uz neni volny termin u Emily.</em>
+
+      Novy rozvrh na dalsi tyden bude dostupny <strong>v pondeli v 0:00</strong>.
+      <div class="tg-buttons">
+        <div class="tg-btn" style="background: rgba(96,165,250,0.2); color: #60a5fa;">&#128276; Sledovat Emily</div>
+        <div class="tg-btn">Jina divka</div>
+      </div>
+      <div class="msg-time">20:15</div>
+    </div>
+
+    <div class="msg msg-user">
+      <em style="color: #7da8c9;">[Sledovat Emily]</em>
+      <div class="msg-time">20:16</div>
+    </div>
+
+    <div class="msg msg-bot">
+      &#10003; Sledovani zapnuto! Poslu ti notifikaci v <strong>pondeli v 0:05</strong>, jakmile bude novy rozvrh Emily dostupny.
+      <div class="msg-time">20:16</div>
+    </div>
+
+    <div class="msg-system">Pondeli 16. zari, 0:05</div>
+
+    <div class="msg msg-bot">
+      &#128276; <strong>Novy rozvrh Emily!</strong>
+
+      Tento tyden (16.9. - 22.9.) pracuje:
+      <strong>Po 16.9.</strong> (11:00-20:00)
+      <strong>Ut 17.9.</strong> (12:00-22:00)
+      <strong>Ct 19.9.</strong> (11:00-22:00)
+      <strong>Pa 20.9.</strong> (11:00-22:00)
+
+      Chces si objednat?
+      <div class="tg-buttons">
+        <div class="tg-btn" style="background: rgba(74,222,128,0.2); color: #4ade80;">&#128197; Objednat u Emily</div>
+      </div>
+      <div class="msg-time">00:05</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== FLOW 5b: Oblibenkyne nepracuje cely tyden ===== -->
+<div class="section-title">Flow 5b: Oblibenkyne nepracuje tento tyden</div>
+
+<div class="chat">
+  <div class="chat-header">
+    <div class="chat-avatar">LG</div>
+    <div>
+      <div class="chat-name">LovelyGirls Praha</div>
+      <div class="chat-status">bot</div>
+    </div>
+  </div>
+  <div class="chat-body">
+
+    <div class="msg msg-user">
+      /booking
+      <div class="msg-time">10:00</div>
+    </div>
+
+    <div class="msg msg-bot">
+      Ahoj Josefe! Chces si objednat?
+
+      Vyber si divku:
+      <div class="tg-buttons">
+        <div class="tg-btn">Nika</div>
+        <div class="tg-btn">Luna</div>
+        <div class="tg-btn">Caty</div>
+        <div class="tg-btn full">Vsechny dostupne &rarr;</div>
+      </div>
+      <div class="msg-time">10:00</div>
+    </div>
+
+    <div class="msg msg-user">
+      Chci Emily
+      <div class="msg-time">10:00</div>
+    </div>
+
+    <div class="msg msg-bot">
+      Emily tento tyden <strong>nepracuje</strong>.
+
+      Chces vedet az bude priste?
+      <div class="tg-buttons">
+        <div class="tg-btn" style="background: rgba(96,165,250,0.2); color: #60a5fa;">&#128276; Ano, sledovat Emily</div>
+        <div class="tg-btn">Jina divka</div>
+        <div class="tg-btn">Zrusit</div>
+      </div>
+      <div class="msg-time">10:00</div>
+    </div>
+
+    <div class="msg msg-user">
+      <em style="color: #7da8c9;">[Sledovat Emily]</em>
+      <div class="msg-time">10:01</div>
+    </div>
+
+    <div class="msg msg-bot">
+      &#10003; Sledovani zapnuto! Poslu ti notifikaci v <strong>pondeli v 0:05</strong> jakmile Emily bude v novem rozvrhu.
+
+      Chces zatim objednat jinou divku?
+      <div class="tg-buttons">
+        <div class="tg-btn">Nika</div>
+        <div class="tg-btn">Luna</div>
+        <div class="tg-btn">Caty</div>
+        <div class="tg-btn">Ne, dekuji</div>
+      </div>
+      <div class="msg-time">10:01</div>
+    </div>
+
+  </div>
+</div>
+
 <div class="mockup-label">
-  MOCKUP: Telegram Bot — 4 flow: booking konverzace, reminder + adresa, notifikace divce, deep link aktivace
+  MOCKUP: Telegram Bot — 6 flow: booking konverzace (auto-confirm, bez cekani na operatorku), reminder + adresa, notifikace divce, deep link aktivace, <strong>tydenni omezeni rozvrhu (Po 0:00 - Ne 23:59, sledovat oblibenkyne, notifikace v Po 0:05)</strong>, oblibenkyne nepracuje
 </div>
 
 </body>

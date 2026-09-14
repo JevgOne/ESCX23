@@ -11,20 +11,22 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
 
-// Load .env.local BEFORE anything reads process.env
+// Load .env.local BEFORE importing modules that read process.env
 config({ path: resolve(__dirname, '..', '.env.local') });
 
-import { handleUpdate, type TelegramUpdate } from '../lib/telegram-bot';
-
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-if (!BOT_TOKEN) {
-  console.error('TELEGRAM_BOT_TOKEN not found in .env.local');
-  process.exit(1);
-}
-
-const API = `https://api.telegram.org/bot${BOT_TOKEN}`;
-
 async function main() {
+  // Dynamic import after env is loaded
+  const { handleUpdate } = await import('../lib/telegram-bot');
+  type TgUpdate = import('../lib/telegram-bot').TelegramUpdate;
+
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  if (!BOT_TOKEN) {
+    console.error('TELEGRAM_BOT_TOKEN not found in .env.local');
+    process.exit(1);
+  }
+
+  const API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+
   // Step 1: Delete webhook so polling works
   console.log('Deleting webhook...');
   const delRes = await fetch(`${API}/deleteWebhook`);
@@ -55,7 +57,7 @@ async function main() {
     try {
       const url = `${API}/getUpdates?offset=${offset}&timeout=30&allowed_updates=${encodeURIComponent(JSON.stringify(['message', 'callback_query']))}`;
       const res = await fetch(url, { signal: AbortSignal.timeout(35000) });
-      const data = await res.json() as { ok: boolean; result?: TelegramUpdate[] };
+      const data = await res.json() as { ok: boolean; result?: TgUpdate[] };
 
       if (!data.ok || !data.result) continue;
 

@@ -142,6 +142,39 @@ async function runMigrations(client: Client) {
     // Table already exists — OK
   }
 
+  // Expand users.role CHECK constraint to include 'operator'
+  // SQLite can't ALTER CHECK — recreate table with new constraint
+  try {
+    // Check if the migration already ran by seeing if operator role works
+    const testResult = await client.execute(
+      "SELECT sql FROM sqlite_master WHERE type='table' AND name='users'"
+    );
+    const tableSql = String(testResult.rows[0]?.sql ?? '');
+    if (tableSql.includes("'operator'") === false && tableSql.includes('role')) {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS users_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          email TEXT NOT NULL UNIQUE,
+          password_hash TEXT NOT NULL,
+          role TEXT NOT NULL CHECK(role IN ('admin', 'manager', 'operator', 'girl')),
+          girl_id INTEGER,
+          display_name TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      await client.execute(`
+        INSERT INTO users_new (id, email, password_hash, role, girl_id, display_name, is_active, created_at, updated_at)
+        SELECT id, email, password_hash, role, girl_id, display_name, is_active, created_at, updated_at FROM users
+      `);
+      await client.execute('DROP TABLE users');
+      await client.execute('ALTER TABLE users_new RENAME TO users');
+    }
+  } catch {
+    // Migration may fail if columns don't exist yet — OK, will retry on next startup
+  }
+
   // Schedule reminders — clients want to be notified when new week schedule is published
   try {
     await client.execute(`
@@ -162,6 +195,65 @@ async function runMigrations(client: Client) {
   try {
     await client.execute(
       'CREATE INDEX IF NOT EXISTS idx_reviews_girl_status ON reviews(girl_id, status)'
+    );
+  } catch {
+    // OK
+  }
+
+  // Security audit log — tracks PII access, auth events, booking changes
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS security_audit_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        user_role TEXT,
+        action TEXT NOT NULL,
+        entity_type TEXT,
+        entity_id INTEGER,
+        ip_hash TEXT,
+        user_agent TEXT,
+        details TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch {
+    // Table already exists — OK
+  }
+
+  try {
+    await client.execute(
+      'CREATE INDEX IF NOT EXISTS idx_audit_action ON security_audit_log(action, created_at)'
+    );
+    await client.execute(
+      'CREATE INDEX IF NOT EXISTS idx_audit_user ON security_audit_log(user_id, created_at)'
+    );
+    await client.execute(
+      'CREATE INDEX IF NOT EXISTS idx_audit_entity ON security_audit_log(entity_type, entity_id)'
+    );
+  } catch {
+    // OK
+  }
+
+  // Girl notifications table (for studio PWA)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS girl_notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        girl_id INTEGER NOT NULL,
+        type TEXT NOT NULL DEFAULT 'default',
+        message TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (girl_id) REFERENCES girls(id) ON DELETE CASCADE
+      )
+    `);
+  } catch {
+    // Table already exists — OK
+  }
+
+  try {
+    await client.execute(
+      'CREATE INDEX IF NOT EXISTS idx_girl_notifs ON girl_notifications(girl_id, is_read, created_at)'
     );
   } catch {
     // OK

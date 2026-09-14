@@ -309,7 +309,11 @@
     <pre>
   <span style="color:var(--yellow)">DRAFT</span> ──────────────────────────────────────────┐
      │                                             │
-     ├─ klient dokoncil booking ──► <span style="color:var(--blue)">PENDING</span>          │
+     ├─ bot: staly klient (3+) ──► <span style="color:var(--green)">CONFIRMED</span>        │  (auto, preskoci PENDING)
+     │    dokoncil booking            │             │
+     │                                │             │
+     ├─ phone: operatorka zada ──► <span style="color:var(--blue)">PENDING</span>          │
+     │    (novy klient)               │             │
      │                                │             │
      └─ timeout 30 min ──────────► <span style="color:var(--red)">EXPIRED</span>          │
           (slot se uvolni)             │             │
@@ -340,7 +344,11 @@
      └─ timeout 60 min ──► <span style="color:var(--red)">EXPIRED</span>
            (auto, klient dostane notifikaci)
 
-  Zdroje: <span style="color:var(--blue)">admin</span> | <span style="color:#229ED9">telegram_bot</span> | <span style="color:var(--blue)">phone</span> | <span style="color:var(--blue)">sms</span> | <span style="color:var(--green)">whatsapp</span></pre>
+  Zdroje: <span style="color:var(--blue)">admin</span> | <span style="color:#229ED9">telegram_bot</span> (auto-confirm) | <span style="color:var(--blue)">phone</span> | <span style="color:var(--blue)">sms</span> | <span style="color:var(--green)">whatsapp</span>
+
+  <span style="color:var(--dim)">POZN: Bot booking jde ROVNOU do CONFIRMED (stali klienti 3+ navstev, overeni).
+        Phone booking noveho klienta jde do PENDING → operatorka potvrdi.
+        Phone booking staleho klienta → operatorka rovnou zada CONFIRMED.</span></pre>
   </div>
 </div>
 
@@ -479,53 +487,56 @@
     </div>
     <div class="arrow"></div>
 
+    <!-- Schedule week constraint -->
+    <div class="node node-system">
+      <div class="node-label">System Rule</div>
+      <div class="node-text">Rozvrh: POUZE aktualny tyden (Po 0:00 - Ne 23:59)</div>
+      <div class="node-detail">Bot nabizi jen dny z aktualniho tydne. Dalsi tyden → "Novy rozvrh bude v pondeli v 0:00".<br>Nabidka: <strong>"Sledovat oblibenkyne"</strong> → notifikace v Po 0:05 kdyz divka bude v novem rozvrhu.<br>Pokud divka nepracuje cely tyden: "Emily tento tyden nepracuje. Chces vedet az bude priste?"</div>
+    </div>
+    <div class="arrow"></div>
+
     <div class="node node-tg">
       <div class="node-text">Bot nabidne: Divka &rarr; Den &rarr; Cas &rarr; Program</div>
-      <div class="node-detail">Inline keyboard buttons. Cas: jen volne sloty (bez kolizi).</div>
+      <div class="node-detail">Inline keyboard buttons. Cas: jen volne sloty (bez kolizi). Dny: jen aktualny tyden.</div>
     </div>
     <div class="arrow"></div>
 
     <!-- Collision check -->
     <div class="node node-warn">
       <div class="node-label">System Check</div>
-      <div class="node-text">Kolize check — slot zablokovan pri PENDING</div>
-      <div class="node-detail">Slot je reserved na 60 min pro tento booking. Jiny klient vidi slot jako obsazeny.</div>
+      <div class="node-text">Kolize check — slot zablokovan pri DRAFT</div>
+      <div class="node-detail">Slot je reserved behem vyberu. Jiny klient vidi slot jako obsazeny.</div>
     </div>
     <div class="arrow"></div>
 
+    <div class="node node-end">
+      <div class="node-label">System (auto)</div>
+      <div class="node-text">Booking vytvoren (status: CONFIRMED)</div>
+      <div class="node-detail">source: "telegram_bot". Staly klient (3+ navstev) = auto-confirm, preskoci PENDING.<br>Operatorka NEPOTRVZUJE — vidi rovnou zeleny blok v kalendari.</div>
+    </div>
+    <div class="arrow"></div>
+
+    <div class="node node-tg">
+      <div class="node-text">Bot posle potvrzeni klientovi IHNED</div>
+      <div class="node-detail">"&#10003; Rezervace potvrzena! Emily / Pa 13.9. / 16:00-17:00 / Praha 2"</div>
+    </div>
+    <div class="arrow"></div>
+    <div class="node node-tg">
+      <div class="node-text">Bot notifikuje divku</div>
+      <div class="node-detail">"Nova rezervace: 16:00, 60 min, VIP klient"</div>
+    </div>
+    <div class="arrow"></div>
     <div class="node node-system">
-      <div class="node-label">System</div>
-      <div class="node-text">Booking vytvoren (status: PENDING)</div>
-      <div class="node-detail">source: "telegram_bot", timeout: 60 min</div>
-    </div>
-    <div class="arrow"></div>
-    <div class="node node-action" style="border-color:var(--purple);background:rgba(167,139,250,0.08)">
-      <div class="node-label">Admin Panel</div>
-      <div class="node-text">Operatorka vidi novy pending booking</div>
-      <div class="node-detail">Audio ping + barevne zvyrazneni v kalendari</div>
+      <div class="node-label">Cron (1h pred)</div>
+      <div class="node-text">Auto reminder + expiring link na adresu</div>
+      <div class="node-detail">Bot posle adresu klientovi (link expiruje po navsteve) + reminder divce</div>
     </div>
     <div class="arrow"></div>
 
-    <!-- 3-way branch: potvrzeno / odmitnuto / timeout -->
+    <!-- 3-way branch: dorazi / zrusi / nedorazi -->
     <div class="branch branch-3">
       <div class="branch-path">
-        <div class="branch-label yes">Potvrzeno</div>
-        <div class="arrow"></div>
-        <div class="node node-tg">
-          <div class="node-text">Bot posle potvrzeni klientovi</div>
-          <div class="node-detail">"Emily / Pa 13.9. / 16:00-17:00 / Praha 2"</div>
-        </div>
-        <div class="arrow"></div>
-        <div class="node node-tg">
-          <div class="node-text">Bot notifikuje divku</div>
-          <div class="node-detail">"Nova rezervace: 16:00, 60 min, VIP klient"</div>
-        </div>
-        <div class="arrow"></div>
-        <div class="node node-system">
-          <div class="node-label">Cron (1h pred)</div>
-          <div class="node-text">Auto reminder + expiring link na adresu</div>
-          <div class="node-detail">Bot posle adresu klientovi (link expiruje po navsteve) + reminder divce</div>
-        </div>
+        <div class="branch-label yes">Klient dorazi</div>
         <div class="arrow"></div>
         <div class="node node-teal">
           <div class="node-text">IN_PROGRESS</div>
@@ -538,29 +549,19 @@
         </div>
       </div>
       <div class="branch-path">
-        <div class="branch-label no">Odmitnuto</div>
+        <div class="branch-label warn">Klient zrusi predem</div>
         <div class="arrow"></div>
-        <div class="node node-tg">
-          <div class="node-text">Bot posle alternativy</div>
-          <div class="node-detail">"Bohuzel obsazeno. Nabizime: 17:30 nebo So 14.9."</div>
-        </div>
-        <div class="arrow"></div>
-        <div class="node node-action">
-          <div class="node-text">Klient vybere alternativu</div>
-          <div class="node-detail">Novy PENDING loop &rarr; znovu na operatorku</div>
+        <div class="node node-warn">
+          <div class="node-text">CANCELLED_CLIENT</div>
+          <div class="node-detail">Slot se uvolni, divka notifikovana.<br>Bot: /zrusit</div>
         </div>
       </div>
       <div class="branch-path">
-        <div class="branch-label warn">Timeout (60 min)</div>
-        <div class="arrow"></div>
-        <div class="node node-system">
-          <div class="node-text">30 min: upozorneni operatorce</div>
-          <div class="node-detail">"Booking #247 ceka 30 min na potvrzeni!"</div>
-        </div>
+        <div class="branch-label no">Klient nedorazi</div>
         <div class="arrow"></div>
         <div class="node node-error">
-          <div class="node-text">EXPIRED</div>
-          <div class="node-detail">Auto po 60 min. Bot posle klientovi: "Omlouvame se, termin nebyl potvrzen. Zkuste znovu."</div>
+          <div class="node-text">NO_SHOW</div>
+          <div class="node-detail">Grace period 15 min, pak eskalace viz Flow D</div>
         </div>
       </div>
     </div>
@@ -737,20 +738,14 @@
     <div class="tl-item">
       <div class="tl-dot done"></div>
       <div class="tl-time">12:15</div>
-      <div class="tl-title">Vytvorena (PENDING) <span class="tl-channel ch-tg">TG Bot</span></div>
-      <div class="tl-desc">Klient JozefN1211 &rarr; Emily / Pa 13.9. 16:00 / 60 min. Timeout: 60 min.</div>
+      <div class="tl-title">Vytvorena + AUTO-CONFIRMED <span class="tl-channel ch-tg">TG Bot</span></div>
+      <div class="tl-desc">Klient JozefN1211 (staly, 6 navstev) &rarr; Emily / Pa 13.9. 16:00 / 60 min. Rovnou CONFIRMED (bez PENDING).</div>
     </div>
     <div class="tl-item">
       <div class="tl-dot done"></div>
-      <div class="tl-time">12:28</div>
-      <div class="tl-title">Potvrzena (CONFIRMED) <span class="tl-channel ch-admin">Admin</span></div>
-      <div class="tl-desc">Operatorka schvalila v admin panelu (za 13 min, pod 60 min limitem)</div>
-    </div>
-    <div class="tl-item">
-      <div class="tl-dot done"></div>
-      <div class="tl-time">12:28</div>
+      <div class="tl-time">12:15</div>
       <div class="tl-title">Potvrzeni odeslano <span class="tl-channel ch-tg">TG Bot</span></div>
-      <div class="tl-desc">Klient dostal: "Emily / Pa 13.9. / 16:00-17:00 / Praha 2"</div>
+      <div class="tl-desc">Klient dostal ihned: "&#10003; Rezervace potvrzena! Emily / Pa 13.9. / 16:00-17:00 / Praha 2"</div>
     </div>
     <div class="tl-item">
       <div class="tl-dot done"></div>
@@ -837,9 +832,9 @@
 
           <div class="sync-step confirmed">
             <span class="sync-step-num">4</span>
-            <strong>Souhrn odeslan</strong> &#10003;<br>
+            <strong>Potvrzeno automaticky</strong> &#10003;<br>
             Emily / Pa 13.9. / 16:00-17:00
-            <span class="sync-badge confirmed">PENDING</span>
+            <span class="sync-badge confirmed">CONFIRMED</span>
           </div>
         </div>
 
@@ -897,12 +892,12 @@
           </div>
 
           <div class="sync-step confirmed">
-            Blok zmeni barvu:
-            <div class="cal-block pending">
-              &#128992; PENDING<br>
+            Blok zmeni barvu na zeleny (auto-confirmed):
+            <div class="cal-block confirmed">
+              &#128994; CONFIRMED<br>
               Josef / Emily<br>
               Pa 13.9. / 16:00 - 17:00<br>
-              <strong>Ceka na potvrzeni!</strong>
+              <em style="font-size:10px;">staly klient — auto-potvrzeno</em>
             </div>
           </div>
         </div>
@@ -1051,7 +1046,7 @@
             <div style="font-size: 16px; margin-bottom: 4px;">&#10003;</div>
             <strong>Klient A vyhraje</strong><br>
             <span style="font-size: 11px; color: var(--muted);">(write: 18:31:42.103)</span><br>
-            <span style="font-size: 11px;">Booking → PENDING</span>
+            <span style="font-size: 11px;">Booking → CONFIRMED</span>
           </div>
           <div class="race-result lose" style="flex: 1; max-width: 200px;">
             <div style="font-size: 16px; margin-bottom: 4px;">&#10060;</div>
@@ -1098,7 +1093,7 @@
 </div>
 
 <div class="mockup-label">
-  MOCKUP: Flow Diagram &mdash; State machine (11 stavu + DRAFT), Flow A (telefon + rejection/kolize/grace period), Flow B (TG bot + timeout/rebook/expired), Flow C (storno klient + divka), Flow D (no-show eskalace 3 levely), <strong>Flow E (real-time sync Bot ↔ Operatorka: 3 scenare — bot booking s DRAFT, rucni blokace, race condition + first-write-wins)</strong>, Timeline (kompletni s IN_PROGRESS + body)
+  MOCKUP: Flow Diagram &mdash; State machine (11 stavu + DRAFT, bot=auto-confirm), Flow A (telefon + rejection/kolize/grace period), Flow B (TG bot: DRAFT→CONFIRMED auto, BEZ operatorky, <strong>rozvrh jen aktualny tyden + sledovat oblibenkyne</strong>), Flow C (storno klient + divka), Flow D (no-show eskalace 3 levely), <strong>Flow E (real-time sync Bot ↔ Operatorka: 3 scenare — bot booking s DRAFT→CONFIRMED, rucni blokace, race condition + first-write-wins)</strong>, Timeline (kompletni s auto-confirm + body)
 </div>
 
 </body>

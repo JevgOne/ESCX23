@@ -168,3 +168,16 @@ CREATE TABLE IF NOT EXISTS slot_locks (
   UNIQUE(girl_id, date, start_time, end_time)
 );
 CREATE INDEX IF NOT EXISTS idx_sl_expires ON slot_locks(expires_at);
+
+-- ----- GIRL NOTIFICATIONS (Studio PWA notification feed) -----
+CREATE TABLE IF NOT EXISTS girl_notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  girl_id INTEGER NOT NULL,
+  type TEXT NOT NULL DEFAULT 'default'
+    CHECK (type IN ('new_booking', 'cancelled', 'reminder', 'schedule_change', 'default')),
+  message TEXT NOT NULL,
+  is_read INTEGER NOT NULL DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_gn_girl ON girl_notifications(girl_id);
+CREATE INDEX IF NOT EXISTS idx_gn_created ON girl_notifications(girl_id, created_at);

@@ -15,6 +15,7 @@ const SESSION_COOKIE = 'escx23_session';
 const SESSION_MAX_AGE_SECONDS: Record<string, number> = {
   admin: 20 * 60,           // 20 minutes inactivity
   manager: 20 * 60,         // 20 minutes inactivity
+  operator: 20 * 60,        // 20 minutes inactivity
   girl: 72 * 60 * 60,      // 72 hours (3 days)
 };
 const REMEMBER_ME_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
@@ -43,7 +44,7 @@ export function resetLoginAttempts(ip: string) {
 export interface AuthUser {
   id: number;
   email: string;
-  role: 'admin' | 'manager' | 'girl';
+  role: 'admin' | 'manager' | 'operator' | 'girl';
   girl_id: number | null;
 }
 
@@ -122,10 +123,10 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   if (result.rows.length === 0) return null;
 
   const row = result.rows[0] as Record<string, unknown>;
-  const role = row.role as 'admin' | 'manager' | 'girl';
+  const role = row.role as 'admin' | 'manager' | 'operator' | 'girl';
 
-  // Sliding window: refresh session on each request (admin/manager only)
-  if (role === 'admin' || role === 'manager') {
+  // Sliding window: refresh session on each request (admin/manager/operator only)
+  if (role === 'admin' || role === 'manager' || role === 'operator') {
     const maxAge = SESSION_MAX_AGE_SECONDS[role] ?? 20 * 60;
     const newToken = createToken(Number(row.id), role, maxAge);
     try {
@@ -165,7 +166,7 @@ export async function authenticate(
   return {
     id: Number(row.id),
     email: String(row.email),
-    role: row.role as 'admin' | 'manager' | 'girl',
+    role: row.role as 'admin' | 'manager' | 'operator' | 'girl',
     girl_id: row.girl_id != null ? Number(row.girl_id) : null,
   };
 }
@@ -200,6 +201,36 @@ export async function requireGirl(): Promise<AuthUser> {
   if (!user || user.role !== 'girl') {
     const locale = await getLocale();
     redirect(`/${locale}/studio/login`);
+  }
+  return user;
+}
+
+/** Require admin or operator role for /booking/* pages. Girls redirect to /studio. */
+export async function requireBooking(): Promise<AuthUser> {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect('/booking');
+  }
+  if (user.role === 'girl') {
+    redirect('/studio/dashboard');
+  }
+  if (user.role !== 'admin' && user.role !== 'operator') {
+    redirect('/booking');
+  }
+  return user;
+}
+
+/** Require admin role specifically for admin-only /booking/* pages (girls, settings, audit, etc.). */
+export async function requireBookingAdmin(): Promise<AuthUser> {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect('/booking');
+  }
+  if (user.role === 'girl') {
+    redirect('/studio/dashboard');
+  }
+  if (user.role !== 'admin') {
+    redirect('/booking/calendar');
   }
   return user;
 }

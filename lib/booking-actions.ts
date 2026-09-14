@@ -1,0 +1,356 @@
+'use server';
+
+import { db } from './db';
+import { requireBooking } from './auth';
+
+// ---------------------------------------------------------------------------
+// Client lookup by phone HMAC or nickname
+// ---------------------------------------------------------------------------
+
+export interface ClientSearchResult {
+  id: number;
+  clientNumber: string;
+  nickname: string;
+  trustLevel: string;
+  totalVisits: number;
+  noShowCount: number;
+  telegramId: string | null;
+  lastVisitDate: string | null;
+  lastVisitGirl: string | null;
+}
+
+export async function searchClient(query: string): Promise<ClientSearchResult | null> {
+  await requireBooking();
+
+  if (!query.trim()) return null;
+
+  // Try exact match on client_number or nickname
+  const result = await db.execute({
+    sql: `
+      SELECT
+        bc.id, bc.client_number, bc.nickname, bc.trust_level,
+        bc.total_visits, bc.no_show_count, bc.telegram_id,
+        (SELECT b.date FROM bookings_v2 b WHERE b.client_id = bc.id ORDER BY b.date DESC LIMIT 1) AS last_date,
+        (SELECT g.name FROM bookings_v2 b JOIN girls g ON g.id = b.girl_id WHERE b.client_id = bc.id ORDER BY b.date DESC LIMIT 1) AS last_girl
+      FROM booking_clients bc
+      WHERE bc.client_number = ? OR bc.nickname = ?
+      LIMIT 1
+    `,
+    args: [query.trim(), query.trim()],
+  });
+
+  if (result.rows.length === 0) return null;
+
+  const r = result.rows[0];
+  return {
+    id: Number(r.id),
+    clientNumber: String(r.client_number),
+    nickname: String(r.nickname),
+    trustLevel: String(r.trust_level),
+    totalVisits: Number(r.total_visits),
+    noShowCount: Number(r.no_show_count),
+    telegramId: r.telegram_id ? String(r.telegram_id) : null,
+    lastVisitDate: r.last_date ? String(r.last_date) : null,
+    lastVisitGirl: r.last_girl ? String(r.last_girl) : null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Available girls for a given date
+// ---------------------------------------------------------------------------
+
+export interface AvailableGirl {
+  id: number;
+  name: string;
+  photoUrl: string | null;
+  shiftStart: string | null;
+  shiftEnd: string | null;
+  locationName: string | null;
+  isWorking: boolean;
+  bookedSlots: string[]; // ["14:00-15:00", "17:00-18:00"]
+}
+
+export async function getAvailableGirls(date: string): Promise<AvailableGirl[]> {
+  await requireBooking();
+
+  const d = new Date(date + 'T12:00:00');
+  const dayOfWeek = d.getDay();
+
+  const result = await db.execute({
+    sql: `
+      SELECT
+        g.id, g.name,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url,
+        gs.start_time AS shift_start, gs.end_time AS shift_end,
+        l.name AS location_name,
+        se.type AS exception_type, se.start_time AS ex_start, se.end_time AS ex_end
+      FROM girls g
+      LEFT JOIN (
+        SELECT girl_id, start_time, end_time, location_id,
+               ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+        FROM girl_schedules WHERE day_of_week = ? AND is_active = 1
+          AND (effective_from IS NULL OR effective_from <= ?)
+      ) gs ON gs.girl_id = g.id AND gs.rn = 1
+      LEFT JOIN locations l ON l.id = gs.location_id
+      LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
+      WHERE g.status IN ('active', 'inactive')
+      ORDER BY
+        CASE WHEN gs.start_time IS NOT NULL THEN 0 ELSE 1 END,
+        g.name
+    `,
+    args: [dayOfWeek, date, date],
+  });
+
+  // Get existing bookings for this date
+  const bookingsRes = await db.execute({
+    sql: `SELECT girl_id, start_time, end_time FROM bookings_v2 WHERE date = ? AND status NOT IN ('expired', 'cancelled_client', 'cancelled_girl')`,
+    args: [date],
+  });
+  const bookedByGirl = new Map<number, string[]>();
+  for (const r of bookingsRes.rows) {
+    const gid = Number(r.girl_id);
+    const slots = bookedByGirl.get(gid) ?? [];
+    slots.push(`${String(r.start_time).substring(0, 5)}-${String(r.end_time).substring(0, 5)}`);
+    bookedByGirl.set(gid, slots);
+  }
+
+  return result.rows.map((r) => {
+    const exType = r.exception_type ? String(r.exception_type) : null;
+    let shiftStart = r.shift_start ? String(r.shift_start).substring(0, 5) : null;
+    let shiftEnd = r.shift_end ? String(r.shift_end).substring(0, 5) : null;
+
+    if (exType === 'unavailable') { shiftStart = null; shiftEnd = null; }
+    else if (exType === 'custom_hours') {
+      shiftStart = r.ex_start ? String(r.ex_start).substring(0, 5) : shiftStart;
+      shiftEnd = r.ex_end ? String(r.ex_end).substring(0, 5) : shiftEnd;
+    }
+
+    return {
+      id: Number(r.id),
+      name: String(r.name),
+      photoUrl: r.photo_url ? String(r.photo_url) : null,
+      shiftStart,
+      shiftEnd,
+      locationName: r.location_name ? String(r.location_name) : null,
+      isWorking: shiftStart !== null && shiftEnd !== null,
+      bookedSlots: bookedByGirl.get(Number(r.id)) ?? [],
+    };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Available time slots for a girl on a date
+// ---------------------------------------------------------------------------
+
+export async function getAvailableSlots(
+  girlId: number,
+  date: string,
+  durationMinutes: number,
+): Promise<{ time: string; available: boolean }[]> {
+  await requireBooking();
+
+  const d = new Date(date + 'T12:00:00');
+  const dayOfWeek = d.getDay();
+
+  // Get girl's shift
+  const shiftRes = await db.execute({
+    sql: `
+      SELECT gs.start_time, gs.end_time, se.type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
+      FROM girls g
+      LEFT JOIN (
+        SELECT girl_id, start_time, end_time,
+               ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+        FROM girl_schedules WHERE girl_id = ? AND day_of_week = ? AND is_active = 1
+          AND (effective_from IS NULL OR effective_from <= ?)
+      ) gs ON gs.girl_id = g.id AND gs.rn = 1
+      LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
+      WHERE g.id = ?
+    `,
+    args: [girlId, dayOfWeek, date, date, girlId],
+  });
+
+  if (shiftRes.rows.length === 0) return [];
+
+  const row = shiftRes.rows[0];
+  const exType = row.ex_type ? String(row.ex_type) : null;
+  let shiftStart = row.start_time ? String(row.start_time).substring(0, 5) : null;
+  let shiftEnd = row.end_time ? String(row.end_time).substring(0, 5) : null;
+
+  if (exType === 'unavailable') return [];
+  if (exType === 'custom_hours') {
+    shiftStart = row.ex_start ? String(row.ex_start).substring(0, 5) : shiftStart;
+    shiftEnd = row.ex_end ? String(row.ex_end).substring(0, 5) : shiftEnd;
+  }
+
+  if (!shiftStart || !shiftEnd) return [];
+
+  // Get existing bookings
+  const bookingsRes = await db.execute({
+    sql: `SELECT start_time, end_time FROM bookings_v2 WHERE girl_id = ? AND date = ? AND status NOT IN ('expired', 'cancelled_client', 'cancelled_girl')`,
+    args: [girlId, date],
+  });
+
+  const bookedRanges = bookingsRes.rows.map((r) => ({
+    start: String(r.start_time).substring(0, 5),
+    end: String(r.end_time).substring(0, 5),
+  }));
+
+  // Generate 30-min slots within shift
+  const [sh, sm] = shiftStart.split(':').map(Number);
+  const [eh, em] = shiftEnd.split(':').map(Number);
+  const shiftStartMin = sh * 60 + sm;
+  const shiftEndMin = eh * 60 + em;
+
+  const slots: { time: string; available: boolean }[] = [];
+
+  for (let min = shiftStartMin; min + durationMinutes <= shiftEndMin; min += 30) {
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const endMin = min + durationMinutes;
+    const endH = Math.floor(endMin / 60);
+    const endM = endMin % 60;
+    const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+    // Check overlap with existing bookings
+    const isAvailable = !bookedRanges.some((b) => {
+      const [bsh, bsm] = b.start.split(':').map(Number);
+      const [beh, bem] = b.end.split(':').map(Number);
+      const bStart = bsh * 60 + bsm;
+      const bEnd = beh * 60 + bem;
+      return min < bEnd && endMin > bStart;
+    });
+
+    slots.push({ time, available: isAvailable });
+  }
+
+  return slots;
+}
+
+// ---------------------------------------------------------------------------
+// Create booking
+// ---------------------------------------------------------------------------
+
+export interface CreateBookingInput {
+  clientId: number;
+  girlId: number;
+  date: string;
+  startTime: string;
+  durationMinutes: number;
+  channel: string;
+  notes?: string;
+}
+
+export async function createBooking(input: CreateBookingInput): Promise<{ id: number } | { error: string }> {
+  const user = await requireBooking();
+
+  // Calculate end time
+  const [h, m] = input.startTime.split(':').map(Number);
+  const endMin = h * 60 + m + input.durationMinutes;
+  const endH = Math.floor(endMin / 60);
+  const endM = endMin % 60;
+  const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+  // Check for conflicts
+  const conflicts = await db.execute({
+    sql: `
+      SELECT id FROM bookings_v2
+      WHERE girl_id = ? AND date = ?
+        AND status NOT IN ('expired', 'cancelled_client', 'cancelled_girl')
+        AND (
+          (start_time < ? AND end_time > ?)
+        )
+    `,
+    args: [input.girlId, input.date, endTime, input.startTime],
+  });
+
+  if (conflicts.rows.length > 0) {
+    return { error: 'Casovy konflikt — termin je obsazeny.' };
+  }
+
+  // Get girl name for points calculation
+  const girlRes = await db.execute({
+    sql: 'SELECT name FROM girls WHERE id = ?',
+    args: [input.girlId],
+  });
+  const girlName = girlRes.rows[0] ? String(girlRes.rows[0].name) : '?';
+
+  // Get price from pricing_plans
+  const priceRes = await db.execute({
+    sql: 'SELECT base_price FROM pricing_plans WHERE duration = ? LIMIT 1',
+    args: [input.durationMinutes],
+  });
+  const price = priceRes.rows[0] ? Number(priceRes.rows[0].base_price) : null;
+
+  // Points = price (1 CZK = 1 point)
+  const points = price ?? 0;
+
+  // Get location from girl's schedule for this date
+  const d = new Date(input.date + 'T12:00:00');
+  const dayOfWeek = d.getDay();
+  const locRes = await db.execute({
+    sql: `
+      SELECT gs.location_id FROM girl_schedules gs
+      WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
+        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
+      ORDER BY gs.effective_from DESC NULLS LAST LIMIT 1
+    `,
+    args: [input.girlId, dayOfWeek, input.date],
+  });
+  const locationId = locRes.rows[0] ? Number(locRes.rows[0].location_id) : null;
+
+  const result = await db.execute({
+    sql: `
+      INSERT INTO bookings_v2 (
+        client_id, girl_id, location_id, date, start_time, end_time,
+        duration_minutes, price, points_earned, status, channel,
+        source, notes, created_by, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, 'manual', ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `,
+    args: [
+      input.clientId, input.girlId, locationId, input.date,
+      input.startTime, endTime, input.durationMinutes,
+      price, points, input.channel,
+      input.notes ?? null, user.id,
+    ],
+  });
+
+  const bookingId = Number(result.lastInsertRowid);
+
+  // Update client total_visits
+  await db.execute({
+    sql: 'UPDATE booking_clients SET total_visits = total_visits + 1, total_points = total_points + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    args: [points, input.clientId],
+  });
+
+  return { id: bookingId };
+}
+
+// ---------------------------------------------------------------------------
+// Create new client (quick inline)
+// ---------------------------------------------------------------------------
+
+export async function createClient(
+  nickname: string,
+  channel: string,
+): Promise<{ id: number; clientNumber: string }> {
+  await requireBooking();
+
+  // Generate client number
+  const countRes = await db.execute('SELECT COUNT(*) AS c FROM booking_clients');
+  const count = Number(countRes.rows[0]?.c ?? 0);
+  const clientNumber = `KLIENT${String(count + 1).padStart(4, '0')}`;
+
+  const result = await db.execute({
+    sql: `
+      INSERT INTO booking_clients (client_number, nickname, source, trust_level, created_at, updated_at)
+      VALUES (?, ?, ?, 'new', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `,
+    args: [clientNumber, nickname, channel],
+  });
+
+  return {
+    id: Number(result.lastInsertRowid),
+    clientNumber,
+  };
+}

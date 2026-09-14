@@ -855,38 +855,30 @@
             <div class="dash-card-icon">&#128131;</div>
           </div>
           <div class="dash-card">
-            <div class="dash-card-label">TG Bot pending</div>
-            <div class="dash-card-value" style="color: var(--telegram);">2</div>
-            <div class="dash-card-sub">ceka na potvrzeni</div>
+            <div class="dash-card-label">TG Bot dnes</div>
+            <div class="dash-card-value" style="color: var(--telegram);">4</div>
+            <div class="dash-card-sub">auto-potvrzeno</div>
             <div class="dash-card-icon">&#129302;</div>
           </div>
         </div>
 
-        <!-- Pending bookings -->
+        <!-- Pending bookings (only manual phone bookings — bot bookings are auto-confirmed) -->
         <div class="dash-section-title">Cekajici na potvrzeni</div>
         <div class="pending-list">
-          <div class="pending-item">
-            <div class="pending-dot tg"></div>
-            <div class="pending-info">
-              <div class="pi-main">Emily / JozefN1211 — 16:00 (60 min)</div>
-              <div class="pi-sub">Telegram bot / pred 12 min</div>
-            </div>
-            <div class="pending-actions">
-              <button class="pending-btn accept">&#10003; Potvrdit</button>
-              <button class="pending-btn reject">&#10005;</button>
-            </div>
-          </div>
           <div class="pending-item">
             <div class="pending-dot phone"></div>
             <div class="pending-info">
               <div class="pi-main">Nika / NOVY1309 — 19:30 (30 min)</div>
-              <div class="pi-sub">Telefon / pred 45 min</div>
+              <div class="pi-sub">Telefon / novy klient / pred 45 min</div>
             </div>
             <div class="pending-actions">
               <button class="pending-btn accept">&#10003; Potvrdit</button>
               <button class="pending-btn reject">&#10005;</button>
             </div>
           </div>
+        </div>
+        <div style="padding: 0 24px 8px; font-size: 11px; color: var(--dim);">
+          Bot bookings se zobrazuji rovnou v kalendari jako zelene bloky (auto-confirmed pro stale klienty 3+ navstev).
         </div>
 
         <!-- Weekly chart -->

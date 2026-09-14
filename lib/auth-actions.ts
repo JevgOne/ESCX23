@@ -63,6 +63,36 @@ export async function loginGirl(formData: FormData) {
   redirect(`/${locale}/studio`);
 }
 
+export async function loginBooking(formData: FormData) {
+  const email = String(formData.get('email') ?? '');
+  const password = String(formData.get('password') ?? '');
+  const remember = formData.get('remember') === 'on';
+  const ip = await getClientIP();
+
+  if (!checkLoginRateLimit(ip)) {
+    redirect('/booking?error=ratelimit');
+  }
+
+  const user = await authenticate(email, password);
+
+  if (!user) {
+    redirect('/booking?error=invalid');
+  }
+
+  resetLoginAttempts(ip);
+  await setSession(user.id, user.role, remember);
+
+  // Role-based redirect
+  if (user.role === 'girl') {
+    redirect('/studio/dashboard');
+  }
+  if (user.role === 'operator') {
+    redirect('/booking/calendar');
+  }
+  // admin (and manager as fallback) → dashboard
+  redirect('/booking/dashboard');
+}
+
 export async function logoutAction() {
   const user = await getCurrentUser();
   const locale = await getLocale();
@@ -71,5 +101,13 @@ export async function logoutAction() {
   if (user?.role === 'girl') {
     redirect(`/${locale}/studio/login`);
   }
+  if (user?.role === 'operator') {
+    redirect('/booking');
+  }
   redirect(`/${locale}/admin/login`);
+}
+
+export async function logoutBookingAction() {
+  await clearSession();
+  redirect('/booking');
 }
