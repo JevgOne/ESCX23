@@ -45,6 +45,28 @@ export async function answerCallbackQuery(
   return res.ok;
 }
 
+export async function sendPhoto(
+  chatId: string | number,
+  photoUrl: string,
+  opts?: { caption?: string; parseMode?: 'HTML' | 'Markdown'; replyMarkup?: unknown },
+): Promise<boolean> {
+  const res = await fetch(`${API}/sendPhoto`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      photo: photoUrl,
+      ...(opts?.caption ? { caption: opts.caption, parse_mode: opts?.parseMode ?? 'HTML' } : {}),
+      ...(opts?.replyMarkup ? { reply_markup: opts.replyMarkup } : {}),
+    }),
+  });
+  if (!res.ok) {
+    console.error('[telegram] sendPhoto failed:', await res.text());
+    return false;
+  }
+  return true;
+}
+
 export async function editMessageText(
   chatId: string | number,
   messageId: number,

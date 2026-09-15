@@ -119,6 +119,8 @@ async function saveMessage(
 // ---------------------------------------------------------------------------
 
 function callbackDataToText(data: string): string | null {
+  // Booking flow callbacks — handled directly in telegram-bot.ts, never via AI
+  if (data.startsWith('bk_')) return null;
   if (data.startsWith('girl:')) return data.slice(5);
   if (data.startsWith('time:')) return data.slice(5);
   if (data.startsWith('dur:')) return `${data.slice(4)} min`;

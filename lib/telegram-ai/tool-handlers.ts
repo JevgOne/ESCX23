@@ -1,5 +1,7 @@
 import { db } from '../db';
+import { sendPhoto } from '../telegram';
 import { logAudit } from '../audit';
+import { startBookingFlow } from './booking-flow';
 import type { ClientContext } from './types';
 
 // ---------------------------------------------------------------------------
@@ -31,12 +33,6 @@ function getWeekSunday(): string {
   return `${sun.getFullYear()}-${String(sun.getMonth() + 1).padStart(2, '0')}-${String(sun.getDate()).padStart(2, '0')}`;
 }
 
-function addMinutes(time: string, mins: number): string {
-  const [h, m] = time.split(':').map(Number);
-  const total = h * 60 + m + mins;
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
-}
-
 // ---------------------------------------------------------------------------
 // Main dispatcher
 // ---------------------------------------------------------------------------
@@ -48,16 +44,17 @@ export async function handleToolCall(
 ): Promise<string> {
   try {
     switch (name) {
-      case 'getAvailableGirls': return await getAvailableGirls(input);
+      case 'getAvailableGirls': return await getAvailableGirls(input, ctx);
       case 'getGirlProfile': return await getGirlProfile(input);
       case 'searchGirls': return await searchGirls(input);
       case 'checkAvailability': return await checkAvailability(input);
       case 'getWeekSchedule': return await getWeekSchedule(input);
       case 'getPricing': return await getPricing();
-      case 'createBooking': return await createBooking(input, ctx);
       case 'getClientBookings': return await getClientBookings(input, ctx);
       case 'cancelBooking': return await cancelBooking(input, ctx);
       case 'subscribeToGirl': return await subscribeToGirl(input, ctx);
+      case 'sendGirlPhoto': return await handleSendGirlPhoto(input, ctx);
+      case 'startBookingFlow': return await handleStartBookingFlow(input, ctx);
       default: return JSON.stringify({ error: 'Unknown tool' });
     }
   } catch (error) {
@@ -70,42 +67,97 @@ export async function handleToolCall(
 // Tool implementations
 // ---------------------------------------------------------------------------
 
-async function getAvailableGirls(input: Record<string, unknown>): Promise<string> {
+async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientContext): Promise<string> {
   const date = (input.date as string) || getPragueToday();
   const d = new Date(date + 'T12:00:00');
   const dayOfWeek = d.getDay();
 
+  // Single query: LEFT JOIN from girls so exception-only schedules are included
+  // Also fetch primary photo URL to send photos automatically
   const result = await db.execute({
     sql: `
-      SELECT g.id, g.name, g.age, g.hair, g.nationality,
-             gs.start_time, gs.end_time, l.name AS location_name
+      SELECT
+        g.id, g.name, g.age, g.hair, g.nationality, g.rating, g.reviews_count,
+        gs.start_time AS shift_start, gs.end_time AS shift_end,
+        l.name AS location_name,
+        se.exception_type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
       FROM girls g
-      JOIN girl_schedules gs ON g.id = gs.girl_id
-        AND gs.day_of_week = ? AND gs.is_active = 1
-        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
+      LEFT JOIN (
+        SELECT girl_id, start_time, end_time, location_id,
+               ROW_NUMBER() OVER (PARTITION BY girl_id ORDER BY effective_from DESC NULLS LAST) AS rn
+        FROM girl_schedules
+        WHERE day_of_week = ? AND is_active = 1
+          AND (effective_from IS NULL OR effective_from <= ?)
+      ) gs ON gs.girl_id = g.id AND gs.rn = 1
       LEFT JOIN locations l ON l.id = gs.location_id
+      LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status = 'active'
-        AND NOT EXISTS (
-          SELECT 1 FROM schedule_exceptions se
-          WHERE se.girl_id = g.id AND se.date = ? AND se.type = 'unavailable'
-        )
       ORDER BY g.name
     `,
     args: [dayOfWeek, date, date],
   });
 
-  const girls = result.rows.map((r) => ({
-    id: Number(r.id),
-    name: String(r.name),
-    age: Number(r.age),
-    hair: r.hair ? String(r.hair) : null,
-    nationality: r.nationality ? String(r.nationality) : null,
-    shiftStart: String(r.start_time).substring(0, 5),
-    shiftEnd: String(r.end_time).substring(0, 5),
-    location: r.location_name ? String(r.location_name) : null,
-  }));
+  const girls: {
+    id: number;
+    name: string;
+    age: number;
+    hair: string | null;
+    nationality: string | null;
+    rating: number | null;
+    reviewsCount: number;
+    shiftStart: string;
+    shiftEnd: string;
+    location: string | null;
+    photoUrl: string | null;
+  }[] = [];
 
-  return JSON.stringify({ date, girls, count: girls.length });
+  for (const r of result.rows) {
+    const exType = r.ex_type ? String(r.ex_type) : null;
+
+    // Skip if explicitly unavailable
+    if (exType === 'unavailable') continue;
+
+    let shiftStart = r.shift_start ? String(r.shift_start).substring(0, 5) : null;
+    let shiftEnd = r.shift_end ? String(r.shift_end).substring(0, 5) : null;
+
+    if (exType === 'custom_hours') {
+      shiftStart = r.ex_start ? String(r.ex_start).substring(0, 5) : shiftStart;
+      shiftEnd = r.ex_end ? String(r.ex_end).substring(0, 5) : shiftEnd;
+    }
+
+    // Girl must have a shift (either from regular schedule or exception)
+    if (!shiftStart || !shiftEnd) continue;
+
+    girls.push({
+      id: Number(r.id),
+      name: String(r.name),
+      age: Number(r.age),
+      hair: r.hair ? String(r.hair) : null,
+      nationality: r.nationality ? String(r.nationality) : null,
+      rating: r.rating ? Number(r.rating) : null,
+      reviewsCount: r.reviews_count ? Number(r.reviews_count) : 0,
+      shiftStart,
+      shiftEnd,
+      location: r.location_name ? String(r.location_name) : null,
+      photoUrl: r.photo_url ? String(r.photo_url) : null,
+    });
+  }
+
+  // Send photos of all available girls directly into the chat
+  for (const g of girls) {
+    if (g.photoUrl) {
+      const caption = `<b>${g.name}</b>, ${g.age} let` +
+        (g.rating ? ` ⭐ ${g.rating}/5` + (g.reviewsCount ? ` (${g.reviewsCount} recenzi)` : '') : '') +
+        `\n🟢 ${g.shiftStart} – ${g.shiftEnd}` +
+        (g.location ? `\n📍 ${g.location}` : '');
+      await sendPhoto(ctx.chatId, g.photoUrl, { caption }).catch((err) => {
+        console.error(`[telegram-ai] Failed to send photo for ${g.name}:`, err);
+      });
+    }
+  }
+
+  return JSON.stringify({ date, girls, count: girls.length, photosSent: true });
 }
 
 async function getGirlProfile(input: Record<string, unknown>): Promise<string> {
@@ -219,13 +271,30 @@ async function searchGirls(input: Record<string, unknown>): Promise<string> {
     const dow = new Date(date + 'T12:00:00').getDay();
     const available: typeof girls = [];
     for (const g of girls) {
+      // Check regular schedule OR exception-based schedule
       const sched = await db.execute({
         sql: `SELECT 1 FROM girl_schedules
               WHERE girl_id = ? AND day_of_week = ? AND is_active = 1
+                AND (effective_from IS NULL OR effective_from <= ?)
               LIMIT 1`,
-        args: [g.id, dow],
+        args: [g.id, dow, date],
       });
-      if (sched.rows.length > 0) available.push(g);
+      if (sched.rows.length > 0) {
+        // Has regular schedule — check if not marked unavailable
+        const ex = await db.execute({
+          sql: `SELECT exception_type FROM schedule_exceptions WHERE girl_id = ? AND date = ? LIMIT 1`,
+          args: [g.id, date],
+        });
+        if (ex.rows.length > 0 && String(ex.rows[0].exception_type) === 'unavailable') continue;
+        available.push(g);
+      } else {
+        // No regular schedule — check for custom_hours exception
+        const ex = await db.execute({
+          sql: `SELECT 1 FROM schedule_exceptions WHERE girl_id = ? AND date = ? AND exception_type = 'custom_hours' LIMIT 1`,
+          args: [g.id, date],
+        });
+        if (ex.rows.length > 0) available.push(g);
+      }
     }
     girls = available;
   }
@@ -241,7 +310,7 @@ async function checkAvailability(input: Record<string, unknown>): Promise<string
   // 1. Get shift
   const shiftResult = await db.execute({
     sql: `SELECT gs.start_time, gs.end_time,
-                 se.type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
+                 se.exception_type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
           FROM girl_schedules gs
           LEFT JOIN schedule_exceptions se ON se.girl_id = gs.girl_id AND se.date = ?
           WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
@@ -343,7 +412,7 @@ async function getWeekSchedule(input: Record<string, unknown>): Promise<string> 
 
     const result = await db.execute({
       sql: `SELECT gs.start_time, gs.end_time, l.name AS location_name,
-                   se.type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
+                   se.exception_type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
             FROM girl_schedules gs
             LEFT JOIN locations l ON l.id = gs.location_id
             LEFT JOIN schedule_exceptions se ON se.girl_id = gs.girl_id AND se.date = ?
@@ -399,127 +468,6 @@ async function getPricing(): Promise<string> {
   return JSON.stringify({
     plans,
     note: 'Ceny v CZK. Nocni cena plati od 22:00 do 6:00.',
-  });
-}
-
-async function createBooking(
-  input: Record<string, unknown>,
-  ctx: ClientContext,
-): Promise<string> {
-  if (!ctx.isRegistered || !ctx.clientId) {
-    return JSON.stringify({ error: 'Pro rezervaci musis byt registrovany klient.' });
-  }
-  if (ctx.totalVisits < 3) {
-    return JSON.stringify({ error: 'Rezervace pres bota je dostupna od 3 navstev. Zavolej nam pro objednani.' });
-  }
-  if (ctx.isBanned) {
-    return JSON.stringify({ error: 'Tvuj ucet je zablokovany. Kontaktuj studio.' });
-  }
-
-  const girlId = Number(input.girlId);
-  const date = String(input.date);
-  const startTime = String(input.startTime);
-  const duration = Number(input.durationMinutes);
-
-  // Validate date is in current week
-  const weekMon = getWeekMonday();
-  const weekSun = getWeekSunday();
-  if (date < weekMon || date > weekSun) {
-    return JSON.stringify({ error: 'Lze bookovat pouze aktualni tyden.' });
-  }
-
-  // Validate duration
-  if (![30, 45, 60, 90, 120].includes(duration)) {
-    return JSON.stringify({ error: 'Platne delky: 30, 45, 60, 90, 120 minut.' });
-  }
-
-  const endTime = addMinutes(startTime, duration);
-
-  // Check availability first
-  const availJson = await checkAvailability({ girlId, date });
-  const avail = JSON.parse(availJson);
-  if (!avail.available) {
-    return JSON.stringify({ error: avail.reason ?? 'Divka neni dostupna.' });
-  }
-  if (!avail.freeSlots.includes(startTime)) {
-    return JSON.stringify({ error: `Slot ${startTime} neni volny. Volne: ${avail.freeSlots.slice(0, 5).join(', ')}` });
-  }
-
-  // Get price
-  const priceResult = await db.execute({
-    sql: 'SELECT price, night_price FROM pricing_plans WHERE duration = ? LIMIT 1',
-    args: [duration],
-  });
-  const priceRow = priceResult.rows[0];
-  const [sh] = startTime.split(':').map(Number);
-  const isNight = sh >= 22 || sh < 6;
-  const price = priceRow
-    ? (isNight && priceRow.night_price ? Number(priceRow.night_price) : Number(priceRow.price))
-    : 0;
-
-  // Slot lock
-  try {
-    await db.execute({
-      sql: `INSERT INTO slot_locks (girl_id, date, start_time, end_time, locked_by, expires_at)
-            VALUES (?, ?, ?, ?, 'ai_booking', datetime('now', '+5 minutes'))`,
-      args: [girlId, date, startTime, endTime],
-    });
-  } catch {
-    return JSON.stringify({ error: 'Slot je prave obsazovany nekym jinym. Zkus jiny cas.' });
-  }
-
-  // Create booking (auto-confirmed for established clients via bot)
-  const bookingResult = await db.execute({
-    sql: `INSERT INTO bookings_v2 (
-            client_id, girl_id, date, start_time, end_time, duration_minutes,
-            price, points_earned, status, source, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', 'ai_operator', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-    args: [ctx.clientId, girlId, date, startTime, endTime, duration, price, price],
-  });
-
-  const bookingId = Number(bookingResult.lastInsertRowid);
-
-  // Update slot lock
-  await db.execute({
-    sql: `UPDATE slot_locks SET locked_by = ? WHERE girl_id = ? AND date = ? AND start_time = ? AND end_time = ?`,
-    args: [`booking:${bookingId}`, girlId, date, startTime, endTime],
-  }).catch(() => {});
-
-  // Audit log
-  logAudit({
-    bookingId,
-    userId: ctx.clientId,
-    action: 'booking.create',
-    actorType: 'bot',
-    entityType: 'booking',
-    entityId: bookingId,
-    details: { source: 'ai_operator', chatId: ctx.chatId },
-  }).catch(() => {});
-
-  // Get girl name and location for confirmation
-  const girlResult = await db.execute({
-    sql: `SELECT g.name, l.name AS location_name
-          FROM girls g
-          LEFT JOIN girl_schedules gs ON gs.girl_id = g.id AND gs.day_of_week = ? AND gs.is_active = 1
-          LEFT JOIN locations l ON l.id = gs.location_id
-          WHERE g.id = ?
-          LIMIT 1`,
-    args: [new Date(date + 'T12:00:00').getDay(), girlId],
-  });
-  const girlName = girlResult.rows[0] ? String(girlResult.rows[0].name) : '—';
-  const location = girlResult.rows[0]?.location_name ? String(girlResult.rows[0].location_name) : null;
-
-  return JSON.stringify({
-    success: true,
-    bookingId,
-    girl: girlName,
-    date,
-    startTime,
-    endTime,
-    duration,
-    price,
-    location,
-    status: 'confirmed',
   });
 }
 
@@ -626,6 +574,74 @@ async function cancelBooking(
   }).catch(() => {});
 
   return JSON.stringify({ success: true, bookingId, status: 'cancelled_client' });
+}
+
+async function handleSendGirlPhoto(
+  input: Record<string, unknown>,
+  ctx: ClientContext,
+): Promise<string> {
+  const girlId = Number(input.girlId);
+  const caption = input.caption as string | undefined;
+
+  // Get girl name + primary photo URL
+  const result = await db.execute({
+    sql: `SELECT g.name,
+                 (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
+          FROM girls g
+          WHERE g.id = ? AND g.status = 'active'
+          LIMIT 1`,
+    args: [girlId],
+  });
+
+  if (result.rows.length === 0) {
+    return JSON.stringify({ error: 'Divka nenalezena.' });
+  }
+
+  const girlName = String(result.rows[0].name);
+  const photoUrl = result.rows[0].photo_url ? String(result.rows[0].photo_url) : null;
+
+  if (!photoUrl) {
+    return JSON.stringify({ error: `${girlName} nema zadnou fotku.` });
+  }
+
+  // Send photo to Telegram
+  const sent = await sendPhoto(ctx.chatId, photoUrl, {
+    caption: caption || undefined,
+  });
+
+  if (!sent) {
+    return JSON.stringify({ error: 'Nepodarilo se odeslat fotku.' });
+  }
+
+  return JSON.stringify({
+    success: true,
+    girlName,
+    photoSent: true,
+    message: `Fotka ${girlName} odeslana klientovi.`,
+  });
+}
+
+async function handleStartBookingFlow(
+  input: Record<string, unknown>,
+  ctx: ClientContext,
+): Promise<string> {
+  const girlId = Number(input.girlId);
+  const date = String(input.date);
+
+  try {
+    const result = await startBookingFlow(ctx.chatId, ctx, girlId, date);
+    return JSON.stringify({
+      success: true,
+      sessionId: result.sessionId,
+      girlName: result.girlName,
+      date: result.date,
+      message: 'Booking flow spusten — klient nyni vybira cas pres tlacitka. NEODPOVIDEJ textem, flow pokracuje automaticky.',
+    });
+  } catch (error) {
+    return JSON.stringify({
+      error: error instanceof Error ? error.message : 'Nepodarilo se spustit booking flow.',
+    });
+  }
 }
 
 async function subscribeToGirl(

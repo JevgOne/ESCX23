@@ -87,21 +87,6 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
-    name: 'createBooking',
-    description:
-      'Vytvori potvrzenou rezervaci. POUZE pro registrovane klienty s 3+ navstevami. Auto-confirmed.',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        girlId: { type: 'integer', description: 'ID divky' },
-        date: { type: 'string', description: 'Datum YYYY-MM-DD' },
-        startTime: { type: 'string', description: 'Cas zacatku HH:MM' },
-        durationMinutes: { type: 'integer', description: 'Delka v minutach: 30, 45, 60, 90, nebo 120' },
-      },
-      required: ['girlId', 'date', 'startTime', 'durationMinutes'],
-    },
-  },
-  {
     name: 'getClientBookings',
     description: 'Aktivni a nadchazejici rezervace klienta.',
     input_schema: {
@@ -135,6 +120,37 @@ export const TOOLS: Anthropic.Tool[] = [
         girlId: { type: 'integer', description: 'ID divky k sledovani' },
       },
       required: ['girlId'],
+    },
+  },
+  {
+    name: 'sendGirlPhoto',
+    description:
+      'Posle klientovi fotku divky do Telegramu. Pouzij kdyz popisujes divku, ' +
+      'nebo kdyz klient chce videt jak vypada. Posle hlavni profilovou fotku.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        girlId: { type: 'integer', description: 'ID divky' },
+        caption: { type: 'string', description: 'Volitelny popisek pod fotkou (HTML)' },
+      },
+      required: ['girlId'],
+    },
+  },
+  {
+    name: 'startBookingFlow',
+    description:
+      'Spusti strukturovany booking flow s inline tlacitky (BEZ dalsich AI volani). ' +
+      'Pouzij kdyz VIS kterou divku klient chce A na jaky den. ' +
+      'NEPOUZIVEJ kdyz klient jeste nevi koho chce — pak pomahej prirozene. ' +
+      'Bot sam nabidne casove sloty, delky programu a potvrzeni pres tlacitka. ' +
+      'Po zavolani uz NEODPOVIDEJ textem — flow pokracuje automaticky.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        girlId: { type: 'integer', description: 'ID divky' },
+        date: { type: 'string', description: 'Datum YYYY-MM-DD' },
+      },
+      required: ['girlId', 'date'],
     },
   },
 ];
