@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
 // Hardcoded girl name → ID mapping (primary, reliable)
 const GIRL_ID_MAP: Record<string, number> = {
@@ -108,6 +109,30 @@ export async function POST(request: Request) {
       }
 
       results.push(`Imported ${imported} bookings, skipped ${skipped}`);
+    }
+
+    // 3. Create user account
+    if (body.createUser) {
+      const { email, password, role, displayName } = body.createUser;
+      if (!email || !password || !role) {
+        results.push('createUser: missing email/password/role');
+      } else {
+        const existing = await db.execute({
+          sql: 'SELECT id FROM users WHERE email = ? LIMIT 1',
+          args: [email.trim().toLowerCase()],
+        });
+        if (existing.rows.length > 0) {
+          results.push(`createUser: user ${email} already exists (id=${existing.rows[0].id})`);
+        } else {
+          const hash = await bcrypt.hash(password, 12);
+          const res = await db.execute({
+            sql: `INSERT INTO users (email, password_hash, role, display_name, is_active, created_at, updated_at)
+                  VALUES (?, ?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            args: [email.trim().toLowerCase(), hash, role, displayName || null],
+          });
+          results.push(`Created user ${email} (id=${res.lastInsertRowid}, role=${role})`);
+        }
+      }
     }
 
     return NextResponse.json({ success: true, results });
