@@ -162,11 +162,19 @@ export async function GET(request: Request) {
     const girlsList = await db.execute(
       'SELECT id, name FROM girls ORDER BY name'
     );
+    const usersList = await db.execute(
+      'SELECT id, email, role, display_name, is_active, girl_id FROM users ORDER BY id'
+    );
 
     return NextResponse.json({
       pending: Number(pendingCount.rows[0]?.cnt),
       totalBookings: Number(totalBookings.rows[0]?.cnt),
       girls: girlsList.rows.map(r => ({ id: Number(r.id), name: String(r.name) })),
+      users: usersList.rows.map(r => ({
+        id: Number(r.id), email: String(r.email), role: String(r.role),
+        displayName: r.display_name ? String(r.display_name) : null,
+        isActive: Number(r.is_active) === 1, girlId: r.girl_id ? Number(r.girl_id) : null,
+      })),
     });
   } catch (error) {
     console.error('[fix-data] GET error:', error);
