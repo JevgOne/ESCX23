@@ -21,6 +21,7 @@ export interface CalendarGirl {
 
 export interface CalendarBooking {
   id: number;
+  clientId: number | null;
   clientNickname: string;
   clientTrustLevel: string;
   girlId: number;
@@ -127,7 +128,7 @@ export async function getCalendarBookings(
   const bookingsResult = await db.execute({
     sql: `
       SELECT
-        b.id, b.girl_id, b.date, b.start_time, b.end_time,
+        b.id, b.client_id, b.girl_id, b.date, b.start_time, b.end_time,
         b.duration_minutes, b.status, b.channel, b.points_earned,
         b.price, b.notes, b.source,
         bc.nickname AS client_nickname,
@@ -147,6 +148,7 @@ export async function getCalendarBookings(
 
   const bookings: CalendarBooking[] = bookingsResult.rows.map((r) => ({
     id: Number(r.id),
+    clientId: r.client_id != null ? Number(r.client_id) : null,
     clientNickname: String(r.source) === 'gcal_import' && r.notes
       ? String(r.notes)
       : r.client_nickname ? String(r.client_nickname) : 'Neznámý',
@@ -189,6 +191,7 @@ export async function getCalendarBookings(
   for (const r of draftsResult.rows) {
     bookings.push({
       id: Number(r.id),
+      clientId: null,
       clientNickname: 'TG Draft',
       clientTrustLevel: 'new',
       girlId: Number(r.girl_id),
@@ -422,6 +425,7 @@ function getDemoBookings(dateFrom: string, dateTo: string): CalendarBooking[] {
 
       return {
         id: 200 + idx,
+        clientId: null,
         clientNickname: slot.client,
         clientTrustLevel: slot.trust,
         girlId: slot.girlId,

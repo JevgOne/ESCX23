@@ -104,7 +104,11 @@ export default function BookingDetailOverlay({ booking, backUrl }: Props) {
           <div className="bdo-client">
             <div className="bdo-client-av">{clientInitial}</div>
             <div>
-              <span className="bdo-client-name">{b.clientNickname}</span>
+              {b.clientId ? (
+                <a href={`/booking/clients/${b.clientId}`} className="bdo-client-link">{b.clientNickname}</a>
+              ) : (
+                <span className="bdo-client-name">{b.clientNickname}</span>
+              )}
               <span className={`bdo-client-badge ${trustClass}`}>{trustLabel}</span>
             </div>
           </div>
@@ -213,6 +217,11 @@ const OVERLAY_STYLES = `
   font-weight: 700; color: var(--coral); font-size: 13px; flex-shrink: 0;
 }
 .bdo-client-name { font-weight: 700; font-size: 14px; }
+.bdo-client-link {
+  font-weight: 700; font-size: 14px; color: var(--coral);
+  text-decoration: none; transition: color 0.15s;
+}
+.bdo-client-link:hover { color: var(--text); text-decoration: underline; }
 .bdo-client-badge {
   padding: 2px 8px; border-radius: 4px;
   font-size: 10px; font-weight: 700; text-transform: uppercase; margin-left: 6px;
