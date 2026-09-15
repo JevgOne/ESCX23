@@ -390,7 +390,7 @@ export async function updateBookingStatus(
   const oldStatus = String(booking.status);
 
   const allowedTransitions: Record<string, string[]> = {
-    pending: ['confirmed', 'declined'],
+    pending: ['confirmed', 'declined', 'cancelled_client'],
     confirmed: ['completed', 'in_progress', 'no_show', 'cancelled_client', 'cancelled_girl', 'rescheduled'],
     in_progress: ['completed', 'no_show'],
   };

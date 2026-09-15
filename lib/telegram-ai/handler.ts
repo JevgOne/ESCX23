@@ -126,8 +126,9 @@ function callbackDataToText(data: string): string | null {
   if (data.startsWith('dur:')) return `${data.slice(4)} min`;
   if (data === 'confirm') return 'Potvrdit';
   if (data === 'cancel') return 'Zrusit';
-  // Legacy confirm_booking callbacks handled separately
-  if (data.startsWith('confirm_booking:')) return null;
+  // Client self-confirm/cancel callbacks — handled by booking-flow.ts
+  if (data.startsWith('bk_remind_ok:')) return null;
+  if (data.startsWith('bk_remind_cancel:')) return null;
   if (data.startsWith('schedule_remind:')) return null;
   return data;
 }

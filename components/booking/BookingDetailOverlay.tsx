@@ -118,12 +118,7 @@ export default function BookingDetailOverlay({ booking, backUrl }: Props) {
             <div className="bdo-actions">
               {b.status === 'pending' ? (
                 <>
-                  <button className="bdo-btn bdo-primary" onClick={() => handleAction('confirmed')} disabled={isPending}>
-                    <span className="bdo-icon">&#10003;</span> Potvrdit
-                  </button>
-                  <button className="bdo-btn" onClick={() => handleAction('rescheduled', 'Presunout rezervaci na jiny cas?')} disabled={isPending}>
-                    <span className="bdo-icon">&#8644;</span> Jiny cas
-                  </button>
+                  <div className="bdo-pending-info">Ceka na potvrzeni klientem</div>
                   <button className="bdo-btn bdo-danger" onClick={() => handleAction('declined', 'Odmitnout rezervaci?')} disabled={isPending} style={{ gridColumn: '1 / -1' }}>
                     <span className="bdo-icon">&#10007;</span> Odmitnout
                   </button>
@@ -253,6 +248,17 @@ const OVERLAY_STYLES = `
 .bdo-btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
 .bdo-status.s-finalized { background: rgba(148,163,184,0.1); color: var(--dim); border-bottom: 1px solid rgba(148,163,184,0.15); }
+
+.bdo-pending-info {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 12px;
+  font-size: 13px; font-weight: 600;
+  color: var(--yellow);
+  background: rgba(251,191,36,0.08);
+  border: 1px dashed rgba(251,191,36,0.3);
+  border-radius: 8px;
+}
 
 .bdo-finalized {
   padding: 20px 24px; text-align: center;

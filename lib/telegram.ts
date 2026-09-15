@@ -151,32 +151,6 @@ export async function sendBookingReminder(
   ].filter(Boolean).join('\n'));
 }
 
-export async function sendClientConfirmationRequest(
-  chatId: string,
-  bookingId: number,
-  date: string,
-  startTime: string,
-  endTime: string,
-): Promise<boolean> {
-  return sendMessage(chatId, [
-    '📅 <b>Potvrzení rezervace</b>',
-    '',
-    `Datum: ${date}`,
-    `Čas: ${startTime} — ${endTime}`,
-    '',
-    'Potvrzujete svůj příchod?',
-  ].join('\n'), {
-    replyMarkup: {
-      inline_keyboard: [
-        [
-          { text: '✅ Potvrzuji', callback_data: `confirm_booking:${bookingId}:yes` },
-          { text: '❌ Ruším', callback_data: `confirm_booking:${bookingId}:no` },
-        ],
-      ],
-    },
-  });
-}
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

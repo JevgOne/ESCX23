@@ -352,7 +352,8 @@ export async function handleConfirm(
         location ? `\u{1F4CD} ${location}` : '',
         '',
         `Rezervace #${bookingId}`,
-        `Ceka na potvrzeni operatorkou — ozveme se ti brzy \u2705`,
+        `Protoze jsi u nas poprve, prosim <b>potvrd svuj prichod</b> kliknutim na tlacitko nize.`,
+        `Pokud nepotvrdis do 1h pred terminem, rezervace bude automaticky zrusena.`,
       ].filter(Boolean).join('\n')
     : [
         `\u2705 <b>Rezervace potvrzena!</b>`,
@@ -366,7 +367,20 @@ export async function handleConfirm(
         `Rezervace #${bookingId}`,
       ].filter(Boolean).join('\n');
 
-  await sendMessage(chatId, msg);
+  if (bookingStatus === 'pending') {
+    await sendMessage(chatId, msg, {
+      replyMarkup: {
+        inline_keyboard: [
+          [
+            { text: '\u2705 Potvrzuji prichod', callback_data: `bk_remind_ok:${bookingId}` },
+            { text: '\u274C Rusim', callback_data: `bk_remind_cancel:${bookingId}` },
+          ],
+        ],
+      },
+    });
+  } else {
+    await sendMessage(chatId, msg);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -480,7 +494,120 @@ export async function handleBookingCallback(
     return true;
   }
 
+  // bk_remind_ok:{bookingId} — client confirms attendance
+  if (callbackData.startsWith('bk_remind_ok:')) {
+    const bookingId = parseInt(callbackData.slice(13), 10);
+    await handleClientConfirm(chatId, bookingId);
+    return true;
+  }
+
+  // bk_remind_cancel:{bookingId} — client cancels
+  if (callbackData.startsWith('bk_remind_cancel:')) {
+    const bookingId = parseInt(callbackData.slice(17), 10);
+    await handleClientCancel(chatId, bookingId);
+    return true;
+  }
+
   return false;
+}
+
+// ---------------------------------------------------------------------------
+// Client self-confirm / cancel (for pending bookings)
+// ---------------------------------------------------------------------------
+
+async function handleClientConfirm(chatId: string, bookingId: number): Promise<void> {
+  const result = await db.execute({
+    sql: `SELECT b.id, b.status, b.date, b.start_time, b.end_time,
+                 g.name AS girl_name, bc.telegram_id
+          FROM bookings_v2 b
+          JOIN girls g ON g.id = b.girl_id
+          JOIN booking_clients bc ON bc.id = b.client_id
+          WHERE b.id = ? AND bc.telegram_id = ?`,
+    args: [bookingId, chatId],
+  });
+
+  if (result.rows.length === 0) {
+    await sendMessage(chatId, 'Rezervace nenalezena.');
+    return;
+  }
+
+  const booking = result.rows[0];
+  if (String(booking.status) !== 'pending') {
+    const label = String(booking.status) === 'confirmed' ? 'uz je potvrzena' : 'uz neni aktivni';
+    await sendMessage(chatId, `Tato rezervace ${label}.`);
+    return;
+  }
+
+  await db.execute({
+    sql: `UPDATE bookings_v2 SET status = 'confirmed', confirmed_at = CURRENT_TIMESTAMP,
+                                  updated_at = CURRENT_TIMESTAMP
+          WHERE id = ? AND status = 'pending'`,
+    args: [bookingId],
+  });
+
+  await sendMessage(chatId, [
+    '\u2705 <b>Rezervace potvrzena!</b>',
+    '',
+    `\u{1F469} ${String(booking.girl_name)}`,
+    `\u{1F4C5} ${formatDate(String(booking.date))}`,
+    `\u23F0 ${String(booking.start_time).substring(0, 5)} \u2014 ${String(booking.end_time).substring(0, 5)}`,
+    '',
+    'Tesime se na tebe!',
+  ].join('\n'));
+
+  logAudit({
+    bookingId,
+    action: 'booking.client_confirm',
+    actorType: 'bot',
+    entityType: 'booking',
+    entityId: bookingId,
+    details: { chatId, source: 'client_self_confirm' },
+  }).catch(() => {});
+}
+
+async function handleClientCancel(chatId: string, bookingId: number): Promise<void> {
+  const result = await db.execute({
+    sql: `SELECT b.id, b.status, bc.telegram_id
+          FROM bookings_v2 b
+          JOIN booking_clients bc ON bc.id = b.client_id
+          WHERE b.id = ? AND bc.telegram_id = ?`,
+    args: [bookingId, chatId],
+  });
+
+  if (result.rows.length === 0) {
+    await sendMessage(chatId, 'Rezervace nenalezena.');
+    return;
+  }
+
+  if (String(result.rows[0].status) !== 'pending') {
+    await sendMessage(chatId, 'Tato rezervace uz neni aktivni.');
+    return;
+  }
+
+  await db.execute({
+    sql: `UPDATE bookings_v2 SET status = 'cancelled_client',
+          cancel_reason = 'Klient zrusil pred potvrzenim',
+          cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ? AND status = 'pending'`,
+    args: [bookingId],
+  });
+
+  // Release slot lock
+  await db.execute({
+    sql: 'DELETE FROM slot_locks WHERE locked_by = ?',
+    args: [`booking:${bookingId}`],
+  }).catch(() => {});
+
+  await sendMessage(chatId, 'Rezervace zrusena. Napis kdykoliv pro novou rezervaci \u{1F60A}');
+
+  logAudit({
+    bookingId,
+    action: 'booking.client_cancel',
+    actorType: 'bot',
+    entityType: 'booking',
+    entityId: bookingId,
+    details: { chatId, source: 'client_self_cancel' },
+  }).catch(() => {});
 }
 
 // ---------------------------------------------------------------------------
