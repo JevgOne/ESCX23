@@ -87,6 +87,59 @@ Photo upload pipeline konvertuje na WebP (quality 82) přes sharp před uložen�
 
 ---
 
+## TASK-012: Kompletní audit webu na nové doméně
+Dokončeno: 2026-09-03
+Cyklů zpracování: 1
+
+### Co bylo uděláno:
+Kompletní audit webu www.lovelygirls.cz — 22 veřejných routes × 4 locale, 20+ admin routes, 18 studio routes.
+
+**Nalezeno a opraveno:**
+- BUG-1: Blog listing hreflang — přidány chybějící de + uk alternates
+- BUG-2: Novinky page — přidáno og:url do openGraph
+- BUG-3: 4 env souborů — opraveno GOOGLE_REDIRECT_URI z escx23.vercel.app na www.lovelygirls.cz
+- BUG-4: llms.txt — ověřeno že existuje (app/llms.txt/route.ts)
+- BUG-5: profilePersonJsonLd — locale-aware URL (/profile/ pro EN, /profil/ pro ostatní)
+- BUG-7: Blog listing OG siteName — locale-dependent (Prague/Praha/Prag/Прага)
+- BUG-8: Blog article BlogPosting JSON-LD — ověřeno že existuje, přidáno chybějící url pole
+- BUG-9: Rozvrh canonical — zjednodušen na getCanonicalUrl(locale, '/rozvrh')
+- NOTE-1: Blog article ogLocale() helper místo inline mappingu
+
+**Celkový SEO health: 85/100 → 95/100 po opravách**
+
+### Soubory změněné:
+- app/[locale]/blog/page.tsx (hreflang de+uk, siteName locale)
+- app/[locale]/blog/[slug]/page.tsx (BlogPosting url, ogLocale helper)
+- app/[locale]/novinky/page.tsx (og:url)
+- app/[locale]/rozvrh/page.tsx (canonical zjednodušení)
+- lib/seo/jsonld.ts (profilePersonJsonLd locale param)
+- .env.production.local, .env.prod-pull.local, .env.prod-pulled.local, .env.blob (GOOGLE_REDIRECT_URI)
+
+### Poznámky:
+Workflow: plánovač (audit) → implementátor → kontrolor (2x QA) → evžen (schváleno) → test-chrome (7/8 pass + 1 minor fix). Commity: 41ee2e8, 4c2c93a, 868c270.
+
+---
+
+## TASK-018: Opravit design hashtag landing stránek
+Dokončeno: 2026-09-02
+Cyklů zpracování: 1
+
+### Co bylo uděláno:
+CSS spacing a oddělovače na hashtag landing stránkách opraveny pro konzistentní design:
+1. `.lp-grid-section` bottom padding 32→40px
+2. `.lp-cta-row` přidán border-top oddělovač, padding 12px 0 48px
+3. `.lp-related` padding 36→48px
+4. `.lp-section` padding 36→48px
+5. `.lp-faq-section` top padding 36→48px
+
+### Soubory změněné:
+- app/globals.css (.lp-grid-section, .lp-cta-row, .lp-related, .lp-section, .lp-faq-section)
+
+### Poznámky:
+Workflow: PLÁNOVAČ → IMPLEMENTÁTOR → KONTROLOR (schváleno). Commit 7846baa.
+
+---
+
 ## TASK-010: Admin panel na nové doméně
 Dokončeno: 2026-07-06 (ověřeno)
 Cyklů zpracování: 1

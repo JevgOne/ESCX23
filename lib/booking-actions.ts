@@ -356,6 +356,90 @@ export async function createClient(
 }
 
 // ---------------------------------------------------------------------------
+// Update booking status (confirm, complete, cancel, no-show, etc.)
+// ---------------------------------------------------------------------------
+
+export async function updateBookingStatus(
+  bookingId: number,
+  newStatus: string,
+  cancelReason?: string,
+): Promise<{ ok: true } | { error: string }> {
+  const user = await requireBooking();
+
+  const validStatuses = [
+    'confirmed', 'completed', 'in_progress',
+    'no_show', 'cancelled_client', 'cancelled_girl',
+    'declined', 'rescheduled',
+  ];
+  if (!validStatuses.includes(newStatus)) {
+    return { error: 'Neplatny status' };
+  }
+
+  const current = await db.execute({
+    sql: 'SELECT id, status, client_id, price FROM bookings_v2 WHERE id = ?',
+    args: [bookingId],
+  });
+  if (current.rows.length === 0) {
+    return { error: 'Rezervace nenalezena' };
+  }
+
+  const booking = current.rows[0];
+  const oldStatus = String(booking.status);
+
+  const allowedTransitions: Record<string, string[]> = {
+    pending: ['confirmed', 'declined'],
+    confirmed: ['completed', 'in_progress', 'no_show', 'cancelled_client', 'cancelled_girl', 'rescheduled'],
+    in_progress: ['completed', 'no_show'],
+  };
+
+  const allowed = allowedTransitions[oldStatus];
+  if (!allowed || !allowed.includes(newStatus)) {
+    return { error: `Nelze zmenit stav z "${oldStatus}" na "${newStatus}"` };
+  }
+
+  const setClauses = ['status = ?', 'updated_at = CURRENT_TIMESTAMP'];
+  const args: (string | number | null)[] = [newStatus];
+
+  if (['cancelled_client', 'cancelled_girl', 'declined'].includes(newStatus)) {
+    setClauses.push('cancel_reason = ?', 'cancelled_at = CURRENT_TIMESTAMP');
+    args.push(cancelReason ?? null);
+  }
+
+  if (newStatus === 'completed') {
+    setClauses.push('completed_at = CURRENT_TIMESTAMP');
+  }
+
+  args.push(bookingId);
+
+  await db.execute({
+    sql: `UPDATE bookings_v2 SET ${setClauses.join(', ')} WHERE id = ?`,
+    args,
+  });
+
+  if (newStatus === 'no_show') {
+    await db.execute({
+      sql: 'UPDATE booking_clients SET no_show_count = no_show_count + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      args: [Number(booking.client_id)],
+    });
+  }
+
+  if (newStatus === 'completed' && booking.price) {
+    await db.execute({
+      sql: 'UPDATE booking_clients SET total_spent = total_spent + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      args: [Number(booking.price), Number(booking.client_id)],
+    });
+  }
+
+  await db.execute({
+    sql: `INSERT INTO booking_audit_log (booking_id, user_id, action, actor_type, details, severity, created_at)
+          VALUES (?, ?, 'status_change', 'user', ?, 'info', CURRENT_TIMESTAMP)`,
+    args: [bookingId, user.id, `${oldStatus} -> ${newStatus}${cancelReason ? ': ' + cancelReason : ''}`],
+  });
+
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
 // Week schedules for ALL active girls (for quick booking panel)
 // ---------------------------------------------------------------------------
 

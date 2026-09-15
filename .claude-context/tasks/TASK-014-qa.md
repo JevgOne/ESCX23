@@ -1,128 +1,79 @@
-# TASK-014: QA — Auth session expirace + remember me
+# QA Report — Task #14: FAQ relevance fix (cernovlasky-praha, tetovani)
 
-**Datum:** 2026-06-21
-**Kontrolor:** kontrolor
-
----
-
-## 1. Simplify kontrola
-
-### lib/auth.ts
-
-**Pozitivní:**
-- Konstanty jsou pojmenované přehledně (`SESSION_MAX_AGE_SECONDS`, `REMEMBER_ME_MAX_AGE`)
-- `setSession()` má čistou logiku: `remember=true` → persistent cookie, `remember=false` → session cookie (bez `maxAge`)
-- `verifyToken()` kontroluje expiraci uvnitř tokenu (`Number(exp) < Date.now()`) — správně
-
-**Nalezena 1 potenciální chyba — logic inconsistency:**
-
-```ts
-// lib/auth.ts:70-82
-export async function setSession(userId: number, role: string, remember = false) {
-  const maxAge = remember
-    ? REMEMBER_ME_MAX_AGE
-    : SESSION_MAX_AGE_SECONDS[role] ?? 8 * 60 * 60;
-  const token = createToken(userId, role, maxAge);
-  const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    ...
-    ...(remember ? { maxAge } : {}),  // <-- cookie nemá maxAge bez remember
-  });
-}
-```
-
-**Problem:** Když `remember=false`, cookie nemá `maxAge` (= session cookie, vyprší po zavření browseru). ALE token uvnitř cookie má expiration nastavenou na 8h (resp. 72h pro girl). To znamená:
-
-- Cookie: přežije pouze do zavření browseru → OK
-- Token v cookie: expiruje za 8h/72h → OK
-
-Tyto dvě věci jsou **konzistentní** — token i cookie expirují, jen různým mechanismem. **Není to bug, ale stojí za zmínku:** pokud user zavře browser po 1h a znovu otevře za 2h (do 8h okna), cookie nebude přítomna (session cookie zmizela). Chování je tedy správné.
-
-**Duplicita `getLocale()`:**
-
-Funkce `getLocale()` je definována **dvakrát** — v `lib/auth.ts` (řádek 7-12) i v `lib/auth-actions.ts` (řádek 7-12). Jde o zjevnou duplicitu, která by měla být extrahována do sdílené utility. Nicméně toto není nová chyba zavedená v TASK-014 — byla přítomna i dříve. Netýká se přímo scope tohoto tasku.
-
-### lib/auth-actions.ts
-
-Čistý kód. `loginAdmin` a `loginGirl` jsou symetrické, logika je přehledná.
-
-### admin/login/page.tsx
-
-Kód je čistý. CSS je v `LOGIN_STYLES` stringu (inline `<style>`), checkbox má správný `name="remember"`.
-
-### studio/login/page.tsx
-
-**Nalezen problém — inkonsistentní styling:**
-
-Studio login page (`studio/login/page.tsx`) používá **inline styly** místo CSS tříd:
-
-```tsx
-<label style={{ display: 'flex', alignItems: 'center', gap: '8px', ... }}>
-  <input type="checkbox" name="remember" style={{ accentColor: '#f27d8d', ... }} />
-```
-
-Admin login page má pro remember me čistý CSS class `.escx-login-remember`.
-
-Studio login je obecně vizuálně chudší (žádný background gradient, žádné karty, žádné efekty) — ale toto je existující technický dluh, ne nová regrese z TASK-014.
+**Datum:** 2026-09-03
+**Kontrolor:** kontrolor agent
+**Zadání:** Ověřit že FAQ jsou specifické pro dané téma, ne generické
 
 ---
 
-## 2. Debug kontrola
+## 1. Simplify — čistota kódu
 
-### TypeScript
-```
-npx tsc --noEmit → 0 chyb
-```
+### `cernovlasky-praha` FAQ (lib/seo/landing-content.ts:117–134)
+- 4 FAQ otázky, každá ve 4 jazycích (cs/en/de/uk)
+- Struktura konzistentní se zbytkem souboru
+- Odpovědi stručné a relevantní
+- Žádný dead code, žádné duplicity
 
-### Build
-```
-npm run build → SUCCESS
-/[locale]/studio/login — ƒ (Dynamic)
-/[locale]/admin/login — ƒ (Dynamic)
-```
-Oba jsou `force-dynamic`, build prošel bez chyb.
+### `tetovani` FAQ (lib/seo/landing-content.ts:291–304)
+- 3 FAQ otázky, každá ve 4 jazycích
+- Struktura konzistentní
+- Žádný zbytečný kód
 
-### Lint
-ESLint **není nakonfigurován** (chybí `eslint.config.js` pro ESLint v9). Toto je existující problém projektu, ne regrese z TASK-014.
+**Simplify verdict: PASS**
 
 ---
 
-## 3. Reverzní kontrola vs zadání
+## 2. Debug
 
-### Původní požadavek
-> "Na jednom a tom samém PC jsem neustále přihlášený, musí to vyžadovat častěji heslo"
+### TypeScript check
+- **Produkční kód: 0 chyb** ✅
+- Pouze `e2e/tests/full-test.spec.ts(26)` — nesouvisí
 
-| # | Požadavek | Status | Poznámka |
-|---|-----------|--------|----------|
-| 1 | Admin session se zkrátí (nebude 30 dní) | ✅ | Implementováno: 8h bez remember me |
-| 2 | Manager session se zkrátí | ✅ | Implementováno: 8h |
-| 3 | Studio (girl) session — rozumná délka | ✅ | 72h (3 dny) — přiměřené pro girl |
-| 4 | Remember me checkbox na admin login | ✅ | Checkbox s labelem "Zapamatovat si mě (7 dní)" |
-| 5 | Remember me checkbox na studio login | ✅ | Checkbox přítomen |
-| 6 | Bez remember me: session cookie (zmizí po zavření browseru) | ✅ | `...(remember ? { maxAge } : {})` — cookie bez maxAge |
-| 7 | S remember me: persistent 7 dní | ✅ | `REMEMBER_ME_MAX_AGE = 7 * 24 * 60 * 60` |
-| 8 | Token expiration odpovídá cookie | ✅ | Token i cookie mají konzistentní expirace |
-
-### Vyšší nároky z plánu (TASK-014-plan.md)
-
-| Položka z plánu | Status | Poznámka |
-|-----------------|--------|----------|
-| Idle timeout | ⚠️ NENÍ | Záměrně vynecháno — plán označil jako "volitelné", scope byl Změna 1 + Změna 3 |
-| Session invalidation při změně hesla | ⚠️ NENÍ | Záměrně vynecháno — plán označil jako "low priority" |
-| Concurrent session limit | ⚠️ NENÍ | Záměrně vynecháno — nebyl součástí doporučené implementace |
-| CSRF ochrana | ⚠️ Existující | Next.js Server Actions mají Origin check; `allowedOrigins` pro custom doménu je jiný task |
+**Debug verdict: PASS**
 
 ---
 
-## Závěr
+## 3. Reverzní kontrola — FAQ relevance
 
-### Blocker
-Žádný.
+### Zadání uživatele
+> "FAQ at se hodi k danemu tematu"
 
-### Doporučení (non-blocker)
-1. **Duplikace `getLocale()`** — extrahovat do `lib/locale-utils.ts`, použít v obou souborech. Nevzniklo v TASK-014, ale je to vhodný refactor.
-2. **Studio login styling** — stránka vizuálně neodpovídá admin loginu (žádný design). Měla by dostat stejnou úroveň designu. Kandidát na samostatný task.
+### `cernovlasky-praha` — 4 FAQ (řádky 119–133)
 
-### Verdikt
-**PASS** — implementace splňuje původní zadání ("vyžadovat častěji heslo") i doporučený scope z plánu (Změna 1 + Změna 3). Build a typecheck bez chyb.
+| # | Otázka (CS) | Tematická relevance |
+|---|-------------|---------------------|
+| 1 | Kolik černovlásek máte aktuálně k dispozici? | ✅ Specifická — ptá se na počet **černovlásek** |
+| 2 | Jsou fotografie černovlásek skutečné? | ✅ Specifická — ptá se na foto **černovlásek** |
+| 3 | Kde se s černovláskou potkám? | ✅ Specifická — ptá se na setkání s **černovláskou** |
+| 4 | Nabízejí černovlásky GFE? | ✅ Specifická — ptá se na služby **černovlásek** |
+
+Všechny 4 otázky explicitně zmiňují „černovlásky" / „dark-haired" / „schwarzhaarige" — jsou tematicky ukotvené, ne generické.
+
+### `tetovani` — 3 FAQ (řádky 293–303)
+
+| # | Otázka (CS) | Tematická relevance |
+|---|-------------|---------------------|
+| 1 | Jak rozsáhlé tetování společnice má? | ✅ Specifická — přímo o **tetování** a jeho rozsahu |
+| 2 | Mohu si vybrat společnici podle stylu tetování? | ✅ Specifická — výběr podle **tetování** |
+| 3 | Mají tetované společnice stejný ceník? | ✅ Specifická — ceny **tetovaných** společnic |
+
+Všechny 3 otázky se točí kolem tématu tetování. Žádná generická otázka (typ „jak se zarezervovat" nebo „jsou fotky reálné" bez vazby na téma).
+
+**Reverzní kontrola verdict: PASS**
+
+---
+
+## Celkový výsledek
+
+| Kontrola | Výsledek |
+|----------|----------|
+| 1. Simplify | PASS ✅ |
+| 2. Debug | PASS ✅ |
+| 3. Reverzní kontrola | PASS ✅ |
+
+**CELKOVÝ VERDICT: APPROVED — FAQ jsou tematicky relevantní pro oba hashtagy.**
+
+### Poznámky
+- `cernovlasky-praha`: 4 FAQ, všechny explicitně tematicky ukotvené (zmiňují „černovlásky" v otázce)
+- `tetovani`: 3 FAQ, všechny o tetování (rozsah, styl, ceny)
+- TS chyba v e2e testovacím souboru přetrvává — nesouvisí s touto implementací

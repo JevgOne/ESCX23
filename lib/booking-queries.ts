@@ -129,7 +129,7 @@ export async function getCalendarBookings(
       SELECT
         b.id, b.girl_id, b.date, b.start_time, b.end_time,
         b.duration_minutes, b.status, b.channel, b.points_earned,
-        b.price, b.notes,
+        b.price, b.notes, b.source,
         bc.nickname AS client_nickname,
         bc.trust_level AS client_trust,
         g.name AS girl_name,
@@ -147,7 +147,9 @@ export async function getCalendarBookings(
 
   const bookings: CalendarBooking[] = bookingsResult.rows.map((r) => ({
     id: Number(r.id),
-    clientNickname: r.client_nickname ? String(r.client_nickname) : 'Neznámý',
+    clientNickname: String(r.source) === 'gcal_import' && r.notes
+      ? String(r.notes)
+      : r.client_nickname ? String(r.client_nickname) : 'Neznámý',
     clientTrustLevel: r.client_trust ? String(r.client_trust) : 'new',
     girlId: Number(r.girl_id),
     girlName: r.girl_name ? String(r.girl_name) : '?',

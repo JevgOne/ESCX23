@@ -2,6 +2,8 @@
 
 import type { CalendarBooking } from '@/lib/booking-queries';
 import { useRouter } from 'next/navigation';
+import { useTransition, useState } from 'react';
+import { updateBookingStatus } from '@/lib/booking-actions';
 
 interface Props {
   booking: CalendarBooking;
@@ -11,14 +13,27 @@ interface Props {
 export default function BookingDetailOverlay({ booking, backUrl }: Props) {
   const router = useRouter();
   const b = booking;
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
-  const statusLabel = b.status === 'confirmed' || b.status === 'completed' || b.status === 'in_progress'
-    ? 'Potvrzena'
-    : b.status === 'pending'
-    ? 'Ceka na potvrzeni'
-    : b.status;
+  const isFinalized = ['completed', 'no_show', 'cancelled_client', 'cancelled_girl', 'declined', 'expired'].includes(b.status);
 
-  const statusClass = b.status === 'pending' ? 's-pending' : 's-confirmed';
+  const statusLabels: Record<string, string> = {
+    confirmed: 'Potvrzena',
+    completed: 'Dokoncena',
+    in_progress: 'Probiha',
+    pending: 'Ceka na potvrzeni',
+    no_show: 'No-show',
+    cancelled_client: 'Zruseno klientem',
+    cancelled_girl: 'Zruseno',
+    declined: 'Odmitnuta',
+    expired: 'Expirovana',
+  };
+  const statusLabel = statusLabels[b.status] ?? b.status;
+
+  const statusClass = b.status === 'pending' ? 's-pending'
+    : isFinalized ? 's-finalized'
+    : 's-confirmed';
 
   const sourceLabel = b.channel === 'telegram' ? 'Telegram'
     : b.channel === 'whatsapp' ? 'WhatsApp'
@@ -47,6 +62,19 @@ export default function BookingDetailOverlay({ booking, backUrl }: Props) {
 
   function close() {
     router.push(backUrl);
+  }
+
+  function handleAction(newStatus: string, confirmMsg?: string) {
+    if (confirmMsg && !window.confirm(confirmMsg)) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await updateBookingStatus(b.id, newStatus);
+      if ('error' in result) {
+        setError(result.error);
+      } else {
+        router.refresh();
+      }
+    });
   }
 
   return (
@@ -80,36 +108,41 @@ export default function BookingDetailOverlay({ booking, backUrl }: Props) {
               <span className={`bdo-client-badge ${trustClass}`}>{trustLabel}</span>
             </div>
           </div>
-          <div className="bdo-actions">
-            {b.status === 'pending' ? (
-              <>
-                <button className="bdo-btn bdo-primary">
-                  <span className="bdo-icon">&#10003;</span> Potvrdit
-                </button>
-                <button className="bdo-btn">
-                  <span className="bdo-icon">&#8644;</span> Jiny cas
-                </button>
-                <button className="bdo-btn bdo-danger" style={{ gridColumn: '1 / -1' }}>
-                  <span className="bdo-icon">&#10007;</span> Odmitnout
-                </button>
-              </>
-            ) : (
-              <>
-                <button className="bdo-btn bdo-primary">
-                  <span className="bdo-icon">&#10003;</span> Dokonceno
-                </button>
-                <button className="bdo-btn">
-                  <span className="bdo-icon">&#8644;</span> Presunout
-                </button>
-                <button className="bdo-btn bdo-danger">
-                  <span className="bdo-icon">&#10007;</span> No-show
-                </button>
-                <button className="bdo-btn bdo-danger">
-                  <span className="bdo-icon">&#128465;</span> Zrusit
-                </button>
-              </>
-            )}
-          </div>
+          {isFinalized ? (
+            <div className="bdo-finalized">Uzavreno</div>
+          ) : (
+            <div className="bdo-actions">
+              {b.status === 'pending' ? (
+                <>
+                  <button className="bdo-btn bdo-primary" onClick={() => handleAction('confirmed')} disabled={isPending}>
+                    <span className="bdo-icon">&#10003;</span> Potvrdit
+                  </button>
+                  <button className="bdo-btn" disabled={isPending}>
+                    <span className="bdo-icon">&#8644;</span> Jiny cas
+                  </button>
+                  <button className="bdo-btn bdo-danger" onClick={() => handleAction('declined', 'Odmitnout rezervaci?')} disabled={isPending} style={{ gridColumn: '1 / -1' }}>
+                    <span className="bdo-icon">&#10007;</span> Odmitnout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="bdo-btn bdo-primary" onClick={() => handleAction('completed')} disabled={isPending}>
+                    <span className="bdo-icon">&#10003;</span> Dokonceno
+                  </button>
+                  <button className="bdo-btn" onClick={() => handleAction('rescheduled', 'Presunout rezervaci?')} disabled={isPending}>
+                    <span className="bdo-icon">&#8644;</span> Presunout
+                  </button>
+                  <button className="bdo-btn bdo-danger" onClick={() => handleAction('no_show', 'Oznacit jako no-show?')} disabled={isPending}>
+                    <span className="bdo-icon">&#10007;</span> No-show
+                  </button>
+                  <button className="bdo-btn bdo-danger" onClick={() => handleAction('cancelled_client', 'Zrusit rezervaci?')} disabled={isPending}>
+                    <span className="bdo-icon">&#128465;</span> Zrusit
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+          {error && <div className="bdo-error">{error}</div>}
           {b.notes && (
             <div className="bdo-notes">
               <div className="bdo-notes-label">Poznamky</div>
@@ -208,6 +241,21 @@ const OVERLAY_STYLES = `
 .bdo-btn.bdo-primary:hover { border-color: var(--green); background: rgba(74,222,128,0.15); }
 .bdo-btn.bdo-danger { color: var(--red); }
 .bdo-btn.bdo-danger:hover { border-color: var(--red); }
+.bdo-btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+.bdo-status.s-finalized { background: rgba(148,163,184,0.1); color: var(--dim); border-bottom: 1px solid rgba(148,163,184,0.15); }
+
+.bdo-finalized {
+  padding: 20px 24px; text-align: center;
+  font-size: 13px; font-weight: 700; color: var(--dim);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+.bdo-error {
+  padding: 8px 24px 12px;
+  font-size: 12px; color: var(--red);
+  background: rgba(239,68,68,0.08);
+}
 
 .bdo-notes {
   padding: 12px 24px; border-top: 1px solid var(--line);
