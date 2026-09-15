@@ -39,6 +39,23 @@ export async function POST(request: Request) {
 
     // 2. Import ICS bookings
     if (body.bookings && Array.isArray(body.bookings)) {
+      // Ensure a placeholder "GCal Import" client exists (FK constraint requires valid client_id)
+      let gcalClientId: number;
+      const existingClient = await db.execute(
+        "SELECT id FROM booking_clients WHERE client_number = 'LG-GCAL'"
+      );
+      if (existingClient.rows.length > 0) {
+        gcalClientId = Number(existingClient.rows[0].id);
+      } else {
+        const ins = await db.execute({
+          sql: `INSERT INTO booking_clients (client_number, nickname, trust_level, is_banned, no_show_count, total_visits, source, created_at, updated_at)
+                VALUES ('LG-GCAL', 'GCal Import', 'regular', 0, 0, 0, 'walkin', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          args: [],
+        });
+        gcalClientId = Number(ins.lastInsertRowid);
+        results.push(`Created placeholder client LG-GCAL (id=${gcalClientId})`);
+      }
+
       // Build girl name → ID map: hardcoded first, then DB as fallback for new girls
       const girlMap = new Map<string, number>(Object.entries(GIRL_ID_MAP));
 
@@ -84,8 +101,8 @@ export async function POST(request: Request) {
           sql: `INSERT INTO bookings_v2 (
                   client_id, girl_id, date, start_time, end_time, duration_minutes,
                   price, points_earned, status, source, channel, notes, created_at, updated_at
-                ) VALUES (0, ?, ?, ?, ?, ?, 0, 0, 'confirmed', 'gcal_import', 'phone', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-          args: [girlId, bk.date, bk.start, bk.end, bk.duration, clientNote],
+                ) VALUES (?, ?, ?, ?, ?, ?, 0, 0, 'confirmed', 'gcal_import', 'phone', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          args: [gcalClientId, girlId, bk.date, bk.start, bk.end, bk.duration, clientNote],
         });
         imported++;
       }
