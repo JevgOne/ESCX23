@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { sendPhoto } from '../telegram';
+import { sendMessage, sendPhoto } from '../telegram';
 import { logAudit } from '../audit';
 import { startBookingFlow } from './booking-flow';
 import type { ClientContext } from './types';
@@ -33,6 +33,14 @@ function getWeekSunday(): string {
   return `${sun.getFullYear()}-${String(sun.getMonth() + 1).padStart(2, '0')}-${String(sun.getDate()).padStart(2, '0')}`;
 }
 
+/**
+ * Convert JS getDay() (Sun=0..Sat=6) to DB convention (Mon=0..Sun=6).
+ * Must match lib/queries.ts: jsDay === 0 ? 6 : jsDay - 1
+ */
+function toDbDayOfWeek(jsDay: number): number {
+  return jsDay === 0 ? 6 : jsDay - 1;
+}
+
 // ---------------------------------------------------------------------------
 // Main dispatcher
 // ---------------------------------------------------------------------------
@@ -47,7 +55,7 @@ export async function handleToolCall(
       case 'getAvailableGirls': return await getAvailableGirls(input, ctx);
       case 'getGirlProfile': return await getGirlProfile(input);
       case 'searchGirls': return await searchGirls(input);
-      case 'checkAvailability': return await checkAvailability(input);
+      case 'checkAvailability': return await checkAvailability(input, ctx);
       case 'getWeekSchedule': return await getWeekSchedule(input);
       case 'getPricing': return await getPricing();
       case 'getClientBookings': return await getClientBookings(input, ctx);
@@ -68,6 +76,7 @@ export async function handleToolCall(
       }
       case 'sendGirlPhoto': return await handleSendGirlPhoto(input, ctx);
       case 'startBookingFlow': return await handleStartBookingFlow(input, ctx);
+      case 'escalateToOperator': return await handleEscalateToOperator(input, ctx);
       default: return JSON.stringify({ error: 'Unknown tool' });
     }
   } catch (error) {
@@ -83,7 +92,7 @@ export async function handleToolCall(
 async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientContext): Promise<string> {
   const date = (input.date as string) || getPragueToday();
   const d = new Date(date + 'T12:00:00');
-  const dayOfWeek = d.getDay();
+  const dayOfWeek = toDbDayOfWeek(d.getDay());
 
   // Single query: LEFT JOIN from girls so exception-only schedules are included
   // Also fetch primary photo URL to send photos automatically
@@ -92,7 +101,7 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
       SELECT
         g.id, g.name, g.age, g.hair, g.nationality, g.rating, g.reviews_count,
         gs.start_time AS shift_start, gs.end_time AS shift_end,
-        l.name AS location_name,
+        COALESCE(l.display_name, l.name) AS location_name,
         se.exception_type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
       FROM girls g
@@ -105,7 +114,7 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
       ) gs ON gs.girl_id = g.id AND gs.rn = 1
       LEFT JOIN locations l ON l.id = gs.location_id
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
-      WHERE g.status = 'active'
+      WHERE g.status IN ('active', 'inactive')
       ORDER BY g.name
     `,
     args: [dayOfWeek, date, date],
@@ -161,8 +170,8 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
   for (const g of girls) {
     if (g.photoUrl) {
       const caption = `<b>${g.name}</b>, ${g.age} let` +
-        (g.rating ? ` ⭐ ${g.rating}/5` + (g.reviewsCount ? ` (${g.reviewsCount} recenzi)` : '') : '') +
         `\n🟢 ${g.shiftStart} – ${g.shiftEnd}` +
+        (g.rating ? `\n⭐ ${g.rating}/5` + (g.reviewsCount ? ` (${g.reviewsCount} recenzí)` : '') : '') +
         (g.location ? `\n📍 ${g.location}` : '');
       await sendPhoto(ctx.chatId, g.photoUrl, { caption }).catch((err) => {
         console.error(`[telegram-ai] Failed to send photo for ${g.name}:`, err);
@@ -184,13 +193,13 @@ async function getGirlProfile(input: Record<string, unknown>): Promise<string> {
     sql = `SELECT id, name, age, height, weight, bust, hair, eyes, nationality,
                   languages, bio_cs, rating, reviews_count,
                   tattoo_description_cs, piercing, piercing_description_cs
-           FROM girls WHERE id = ? AND status = 'active' LIMIT 1`;
+           FROM girls WHERE id = ? AND status IN ('active', 'inactive') LIMIT 1`;
     args = [girlId];
   } else if (girlName) {
     sql = `SELECT id, name, age, height, weight, bust, hair, eyes, nationality,
                   languages, bio_cs, rating, reviews_count,
                   tattoo_description_cs, piercing, piercing_description_cs
-           FROM girls WHERE LOWER(name) = LOWER(?) AND status = 'active' LIMIT 1`;
+           FROM girls WHERE LOWER(name) = LOWER(?) AND status IN ('active', 'inactive') LIMIT 1`;
     args = [girlName];
   } else {
     return JSON.stringify({ error: 'Zadej girlId nebo girlName' });
@@ -237,7 +246,7 @@ async function getGirlProfile(input: Record<string, unknown>): Promise<string> {
 }
 
 async function searchGirls(input: Record<string, unknown>): Promise<string> {
-  const conditions: string[] = ["g.status = 'active'"];
+  const conditions: string[] = ["g.status IN ('active', 'inactive')"];
   const args: (string | number)[] = [];
 
   if (input.hairColor) {
@@ -281,7 +290,7 @@ async function searchGirls(input: Record<string, unknown>): Promise<string> {
 
   if (input.availableDate) {
     const date = String(input.availableDate);
-    const dow = new Date(date + 'T12:00:00').getDay();
+    const dow = toDbDayOfWeek(new Date(date + 'T12:00:00').getDay());
     const available: typeof girls = [];
     for (const g of girls) {
       // Check regular schedule OR exception-based schedule
@@ -315,10 +324,18 @@ async function searchGirls(input: Record<string, unknown>): Promise<string> {
   return JSON.stringify({ results: girls, count: girls.length });
 }
 
-async function checkAvailability(input: Record<string, unknown>): Promise<string> {
+async function checkAvailability(input: Record<string, unknown>, ctx: ClientContext): Promise<string> {
   const girlId = Number(input.girlId);
   const date = String(input.date);
-  const dow = new Date(date + 'T12:00:00').getDay();
+
+  // Record interest for last-minute slot offers
+  if (ctx.chatId) {
+    db.execute({
+      sql: `INSERT INTO booking_interest (telegram_chat_id, girl_id, date) VALUES (?, ?, ?)`,
+      args: [ctx.chatId, girlId, date],
+    }).catch(() => {});
+  }
+  const dow = toDbDayOfWeek(new Date(date + 'T12:00:00').getDay());
 
   // 1. Get shift
   const shiftResult = await db.execute({
@@ -421,10 +438,10 @@ async function getWeekSchedule(input: Record<string, unknown>): Promise<string> 
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const dow = d.getDay();
+    const dow = toDbDayOfWeek(d.getDay());
 
     const result = await db.execute({
-      sql: `SELECT gs.start_time, gs.end_time, l.name AS location_name,
+      sql: `SELECT gs.start_time, gs.end_time, COALESCE(l.display_name, l.name) AS location_name,
                    se.exception_type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
             FROM girl_schedules gs
             LEFT JOIN locations l ON l.id = gs.location_id
@@ -670,7 +687,7 @@ async function handleSendGirlPhoto(
     sql: `SELECT g.name,
                  (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
           FROM girls g
-          WHERE g.id = ? AND g.status = 'active'
+          WHERE g.id = ? AND g.status IN ('active', 'inactive')
           LIMIT 1`,
     args: [girlId],
   });
@@ -724,6 +741,78 @@ async function handleStartBookingFlow(
       error: error instanceof Error ? error.message : 'Nepodarilo se spustit booking flow.',
     });
   }
+}
+
+async function handleEscalateToOperator(
+  input: Record<string, unknown>,
+  ctx: ClientContext,
+): Promise<string> {
+  const reason = String(input.reason || 'Klient potrebuje pomoc').substring(0, 200);
+
+  // Find active operators/managers with telegram_chat_id set
+  const operators = await db.execute({
+    sql: `SELECT id, display_name, telegram_chat_id, role FROM users
+          WHERE role IN ('operator', 'manager', 'admin')
+            AND telegram_chat_id IS NOT NULL
+            AND is_active = 1
+          ORDER BY CASE role WHEN 'operator' THEN 1 WHEN 'manager' THEN 2 WHEN 'admin' THEN 3 END`,
+    args: [],
+  });
+
+  if (operators.rows.length === 0) {
+    return JSON.stringify({
+      success: false,
+      error: 'Zadna operatorka nema nastaveny Telegram. Eskalace nebyla dorucena.',
+    });
+  }
+
+  const clientLabel = ctx.isRegistered
+    ? `${ctx.nickname ?? 'Klient'} (${ctx.clientNumber ?? '?'})`
+    : `Novy klient (chat ${ctx.chatId})`;
+
+  const notifText = [
+    '<b>Eskalace z bota</b>',
+    '',
+    `Klient: <b>${clientLabel}</b>`,
+    `Duvod: ${reason}`,
+    '',
+    `Chat ID: <code>${ctx.chatId}</code>`,
+    'Odpovezte klientovi primo v Telegram nebo v STUDIOFLOW.',
+  ].join('\n');
+
+  let notified = 0;
+  for (const op of operators.rows) {
+    const chatId = String(op.telegram_chat_id);
+    try {
+      await sendMessage(chatId, notifText, { parseMode: 'HTML' });
+      notified++;
+    } catch (err) {
+      console.error(`[escalate] Failed to notify ${op.display_name}:`, err);
+    }
+  }
+
+  // Audit
+  logAudit({
+    userId: ctx.clientId ?? 0,
+    action: 'bot.escalate',
+    actorType: 'bot',
+    entityType: 'conversation',
+    entityId: 0,
+    details: { reason, chatId: ctx.chatId, notifiedCount: notified },
+  }).catch(() => {});
+
+  if (notified > 0) {
+    return JSON.stringify({
+      success: true,
+      notified,
+      message: 'Operatorka byla upozornena. Ozve se co nejdrive.',
+    });
+  }
+
+  return JSON.stringify({
+    success: false,
+    error: 'Notifikace se nepodarilo dorucit. Klient necht zavola na studio.',
+  });
 }
 
 async function subscribeToGirl(

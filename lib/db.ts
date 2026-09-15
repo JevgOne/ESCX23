@@ -175,6 +175,28 @@ async function runMigrations(client: Client) {
     // Migration may fail if columns don't exist yet — OK, will retry on next startup
   }
 
+  // Add telegram_chat_id to users for operator/manager notifications
+  try {
+    await client.execute('ALTER TABLE users ADD COLUMN telegram_chat_id TEXT');
+  } catch { /* OK — column already exists */ }
+
+  // Booking notifications (bot bookings → operator/manager in-app alerts)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS booking_notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        booking_id INTEGER,
+        link TEXT,
+        is_read INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (booking_id) REFERENCES bookings_v2(id)
+      )
+    `);
+  } catch { /* OK */ }
+
   // Schedule reminders — clients want to be notified when new week schedule is published
   try {
     await client.execute(`
@@ -318,6 +340,235 @@ async function runMigrations(client: Client) {
   } catch {
     // Table already exists — OK
   }
+
+  // ----- STUDIOFLOW Booking System tables -----
+
+  // Booking clients (encrypted PII)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS booking_clients (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_number TEXT NOT NULL UNIQUE,
+        nickname TEXT NOT NULL,
+        phone_encrypted TEXT,
+        phone_hmac TEXT,
+        name_encrypted TEXT,
+        surname_encrypted TEXT,
+        email_encrypted TEXT,
+        telegram_id TEXT,
+        source TEXT NOT NULL DEFAULT 'phone'
+          CHECK (source IN ('phone', 'telegram', 'whatsapp', 'walkin', 'web')),
+        trust_level TEXT NOT NULL DEFAULT 'new'
+          CHECK (trust_level IN ('new', 'verified', 'regular', 'vip')),
+        total_visits INTEGER NOT NULL DEFAULT 0,
+        total_spent INTEGER NOT NULL DEFAULT 0,
+        total_points INTEGER NOT NULL DEFAULT 0,
+        no_show_count INTEGER NOT NULL DEFAULT 0,
+        is_banned INTEGER NOT NULL DEFAULT 0,
+        ban_reason TEXT,
+        notes TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch { /* OK */ }
+
+  try {
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bc_phone_hmac ON booking_clients(phone_hmac)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bc_telegram ON booking_clients(telegram_id)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bc_trust ON booking_clients(trust_level)');
+  } catch { /* OK */ }
+
+  // Deep-link token for Telegram bot activation
+  try {
+    await client.execute('ALTER TABLE booking_clients ADD COLUMN deep_link_token TEXT');
+  } catch { /* column already exists */ }
+  try {
+    await client.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_bc_deeplink ON booking_clients(deep_link_token)');
+  } catch { /* OK */ }
+
+  // Bookings V2 (main reservation table)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS bookings_v2 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL,
+        girl_id INTEGER NOT NULL,
+        location_id INTEGER,
+        date TEXT NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        duration_minutes INTEGER NOT NULL,
+        program_id INTEGER,
+        extras TEXT DEFAULT '[]',
+        price INTEGER,
+        points_earned INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'pending'
+          CHECK (status IN ('draft', 'pending', 'confirmed', 'in_progress', 'completed',
+                             'no_show', 'declined', 'expired',
+                             'cancelled_client', 'cancelled_girl',
+                             'rescheduled', 'reassigned')),
+        channel TEXT NOT NULL DEFAULT 'phone'
+          CHECK (channel IN ('phone', 'telegram', 'whatsapp', 'admin', 'sms')),
+        source TEXT,
+        notes TEXT,
+        girl_notes TEXT,
+        decline_reason TEXT,
+        cancel_reason TEXT,
+        no_show_level INTEGER,
+        confirmed_at DATETIME,
+        arrived_at DATETIME,
+        completed_at DATETIME,
+        cancelled_at DATETIME,
+        created_by INTEGER,
+        updated_by INTEGER,
+        slot_version INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES booking_clients(id)
+      )
+    `);
+  } catch { /* OK */ }
+
+  try {
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bv2_girl_date ON bookings_v2(girl_id, date)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bv2_client ON bookings_v2(client_id)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bv2_status ON bookings_v2(status)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bv2_slot ON bookings_v2(girl_id, date, start_time, status)');
+  } catch { /* OK */ }
+
+  // New client confirmation columns
+  try {
+    await client.execute('ALTER TABLE bookings_v2 ADD COLUMN needs_confirmation INTEGER NOT NULL DEFAULT 0');
+  } catch { /* OK — column already exists */ }
+  try {
+    await client.execute('ALTER TABLE bookings_v2 ADD COLUMN confirmation_due_at DATETIME');
+  } catch { /* OK — column already exists */ }
+  try {
+    await client.execute('ALTER TABLE bookings_v2 ADD COLUMN confirmation_sent_at DATETIME');
+  } catch { /* OK — column already exists */ }
+  try {
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bv2_confirmation ON bookings_v2(needs_confirmation, confirmation_due_at) WHERE needs_confirmation = 1');
+  } catch { /* OK */ }
+
+  // Booking drafts (real-time bot → calendar sync)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS booking_drafts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER,
+        telegram_chat_id TEXT,
+        girl_id INTEGER,
+        date TEXT,
+        start_time TEXT,
+        end_time TEXT,
+        duration_minutes INTEGER,
+        channel TEXT NOT NULL DEFAULT 'telegram'
+          CHECK (channel IN ('telegram', 'whatsapp')),
+        session_id TEXT NOT NULL UNIQUE,
+        step TEXT NOT NULL DEFAULT 'select_girl'
+          CHECK (step IN ('select_girl', 'select_day', 'select_time', 'select_duration', 'confirm')),
+        expires_at DATETIME NOT NULL,
+        is_converted INTEGER NOT NULL DEFAULT 0,
+        converted_to_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES booking_clients(id)
+      )
+    `);
+  } catch { /* OK */ }
+
+  try {
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bd_girl_slot ON booking_drafts(girl_id, date, start_time)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bd_expires ON booking_drafts(expires_at)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bd_chat ON booking_drafts(telegram_chat_id)');
+  } catch { /* OK */ }
+
+  // Telegram users (bot deep-link activation)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS telegram_users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        telegram_user_id TEXT NOT NULL UNIQUE,
+        telegram_name TEXT,
+        client_id INTEGER NOT NULL UNIQUE,
+        chat_id TEXT,
+        activation_token TEXT,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        activated_at DATETIME,
+        last_interaction DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES booking_clients(id)
+      )
+    `);
+  } catch { /* OK */ }
+
+  // Booking audit log (immutable — INSERT only)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS booking_audit_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        booking_id INTEGER,
+        user_id INTEGER,
+        action TEXT NOT NULL,
+        actor_type TEXT NOT NULL DEFAULT 'user'
+          CHECK (actor_type IN ('user', 'bot', 'system', 'cron')),
+        entity_type TEXT,
+        entity_id INTEGER,
+        details TEXT DEFAULT '{}',
+        ip_hash TEXT,
+        user_agent TEXT,
+        severity TEXT NOT NULL DEFAULT 'info'
+          CHECK (severity IN ('info', 'warn', 'critical')),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch { /* OK */ }
+
+  try {
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bal_booking ON booking_audit_log(booking_id)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bal_user ON booking_audit_log(user_id)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bal_action ON booking_audit_log(action)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bal_created ON booking_audit_log(created_at)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bal_severity ON booking_audit_log(severity)');
+  } catch { /* OK */ }
+
+  // Slot locks (race condition prevention)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS slot_locks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        girl_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        locked_by TEXT NOT NULL,
+        expires_at DATETIME NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(girl_id, date, start_time, end_time)
+      )
+    `);
+  } catch { /* OK */ }
+
+  try {
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_sl_expires ON slot_locks(expires_at)');
+  } catch { /* OK */ }
+
+  // Booking interest — tracks who showed interest in a girl/date for last-minute offers
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS booking_interest (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        telegram_chat_id TEXT NOT NULL,
+        girl_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch { /* OK */ }
+  try {
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_bi_girl_date ON booking_interest(girl_id, date)');
+  } catch { /* OK */ }
 
   // Legacy slugs confirmed 404ing in production (GSC export, /Users/lunagroup/Downloads/
   // lovelygirls-3/Tabulka.csv, cross-checked against production with curl) from before

@@ -170,4 +170,23 @@ export const TOOLS: Anthropic.Tool[] = [
       required: ['girlId', 'date'],
     },
   },
+  {
+    name: 'escalateToOperator',
+    description:
+      'Eskaluje konverzaci na zivou operatorku. Pouzij kdyz: ' +
+      '1) Klient se pta na neco co nevis/nemas v datech, ' +
+      '2) Klient je nastvany a chce mluvit s clovekem, ' +
+      '3) Klient ma specificky pozadavek ktery nezvladnes (zmena casu, specialni sluzba). ' +
+      'Posle Telegram notifikaci operatorce s kontextem konverzace.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        reason: {
+          type: 'string',
+          description: 'Kratky duvod eskalace (max 200 znaku) — co klient chce a proc bot nevi',
+        },
+      },
+      required: ['reason'],
+    },
+  },
 ];

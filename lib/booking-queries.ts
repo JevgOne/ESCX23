@@ -50,7 +50,8 @@ export interface WeekGirlSchedule {
 
 export async function getCalendarGirls(date: string): Promise<CalendarGirl[]> {
   const d = new Date(date + 'T12:00:00');
-  const dayOfWeek = d.getDay(); // 0=Sun
+  const jsDay = d.getDay();
+  const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // Convert to DB convention (Mon=0..Sun=6)
 
   const result = await db.execute({
     sql: `
@@ -61,7 +62,7 @@ export async function getCalendarGirls(date: string): Promise<CalendarGirl[]> {
         gs.start_time AS shift_start,
         gs.end_time AS shift_end,
         l.name AS location_name,
-        se.type AS exception_type,
+        se.exception_type AS exception_type,
         se.start_time AS ex_start,
         se.end_time AS ex_end
       FROM girls g
@@ -76,7 +77,7 @@ export async function getCalendarGirls(date: string): Promise<CalendarGirl[]> {
       LEFT JOIN schedule_exceptions se ON se.girl_id = g.id AND se.date = ?
       WHERE g.status IN ('active', 'inactive')
       ORDER BY
-        CASE WHEN gs.start_time IS NOT NULL AND (se.type IS NULL OR se.type != 'unavailable') THEN 0 ELSE 1 END,
+        CASE WHEN gs.start_time IS NOT NULL AND (se.exception_type IS NULL OR se.exception_type != 'unavailable') THEN 0 ELSE 1 END,
         g.name
     `,
     args: [dayOfWeek, date, date],

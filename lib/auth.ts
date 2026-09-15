@@ -205,7 +205,7 @@ export async function requireGirl(): Promise<AuthUser> {
   return user;
 }
 
-/** Require admin or operator role for /booking/* pages. Girls redirect to /studio. */
+/** Require admin, manager, or operator role for /booking/* pages. Girls redirect to /studio. */
 export async function requireBooking(): Promise<AuthUser> {
   const user = await getCurrentUser();
   if (!user) {
@@ -214,13 +214,13 @@ export async function requireBooking(): Promise<AuthUser> {
   if (user.role === 'girl') {
     redirect('/studio/dashboard');
   }
-  if (user.role !== 'admin' && user.role !== 'operator') {
+  if (user.role !== 'admin' && user.role !== 'manager' && user.role !== 'operator') {
     redirect('/booking');
   }
   return user;
 }
 
-/** Require admin role specifically for admin-only /booking/* pages (girls, settings, audit, etc.). */
+/** Require admin role specifically for admin-only /booking/* pages (audit, users, settings). */
 export async function requireBookingAdmin(): Promise<AuthUser> {
   const user = await getCurrentUser();
   if (!user) {

@@ -83,7 +83,7 @@ export async function getAvailableGirls(date: string): Promise<AvailableGirl[]> 
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url,
         gs.start_time AS shift_start, gs.end_time AS shift_end,
         l.name AS location_name,
-        se.type AS exception_type, se.start_time AS ex_start, se.end_time AS ex_end
+        se.exception_type AS exception_type, se.start_time AS ex_start, se.end_time AS ex_end
       FROM girls g
       LEFT JOIN (
         SELECT girl_id, start_time, end_time, location_id,
@@ -155,7 +155,7 @@ export async function getAvailableSlots(
   // Get girl's shift
   const shiftRes = await db.execute({
     sql: `
-      SELECT gs.start_time, gs.end_time, se.type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
+      SELECT gs.start_time, gs.end_time, se.exception_type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
       FROM girls g
       LEFT JOIN (
         SELECT girl_id, start_time, end_time,
@@ -353,4 +353,149 @@ export async function createClient(
     id: Number(result.lastInsertRowid),
     clientNumber,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Week schedules for ALL active girls (for quick booking panel)
+// ---------------------------------------------------------------------------
+
+export interface DaySchedule {
+  date: string;       // "2026-09-14"
+  dayOfWeek: number;
+  dayName: string;    // "NEDELE"
+  dateLabel: string;  // "14.9 NEDELE"
+  shiftStart: string | null;
+  shiftEnd: string | null;
+  locationName: string | null;
+}
+
+export interface GirlSummary {
+  id: number;
+  name: string;
+  photoUrl: string | null;
+}
+
+const CZECH_DAYS = ['NEDELE', 'PONDELI', 'UTERY', 'STREDA', 'CTVRTEK', 'PATEK', 'SOBOTA'];
+
+function formatDateLabel(date: string): string {
+  const d = new Date(date + 'T12:00:00');
+  return `${d.getDate()}.${d.getMonth() + 1} ${CZECH_DAYS[d.getDay()]}`;
+}
+
+export async function getWeekSchedulesForAll(): Promise<{
+  girls: GirlSummary[];
+  schedules: Record<number, DaySchedule[]>;
+}> {
+  await requireBooking();
+
+  // Build 7-day range starting from today (Prague timezone)
+  const now = new Date();
+  const pragueDate = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Prague' }));
+  const days: { date: string; dayOfWeek: number }[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(pragueDate);
+    d.setDate(d.getDate() + i);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    days.push({ date: dateStr, dayOfWeek: d.getDay() });
+  }
+
+  // Get all active girls
+  const girlsRes = await db.execute({
+    sql: `
+      SELECT g.id, g.name,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
+      FROM girls g WHERE g.status = 'active' ORDER BY g.name
+    `,
+    args: [],
+  });
+
+  const girls: GirlSummary[] = girlsRes.rows.map((r) => ({
+    id: Number(r.id),
+    name: String(r.name),
+    photoUrl: r.photo_url ? String(r.photo_url) : null,
+  }));
+
+  const girlIds = girls.map((g) => g.id);
+  if (girlIds.length === 0) return { girls, schedules: {} };
+
+  // Get all schedules for these girls for all 7 day_of_week values
+  const schedulesRes = await db.execute({
+    sql: `
+      SELECT gs.girl_id, gs.day_of_week, gs.start_time, gs.end_time, l.name AS location_name
+      FROM girl_schedules gs
+      LEFT JOIN locations l ON l.id = gs.location_id
+      WHERE gs.girl_id IN (${girlIds.map(() => '?').join(',')})
+        AND gs.is_active = 1
+      ORDER BY gs.girl_id, gs.day_of_week, gs.effective_from DESC NULLS LAST
+    `,
+    args: [...girlIds],
+  });
+
+  // Build lookup: girlId -> dayOfWeek -> first match (most recent effective_from)
+  const shiftLookup = new Map<string, { start: string; end: string; location: string | null }>();
+  for (const r of schedulesRes.rows) {
+    const key = `${r.girl_id}_${r.day_of_week}`;
+    if (!shiftLookup.has(key)) {
+      shiftLookup.set(key, {
+        start: String(r.start_time).substring(0, 5),
+        end: String(r.end_time).substring(0, 5),
+        location: r.location_name ? String(r.location_name) : null,
+      });
+    }
+  }
+
+  // Get exceptions for the 7-day range
+  const dateStrs = days.map((d) => d.date);
+  const exceptionsRes = await db.execute({
+    sql: `
+      SELECT girl_id, date, exception_type, start_time, end_time
+      FROM schedule_exceptions
+      WHERE girl_id IN (${girlIds.map(() => '?').join(',')})
+        AND date IN (${dateStrs.map(() => '?').join(',')})
+    `,
+    args: [...girlIds, ...dateStrs],
+  });
+
+  const exceptionLookup = new Map<string, { type: string; start: string | null; end: string | null }>();
+  for (const r of exceptionsRes.rows) {
+    const key = `${r.girl_id}_${r.date}`;
+    exceptionLookup.set(key, {
+      type: String(r.exception_type),
+      start: r.start_time ? String(r.start_time).substring(0, 5) : null,
+      end: r.end_time ? String(r.end_time).substring(0, 5) : null,
+    });
+  }
+
+  // Build per-girl schedules
+  const schedules: Record<number, DaySchedule[]> = {};
+  for (const girl of girls) {
+    schedules[girl.id] = days.map((day) => {
+      const shift = shiftLookup.get(`${girl.id}_${day.dayOfWeek}`);
+      const exception = exceptionLookup.get(`${girl.id}_${day.date}`);
+
+      let shiftStart = shift?.start ?? null;
+      let shiftEnd = shift?.end ?? null;
+      let locationName = shift?.location ?? null;
+
+      if (exception?.type === 'unavailable') {
+        shiftStart = null;
+        shiftEnd = null;
+      } else if (exception?.type === 'custom_hours') {
+        shiftStart = exception.start ?? shiftStart;
+        shiftEnd = exception.end ?? shiftEnd;
+      }
+
+      return {
+        date: day.date,
+        dayOfWeek: day.dayOfWeek,
+        dayName: CZECH_DAYS[day.dayOfWeek],
+        dateLabel: formatDateLabel(day.date),
+        shiftStart,
+        shiftEnd,
+        locationName,
+      };
+    });
+  }
+
+  return { girls, schedules };
 }

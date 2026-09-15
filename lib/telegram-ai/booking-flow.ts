@@ -17,6 +17,7 @@
 import { db } from '../db';
 import { sendMessage } from '../telegram';
 import { logAudit } from '../audit';
+import { createBookingNotification } from '../booking-notifications';
 import type { ClientContext } from './types';
 
 // ---------------------------------------------------------------------------
@@ -40,6 +41,11 @@ function addMinutes(time: string, mins: number): string {
 
 function generateSessionId(): string {
   return `bk_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/** Convert JS getDay() (Sun=0..Sat=6) to DB convention (Mon=0..Sun=6). */
+function toDbDayOfWeek(jsDay: number): number {
+  return jsDay === 0 ? 6 : jsDay - 1;
 }
 
 // ---------------------------------------------------------------------------
@@ -77,7 +83,7 @@ export async function startBookingFlow(
 
   // Get girl info
   const girlResult = await db.execute({
-    sql: 'SELECT id, name FROM girls WHERE id = ? AND status = \'active\' LIMIT 1',
+    sql: `SELECT id, name FROM girls WHERE id = ? AND status IN ('active', 'inactive') LIMIT 1`,
     args: [girlId],
   });
   if (girlResult.rows.length === 0) {
@@ -139,11 +145,16 @@ export async function handleTimeSelected(
     return;
   }
 
-  // Update draft
+  // Prevent double-click: if already past time selection, ignore
+  if (draft.step !== 'select_time') {
+    return; // silently ignore — user already clicked a time
+  }
+
+  // Update draft atomically (step change prevents race condition)
   await db.execute({
     sql: `UPDATE booking_drafts
           SET start_time = ?, step = 'select_duration', updated_at = CURRENT_TIMESTAMP
-          WHERE session_id = ?`,
+          WHERE session_id = ? AND step = 'select_time'`,
     args: [time, sessionId],
   });
 
@@ -182,6 +193,11 @@ export async function handleDurationSelected(
   const draft = await getDraft(sessionId, chatId);
   if (!draft || !draft.startTime) {
     await sendMessage(chatId, 'Tato rezervace vyprsela. Zacni prosim znovu.');
+    return;
+  }
+
+  // Prevent double-click on duration
+  if (draft.step !== 'select_duration') {
     return;
   }
 
@@ -245,6 +261,11 @@ export async function handleConfirm(
     return;
   }
 
+  // Prevent double-click on confirm
+  if (draft.step !== 'confirm') {
+    return;
+  }
+
   // Check slot is still available
   const conflictCheck = await db.execute({
     sql: `SELECT id FROM bookings_v2
@@ -285,22 +306,32 @@ export async function handleConfirm(
     return;
   }
 
-  // Determine booking status: new clients → pending, regulars → confirmed
+  // Determine if new client needs confirmation (2h before)
   const clientRes = await db.execute({
     sql: 'SELECT trust_level, total_visits FROM booking_clients WHERE id = ? LIMIT 1',
     args: [draft.clientId],
   });
   const trustLevel = clientRes.rows[0] ? String(clientRes.rows[0].trust_level) : 'new';
   const visits = clientRes.rows[0] ? Number(clientRes.rows[0].total_visits) : 0;
-  const bookingStatus = (visits === 0 || trustLevel === 'new') ? 'pending' : 'confirmed';
+  const isNewClient = visits === 0 || trustLevel === 'new';
 
-  // Create booking
+  // Calculate confirmation_due_at (2h before booking) for new clients
+  let confirmationDueAt: string | null = null;
+  if (isNewClient) {
+    const [bh, bm] = draft.startTime.split(':').map(Number);
+    const bookingDate = new Date(draft.date + 'T00:00:00+02:00'); // Prague timezone
+    bookingDate.setHours(bh - 2, bm, 0, 0); // 2h before
+    confirmationDueAt = bookingDate.toISOString();
+  }
+
+  // All bookings are confirmed — new clients just need to re-confirm 2h before
   const bookingResult = await db.execute({
     sql: `INSERT INTO bookings_v2 (
             client_id, girl_id, date, start_time, end_time, duration_minutes,
-            price, points_earned, status, source, channel, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-    args: [draft.clientId, draft.girlId, draft.date, draft.startTime, draft.endTime, draft.durationMinutes, price, price, bookingStatus],
+            price, points_earned, status, needs_confirmation, confirmation_due_at,
+            source, channel, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    args: [draft.clientId, draft.girlId, draft.date, draft.startTime, draft.endTime, draft.durationMinutes, price, price, isNewClient ? 1 : 0, confirmationDueAt],
   });
 
   const bookingId = Number(bookingResult.lastInsertRowid);
@@ -329,44 +360,47 @@ export async function handleConfirm(
     details: { source: 'booking_flow', chatId, sessionId },
   }).catch(() => {});
 
+  // In-app notification for operators/managers
+  createBookingNotification({
+    type: 'bot_booking',
+    title: `Nova TG rezervace: ${draft.girlName}`,
+    message: `${draft.date} ${draft.startTime}-${draft.endTime} (${draft.durationMinutes} min) — ${price} CZK`,
+    bookingId,
+    link: `/booking/calendar?date=${draft.date}`,
+  }).catch(() => {});
+
   // Get location for confirmation message
   const locResult = await db.execute({
-    sql: `SELECT l.name AS location_name
+    sql: `SELECT COALESCE(l.display_name, l.name) AS location_name
           FROM girl_schedules gs
           LEFT JOIN locations l ON l.id = gs.location_id
           WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
           LIMIT 1`,
-    args: [draft.girlId, new Date(draft.date + 'T12:00:00').getDay()],
+    args: [draft.girlId, toDbDayOfWeek(new Date(draft.date + 'T12:00:00').getDay())],
   });
   const location = locResult.rows[0]?.location_name ? String(locResult.rows[0].location_name) : null;
 
-  // Send confirmation — different message for pending vs confirmed
-  const msg = bookingStatus === 'pending'
-    ? [
-        `\u{1F4CB} <b>Rezervace prijata!</b>`,
-        '',
-        `\u{1F469} ${draft.girlName}`,
-        `\u{1F4C5} ${formatDate(draft.date)}`,
-        `\u23F0 ${draft.startTime} — ${draft.endTime} (${draft.durationMinutes} min)`,
-        `\u{1F4B0} ${price} CZK`,
-        location ? `\u{1F4CD} ${location}` : '',
-        '',
-        `Rezervace #${bookingId}`,
-        `Ceka na potvrzeni operatorkou — ozveme se ti brzy \u2705`,
-      ].filter(Boolean).join('\n')
-    : [
-        `\u2705 <b>Rezervace potvrzena!</b>`,
-        '',
-        `\u{1F469} ${draft.girlName}`,
-        `\u{1F4C5} ${formatDate(draft.date)}`,
-        `\u23F0 ${draft.startTime} — ${draft.endTime} (${draft.durationMinutes} min)`,
-        `\u{1F4B0} ${price} CZK`,
-        location ? `\u{1F4CD} ${location}` : '',
-        '',
-        `Rezervace #${bookingId}`,
-      ].filter(Boolean).join('\n');
+  // Build confirmation message
+  const msgLines = [
+    `\u2705 <b>Rezervace potvrzena!</b>`,
+    '',
+    `\u{1F469} ${draft.girlName}`,
+    `\u{1F4C5} ${formatDate(draft.date)}`,
+    `\u23F0 ${draft.startTime} — ${draft.endTime} (${draft.durationMinutes} min)`,
+    `\u{1F4B0} ${price} CZK`,
+    location ? `\u{1F4CD} ${location}` : '',
+    '',
+    `Rezervace #${bookingId}`,
+  ];
 
-  await sendMessage(chatId, msg);
+  // New clients get confirmation reminder info
+  if (isNewClient) {
+    msgLines.push('');
+    msgLines.push(`\u26A0\uFE0F Jako novy klient prosim <b>potvrdte</b> rezervaci 2h pred terminem — poslu ti pripominku.`);
+    msgLines.push(`Pokud nepotvrdis, misto muze byt nabidnuto nekomu jinemu.`);
+  }
+
+  await sendMessage(chatId, msgLines.filter(Boolean).join('\n'));
 }
 
 // ---------------------------------------------------------------------------
@@ -480,7 +514,123 @@ export async function handleBookingCallback(
     return true;
   }
 
+  // bk_remind_ok:{bookingId} — new client confirms booking from reminder
+  if (callbackData.startsWith('bk_remind_ok:')) {
+    const bookingId = parseInt(callbackData.slice(13), 10);
+    await handleReminderConfirm(chatId, bookingId);
+    return true;
+  }
+
+  // bk_remind_cancel:{bookingId} — new client cancels from reminder
+  if (callbackData.startsWith('bk_remind_cancel:')) {
+    const bookingId = parseInt(callbackData.slice(17), 10);
+    await handleReminderCancel(chatId, bookingId);
+    return true;
+  }
+
   return false;
+}
+
+// ---------------------------------------------------------------------------
+// Reminder confirmation handlers (from cron reminder buttons)
+// ---------------------------------------------------------------------------
+
+async function handleReminderConfirm(chatId: string, bookingId: number): Promise<void> {
+  const result = await db.execute({
+    sql: `UPDATE bookings_v2
+          SET confirmed_at = CURRENT_TIMESTAMP, needs_confirmation = 0, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ? AND status = 'confirmed' AND needs_confirmation = 1`,
+    args: [bookingId],
+  });
+
+  if (result.rowsAffected === 0) {
+    await sendMessage(chatId, 'Tato rezervace uz neni aktivni.');
+    return;
+  }
+
+  // Get booking details for confirmation message
+  const booking = await db.execute({
+    sql: `SELECT b.date, b.start_time, b.end_time, g.name AS girl_name
+          FROM bookings_v2 b JOIN girls g ON g.id = b.girl_id
+          WHERE b.id = ?`,
+    args: [bookingId],
+  });
+
+  if (booking.rows.length > 0) {
+    const r = booking.rows[0];
+    await sendMessage(chatId, [
+      `\u2705 <b>Super, potvrzeno!</b>`,
+      '',
+      `\u{1F469} ${r.girl_name} — ${formatDate(String(r.date))} v ${String(r.start_time).substring(0, 5)}`,
+      '',
+      `Tesime se na tebe \u{1F60A}`,
+    ].join('\n'));
+  }
+}
+
+async function handleReminderCancel(chatId: string, bookingId: number): Promise<void> {
+  const result = await db.execute({
+    sql: `UPDATE bookings_v2
+          SET status = 'cancelled_client', cancel_reason = 'Klient zrusil pri potvrzeni',
+              cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ? AND status = 'confirmed'`,
+    args: [bookingId],
+  });
+
+  if (result.rowsAffected === 0) {
+    await sendMessage(chatId, 'Tato rezervace uz neni aktivni.');
+    return;
+  }
+
+  // Release slot lock
+  await db.execute({
+    sql: `DELETE FROM slot_locks WHERE locked_by = ?`,
+    args: [`booking:${bookingId}`],
+  }).catch(() => {});
+
+  // Get booking info for notification to interested clients
+  const booking = await db.execute({
+    sql: `SELECT b.girl_id, b.date, b.start_time, b.end_time, g.name AS girl_name
+          FROM bookings_v2 b JOIN girls g ON g.id = b.girl_id
+          WHERE b.id = ?`,
+    args: [bookingId],
+  });
+
+  await sendMessage(chatId, 'Rezervace zrusena. Napiste kdykoliv, pokud si budete chtit zarezervovat \u{1F60A}');
+
+  // Notify interested clients about freed slot
+  if (booking.rows.length > 0) {
+    const r = booking.rows[0];
+    const girlId = Number(r.girl_id);
+    const date = String(r.date);
+    const girlName = String(r.girl_name);
+    const startTime = String(r.start_time).substring(0, 5);
+    const endTime = String(r.end_time).substring(0, 5);
+
+    const interested = await db.execute({
+      sql: `SELECT DISTINCT telegram_chat_id FROM booking_interest
+            WHERE girl_id = ? AND date = ? AND telegram_chat_id != ?
+              AND created_at > datetime('now', '-24 hours')`,
+      args: [girlId, date, chatId],
+    });
+
+    for (const intRow of interested.rows) {
+      await sendMessage(String(intRow.telegram_chat_id), [
+        `\u{1F525} <b>Uvolnil se termin!</b>`,
+        '',
+        `\u{1F469} ${girlName}`,
+        `\u23F0 ${startTime} — ${endTime} (${formatDate(date)})`,
+        '',
+        `Chces rezervovat? Napis mi \u{1F60A}`,
+      ].join('\n'));
+    }
+
+    // Clean up interest
+    await db.execute({
+      sql: `DELETE FROM booking_interest WHERE girl_id = ? AND date = ?`,
+      args: [girlId, date],
+    }).catch(() => {});
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -539,7 +689,7 @@ async function expireDraft(sessionId: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 async function getAvailableSlots(girlId: number, date: string): Promise<string[]> {
-  const dow = new Date(date + 'T12:00:00').getDay();
+  const dow = toDbDayOfWeek(new Date(date + 'T12:00:00').getDay());
 
   // Get shift
   const shiftResult = await db.execute({
@@ -630,7 +780,7 @@ async function getAvailableDurations(
   startTime: string,
 ): Promise<Array<{ minutes: number; price: number }>> {
   // Get shift end time
-  const dow = new Date(date + 'T12:00:00').getDay();
+  const dow = toDbDayOfWeek(new Date(date + 'T12:00:00').getDay());
   const shiftResult = await db.execute({
     sql: `SELECT gs.end_time, se.exception_type AS ex_type, se.end_time AS ex_end
           FROM girl_schedules gs

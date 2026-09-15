@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getCurrentUser, requireBooking } from '@/lib/auth';
+import { getUnreadCount } from '@/lib/booking-notifications';
 import BookingSidebar from '@/components/booking/BookingSidebar';
 
 export const dynamic = 'force-dynamic';
@@ -75,7 +76,27 @@ const SHELL_STYLES = `
     text-transform: uppercase;
   }
   .sf-topbar-role.admin { background: rgba(242,125,141,0.2); color: var(--coral); }
+  .sf-topbar-role.manager { background: rgba(167,139,250,0.2); color: var(--purple); }
   .sf-topbar-role.operator { background: rgba(96,165,250,0.2); color: var(--blue); }
+  .sf-notif-link {
+    position: relative;
+    text-decoration: none;
+    font-size: 18px;
+    line-height: 1;
+    padding: 4px;
+  }
+  .sf-notif-badge {
+    position: absolute;
+    top: -4px; right: -6px;
+    min-width: 16px; height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: var(--red);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
   .sf-content {
     flex: 1;
     padding: 24px;
@@ -106,9 +127,11 @@ export default async function BookingLayout({
 
   // All other pages require auth
   const user = await requireBooking();
+  const unreadCount = await getUnreadCount().catch(() => 0);
 
   const displayName = user.email.split('@')[0];
-  const roleLabel = user.role === 'admin' ? 'Admin' : 'Operátorka';
+  const roleLabels: Record<string, string> = { admin: 'Admin', manager: 'Manažerka', operator: 'Operátorka' };
+  const roleLabel = roleLabels[user.role] ?? user.role;
 
   return (
     <html lang="cs">
@@ -120,6 +143,12 @@ export default async function BookingLayout({
             <div className="sf-topbar">
               <div />
               <div className="sf-topbar-user">
+                <a href="/booking/notifications" className="sf-notif-link" title="Notifikace">
+                  {'\u{1F514}'}
+                  {unreadCount > 0 && (
+                    <span className="sf-notif-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                  )}
+                </a>
                 <span className="sf-topbar-name">{displayName}</span>
                 <span className={`sf-topbar-role ${user.role}`}>{roleLabel}</span>
               </div>

@@ -5,6 +5,7 @@ interface NavItem {
   href: string;
   icon: string;
   adminOnly?: boolean;
+  superAdminOnly?: boolean;
 }
 
 interface NavSection {
@@ -16,6 +17,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Booking',
     items: [
+      { label: 'Rychla rezervace', href: '/booking/quick', icon: '\u26A1' },
       { label: 'Dashboard', href: '/booking/dashboard', icon: '\u{1F4CA}' },
       { label: 'Kalendář', href: '/booking/calendar', icon: '\u{1F4C5}' },
       { label: 'Klienti', href: '/booking/clients', icon: '\u{1F464}' },
@@ -33,9 +35,9 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Systém',
     items: [
-      { label: 'Nastavení', href: '/booking/settings', icon: '\u2699\uFE0F', adminOnly: true },
-      { label: 'Audit log', href: '/booking/audit', icon: '\u{1F4DC}', adminOnly: true },
-      { label: 'Uživatelé', href: '/booking/users', icon: '\u{1F465}', adminOnly: true },
+      { label: 'Nastavení', href: '/booking/settings', icon: '\u2699\uFE0F', superAdminOnly: true },
+      { label: 'Audit log', href: '/booking/audit', icon: '\u{1F4DC}', superAdminOnly: true },
+      { label: 'Uživatelé', href: '/booking/users', icon: '\u{1F465}', superAdminOnly: true },
       { label: 'TG Bot', href: '/booking/telegram', icon: '\u2708\uFE0F', adminOnly: true },
     ],
   },
@@ -165,7 +167,8 @@ export default function BookingSidebar({
   role: string;
   currentPath: string;
 }) {
-  const isAdmin = role === 'admin';
+  const isAdmin = role === 'admin' || role === 'manager';
+  const isSuperAdmin = role === 'admin';
 
   return (
     <>
@@ -179,7 +182,9 @@ export default function BookingSidebar({
         <div className="sf-nav">
           {NAV_SECTIONS.map((section, si) => {
             const visibleItems = section.items.filter(
-              (item) => !item.adminOnly || isAdmin,
+              (item) =>
+                (!item.adminOnly || isAdmin) &&
+                (!item.superAdminOnly || isSuperAdmin),
             );
             if (visibleItems.length === 0) return null;
 
