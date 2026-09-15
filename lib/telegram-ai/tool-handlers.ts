@@ -143,6 +143,14 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
     // Girl must have a shift (either from regular schedule or exception)
     if (!shiftStart || !shiftEnd) continue;
 
+    // If asking about today, skip girls whose shift already ended
+    if (date === getPragueToday()) {
+      const now = getPragueNow();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const [eh, em] = shiftEnd.split(':').map(Number);
+      if (eh * 60 + em <= nowMinutes) continue;
+    }
+
     girls.push({
       id: Number(r.id),
       name: String(r.name),
