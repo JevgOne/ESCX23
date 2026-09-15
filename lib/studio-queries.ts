@@ -88,7 +88,8 @@ export async function getGirlShift(
   date: string,
 ): Promise<{ startTime: string; endTime: string; locationName: string | null } | null> {
   const d = new Date(date + 'T12:00:00');
-  const dayOfWeek = d.getDay();
+  const jsDay = d.getDay();
+  const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
 
   const result = await db.execute({
     sql: `
@@ -144,7 +145,8 @@ export async function getGirlWeekSchedule(
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const dow = d.getDay();
+    const jsDay = d.getDay();
+    const dow = jsDay === 0 ? 6 : jsDay - 1;
 
     const shiftResult = await db.execute({
       sql: `

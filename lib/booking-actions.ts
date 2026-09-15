@@ -74,7 +74,8 @@ export async function getAvailableGirls(date: string): Promise<AvailableGirl[]> 
   await requireBooking();
 
   const d = new Date(date + 'T12:00:00');
-  const dayOfWeek = d.getDay();
+  const jsDay = d.getDay();
+  const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
 
   const result = await db.execute({
     sql: `
@@ -150,7 +151,8 @@ export async function getAvailableSlots(
   await requireBooking();
 
   const d = new Date(date + 'T12:00:00');
-  const dayOfWeek = d.getDay();
+  const jsDay = d.getDay();
+  const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
 
   // Get girl's shift
   const shiftRes = await db.execute({
@@ -287,7 +289,8 @@ export async function createBooking(input: CreateBookingInput): Promise<{ id: nu
 
   // Get location from girl's schedule for this date
   const d = new Date(input.date + 'T12:00:00');
-  const dayOfWeek = d.getDay();
+  const jsDay = d.getDay();
+  const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
   const locRes = await db.execute({
     sql: `
       SELECT gs.location_id FROM girl_schedules gs
@@ -480,7 +483,8 @@ export async function getWeekSchedulesForAll(): Promise<{
     const d = new Date(pragueDate);
     d.setDate(d.getDate() + i);
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    days.push({ date: dateStr, dayOfWeek: d.getDay() });
+    const jsDay = d.getDay();
+    days.push({ date: dateStr, dayOfWeek: jsDay === 0 ? 6 : jsDay - 1 });
   }
 
   // Get all active girls
