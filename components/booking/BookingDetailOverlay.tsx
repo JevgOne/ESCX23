@@ -117,7 +117,7 @@ export default function BookingDetailOverlay({ booking, backUrl }: Props) {
                   <button className="bdo-btn bdo-primary" onClick={() => handleAction('confirmed')} disabled={isPending}>
                     <span className="bdo-icon">&#10003;</span> Potvrdit
                   </button>
-                  <button className="bdo-btn" disabled={isPending}>
+                  <button className="bdo-btn" onClick={() => handleAction('rescheduled', 'Presunout rezervaci na jiny cas?')} disabled={isPending}>
                     <span className="bdo-icon">&#8644;</span> Jiny cas
                   </button>
                   <button className="bdo-btn bdo-danger" onClick={() => handleAction('declined', 'Odmitnout rezervaci?')} disabled={isPending} style={{ gridColumn: '1 / -1' }}>
