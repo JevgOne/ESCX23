@@ -4,6 +4,7 @@
  */
 
 import { db } from './db';
+import { decrypt, isEncrypted } from './crypto';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,10 +26,13 @@ export interface ClientDetail {
   clientNumber: string;
   nickname: string;
   phoneEncrypted: string | null;
+  phoneDecrypted: string | null;
   nameEncrypted: string | null;
   surnameEncrypted: string | null;
   emailEncrypted: string | null;
+  emailDecrypted: string | null;
   telegramId: string | null;
+  deepLinkToken: string | null;
   source: string;
   trustLevel: string;
   totalVisits: number;
@@ -162,15 +166,32 @@ export async function getClientDetail(id: number): Promise<ClientDetail | null> 
   if (result.rows.length === 0) return null;
 
   const r = result.rows[0];
+
+  // Decrypt PII fields for admin display
+  const phoneRaw = r.phone_encrypted ? String(r.phone_encrypted) : null;
+  let phoneDecrypted: string | null = null;
+  if (phoneRaw && isEncrypted(phoneRaw)) {
+    try { phoneDecrypted = decrypt(phoneRaw); } catch { /* decryption failed */ }
+  }
+
+  const emailRaw = r.email_encrypted ? String(r.email_encrypted) : null;
+  let emailDecrypted: string | null = null;
+  if (emailRaw && isEncrypted(emailRaw)) {
+    try { emailDecrypted = decrypt(emailRaw); } catch { /* decryption failed */ }
+  }
+
   return {
     id: Number(r.id),
     clientNumber: String(r.client_number),
     nickname: String(r.nickname),
-    phoneEncrypted: r.phone_encrypted ? String(r.phone_encrypted) : null,
+    phoneEncrypted: phoneRaw,
+    phoneDecrypted,
     nameEncrypted: r.name_encrypted ? String(r.name_encrypted) : null,
     surnameEncrypted: r.surname_encrypted ? String(r.surname_encrypted) : null,
-    emailEncrypted: r.email_encrypted ? String(r.email_encrypted) : null,
+    emailEncrypted: emailRaw,
+    emailDecrypted,
     telegramId: r.telegram_id ? String(r.telegram_id) : null,
+    deepLinkToken: r.deep_link_token ? String(r.deep_link_token) : null,
     source: String(r.source),
     trustLevel: String(r.trust_level),
     totalVisits: Number(r.total_visits),

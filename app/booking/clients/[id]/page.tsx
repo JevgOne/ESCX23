@@ -136,7 +136,11 @@ export default async function ClientDetailPage({ params }: Props) {
             <div className="cd-info-row">
               <span className="cd-info-label">Telefon</span>
               <span className="cd-info-value">
-                {client.phoneEncrypted ? (
+                {client.phoneDecrypted ? (
+                  <a href={`tel:${client.phoneDecrypted}`} style={{ color: 'var(--text)', textDecoration: 'none' }}>
+                    {client.phoneDecrypted}
+                  </a>
+                ) : client.phoneEncrypted ? (
                   <span className="cd-encrypted">sifrovano</span>
                 ) : (
                   <span className="cd-dim">--</span>
@@ -149,10 +153,25 @@ export default async function ClientDetailPage({ params }: Props) {
                 {client.telegramId ?? '--'}
               </span>
             </div>
+            {client.deepLinkToken && !client.telegramId && (
+              <div className="cd-info-row">
+                <span className="cd-info-label">Deep-link</span>
+                <span className="cd-info-value" style={{
+                  fontSize: '11px', fontFamily: 'monospace', wordBreak: 'break-all',
+                  color: '#229ED9', userSelect: 'all',
+                }}>
+                  t.me/studioflow3_bot?start=LG_{client.deepLinkToken}
+                </span>
+              </div>
+            )}
             <div className="cd-info-row">
               <span className="cd-info-label">Email</span>
               <span className="cd-info-value">
-                {client.emailEncrypted ? (
+                {client.emailDecrypted ? (
+                  <a href={`mailto:${client.emailDecrypted}`} style={{ color: 'var(--text)', textDecoration: 'none' }}>
+                    {client.emailDecrypted}
+                  </a>
+                ) : client.emailEncrypted ? (
                   <span className="cd-encrypted">sifrovano</span>
                 ) : (
                   <span className="cd-dim">--</span>
