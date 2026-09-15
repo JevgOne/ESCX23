@@ -65,10 +65,7 @@ export async function startBookingFlow(
 ): Promise<StartBookingResult> {
   // Validate client can book
   if (!ctx.isRegistered || !ctx.clientId) {
-    throw new Error('Pro rezervaci musis byt registrovany klient.');
-  }
-  if (ctx.totalVisits < 3) {
-    throw new Error('Rezervace pres bota je dostupna od 3 navstev. Zavolej nam pro objednani.');
+    throw new Error('Pro rezervaci musis byt registrovany klient. Rekni mi sve jmeno a zaregistruji te.');
   }
 
   // Cancel any existing active draft for this chat
@@ -288,13 +285,22 @@ export async function handleConfirm(
     return;
   }
 
+  // Determine booking status: new clients → pending, regulars → confirmed
+  const clientRes = await db.execute({
+    sql: 'SELECT trust_level, total_visits FROM booking_clients WHERE id = ? LIMIT 1',
+    args: [draft.clientId],
+  });
+  const trustLevel = clientRes.rows[0] ? String(clientRes.rows[0].trust_level) : 'new';
+  const visits = clientRes.rows[0] ? Number(clientRes.rows[0].total_visits) : 0;
+  const bookingStatus = (visits === 0 || trustLevel === 'new') ? 'pending' : 'confirmed';
+
   // Create booking
   const bookingResult = await db.execute({
     sql: `INSERT INTO bookings_v2 (
             client_id, girl_id, date, start_time, end_time, duration_minutes,
             price, points_earned, status, source, channel, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-    args: [draft.clientId, draft.girlId, draft.date, draft.startTime, draft.endTime, draft.durationMinutes, price, price],
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    args: [draft.clientId, draft.girlId, draft.date, draft.startTime, draft.endTime, draft.durationMinutes, price, price, bookingStatus],
   });
 
   const bookingId = Number(bookingResult.lastInsertRowid);
@@ -334,18 +340,31 @@ export async function handleConfirm(
   });
   const location = locResult.rows[0]?.location_name ? String(locResult.rows[0].location_name) : null;
 
-  // Send confirmation
-  const msg = [
-    `\u2705 <b>Rezervace potvrzena!</b>`,
-    '',
-    `\u{1F469} ${draft.girlName}`,
-    `\u{1F4C5} ${formatDate(draft.date)}`,
-    `\u23F0 ${draft.startTime} — ${draft.endTime} (${draft.durationMinutes} min)`,
-    `\u{1F4B0} ${price} CZK`,
-    location ? `\u{1F4CD} ${location}` : '',
-    '',
-    `Rezervace #${bookingId}`,
-  ].filter(Boolean).join('\n');
+  // Send confirmation — different message for pending vs confirmed
+  const msg = bookingStatus === 'pending'
+    ? [
+        `\u{1F4CB} <b>Rezervace prijata!</b>`,
+        '',
+        `\u{1F469} ${draft.girlName}`,
+        `\u{1F4C5} ${formatDate(draft.date)}`,
+        `\u23F0 ${draft.startTime} — ${draft.endTime} (${draft.durationMinutes} min)`,
+        `\u{1F4B0} ${price} CZK`,
+        location ? `\u{1F4CD} ${location}` : '',
+        '',
+        `Rezervace #${bookingId}`,
+        `Ceka na potvrzeni operatorkou — ozveme se ti brzy \u2705`,
+      ].filter(Boolean).join('\n')
+    : [
+        `\u2705 <b>Rezervace potvrzena!</b>`,
+        '',
+        `\u{1F469} ${draft.girlName}`,
+        `\u{1F4C5} ${formatDate(draft.date)}`,
+        `\u23F0 ${draft.startTime} — ${draft.endTime} (${draft.durationMinutes} min)`,
+        `\u{1F4B0} ${price} CZK`,
+        location ? `\u{1F4CD} ${location}` : '',
+        '',
+        `Rezervace #${bookingId}`,
+      ].filter(Boolean).join('\n');
 
   await sendMessage(chatId, msg);
 }

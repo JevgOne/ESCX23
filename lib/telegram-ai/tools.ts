@@ -123,6 +123,23 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: 'registerNewClient',
+    description:
+      'Registruje noveho klienta ktery chce poprve rezervovat. ' +
+      'Pouzij POUZE kdyz klient AKTIVNE chce bookovat a neni registrovany. ' +
+      'Automaticky propoji jeho Telegram s novou klientskou kartou.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        nickname: {
+          type: 'string',
+          description: 'Jmeno/prezdivka klienta (ptat se nebo pouzit Telegram display name)',
+        },
+      },
+      required: ['nickname'],
+    },
+  },
+  {
     name: 'sendGirlPhoto',
     description:
       'Posle klientovi fotku divky do Telegramu. Pouzij kdyz popisujes divku, ' +

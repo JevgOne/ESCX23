@@ -53,6 +53,19 @@ export async function handleToolCall(
       case 'getClientBookings': return await getClientBookings(input, ctx);
       case 'cancelBooking': return await cancelBooking(input, ctx);
       case 'subscribeToGirl': return await subscribeToGirl(input, ctx);
+      case 'registerNewClient': {
+        const result = await handleRegisterNewClient(input, ctx);
+        const parsed = JSON.parse(result);
+        if (parsed.success) {
+          ctx.isRegistered = true;
+          ctx.clientId = parsed.clientId;
+          ctx.clientNumber = parsed.clientNumber;
+          ctx.nickname = parsed.nickname;
+          ctx.trustLevel = 'new';
+          ctx.totalVisits = 0;
+        }
+        return result;
+      }
       case 'sendGirlPhoto': return await handleSendGirlPhoto(input, ctx);
       case 'startBookingFlow': return await handleStartBookingFlow(input, ctx);
       default: return JSON.stringify({ error: 'Unknown tool' });
@@ -574,6 +587,75 @@ async function cancelBooking(
   }).catch(() => {});
 
   return JSON.stringify({ success: true, bookingId, status: 'cancelled_client' });
+}
+
+async function handleRegisterNewClient(
+  input: Record<string, unknown>,
+  ctx: ClientContext,
+): Promise<string> {
+  // Guard: already registered
+  if (ctx.isRegistered) {
+    return JSON.stringify({ error: 'Klient je uz registrovany.', clientId: ctx.clientId });
+  }
+
+  // Guard: max 1 registration per chat_id
+  const existing = await db.execute({
+    sql: 'SELECT id FROM booking_clients WHERE telegram_id = ? LIMIT 1',
+    args: [ctx.chatId],
+  });
+  if (existing.rows.length > 0) {
+    return JSON.stringify({ error: 'Uz jsi registrovany.' });
+  }
+
+  const nickname = String(input.nickname || 'Klient').trim();
+
+  // Generate client number (LG-XXXX format)
+  const maxRes = await db.execute(
+    "SELECT MAX(CAST(REPLACE(client_number, 'LG-', '') AS INTEGER)) AS mx FROM booking_clients WHERE client_number LIKE 'LG-%'",
+  );
+  const maxNum = Number(maxRes.rows[0]?.mx ?? 0);
+  const clientNumber = `LG-${maxNum + 1}`;
+
+  // Generate deep_link_token
+  const crypto = await import('crypto');
+  const deepLinkToken = crypto.randomBytes(8).toString('hex');
+
+  // Create client record
+  const result = await db.execute({
+    sql: `INSERT INTO booking_clients
+            (client_number, nickname, telegram_id, source, trust_level,
+             total_visits, deep_link_token, created_at, updated_at)
+          VALUES (?, ?, ?, 'telegram', 'new', 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    args: [clientNumber, nickname, ctx.chatId, deepLinkToken],
+  });
+
+  const clientId = Number(result.lastInsertRowid);
+
+  // Also create telegram_users record
+  await db.execute({
+    sql: `INSERT OR IGNORE INTO telegram_users
+            (telegram_user_id, client_id, chat_id, is_active, activated_at)
+          VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)`,
+    args: [ctx.chatId, clientId, ctx.chatId],
+  });
+
+  // Audit
+  logAudit({
+    userId: clientId,
+    action: 'client.register',
+    actorType: 'bot',
+    entityType: 'client',
+    entityId: clientId,
+    details: { source: 'telegram_auto', chatId: ctx.chatId, nickname },
+  }).catch(() => {});
+
+  return JSON.stringify({
+    success: true,
+    clientId,
+    clientNumber,
+    nickname,
+    message: `Klient zaregistrovan jako ${nickname} (${clientNumber}). Nyni muzes pouzit startBookingFlow.`,
+  });
 }
 
 async function handleSendGirlPhoto(
