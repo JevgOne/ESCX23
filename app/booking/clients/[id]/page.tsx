@@ -10,6 +10,8 @@ import {
   getClientBookingHistory,
   getClientGirlStats,
 } from '@/lib/client-queries';
+import { getCurrentUser } from '@/lib/auth';
+import { auditClientDecrypt } from '@/lib/audit';
 import ClientNotes from '@/components/booking/ClientNotes';
 import ClientTrustActions from '@/components/booking/ClientTrustActions';
 
@@ -67,6 +69,19 @@ export default async function ClientDetailPage({ params }: Props) {
   ]);
 
   if (!client) notFound();
+
+  // Role-based PII access: only admin sees decrypted phone/email
+  const user = await getCurrentUser();
+  const isAdmin = user?.role === 'admin';
+
+  const phone = isAdmin ? client.phoneDecrypted : null;
+  const email = isAdmin ? client.emailDecrypted : null;
+
+  // Audit log for PII decryption
+  if (isAdmin && user) {
+    if (phone) auditClientDecrypt(user.id, client.id, 'phone').catch(() => {});
+    if (email) auditClientDecrypt(user.id, client.id, 'email').catch(() => {});
+  }
 
   const initial = client.nickname.charAt(0).toUpperCase();
   const badge = TRUST_LABELS[client.trustLevel] ?? TRUST_LABELS.new;
@@ -136,9 +151,9 @@ export default async function ClientDetailPage({ params }: Props) {
             <div className="cd-info-row">
               <span className="cd-info-label">Telefon</span>
               <span className="cd-info-value">
-                {client.phoneDecrypted ? (
-                  <a href={`tel:${client.phoneDecrypted}`} style={{ color: 'var(--text)', textDecoration: 'none' }}>
-                    {client.phoneDecrypted}
+                {phone ? (
+                  <a href={`tel:${phone}`} style={{ color: 'var(--coral)', textDecoration: 'none', fontWeight: 700 }}>
+                    {phone}
                   </a>
                 ) : client.phoneEncrypted ? (
                   <span className="cd-encrypted">sifrovano</span>
@@ -167,9 +182,9 @@ export default async function ClientDetailPage({ params }: Props) {
             <div className="cd-info-row">
               <span className="cd-info-label">Email</span>
               <span className="cd-info-value">
-                {client.emailDecrypted ? (
-                  <a href={`mailto:${client.emailDecrypted}`} style={{ color: 'var(--text)', textDecoration: 'none' }}>
-                    {client.emailDecrypted}
+                {email ? (
+                  <a href={`mailto:${email}`} style={{ color: 'var(--blue)', textDecoration: 'none' }}>
+                    {email}
                   </a>
                 ) : client.emailEncrypted ? (
                   <span className="cd-encrypted">sifrovano</span>
