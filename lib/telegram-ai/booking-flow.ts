@@ -336,7 +336,7 @@ export async function handleConfirm(
           LEFT JOIN locations l ON l.id = gs.location_id
           WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
           LIMIT 1`,
-    args: [draft.girlId, new Date(draft.date + 'T12:00:00').getDay()],
+    args: [draft.girlId, (() => { const js = new Date(draft.date + 'T12:00:00').getDay(); return js === 0 ? 6 : js - 1; })()],
   });
   const location = locResult.rows[0]?.location_name ? String(locResult.rows[0].location_name) : null;
 
@@ -539,7 +539,8 @@ async function expireDraft(sessionId: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 async function getAvailableSlots(girlId: number, date: string): Promise<string[]> {
-  const dow = new Date(date + 'T12:00:00').getDay();
+  const jsDay = new Date(date + 'T12:00:00').getDay();
+  const dow = jsDay === 0 ? 6 : jsDay - 1;
 
   // Get shift
   const shiftResult = await db.execute({
@@ -630,7 +631,8 @@ async function getAvailableDurations(
   startTime: string,
 ): Promise<Array<{ minutes: number; price: number }>> {
   // Get shift end time
-  const dow = new Date(date + 'T12:00:00').getDay();
+  const jsDay = new Date(date + 'T12:00:00').getDay();
+  const dow = jsDay === 0 ? 6 : jsDay - 1;
   const shiftResult = await db.execute({
     sql: `SELECT gs.end_time, se.exception_type AS ex_type, se.end_time AS ex_end
           FROM girl_schedules gs

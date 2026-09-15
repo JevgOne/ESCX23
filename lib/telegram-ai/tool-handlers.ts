@@ -83,7 +83,8 @@ export async function handleToolCall(
 async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientContext): Promise<string> {
   const date = (input.date as string) || getPragueToday();
   const d = new Date(date + 'T12:00:00');
-  const dayOfWeek = d.getDay();
+  const jsDay = d.getDay();
+  const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
 
   // Single query: LEFT JOIN from girls so exception-only schedules are included
   // Also fetch primary photo URL to send photos automatically
@@ -281,7 +282,8 @@ async function searchGirls(input: Record<string, unknown>): Promise<string> {
 
   if (input.availableDate) {
     const date = String(input.availableDate);
-    const dow = new Date(date + 'T12:00:00').getDay();
+    const jsDay = new Date(date + 'T12:00:00').getDay();
+    const dow = jsDay === 0 ? 6 : jsDay - 1;
     const available: typeof girls = [];
     for (const g of girls) {
       // Check regular schedule OR exception-based schedule
@@ -318,7 +320,8 @@ async function searchGirls(input: Record<string, unknown>): Promise<string> {
 async function checkAvailability(input: Record<string, unknown>): Promise<string> {
   const girlId = Number(input.girlId);
   const date = String(input.date);
-  const dow = new Date(date + 'T12:00:00').getDay();
+  const jsDay = new Date(date + 'T12:00:00').getDay();
+  const dow = jsDay === 0 ? 6 : jsDay - 1;
 
   // 1. Get shift
   const shiftResult = await db.execute({
@@ -421,7 +424,8 @@ async function getWeekSchedule(input: Record<string, unknown>): Promise<string> 
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const dow = d.getDay();
+    const jsDay = d.getDay();
+    const dow = jsDay === 0 ? 6 : jsDay - 1;
 
     const result = await db.execute({
       sql: `SELECT gs.start_time, gs.end_time, l.name AS location_name,
