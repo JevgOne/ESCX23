@@ -279,10 +279,10 @@ export async function createBooking(input: CreateBookingInput): Promise<{ id: nu
 
   // Get price from pricing_plans
   const priceRes = await db.execute({
-    sql: 'SELECT base_price FROM pricing_plans WHERE duration = ? LIMIT 1',
+    sql: 'SELECT price FROM pricing_plans WHERE duration = ? LIMIT 1',
     args: [input.durationMinutes],
   });
-  const price = priceRes.rows[0] ? Number(priceRes.rows[0].base_price) : null;
+  const price = priceRes.rows[0] ? Number(priceRes.rows[0].price) : null;
 
   // Points = price (1 CZK = 1 point)
   const points = price ?? 0;
