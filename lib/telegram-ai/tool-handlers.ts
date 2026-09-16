@@ -93,7 +93,7 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
       SELECT
         g.id, g.name, g.age, g.hair, g.nationality, g.rating, g.reviews_count,
         gs.start_time AS shift_start, gs.end_time AS shift_end,
-        l.name AS location_name,
+        l.display_name AS location_name,
         se.exception_type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
       FROM girls g
@@ -170,7 +170,7 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
   for (const g of girls) {
     if (g.photoUrl) {
       const caption = `<b>${g.name}</b>, ${g.age} let` +
-        (g.rating ? ` ⭐ ${g.rating}/5` + (g.reviewsCount ? ` (${g.reviewsCount} recenzi)` : '') : '') +
+        (g.rating ? `\n⭐ ${g.rating}/5` + (g.reviewsCount ? ` (${g.reviewsCount} recenzi)` : '') : '') +
         `\n🟢 ${g.shiftStart} – ${g.shiftEnd}` +
         (g.location ? `\n📍 ${g.location}` : '');
       await sendPhoto(ctx.chatId, g.photoUrl, { caption }).catch((err) => {
@@ -436,7 +436,7 @@ async function getWeekSchedule(input: Record<string, unknown>): Promise<string> 
     const dow = jsDay === 0 ? 6 : jsDay - 1;
 
     const result = await db.execute({
-      sql: `SELECT gs.start_time, gs.end_time, l.name AS location_name,
+      sql: `SELECT gs.start_time, gs.end_time, l.display_name AS location_name,
                    se.exception_type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
             FROM girl_schedules gs
             LEFT JOIN locations l ON l.id = gs.location_id

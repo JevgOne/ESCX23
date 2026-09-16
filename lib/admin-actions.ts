@@ -1533,3 +1533,127 @@ export async function removeGirlVideo(formData: FormData) {
   revalidatePath(`/cs/profil`);
   await adminRedirect(`/admin/divky/${girlId}/videa`);
 }
+
+// ---------------------------------------------------------------------------
+// Girl credentials (email + password)
+// ---------------------------------------------------------------------------
+
+export async function updateGirlCredentials(formData: FormData) {
+  await requireAdmin();
+  const girlId = Number(formData.get('girl_id'));
+  if (!girlId) throw new Error('Missing girl_id');
+
+  const email = (formData.get('email') as string)?.trim().toLowerCase();
+  const password = (formData.get('password') as string)?.trim();
+
+  if (!email) throw new Error('Email je povinny');
+
+  const bcrypt = await import('bcryptjs');
+
+  // Check if user account exists for this girl
+  const existing = await db.execute({
+    sql: 'SELECT id, email FROM users WHERE girl_id = ? LIMIT 1',
+    args: [girlId],
+  });
+
+  if (existing.rows.length > 0) {
+    // Update existing user
+    const userId = Number(existing.rows[0].id);
+    if (password) {
+      const hash = await bcrypt.hash(password, 12);
+      await db.execute({
+        sql: 'UPDATE users SET email = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        args: [email, hash, userId],
+      });
+    } else {
+      await db.execute({
+        sql: 'UPDATE users SET email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        args: [email, userId],
+      });
+    }
+  } else {
+    // Create new user for girl
+    const pwd = password || 'Studio2026!';
+    const hash = await bcrypt.hash(pwd, 12);
+    // Get girl name for display_name
+    const girlRes = await db.execute({ sql: 'SELECT name FROM girls WHERE id = ? LIMIT 1', args: [girlId] });
+    const girlName = girlRes.rows[0]?.name ? String(girlRes.rows[0].name) : 'Divka';
+    await db.execute({
+      sql: `INSERT INTO users (email, password_hash, role, display_name, girl_id, is_active, created_at, updated_at)
+            VALUES (?, ?, 'girl', ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      args: [email, hash, girlName, girlId],
+    });
+  }
+
+  revalidatePath(`/cs/admin/divky/${girlId}`);
+  await adminRedirect(`/admin/divky/${girlId}`);
+}
+
+// ---------------------------------------------------------------------------
+// Discount / Promo Codes CRUD
+// ---------------------------------------------------------------------------
+
+export async function createDiscountCode(formData: FormData) {
+  await requireAdmin();
+  const code = (formData.get('code') as string)?.trim().toUpperCase();
+  const name = (formData.get('name') as string)?.trim();
+  const type = (formData.get('type') as string) ?? 'percentage';
+  const value = Number(formData.get('value'));
+  const minDuration = formData.get('min_duration') ? Number(formData.get('min_duration')) : null;
+  const maxUses = formData.get('max_uses') ? Number(formData.get('max_uses')) : null;
+  const validUntil = (formData.get('valid_until') as string)?.trim() || null;
+
+  if (!code || !name || !value) throw new Error('Kod, nazev a hodnota jsou povinne');
+
+  await db.execute({
+    sql: `INSERT INTO discount_codes (code, name, type, value, min_duration, valid_from, valid_until, max_uses, is_active, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    args: [code, name, type, value, minDuration, validUntil, maxUses],
+  });
+
+  revalidatePath('/booking/settings');
+  redirect('/booking/settings');
+}
+
+export async function toggleDiscountCode(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get('id'));
+  const newActive = Number(formData.get('new_active'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({
+    sql: 'UPDATE discount_codes SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    args: [newActive, id],
+  });
+
+  revalidatePath('/booking/settings');
+  redirect('/booking/settings');
+}
+
+export async function deleteDiscountCode(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get('id'));
+  if (!id) throw new Error('Missing id');
+
+  await db.execute({
+    sql: 'DELETE FROM discount_codes WHERE id = ?',
+    args: [id],
+  });
+
+  revalidatePath('/booking/settings');
+  redirect('/booking/settings');
+}
+
+export async function unlinkGirlTelegram(formData: FormData) {
+  await requireAdmin();
+  const girlId = Number(formData.get('girl_id'));
+  if (!girlId) throw new Error('Missing girl_id');
+
+  await db.execute({
+    sql: 'UPDATE telegram_links SET is_active = 0 WHERE girl_id = ?',
+    args: [girlId],
+  });
+
+  revalidatePath('/booking/settings');
+  redirect('/booking/settings');
+}

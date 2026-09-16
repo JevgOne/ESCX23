@@ -15,6 +15,7 @@ import LocationsRow from '@/components/home/LocationsRow';
 import ContactSteps from '@/components/home/ContactSteps';
 import FinalCta from '@/components/home/FinalCta';
 import QuickLinks from '@/components/home/QuickLinks';
+import TelegramPromoBanner from '@/components/home/TelegramPromoBanner';
 import {
   homepageLocalBusiness,
   organizationJsonLd,
@@ -124,6 +125,7 @@ export default async function HomePage({
       />
       <p data-geo-lead className="sr-only">{t('home_lead', { count: companionsCount })}</p>
       <Hero locale={locale} />
+      <TelegramPromoBanner locale={locale} />
       <StoriesRow locale={locale} />
       <FeaturedNew locale={locale} />
       <GirlsGridSection locale={locale} />

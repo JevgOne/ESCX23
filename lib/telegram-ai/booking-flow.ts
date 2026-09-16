@@ -17,6 +17,7 @@
 import { db } from '../db';
 import { sendMessage } from '../telegram';
 import { logAudit } from '../audit';
+import { createBookingNotification } from '../booking-notifications';
 import type { ClientContext } from './types';
 
 // ---------------------------------------------------------------------------
@@ -150,9 +151,9 @@ export async function handleTimeSelected(
   // Get available durations based on remaining shift time
   const durations = await getAvailableDurations(draft.girlId, draft.date, time);
 
-  // Build duration keyboard
+  // Build duration keyboard — include program title from DB
   const keyboard = durations.map((d) => [{
-    text: `${d.minutes} min — ${d.price} CZK`,
+    text: `${d.title} (${d.minutes} min) — ${d.price} CZK`,
     callback_data: `bk_dur:${sessionId}:${d.minutes}`,
   }]);
 
@@ -207,23 +208,58 @@ export async function handleDurationSelected(
     args: [endTime, durationMinutes, sessionId],
   });
 
-  // Show confirmation
-  const msg = [
-    `\u{1F4CB} <b>Shrnutí rezervace</b>`,
-    '',
-    `\u{1F469} ${draft.girlName}`,
-    `\u{1F4C5} ${formatDate(draft.date)}`,
-    `\u23F0 ${draft.startTime} — ${endTime} (${durationMinutes} min)`,
-    `\u{1F4B0} ${price} CZK`,
-    '',
-    'Potvrdis?',
-  ].join('\n');
+  // Get location for summary
+  const jsDay = new Date(draft.date + 'T12:00:00').getDay();
+  const dow = jsDay === 0 ? 6 : jsDay - 1;
+  const locResult = await db.execute({
+    sql: `SELECT l.display_name AS location_name
+          FROM girl_schedules gs
+          LEFT JOIN locations l ON l.id = gs.location_id
+          WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
+          LIMIT 1`,
+    args: [draft.girlId, dow],
+  });
+  const location = locResult.rows[0]?.location_name ? String(locResult.rows[0].location_name) : null;
+
+  // Show confirmation — flowing text summary
+  await showConfirmation(chatId, sessionId, draft.girlName, draft.date, draft.startTime, endTime, durationMinutes, price, location, null);
+}
+
+async function showConfirmation(
+  chatId: string,
+  sessionId: string,
+  girlName: string,
+  date: string,
+  startTime: string,
+  endTime: string,
+  durationMinutes: number,
+  originalPrice: number,
+  location: string | null,
+  discount: { code: string; type: string; value: number } | null,
+): Promise<void> {
+  let priceText: string;
+  if (discount) {
+    const discountAmount = discount.type === 'percentage'
+      ? Math.round(originalPrice * discount.value / 100)
+      : discount.value;
+    const finalPrice = Math.max(0, originalPrice - discountAmount);
+    priceText = `<s>${originalPrice} CZK</s> <b>${finalPrice} CZK</b> (${discount.code} -${discount.type === 'percentage' ? discount.value + '%' : discountAmount + ' CZK'})`;
+  } else {
+    priceText = `<b>${originalPrice} CZK</b>`;
+  }
+
+  const msg = `<b>${girlName}</b>, ${formatDate(date)}, ${startTime}–${endTime} (${durationMinutes} min)` +
+    (location ? `, ${location}` : '') +
+    ` — ${priceText}. Potvrdis?`;
 
   await sendMessage(chatId, msg, {
     replyMarkup: {
       inline_keyboard: [
         [
           { text: '\u2705 Potvrdit', callback_data: `bk_ok:${sessionId}` },
+          { text: '\u{1F3F7}\uFE0F Promokod', callback_data: `bk_promo:${sessionId}` },
+        ],
+        [
           { text: '\u274C Zrusit', callback_data: `bk_cancel:${sessionId}` },
         ],
       ],
@@ -285,25 +321,70 @@ export async function handleConfirm(
     return;
   }
 
-  // Determine booking status: new clients → pending, regulars → confirmed
+  // Determine booking status: new clients → pending (unless <1h to start), regulars → confirmed
   const clientRes = await db.execute({
     sql: 'SELECT trust_level, total_visits FROM booking_clients WHERE id = ? LIMIT 1',
     args: [draft.clientId],
   });
   const trustLevel = clientRes.rows[0] ? String(clientRes.rows[0].trust_level) : 'new';
   const visits = clientRes.rows[0] ? Number(clientRes.rows[0].total_visits) : 0;
-  const bookingStatus = (visits === 0 || trustLevel === 'new') ? 'pending' : 'confirmed';
+  const isNewClient = visits === 0 || trustLevel === 'new';
+
+  // If booking starts within 1h, skip pending — no time for confirmation flow
+  let bookingStatus: string;
+  if (!isNewClient) {
+    bookingStatus = 'confirmed';
+  } else {
+    const now = getPragueNow();
+    const bookingDate = draft.date;
+    const today = getPragueToday();
+    const [bh, bm] = draft.startTime.split(':').map(Number);
+    const bookingMin = bh * 60 + bm;
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const isToday = bookingDate === today;
+    const minutesUntilStart = isToday ? bookingMin - nowMin : Infinity;
+
+    bookingStatus = minutesUntilStart < 60 ? 'confirmed' : 'pending';
+  }
+
+  // Apply discount if promo code was used
+  let discountAmount = 0;
+  let discountInfo: { code: string; type: string; value: number } | null = null;
+  if (draft.discountCodeId) {
+    const dcRes = await db.execute({
+      sql: 'SELECT code, type, value FROM discount_codes WHERE id = ? AND is_active = 1 LIMIT 1',
+      args: [draft.discountCodeId],
+    });
+    if (dcRes.rows.length > 0) {
+      const dc = dcRes.rows[0];
+      discountInfo = { code: String(dc.code), type: String(dc.type), value: Number(dc.value) };
+      discountAmount = discountInfo.type === 'percentage'
+        ? Math.round(price * discountInfo.value / 100)
+        : discountInfo.value;
+    }
+  }
+  const finalPrice = Math.max(0, price - discountAmount);
 
   // Create booking
   const bookingResult = await db.execute({
     sql: `INSERT INTO bookings_v2 (
             client_id, girl_id, date, start_time, end_time, duration_minutes,
-            price, points_earned, status, source, channel, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-    args: [draft.clientId, draft.girlId, draft.date, draft.startTime, draft.endTime, draft.durationMinutes, price, price, bookingStatus],
+            price, discount_code_id, discount_amount, points_earned,
+            status, source, channel, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    args: [draft.clientId, draft.girlId, draft.date, draft.startTime, draft.endTime, draft.durationMinutes,
+           finalPrice, draft.discountCodeId ?? null, discountAmount, finalPrice, bookingStatus],
   });
 
   const bookingId = Number(bookingResult.lastInsertRowid);
+
+  // Increment discount code usage
+  if (draft.discountCodeId) {
+    await db.execute({
+      sql: 'UPDATE discount_codes SET current_uses = current_uses + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      args: [draft.discountCodeId],
+    }).catch(() => {});
+  }
 
   // Update slot lock
   await db.execute({
@@ -326,12 +407,12 @@ export async function handleConfirm(
     actorType: 'bot',
     entityType: 'booking',
     entityId: bookingId,
-    details: { source: 'booking_flow', chatId, sessionId },
+    details: { source: 'booking_flow', chatId, sessionId, discountCode: discountInfo?.code },
   }).catch(() => {});
 
   // Get location for confirmation message
   const locResult = await db.execute({
-    sql: `SELECT l.name AS location_name
+    sql: `SELECT l.display_name AS location_name
           FROM girl_schedules gs
           LEFT JOIN locations l ON l.id = gs.location_id
           WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
@@ -340,32 +421,22 @@ export async function handleConfirm(
   });
   const location = locResult.rows[0]?.location_name ? String(locResult.rows[0].location_name) : null;
 
-  // Send confirmation — different message for pending vs confirmed
+  // Build price text with discount
+  let priceText: string;
+  if (discountInfo && discountAmount > 0) {
+    priceText = `<s>${price} CZK</s> <b>${finalPrice} CZK</b> (${discountInfo.code} -${discountInfo.type === 'percentage' ? discountInfo.value + '%' : discountAmount + ' CZK'})`;
+  } else {
+    priceText = `<b>${finalPrice} CZK</b>`;
+  }
+
+  // Send confirmation — flowing text, different for pending vs confirmed
+  const summary = `<b>${draft.girlName}</b>, ${formatDate(draft.date)}, ${draft.startTime}–${draft.endTime} (${draft.durationMinutes} min)` +
+    (location ? `, ${location}` : '') +
+    ` — ${priceText}`;
+
   const msg = bookingStatus === 'pending'
-    ? [
-        `\u{1F4CB} <b>Rezervace prijata!</b>`,
-        '',
-        `\u{1F469} ${draft.girlName}`,
-        `\u{1F4C5} ${formatDate(draft.date)}`,
-        `\u23F0 ${draft.startTime} — ${draft.endTime} (${draft.durationMinutes} min)`,
-        `\u{1F4B0} ${price} CZK`,
-        location ? `\u{1F4CD} ${location}` : '',
-        '',
-        `Rezervace #${bookingId}`,
-        `Protoze jsi u nas poprve, prosim <b>potvrd svuj prichod</b> kliknutim na tlacitko nize.`,
-        `Pokud nepotvrdis do 1h pred terminem, rezervace bude automaticky zrusena.`,
-      ].filter(Boolean).join('\n')
-    : [
-        `\u2705 <b>Rezervace potvrzena!</b>`,
-        '',
-        `\u{1F469} ${draft.girlName}`,
-        `\u{1F4C5} ${formatDate(draft.date)}`,
-        `\u23F0 ${draft.startTime} — ${draft.endTime} (${draft.durationMinutes} min)`,
-        `\u{1F4B0} ${price} CZK`,
-        location ? `\u{1F4CD} ${location}` : '',
-        '',
-        `Rezervace #${bookingId}`,
-      ].filter(Boolean).join('\n');
+    ? `\u{1F4CB} Rezervace #${bookingId} prijata!\n\n${summary}\n\nProtoze jsi u nas poprve, prosim <b>potvrd svuj prichod</b> kliknutim nize. Pokud nepotvrdis do 1h pred terminem, misto uvolnime.`
+    : `\u2705 Rezervace #${bookingId} potvrzena!\n\n${summary}\n\nTesime se na tebe!`;
 
   if (bookingStatus === 'pending') {
     await sendMessage(chatId, msg, {
@@ -381,6 +452,121 @@ export async function handleConfirm(
   } else {
     await sendMessage(chatId, msg);
   }
+
+  // ── Notify operator(s) and girl about new booking ──────────────────
+  const clientInfo = await db.execute({
+    sql: 'SELECT nickname FROM booking_clients WHERE id = ? LIMIT 1',
+    args: [draft.clientId],
+  });
+  const clientNickname = clientInfo.rows[0]?.nickname ? String(clientInfo.rows[0].nickname) : 'Neznamy';
+
+  sendBookingCreatedNotifications({
+    bookingId,
+    clientNickname,
+    girlId: draft.girlId,
+    girlName: draft.girlName,
+    date: draft.date,
+    startTime: draft.startTime,
+    endTime: draft.endTime!,
+    durationMinutes: draft.durationMinutes!,
+    price: finalPrice,
+    status: bookingStatus,
+  }).catch(() => {});
+
+  // In-app notification for admin dashboard
+  createBookingNotification({
+    type: 'new_booking',
+    title: `Nova rezervace #${bookingId}`,
+    message: `${clientNickname} \u2192 ${draft.girlName}, ${formatDate(draft.date)} ${draft.startTime}\u2013${draft.endTime} (${finalPrice} CZK)`,
+    bookingId,
+    link: `/booking/calendar?date=${draft.date}`,
+  }).catch(() => {});
+}
+
+// ---------------------------------------------------------------------------
+// Staff notifications (operator + girl)
+// ---------------------------------------------------------------------------
+
+async function sendBookingCreatedNotifications(params: {
+  bookingId: number;
+  clientNickname: string;
+  girlId: number;
+  girlName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  price: number;
+  status: string;
+}): Promise<void> {
+  const { bookingId, clientNickname, girlId, girlName, date, startTime, endTime, durationMinutes, price, status } = params;
+
+  const statusText = status === 'confirmed' ? 'Potvrzena' : 'Ceka na potvrzeni';
+
+  const msg = [
+    `\u{1F4C5} <b>Nova rezervace #${bookingId}</b>`,
+    '',
+    `\u{1F464} Klient: ${clientNickname}`,
+    `\u{1F469} ${girlName}`,
+    `\u{1F4C6} ${formatDate(date)}`,
+    `\u23F0 ${startTime}\u2013${endTime} (${durationMinutes} min)`,
+    `\u{1F4B0} ${price} CZK`,
+    `\u{1F4CB} Status: ${statusText}`,
+  ].join('\n');
+
+  // 1) Notify all operators
+  try {
+    const operators = await db.execute({
+      sql: `SELECT telegram_chat_id FROM users
+            WHERE role = 'operator' AND is_active = 1 AND telegram_chat_id IS NOT NULL`,
+      args: [],
+    });
+    for (const op of operators.rows) {
+      sendMessage(String(op.telegram_chat_id), msg).catch(() => {});
+    }
+  } catch { /* silent */ }
+
+  // 2) Notify the girl — ONLY if she works on the booking date
+  try {
+    const bookingDate = date;
+    const jsDay = new Date(bookingDate + 'T12:00:00').getDay();
+    const dow = jsDay === 0 ? 6 : jsDay - 1; // JS 0=Sun → DB 0=Mon
+
+    const shiftCheck = await db.execute({
+      sql: `SELECT gs.id, se.exception_type AS ex_type
+            FROM girl_schedules gs
+            LEFT JOIN schedule_exceptions se ON se.girl_id = gs.girl_id AND se.date = ?
+            WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
+              AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
+            ORDER BY gs.effective_from DESC NULLS LAST
+            LIMIT 1`,
+      args: [bookingDate, girlId, dow, bookingDate],
+    });
+
+    const hasShift = shiftCheck.rows.length > 0
+      && String(shiftCheck.rows[0].ex_type ?? '') !== 'unavailable';
+
+    if (hasShift) {
+      const girlLink = await db.execute({
+        sql: `SELECT chat_id FROM telegram_links
+              WHERE girl_id = ? AND is_active = 1 LIMIT 1`,
+        args: [girlId],
+      });
+
+      if (girlLink.rows.length > 0) {
+        sendMessage(String(girlLink.rows[0].chat_id), msg).catch(() => {});
+      } else {
+        const girlUser = await db.execute({
+          sql: `SELECT telegram_chat_id FROM users
+                WHERE girl_id = ? AND is_active = 1 AND telegram_chat_id IS NOT NULL LIMIT 1`,
+          args: [girlId],
+        });
+        if (girlUser.rows.length > 0) {
+          sendMessage(String(girlUser.rows[0].telegram_chat_id), msg).catch(() => {});
+        }
+      }
+    }
+  } catch { /* silent */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -393,6 +579,165 @@ export async function handleCancel(
 ): Promise<void> {
   await expireDraft(sessionId);
   await sendMessage(chatId, 'Rezervace zrusena. Napiste kdykoliv, pokud si budete chtit znovu zarezervovat \u{1F60A}');
+}
+
+// ---------------------------------------------------------------------------
+// Promo code flow
+// ---------------------------------------------------------------------------
+
+async function handlePromoPrompt(chatId: string, sessionId: string): Promise<void> {
+  const draft = await getDraft(sessionId, chatId);
+  if (!draft) {
+    await sendMessage(chatId, 'Tato rezervace vyprsela. Zacni prosim znovu.');
+    return;
+  }
+
+  await db.execute({
+    sql: `UPDATE booking_drafts SET step = 'enter_promo', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
+    args: [sessionId],
+  });
+
+  await sendMessage(chatId, 'Napis promokod:');
+}
+
+/**
+ * Called from telegram-bot.ts when user sends text and has active draft in "enter_promo" step.
+ * Returns true if handled.
+ */
+export async function handlePromoCodeInput(chatId: string, text: string): Promise<boolean> {
+  // Find active draft in enter_promo step
+  const draftResult = await db.execute({
+    sql: `SELECT bd.session_id, bd.client_id, bd.girl_id, g.name AS girl_name,
+                 bd.date, bd.start_time, bd.end_time, bd.duration_minutes, bd.step, bd.discount_code_id
+          FROM booking_drafts bd
+          JOIN girls g ON g.id = bd.girl_id
+          WHERE bd.telegram_chat_id = ? AND bd.step = 'enter_promo'
+            AND bd.is_converted = 0 AND bd.expires_at > datetime('now')
+          ORDER BY bd.created_at DESC LIMIT 1`,
+    args: [chatId],
+  });
+
+  if (draftResult.rows.length === 0) return false;
+
+  const r = draftResult.rows[0];
+  const sessionId = String(r.session_id);
+  const code = text.trim().toUpperCase();
+
+  // Validate promo code
+  const codeResult = await db.execute({
+    sql: `SELECT id, code, type, value, min_duration, max_uses, current_uses
+          FROM discount_codes
+          WHERE UPPER(code) = ? AND is_active = 1
+            AND (valid_from IS NULL OR valid_from <= datetime('now'))
+            AND (valid_until IS NULL OR valid_until >= datetime('now'))
+          LIMIT 1`,
+    args: [code],
+  });
+
+  if (codeResult.rows.length === 0) {
+    await sendMessage(chatId, `\u274C Kod <b>${code}</b> neni platny. Zkus jiny, nebo pokracuj bez slevy.`);
+    // Go back to confirm step
+    await db.execute({
+      sql: `UPDATE booking_drafts SET step = 'confirm', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
+      args: [sessionId],
+    });
+    await reshowConfirmation(chatId, sessionId, r);
+    return true;
+  }
+
+  const dc = codeResult.rows[0];
+  const maxUses = dc.max_uses ? Number(dc.max_uses) : null;
+  const currentUses = Number(dc.current_uses);
+  if (maxUses && currentUses >= maxUses) {
+    await sendMessage(chatId, `\u274C Kod <b>${code}</b> uz byl vyuzit. Zkus jiny.`);
+    await db.execute({
+      sql: `UPDATE booking_drafts SET step = 'confirm', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
+      args: [sessionId],
+    });
+    await reshowConfirmation(chatId, sessionId, r);
+    return true;
+  }
+
+  const minDuration = dc.min_duration ? Number(dc.min_duration) : null;
+  const draftDuration = r.duration_minutes ? Number(r.duration_minutes) : 0;
+  if (minDuration && draftDuration < minDuration) {
+    await sendMessage(chatId, `\u274C Kod <b>${code}</b> plati od ${minDuration} min. Tvuj program je ${draftDuration} min.`);
+    await db.execute({
+      sql: `UPDATE booking_drafts SET step = 'confirm', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
+      args: [sessionId],
+    });
+    await reshowConfirmation(chatId, sessionId, r);
+    return true;
+  }
+
+  // Apply discount — store on draft
+  await db.execute({
+    sql: `UPDATE booking_drafts SET discount_code_id = ?, step = 'confirm', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
+    args: [Number(dc.id), sessionId],
+  });
+
+  // Re-show confirmation with discount
+  await reshowConfirmation(chatId, sessionId, r, {
+    code: String(dc.code),
+    type: String(dc.type),
+    value: Number(dc.value),
+  });
+
+  return true;
+}
+
+async function reshowConfirmation(
+  chatId: string,
+  sessionId: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  r: any,
+  discount?: { code: string; type: string; value: number } | null,
+): Promise<void> {
+  const girlName = String(r.girl_name);
+  const date = String(r.date);
+  const startTime = String(r.start_time);
+  const endTime = String(r.end_time);
+  const durationMinutes = Number(r.duration_minutes);
+
+  // Get price
+  const priceResult = await db.execute({
+    sql: 'SELECT price, night_price FROM pricing_plans WHERE duration = ? AND is_active = 1 LIMIT 1',
+    args: [durationMinutes],
+  });
+  const priceRow = priceResult.rows[0];
+  const [sh] = startTime.split(':').map(Number);
+  const isNight = sh >= 22 || sh < 6;
+  const price = priceRow
+    ? (isNight && priceRow.night_price ? Number(priceRow.night_price) : Number(priceRow.price))
+    : 0;
+
+  // Get location
+  const jsDay = new Date(date + 'T12:00:00').getDay();
+  const dow = jsDay === 0 ? 6 : jsDay - 1;
+  const locResult = await db.execute({
+    sql: `SELECT l.display_name AS location_name FROM girl_schedules gs
+          LEFT JOIN locations l ON l.id = gs.location_id
+          WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1 LIMIT 1`,
+    args: [Number(r.girl_id), dow],
+  });
+  const location = locResult.rows[0]?.location_name ? String(locResult.rows[0].location_name) : null;
+
+  // If no discount passed, check if one was stored
+  if (!discount && r.discount_code_id) {
+    const dcRes = await db.execute({
+      sql: 'SELECT code, type, value FROM discount_codes WHERE id = ? LIMIT 1',
+      args: [Number(r.discount_code_id)],
+    });
+    if (dcRes.rows.length > 0) {
+      discount = {
+        code: String(dcRes.rows[0].code),
+        type: String(dcRes.rows[0].type),
+        value: Number(dcRes.rows[0].value),
+      };
+    }
+  }
+
+  await showConfirmation(chatId, sessionId, girlName, date, startTime, endTime, durationMinutes, price, location, discount ?? null);
 }
 
 // ---------------------------------------------------------------------------
@@ -473,6 +818,13 @@ export async function handleBookingCallback(
     }
   }
 
+  // bk_promo:{sessionId} — enter promo code
+  if (callbackData.startsWith('bk_promo:')) {
+    const sessionId = callbackData.slice(9);
+    await handlePromoPrompt(chatId, sessionId);
+    return true;
+  }
+
   // bk_ok:{sessionId}
   if (callbackData.startsWith('bk_ok:')) {
     const sessionId = callbackData.slice(6);
@@ -545,15 +897,11 @@ async function handleClientConfirm(chatId: string, bookingId: number): Promise<v
     args: [bookingId],
   });
 
-  await sendMessage(chatId, [
-    '\u2705 <b>Rezervace potvrzena!</b>',
-    '',
-    `\u{1F469} ${String(booking.girl_name)}`,
-    `\u{1F4C5} ${formatDate(String(booking.date))}`,
-    `\u23F0 ${String(booking.start_time).substring(0, 5)} \u2014 ${String(booking.end_time).substring(0, 5)}`,
-    '',
-    'Tesime se na tebe!',
-  ].join('\n'));
+  const startTime = String(booking.start_time).substring(0, 5);
+  const endTime = String(booking.end_time).substring(0, 5);
+  await sendMessage(chatId,
+    `\u2705 <b>${String(booking.girl_name)}</b>, ${formatDate(String(booking.date))}, ${startTime}–${endTime} — potvrzeno! Tesime se na tebe!`
+  );
 
   logAudit({
     bookingId,
@@ -624,12 +972,13 @@ interface DraftRow {
   endTime: string | null;
   durationMinutes: number | null;
   step: string;
+  discountCodeId: number | null;
 }
 
 async function getDraft(sessionId: string, chatId: string): Promise<DraftRow | null> {
   const result = await db.execute({
     sql: `SELECT bd.session_id, bd.client_id, bd.girl_id, g.name AS girl_name,
-                 bd.date, bd.start_time, bd.end_time, bd.duration_minutes, bd.step
+                 bd.date, bd.start_time, bd.end_time, bd.duration_minutes, bd.step, bd.discount_code_id
           FROM booking_drafts bd
           JOIN girls g ON g.id = bd.girl_id
           WHERE bd.session_id = ? AND bd.telegram_chat_id = ?
@@ -650,6 +999,7 @@ async function getDraft(sessionId: string, chatId: string): Promise<DraftRow | n
     endTime: r.end_time ? String(r.end_time) : null,
     durationMinutes: r.duration_minutes ? Number(r.duration_minutes) : null,
     step: String(r.step),
+    discountCodeId: r.discount_code_id ? Number(r.discount_code_id) : null,
   };
 }
 
@@ -756,7 +1106,7 @@ async function getAvailableDurations(
   girlId: number,
   date: string,
   startTime: string,
-): Promise<Array<{ minutes: number; price: number }>> {
+): Promise<Array<{ minutes: number; price: number; title: string }>> {
   // Get shift end time
   const jsDay = new Date(date + 'T12:00:00').getDay();
   const dow = jsDay === 0 ? 6 : jsDay - 1;
@@ -809,16 +1159,17 @@ async function getAvailableDurations(
   const [startH] = startTime.split(':').map(Number);
   const isNight = startH >= 22 || startH < 6;
 
-  const result: Array<{ minutes: number; price: number }> = [];
+  const result: Array<{ minutes: number; price: number; title: string }> = [];
   for (const dur of durations) {
     const priceResult = await db.execute({
-      sql: 'SELECT price, night_price FROM pricing_plans WHERE duration = ? LIMIT 1',
+      sql: 'SELECT price, night_price, title_cs FROM pricing_plans WHERE duration = ? AND is_active = 1 LIMIT 1',
       args: [dur],
     });
     if (priceResult.rows.length > 0) {
       const pr = priceResult.rows[0];
       const price = isNight && pr.night_price ? Number(pr.night_price) : Number(pr.price);
-      result.push({ minutes: dur, price });
+      const title = pr.title_cs ? String(pr.title_cs) : `${dur} min`;
+      result.push({ minutes: dur, price, title });
     }
   }
 

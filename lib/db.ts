@@ -281,6 +281,27 @@ async function runMigrations(client: Client) {
     // OK
   }
 
+  // Discount codes (promo codes for Telegram booking flow)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS discount_codes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL CHECK (type IN ('percentage', 'fixed')),
+        value INTEGER NOT NULL,
+        min_duration INTEGER DEFAULT NULL,
+        valid_from DATETIME DEFAULT CURRENT_TIMESTAMP,
+        valid_until DATETIME DEFAULT NULL,
+        max_uses INTEGER DEFAULT NULL,
+        current_uses INTEGER DEFAULT 0,
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch { /* OK */ }
+
   // Tracks slugs of girls removed (deleted or archived) from the public site, so their
   // old profile URLs can 308-redirect instead of 404ing — Google keeps crawling them
   // long after the profile is gone.
@@ -467,7 +488,7 @@ async function runMigrations(client: Client) {
           CHECK (channel IN ('telegram', 'whatsapp')),
         session_id TEXT NOT NULL UNIQUE,
         step TEXT NOT NULL DEFAULT 'select_girl'
-          CHECK (step IN ('select_girl', 'select_day', 'select_time', 'select_duration', 'confirm')),
+          CHECK (step IN ('select_girl', 'select_day', 'select_time', 'select_duration', 'confirm', 'enter_promo')),
         expires_at DATETIME NOT NULL,
         is_converted INTEGER NOT NULL DEFAULT 0,
         converted_to_id INTEGER,
@@ -482,6 +503,65 @@ async function runMigrations(client: Client) {
     await client.execute('CREATE INDEX IF NOT EXISTS idx_bd_girl_slot ON booking_drafts(girl_id, date, start_time)');
     await client.execute('CREATE INDEX IF NOT EXISTS idx_bd_expires ON booking_drafts(expires_at)');
     await client.execute('CREATE INDEX IF NOT EXISTS idx_bd_chat ON booking_drafts(telegram_chat_id)');
+  } catch { /* OK */ }
+
+  // Add discount_code_id + expand step CHECK to include 'enter_promo'
+  try {
+    await client.execute('ALTER TABLE booking_drafts ADD COLUMN discount_code_id INTEGER');
+  } catch { /* OK — column already exists */ }
+  // Recreate table to expand CHECK constraint (SQLite can't ALTER CHECK)
+  try {
+    const checkSql = await client.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='booking_drafts'");
+    const tableDef = String(checkSql.rows[0]?.sql ?? '');
+    if (!tableDef.includes("'enter_promo'")) {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS booking_drafts_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          client_id INTEGER,
+          telegram_chat_id TEXT,
+          girl_id INTEGER,
+          date TEXT,
+          start_time TEXT,
+          end_time TEXT,
+          duration_minutes INTEGER,
+          channel TEXT NOT NULL DEFAULT 'telegram' CHECK (channel IN ('telegram', 'whatsapp')),
+          session_id TEXT NOT NULL UNIQUE,
+          step TEXT NOT NULL DEFAULT 'select_girl'
+            CHECK (step IN ('select_girl', 'select_day', 'select_time', 'select_duration', 'confirm', 'enter_promo')),
+          discount_code_id INTEGER,
+          expires_at DATETIME NOT NULL,
+          is_converted INTEGER NOT NULL DEFAULT 0,
+          converted_to_id INTEGER,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (client_id) REFERENCES booking_clients(id)
+        )
+      `);
+      await client.execute(`INSERT INTO booking_drafts_new
+        SELECT id, client_id, telegram_chat_id, girl_id, date, start_time, end_time, duration_minutes,
+               channel, session_id, step, discount_code_id, expires_at, is_converted, converted_to_id, created_at, updated_at
+        FROM booking_drafts`).catch(() => {
+        // If discount_code_id doesn't exist yet in old table, copy without it
+        return client.execute(`INSERT INTO booking_drafts_new
+          (id, client_id, telegram_chat_id, girl_id, date, start_time, end_time, duration_minutes,
+           channel, session_id, step, expires_at, is_converted, converted_to_id, created_at, updated_at)
+          SELECT id, client_id, telegram_chat_id, girl_id, date, start_time, end_time, duration_minutes,
+                 channel, session_id, step, expires_at, is_converted, converted_to_id, created_at, updated_at
+          FROM booking_drafts`);
+      });
+      await client.execute('DROP TABLE booking_drafts');
+      await client.execute('ALTER TABLE booking_drafts_new RENAME TO booking_drafts');
+    }
+  } catch (e) {
+    console.error('[db] booking_drafts migration error:', e);
+  }
+
+  // Add discount columns to bookings_v2
+  try {
+    await client.execute('ALTER TABLE bookings_v2 ADD COLUMN discount_code_id INTEGER');
+  } catch { /* OK */ }
+  try {
+    await client.execute('ALTER TABLE bookings_v2 ADD COLUMN discount_amount INTEGER DEFAULT 0');
   } catch { /* OK */ }
 
   // Telegram users (bot deep-link activation)

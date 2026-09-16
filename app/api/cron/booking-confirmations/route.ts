@@ -86,11 +86,55 @@ export async function GET(request: Request) {
     }
   }
 
-  // ── Step 2: Cancel unconfirmed bookings (1h before) ──────────────
-  // Find bookings where reminder was sent, but no confirmation, and booking is within 1h
+  // ── Step 2: Expire pending bot bookings (1h before start) ────────
+  // These are created by the Telegram booking flow for new clients
   const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
   const cutoffTime = `${String(oneHourFromNow.getHours()).padStart(2, '0')}:${String(oneHourFromNow.getMinutes()).padStart(2, '0')}`;
 
+  const pendingBotBookings = await db.execute({
+    sql: `SELECT b.id, b.client_id, b.girl_id, b.date, b.start_time, b.end_time,
+                 b.price, g.name AS girl_name,
+                 bc.telegram_id AS chat_id
+          FROM bookings_v2 b
+          JOIN girls g ON g.id = b.girl_id
+          JOIN booking_clients bc ON bc.id = b.client_id
+          WHERE b.status = 'pending'
+            AND b.date = ?
+            AND b.start_time <= ?
+            AND bc.telegram_id IS NOT NULL`,
+    args: [todayStr, cutoffTime],
+  });
+
+  for (const row of pendingBotBookings.rows) {
+    const bookingId = Number(row.id);
+    const chatId = String(row.chat_id);
+    const girlName = String(row.girl_name);
+    const girlId = Number(row.girl_id);
+    const date = String(row.date);
+    const startTime = String(row.start_time).substring(0, 5);
+    const endTime = String(row.end_time).substring(0, 5);
+
+    await db.execute({
+      sql: `UPDATE bookings_v2
+            SET status = 'expired', cancel_reason = 'Nepotvrzeno novym klientem',
+                cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND status = 'pending'`,
+      args: [bookingId],
+    });
+
+    await db.execute({
+      sql: `DELETE FROM slot_locks WHERE locked_by = ?`,
+      args: [`booking:${bookingId}`],
+    }).catch(() => {});
+
+    await sendMessage(chatId,
+      `\u274C <b>${girlName}</b>, ${formatDisplayDate(date)} v ${startTime} — rezervace zrusena. Nepotvrdil/a jsi vcas. Napis kdykoliv pro novy termin \u{1F60A}`
+    );
+
+    bookingsCancelled++;
+  }
+
+  // ── Step 3: Cancel unconfirmed bookings with needs_confirmation flag ──
   const unconfirmed = await db.execute({
     sql: `SELECT b.id, b.client_id, b.girl_id, b.date, b.start_time, b.end_time,
                  b.price, g.name AS girl_name,
@@ -117,7 +161,6 @@ export async function GET(request: Request) {
     const startTime = String(row.start_time).substring(0, 5);
     const endTime = String(row.end_time).substring(0, 5);
 
-    // Cancel the booking
     await db.execute({
       sql: `UPDATE bookings_v2
             SET status = 'expired', cancel_reason = 'Nepotvrzeno novym klientem',
@@ -126,25 +169,18 @@ export async function GET(request: Request) {
       args: [bookingId],
     });
 
-    // Release slot lock
     await db.execute({
       sql: `DELETE FROM slot_locks WHERE locked_by = ?`,
       args: [`booking:${bookingId}`],
     }).catch(() => {});
 
-    // Notify client
-    await sendMessage(chatId, [
-      `\u274C <b>Rezervace zrusena</b>`,
-      '',
-      `\u{1F469} ${girlName} — ${formatDisplayDate(date)} v ${startTime}`,
-      '',
-      `Nepotvrdil/a jsi vcas, takze jsme misto uvolnili.`,
-      `Chces zkusit jiny termin? Napis kdykoliv \u{1F60A}`,
-    ].join('\n'));
+    await sendMessage(chatId,
+      `\u274C <b>${girlName}</b>, ${formatDisplayDate(date)} v ${startTime} — rezervace zrusena. Nepotvrdil/a jsi vcas. Napis kdykoliv pro novy termin \u{1F60A}`
+    );
 
     bookingsCancelled++;
 
-    // ── Step 3: Notify interested clients about freed slot ─────────
+    // ── Step 4: Notify interested clients about freed slot ─────────
     const interested = await db.execute({
       sql: `SELECT DISTINCT bi.telegram_chat_id
             FROM booking_interest bi
@@ -168,7 +204,6 @@ export async function GET(request: Request) {
       if (sent) interestNotified++;
     }
 
-    // Clean up interest records for this slot
     await db.execute({
       sql: `DELETE FROM booking_interest WHERE girl_id = ? AND date = ?`,
       args: [girlId, date],

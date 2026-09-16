@@ -6,7 +6,8 @@
 import { redirect } from 'next/navigation';
 import { requireBookingAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { updateUser } from '@/lib/user-actions';
+import { updateUserFromForm } from '@/lib/user-actions';
+import { generateUserLinkToken } from '@/lib/telegram';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,22 +44,6 @@ export default async function UserEditPage({ params }: Props) {
     redirect('/booking/users');
   }
 
-  async function handleSubmit(formData: FormData) {
-    'use server';
-    const role = formData.get('role') as string | null;
-    const displayName = formData.get('displayName') as string;
-    const telegramChatId = formData.get('telegramChatId') as string;
-    const isActive = formData.get('isActive') === 'on';
-
-    await updateUser(userId, {
-      ...(role ? { role } : {}),
-      displayName,
-      telegramChatId,
-      isActive,
-    });
-    redirect('/booking/users');
-  }
-
   const isSelf = currentUser.id === userId;
 
   return (
@@ -81,7 +66,8 @@ export default async function UserEditPage({ params }: Props) {
           </div>
         </div>
 
-        <form action={handleSubmit} className="ue-form">
+        <form action={updateUserFromForm} className="ue-form">
+          <input type="hidden" name="userId" value={userId} />
           <label className="ue-label">
             <span>Zobrazovane jmeno</span>
             <input
@@ -105,20 +91,29 @@ export default async function UserEditPage({ params }: Props) {
             )}
           </label>
 
-          <label className="ue-label">
-            <span>Telegram Chat ID</span>
-            <input
-              type="text"
-              name="telegramChatId"
-              defaultValue={user.telegramChatId}
-              placeholder="Napr. 123456789"
-              className="ue-input"
-            />
-            <span className="ue-hint">
-              Pro prijem eskalaci z bota. Uzivatel musi nejdriv napsat /start botovi,
-              pak zkopirovat chat ID z URL.
-            </span>
-          </label>
+          <div className="ue-label">
+            <span>Telegram propojeni</span>
+            {user.telegramChatId ? (
+              <div className="ue-tg-status">
+                <span className="ue-tg-linked">Propojeno</span>
+                <span className="ue-hint">Chat ID: {user.telegramChatId}</span>
+                <input type="hidden" name="telegramChatId" value={user.telegramChatId} />
+              </div>
+            ) : (
+              <div className="ue-tg-status">
+                <span className="ue-hint" style={{ marginBottom: '8px', display: 'block' }}>
+                  Nepropojeno — poslete tento odkaz uzivateli:
+                </span>
+                <code className="ue-tg-link">
+                  {`https://t.me/studioflow3_bot?start=USER_${generateUserLinkToken(userId)}`}
+                </code>
+                <span className="ue-hint" style={{ marginTop: '6px', display: 'block' }}>
+                  Po kliknuti se ucet propoji automaticky.
+                </span>
+                <input type="hidden" name="telegramChatId" value="" />
+              </div>
+            )}
+          </div>
 
           <label className="ue-label ue-checkbox-label">
             <input
@@ -228,4 +223,14 @@ const STYLES = `
   font-family: inherit; cursor: pointer;
 }
 .ue-btn-save:hover { opacity: 0.9; }
+
+.ue-tg-status { display: flex; flex-direction: column; }
+.ue-tg-linked {
+  color: #22c55e; font-weight: 600; font-size: 14px;
+}
+.ue-tg-link {
+  font-size: 12px; word-break: break-all;
+  background: var(--bg-elev); border: 1px solid var(--line);
+  padding: 8px 12px; border-radius: 6px; display: block;
+}
 `;

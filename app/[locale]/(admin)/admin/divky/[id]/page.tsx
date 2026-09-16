@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { getGirlById } from '@/lib/queries';
 import { db } from '@/lib/db';
 import { photoUrl } from '@/lib/photoUrl';
+import { generateLinkToken } from '@/lib/telegram';
+import { updateGirlCredentials } from '@/lib/admin-actions';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +18,8 @@ export default async function AdminGirlDetailPage({
   const { locale, id } = await params;
   setRequestLocale(locale);
 
-  const girl = await getGirlById(Number(id));
+  const girlId = Number(id);
+  const girl = await getGirlById(girlId);
   if (!girl) notFound();
 
   const name = String(girl.name);
@@ -27,7 +30,7 @@ export default async function AdminGirlDetailPage({
   // Fetch primary photo from girl_photos table
   const photoResult = await db.execute({
     sql: `SELECT url FROM girl_photos WHERE girl_id = ? AND is_primary = 1 LIMIT 1`,
-    args: [Number(id)],
+    args: [girlId],
   });
   const primaryPhoto = photoResult.rows[0]?.url
     ? photoUrl(String(photoResult.rows[0].url), 200)
@@ -49,26 +52,53 @@ export default async function AdminGirlDetailPage({
   const isFeatured = Boolean(girl.is_featured);
   const verified = Boolean(girl.verified);
 
+  // Telegram link status
+  const telegramLink = await db.execute({
+    sql: `SELECT chat_id, is_active, linked_at, username FROM telegram_links WHERE girl_id = ? LIMIT 1`,
+    args: [girlId],
+  });
+  const tgRow = telegramLink.rows[0];
+  const tgLinked = tgRow && Number(tgRow.is_active) === 1 && tgRow.chat_id && String(tgRow.chat_id) !== '';
+  const tgChatId = tgLinked ? String(tgRow.chat_id) : null;
+  const tgLinkedAt = tgRow?.linked_at ? String(tgRow.linked_at) : null;
+  const tgUsername = tgRow?.username ? String(tgRow.username) : null;
+
+  // Deterministic deep-link URL (HMAC token — always the same for the same girlId)
+  const tgToken = generateLinkToken(girlId);
+  const tgActivationUrl = `https://t.me/studioflow3_bot?start=GIRL_${tgToken}`;
+
+  // User account (login credentials)
+  const userResult = await db.execute({
+    sql: `SELECT id, email, display_name, telegram_chat_id FROM users WHERE girl_id = ? AND is_active = 1 LIMIT 1`,
+    args: [girlId],
+  });
+  const userRow = userResult.rows[0];
+  const userEmail = userRow?.email ? String(userRow.email) : null;
+
   const fields = [
     { label: 'ID', value: String(girl.id) },
     { label: 'Slug', value: slug },
     { label: 'Status', value: status },
-    { label: 'Věk', value: `${age} let` },
-    { label: 'Lokalita', value: location ?? '—' },
-    { label: 'Výška', value: height ? `${height} cm` : '—' },
-    { label: 'Váha', value: weight ? `${weight} kg` : '—' },
-    { label: 'Postava', value: bust ? `${bust}` : '—' },
-    { label: 'Hodnocení', value: rating ? rating.toFixed(1) : '—' },
-    { label: 'Počet recenzí', value: String(reviewsCount) },
-    { label: 'Počet rezervací', value: String(bookingsCount) },
-    { label: 'Nová', value: isNew ? 'Ano' : 'Ne' },
+    { label: 'Vek', value: `${age} let` },
+    { label: 'Lokalita', value: location ?? '\u2014' },
+    { label: 'Vyska', value: height ? `${height} cm` : '\u2014' },
+    { label: 'Vaha', value: weight ? `${weight} kg` : '\u2014' },
+    { label: 'Postava', value: bust ? `${bust}` : '\u2014' },
+    { label: 'Hodnoceni', value: rating ? rating.toFixed(1) : '\u2014' },
+    { label: 'Pocet recenzi', value: String(reviewsCount) },
+    { label: 'Pocet rezervaci', value: String(bookingsCount) },
+    { label: 'Nova', value: isNew ? 'Ano' : 'Ne' },
     { label: 'Top', value: isTop ? 'Ano' : 'Ne' },
     { label: 'Featured', value: isFeatured ? 'Ano' : 'Ne' },
     { label: 'Verified', value: verified ? 'Ano' : 'Ne' },
-    { label: 'Google Kalendář', value: calendarUrl ? 'Nastaven' : 'Nenastaveno' },
-    { label: 'Vytvořeno', value: createdAt ? new Date(createdAt).toLocaleString('cs-CZ') : '—' },
-    { label: 'Upraveno', value: updatedAt ? new Date(updatedAt).toLocaleString('cs-CZ') : '—' },
+    { label: 'Google Kalendar', value: calendarUrl ? 'Nastaven' : 'Nenastaveno' },
+    { label: 'Vytvoreno', value: createdAt ? new Date(createdAt).toLocaleString('cs-CZ') : '\u2014' },
+    { label: 'Upraveno', value: updatedAt ? new Date(updatedAt).toLocaleString('cs-CZ') : '\u2014' },
   ];
+
+  const cardStyle = { background: 'var(--color-bg-card)', border: '1px solid var(--color-line)', borderRadius: '12px', padding: '20px', marginBottom: '20px' };
+  const sectionTitle = { fontSize: '12px', color: 'var(--color-coral)', fontWeight: 600 as const, textTransform: 'uppercase' as const, letterSpacing: '0.08em', marginBottom: '16px' };
+  const inputStyle = { width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '9px 12px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' as const };
 
   return (
     <>
@@ -76,7 +106,7 @@ export default async function AdminGirlDetailPage({
 
       <div style={{ marginBottom: '16px' }}>
         <a href={`/${locale}/admin/divky`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
-          ← Zpět na seznam dívek
+          \u2190 Zpet na seznam divek
         </a>
       </div>
 
@@ -106,9 +136,112 @@ export default async function AdminGirlDetailPage({
         </div>
 
         <div>
-          <div style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-line)', borderRadius: '12px', padding: '20px', marginBottom: '20px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--color-coral)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>
-              Data profilu (read-only · edit v Phase 2)
+          {/* Telegram propojeni */}
+          <div style={cardStyle}>
+            <div style={sectionTitle}>
+              Telegram
+            </div>
+            {tgLinked ? (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ color: '#22c55e', fontWeight: 600 }}>Propojeno</span>
+                  {tgUsername && (
+                    <span style={{ fontSize: '13px', color: 'var(--color-text-dim)' }}>
+                      @{tgUsername}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-dim)' }}>
+                  Chat ID: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>{tgChatId}</code>
+                </div>
+                {tgLinkedAt && (
+                  <div style={{ fontSize: '12px', color: 'var(--color-text-dim)', marginTop: '4px' }}>
+                    Propojeno: {new Date(tgLinkedAt).toLocaleString('cs-CZ')}
+                  </div>
+                )}
+                <div style={{ fontSize: '12px', color: 'var(--color-text-dim)', marginTop: '8px' }}>
+                  Divka dostava notifikace o novych rezervacich pres Telegram.
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: '13px', color: 'var(--color-text-dim)', marginBottom: '12px' }}>
+                  Nepropojeno — divka nedostava Telegram notifikace.
+                </div>
+                <div style={{
+                  background: 'var(--color-bg-elev)',
+                  border: '1px solid var(--color-line)',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '12px',
+                }}>
+                  <div style={{ fontSize: '12px', color: 'var(--color-text-dim)', marginBottom: '8px' }}>
+                    Poslete tento odkaz divce (WA/SMS):
+                  </div>
+                  <code style={{
+                    fontSize: '12px',
+                    wordBreak: 'break-all',
+                    background: 'var(--color-bg)',
+                    padding: '6px 10px',
+                    borderRadius: '4px',
+                    display: 'block',
+                  }}>
+                    {tgActivationUrl}
+                  </code>
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--color-text-dim)' }}>
+                  Po kliknuti se divce v Telegramu propoji ucet a zacne dostavat notifikace.
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Prihlasovaci udaje */}
+          <div style={cardStyle}>
+            <div style={sectionTitle}>
+              Prihlasovaci udaje (Studio)
+            </div>
+            <form action={updateGirlCredentials}>
+              <input type="hidden" name="girl_id" value={girlId} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-coral)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '5px' }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    defaultValue={userEmail ?? ''}
+                    placeholder={`${slug}@studio.lovelygirls.cz`}
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-coral)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '5px' }}>
+                    Nove heslo
+                  </label>
+                  <input
+                    type="text"
+                    name="password"
+                    placeholder={userRow ? 'Ponechte prazdne pro zachovani' : 'Studio2026!'}
+                    style={inputStyle}
+                  />
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-dim)', marginTop: '4px' }}>
+                    {userRow ? 'Vyplnte pouze pokud chcete zmenit heslo' : 'Novy ucet — vychozi heslo Studio2026!'}
+                  </div>
+                </div>
+                <button type="submit" className="admin-btn-primary" style={{ alignSelf: 'flex-start' }}>
+                  {userRow ? 'Ulozit' : 'Vytvorit ucet'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Data profilu */}
+          <div style={cardStyle}>
+            <div style={sectionTitle}>
+              Data profilu
             </div>
             <dl style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '8px 16px' }}>
               {fields.map(({ label, value }) => (
@@ -121,15 +254,15 @@ export default async function AdminGirlDetailPage({
           </div>
 
           <div style={{ background: 'var(--color-bg-elev)', border: '1px solid var(--color-line)', borderRadius: '12px', padding: '20px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--color-coral)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>
+            <div style={sectionTitle}>
               Akce
             </div>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <a href={`/cs/admin/divky/${String(girl.id)}/edit`} className="admin-btn-primary">Editovat profil</a>
-              <a href={`/cs/admin/divky/${String(girl.id)}/dostupnost`} className="admin-btn-primary">Rozvrh dostupnosti</a>
-              <a href={`/cs/admin/divky/${String(girl.id)}/fotky`} className="admin-btn-primary">Fotky</a>
-              <a href={`/cs/profil/${slug}`} target="_blank" className="admin-btn-secondary">
-                Zobrazit profil ↗
+              <a href={`/${locale}/admin/divky/${girlId}/edit`} className="admin-btn-primary">Editovat profil</a>
+              <a href={`/${locale}/admin/divky/${girlId}/dostupnost`} className="admin-btn-primary">Rozvrh dostupnosti</a>
+              <a href={`/${locale}/admin/divky/${girlId}/fotky`} className="admin-btn-primary">Fotky</a>
+              <a href={`/${locale}/profil/${slug}`} target="_blank" className="admin-btn-secondary">
+                Zobrazit profil \u2197
               </a>
             </div>
           </div>

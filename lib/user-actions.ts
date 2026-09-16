@@ -1,5 +1,6 @@
 'use server';
 
+import { redirect } from 'next/navigation';
 import { db } from './db';
 import { requireBookingAdmin, hashPassword } from './auth';
 
@@ -111,4 +112,27 @@ export async function createUser(data: {
   });
 
   return { ok: true, userId: Number(result.lastInsertRowid) };
+}
+
+// ---------------------------------------------------------------------------
+// Update user from form submission (server action for form action={...})
+// ---------------------------------------------------------------------------
+
+export async function updateUserFromForm(formData: FormData): Promise<void> {
+  const userId = Number(formData.get('userId'));
+  if (!userId) throw new Error('Missing userId');
+
+  const role = formData.get('role') as string | null;
+  const displayName = (formData.get('displayName') as string) ?? '';
+  const telegramChatId = (formData.get('telegramChatId') as string) ?? '';
+  const isActive = formData.get('isActive') === 'on';
+
+  await updateUser(userId, {
+    ...(role ? { role } : {}),
+    displayName,
+    telegramChatId,
+    isActive,
+  });
+
+  redirect('/booking/users');
 }

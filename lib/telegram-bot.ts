@@ -3,9 +3,9 @@
  * Preserves TelegramUpdate type and handleUpdate export for webhook + polling.
  */
 
-import { answerCallbackQuery, sendMessage } from './telegram';
+import { answerCallbackQuery, sendMessage, verifyLinkToken, verifyUserLinkToken } from './telegram';
 import { handleAIMessage, handleAICallback } from './telegram-ai/handler';
-import { handleBookingCallback } from './telegram-ai/booking-flow';
+import { handleBookingCallback, handlePromoCodeInput } from './telegram-ai/booking-flow';
 import { db } from './db';
 
 // ---------------------------------------------------------------------------
@@ -55,6 +55,38 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
         console.error('[telegram-bot] Deep link error:', err);
       }
       return { type: 'deep_link', from: displayName, text, response: 'done' };
+    }
+
+    // Girl deep-link activation: /start GIRL_{token}
+    if (text.startsWith('/start GIRL_')) {
+      const token = text.replace('/start GIRL_', '');
+      try {
+        await handleGirlDeepLinkActivation(chatId, token, username);
+      } catch (err) {
+        console.error('[telegram-bot] Girl deep link error:', err);
+      }
+      return { type: 'deep_link_girl', from: displayName, text, response: 'done' };
+    }
+
+    // User (admin/operator) deep-link activation: /start USER_{token}
+    if (text.startsWith('/start USER_')) {
+      const token = text.replace('/start USER_', '');
+      try {
+        await handleUserDeepLinkActivation(chatId, token);
+      } catch (err) {
+        console.error('[telegram-bot] User deep link error:', err);
+      }
+      return { type: 'deep_link_user', from: displayName, text, response: 'done' };
+    }
+
+    // Check if user is entering a promo code (active draft in enter_promo step)
+    try {
+      const promoHandled = await handlePromoCodeInput(chatId, text);
+      if (promoHandled) {
+        return { type: 'promo_code', from: displayName, text, response: 'done' };
+      }
+    } catch (err) {
+      console.error('[telegram-bot] Promo code error:', err);
     }
 
     // Await AI handler — Vercel serverless kills background tasks after response
@@ -172,4 +204,113 @@ async function handleDeepLinkActivation(chatId: string, token: string): Promise<
     '',
     'Napiste <b>cokoliv</b> a nase operatorka vam pomuze.',
   ].join('\n'), { parseMode: 'HTML' });
+}
+
+// ---------------------------------------------------------------------------
+// Girl deep-link activation: /start GIRL_{token}
+// ---------------------------------------------------------------------------
+
+async function handleGirlDeepLinkActivation(chatId: string, token: string, username: string | null): Promise<void> {
+  // Verify token by iterating active girls (HMAC is deterministic)
+  const girls = await db.execute({
+    sql: "SELECT id, name FROM girls WHERE status = 'active'",
+    args: [],
+  });
+
+  let matchedGirl: { id: number; name: string } | null = null;
+  for (const row of girls.rows) {
+    const girlId = Number(row.id);
+    if (verifyLinkToken(girlId, token)) {
+      matchedGirl = { id: girlId, name: String(row.name) };
+      break;
+    }
+  }
+
+  if (!matchedGirl) {
+    await sendMessage(chatId, 'Odkaz neni platny. Kontaktujte spravce.');
+    return;
+  }
+
+  // Check if already linked to a different chat
+  const existing = await db.execute({
+    sql: 'SELECT chat_id FROM telegram_links WHERE girl_id = ? AND is_active = 1 LIMIT 1',
+    args: [matchedGirl.id],
+  });
+
+  if (existing.rows.length > 0 && String(existing.rows[0].chat_id) !== chatId) {
+    await sendMessage(chatId, 'Tento ucet je jiz propojen s jinym Telegram chatem.');
+    return;
+  }
+
+  // Upsert into telegram_links
+  await db.execute({
+    sql: `INSERT INTO telegram_links (girl_id, chat_id, username, is_active, linked_at)
+          VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)
+          ON CONFLICT(girl_id) DO UPDATE SET
+            chat_id = ?, username = ?, is_active = 1, linked_at = CURRENT_TIMESTAMP`,
+    args: [matchedGirl.id, chatId, username, chatId, username],
+  });
+
+  // Also update users table if girl has a user account
+  await db.execute({
+    sql: `UPDATE users SET telegram_chat_id = ?, updated_at = CURRENT_TIMESTAMP WHERE girl_id = ? AND is_active = 1`,
+    args: [chatId, matchedGirl.id],
+  }).catch(() => {});
+
+  await sendMessage(chatId, [
+    `<b>Propojeno!</b>`,
+    '',
+    `Vitej, ${matchedGirl.name}. Tvuj Telegram je propojen s tvym profilem.`,
+    'Od ted budes dostavat notifikace o novych rezervacich.',
+  ].join('\n'));
+}
+
+// ---------------------------------------------------------------------------
+// User (admin/operator) deep-link activation: /start USER_{token}
+// ---------------------------------------------------------------------------
+
+async function handleUserDeepLinkActivation(chatId: string, token: string): Promise<void> {
+  // Iterate active users and find match via HMAC verification
+  const users = await db.execute({
+    sql: `SELECT id, display_name, email, telegram_chat_id FROM users WHERE is_active = 1`,
+    args: [],
+  });
+
+  let matchedUser: { id: number; name: string } | null = null;
+  for (const row of users.rows) {
+    const userId = Number(row.id);
+    if (verifyUserLinkToken(userId, token)) {
+      matchedUser = { id: userId, name: row.display_name ? String(row.display_name) : String(row.email) };
+      break;
+    }
+  }
+
+  if (!matchedUser) {
+    await sendMessage(chatId, 'Odkaz neni platny. Kontaktujte spravce.');
+    return;
+  }
+
+  // Check if already linked to a different chat
+  const existing = await db.execute({
+    sql: 'SELECT telegram_chat_id FROM users WHERE id = ? LIMIT 1',
+    args: [matchedUser.id],
+  });
+  const existingChatId = existing.rows[0]?.telegram_chat_id ? String(existing.rows[0].telegram_chat_id) : '';
+  if (existingChatId && existingChatId !== chatId) {
+    await sendMessage(chatId, 'Tento ucet je jiz propojen s jinym Telegram chatem.');
+    return;
+  }
+
+  // Save chat_id to users table
+  await db.execute({
+    sql: `UPDATE users SET telegram_chat_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    args: [chatId, matchedUser.id],
+  });
+
+  await sendMessage(chatId, [
+    `<b>Propojeno!</b>`,
+    '',
+    `Vitejte, ${matchedUser.name}. Vas Telegram je propojen s vasim uctem.`,
+    'Od ted budete dostavat notifikace o novych rezervacich a eskalacich.',
+  ].join('\n'));
 }

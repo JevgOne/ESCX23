@@ -98,6 +98,14 @@ export function verifyLinkToken(girlId: number, token: string): boolean {
   return generateLinkToken(girlId) === token;
 }
 
+export function generateUserLinkToken(userId: number): string {
+  return crypto.createHmac('sha256', LINK_SECRET).update(`user:${userId}`).digest('hex').slice(0, 16);
+}
+
+export function verifyUserLinkToken(userId: number, token: string): boolean {
+  return generateUserLinkToken(userId) === token;
+}
+
 // ---------------------------------------------------------------------------
 // Outgoing notifications (called from booking actions / cron)
 // ---------------------------------------------------------------------------

@@ -271,7 +271,7 @@ export async function GET(request: Request) {
 
     // Schedule diagnostics
     const schedulesList = await db.execute(
-      `SELECT gs.girl_id, g.name, gs.day_of_week, gs.start_time, gs.end_time, gs.is_active, l.name as location_name
+      `SELECT gs.girl_id, g.name, gs.day_of_week, gs.start_time, gs.end_time, gs.is_active, l.display_name as location_name
        FROM girl_schedules gs
        JOIN girls g ON g.id = gs.girl_id
        LEFT JOIN locations l ON l.id = gs.location_id
