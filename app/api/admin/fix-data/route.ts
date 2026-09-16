@@ -269,9 +269,24 @@ export async function GET(request: Request) {
       'SELECT * FROM users ORDER BY id'
     );
 
+    // Schedule diagnostics
+    const schedulesList = await db.execute(
+      `SELECT gs.girl_id, g.name, gs.day_of_week, gs.start_time, gs.end_time, gs.is_active, l.name as location_name
+       FROM girl_schedules gs
+       JOIN girls g ON g.id = gs.girl_id
+       LEFT JOIN locations l ON l.id = gs.location_id
+       WHERE gs.is_active = 1
+       ORDER BY gs.girl_id, gs.day_of_week`
+    );
+
     return NextResponse.json({
       pending: Number(pendingCount.rows[0]?.cnt),
       totalBookings: Number(totalBookings.rows[0]?.cnt),
+      schedules: schedulesList.rows.map(r => ({
+        girlId: Number(r.girl_id), name: String(r.name),
+        dayOfWeek: Number(r.day_of_week), startTime: String(r.start_time),
+        endTime: String(r.end_time), location: r.location_name ? String(r.location_name) : null,
+      })),
       girls: girlsList.rows.map(r => ({
         id: Number(r.id), name: String(r.name), slug: String(r.slug ?? ''),
         status: String(r.status ?? ''),
