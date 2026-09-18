@@ -1,7 +1,6 @@
 /**
  * Promo banner — Telegram booking coming soon with 200 CZK discount.
- * Displayed on homepage between Hero and content sections.
- * Clean text-only strip, no icons (emoji renders inconsistently on mobile).
+ * Uses Telegram blue to stand out from the site's coral/dark palette.
  */
 
 const TEXTS: Record<string, string> = {
@@ -17,18 +16,25 @@ export default function TelegramPromoBanner({ locale }: { locale: string }) {
   return (
     <section
       style={{
-        background: 'linear-gradient(135deg, rgba(242,125,141,0.10) 0%, rgba(167,139,250,0.08) 100%)',
-        borderBottom: '1px solid rgba(242,125,141,0.15)',
-        padding: '14px 16px',
-        marginBottom: '8px',
-        textAlign: 'center',
+        background: 'rgba(34,158,217,0.08)',
+        border: '1px solid rgba(34,158,217,0.3)',
+        padding: '14px 20px',
+        margin: '8px 20px 40px',
+        borderRadius: '6px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
       }}
     >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8l-1.57 7.4c-.12.54-.43.67-.87.42l-2.4-1.77-1.16 1.12c-.13.13-.24.24-.49.24l.17-2.44 4.44-4.01c.19-.17-.04-.27-.3-.1l-5.5 3.46-2.37-.74c-.51-.16-.52-.51.11-.76l9.26-3.57c.43-.16.8.1.66.75z" fill="#229ED9"/>
+      </svg>
       <span
         style={{
           fontSize: '13px',
           fontWeight: 600,
-          color: 'var(--color-text)',
+          color: '#fff',
           lineHeight: 1.4,
         }}
       >
