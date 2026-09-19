@@ -1,12 +1,16 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { changePassword } from '@/lib/auth-actions';
-import { logoutBookingAction } from '@/lib/auth-actions';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { changePassword, logoutBookingAction } from '@/lib/auth-actions';
 
 export default function StudioSettingsPage() {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [done, setDone] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const isForced = searchParams.get('force') === '1';
 
   function handleSubmit(formData: FormData) {
     setMessage(null);
@@ -15,8 +19,8 @@ export default function StudioSettingsPage() {
       if ('error' in result) {
         setMessage({ type: 'err', text: result.error });
       } else {
-        setMessage({ type: 'ok', text: 'Heslo bylo zmeneno' });
-        // Clear form
+        setMessage({ type: 'ok', text: 'Heslo bylo zmeneno! Zapamatuj si ho.' });
+        setDone(true);
         const form = document.querySelector('.sp-form') as HTMLFormElement | null;
         form?.reset();
       }
@@ -29,6 +33,16 @@ export default function StudioSettingsPage() {
 
       <div className="sp-page">
         <h1 className="sp-title">Nastaveni</h1>
+
+        {isForced && !done && (
+          <div className="sp-warning">
+            <div className="sp-warning-title">Musis si zmenit heslo</div>
+            <div className="sp-warning-text">
+              Pred pouzitim aplikace si nastav vlastni heslo.
+              Zapamatuj si ho — nikdo ti ho nemuze pripomenout!
+            </div>
+          </div>
+        )}
 
         <div className="sp-section">
           <h2 className="sp-section-title">Zmena hesla</h2>
@@ -69,6 +83,10 @@ export default function StudioSettingsPage() {
               />
             </label>
 
+            <div className="sp-remember">
+              Zapamatuj si heslo! Nikdo ti ho nemuze pripomenout.
+            </div>
+
             {message && (
               <div className={`sp-msg sp-msg-${message.type}`}>
                 {message.text}
@@ -79,6 +97,15 @@ export default function StudioSettingsPage() {
               {isPending ? 'Menim...' : 'Zmenit heslo'}
             </button>
           </form>
+
+          {done && isForced && (
+            <button
+              className="sp-btn-continue"
+              onClick={() => router.push('/studio/dashboard')}
+            >
+              Pokracovat do aplikace
+            </button>
+          )}
         </div>
 
         <div className="sp-section">
@@ -99,6 +126,24 @@ const STYLES = `
   font-size: 18px;
   font-weight: 800;
   margin-bottom: 20px;
+}
+.sp-warning {
+  background: rgba(251,191,36,0.12);
+  border: 2px solid rgba(251,191,36,0.4);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.sp-warning-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--yellow);
+  margin-bottom: 6px;
+}
+.sp-warning-text {
+  font-size: 13px;
+  color: var(--yellow);
+  line-height: 1.5;
 }
 .sp-section {
   background: var(--bg-elev);
@@ -142,6 +187,16 @@ const STYLES = `
 .sp-input:focus {
   border-color: var(--coral);
 }
+.sp-remember {
+  padding: 10px 12px;
+  background: rgba(242,125,141,0.1);
+  border: 1px solid rgba(242,125,141,0.3);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--coral);
+  text-align: center;
+}
 .sp-btn {
   padding: 10px 20px;
   background: var(--coral);
@@ -156,6 +211,20 @@ const STYLES = `
 }
 .sp-btn:hover { opacity: 0.9; }
 .sp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.sp-btn-continue {
+  width: 100%;
+  padding: 12px;
+  background: var(--green);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 12px;
+}
+.sp-btn-continue:hover { opacity: 0.9; }
 .sp-msg {
   padding: 10px 12px;
   border-radius: 8px;

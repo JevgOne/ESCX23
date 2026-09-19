@@ -152,6 +152,17 @@ export default async function StudioLayout({
   const hdrs = await headers();
   const pathname = hdrs.get('x-pathname') ?? '';
 
+  // Check if girl must change password — redirect to settings (but not if already there)
+  if (!pathname.startsWith('/studio/settings')) {
+    const pwCheck = await db.execute({
+      sql: 'SELECT force_password_change FROM users WHERE id = ?',
+      args: [user.id],
+    }).catch(() => ({ rows: [{ force_password_change: 0 }] }));
+    if (Number(pwCheck.rows[0]?.force_password_change) === 1) {
+      redirect('/studio/settings?force=1');
+    }
+  }
+
   // Get girl name and unread notification count
   let girlName = user.email.split('@')[0];
   let unreadCount = 0;

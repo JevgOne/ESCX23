@@ -140,11 +140,11 @@ export async function changePassword(formData: FormData) {
     return { error: 'Soucasne heslo neni spravne' };
   }
 
-  // Hash new password and update
+  // Hash new password, update, and clear force flag
   const bcrypt = await import('bcryptjs');
   const hash = await bcrypt.hash(newPassword, 12);
   await (await import('./db')).db.execute({
-    sql: 'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    sql: 'UPDATE users SET password_hash = ?, force_password_change = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
     args: [hash, user.id],
   });
 

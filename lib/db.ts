@@ -684,5 +684,11 @@ async function runMigrations(client: Client) {
   }
 }
 
+  // Force password change flag for girls
+  try {
+    await client.execute('ALTER TABLE users ADD COLUMN force_password_change INTEGER NOT NULL DEFAULT 0');
+  } catch { /* OK — column already exists */ }
+}
+
 // Fire and forget on startup
 runMigrations(db).catch(() => {});
