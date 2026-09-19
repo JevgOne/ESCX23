@@ -368,6 +368,37 @@ export async function createBooking(input: CreateBookingInput): Promise<{ id: nu
     args: [points, input.clientId],
   });
 
+  // Get client nickname for notification
+  const clientRes = await db.execute({
+    sql: 'SELECT nickname FROM booking_clients WHERE id = ?',
+    args: [input.clientId],
+  });
+  const clientName = clientRes.rows[0] ? String(clientRes.rows[0].nickname) : 'Klient';
+
+  // Send push + Telegram notification to the girl (fire and forget)
+  import('./push').then(({ sendPushToGirl }) => {
+    sendPushToGirl(input.girlId, {
+      title: 'Nova rezervace',
+      body: `${clientName} — ${input.date} ${input.startTime}–${endTime} (${input.durationMinutes} min)`,
+      url: '/studio/dashboard',
+      tag: `booking-${bookingId}`,
+    }).catch(() => {});
+  }).catch(() => {});
+
+  // Telegram notification to girl
+  import('./telegram').then(async ({ notifyGirlNewBooking }) => {
+    const chatRes = await db.execute({
+      sql: "SELECT telegram_chat_id FROM users WHERE girl_id = ? AND role = 'girl' AND telegram_chat_id IS NOT NULL LIMIT 1",
+      args: [input.girlId],
+    });
+    if (chatRes.rows[0]?.telegram_chat_id) {
+      notifyGirlNewBooking(
+        String(chatRes.rows[0].telegram_chat_id),
+        bookingId, input.date, input.startTime, endTime, input.durationMinutes,
+      ).catch(() => {});
+    }
+  }).catch(() => {});
+
   return { id: bookingId };
 }
 
