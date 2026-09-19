@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   searchClient,
+  searchClients,
   getAvailableGirls,
   getAvailableSlots,
   createBooking,
@@ -42,6 +43,10 @@ export default function NewBookingForm({ initialDate, initialGirlId }: Props) {
   const [clientNotFound, setClientNotFound] = useState(false);
   const [newClientName, setNewClientName] = useState('');
   const [channel, setChannel] = useState<Channel>('phone');
+  const [suggestions, setSuggestions] = useState<ClientSearchResult[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Step 2: Girl
   const [date, setDate] = useState(initialDate);
@@ -66,6 +71,35 @@ export default function NewBookingForm({ initialDate, initialGirlId }: Props) {
 
   // --- Actions ---
 
+  // Autocomplete: debounced search as user types
+  const handleClientQueryChange = useCallback((value: string) => {
+    setClientQuery(value);
+    setClient(null);
+    setClientNotFound(false);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (value.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      const results = await searchClients(value);
+      setSuggestions(results);
+      setShowSuggestions(results.length > 0);
+    }, 300);
+  }, []);
+
+  function selectSuggestion(c: ClientSearchResult) {
+    setClient(c);
+    setClientQuery(c.nickname);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setClientNotFound(false);
+  }
+
   function handleSearchClient() {
     startTransition(async () => {
       const result = await searchClient(clientQuery);
@@ -76,8 +110,20 @@ export default function NewBookingForm({ initialDate, initialGirlId }: Props) {
         setClient(null);
         setClientNotFound(true);
       }
+      setShowSuggestions(false);
     });
   }
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   function handleGoToStep2() {
     startTransition(async () => {
@@ -191,19 +237,42 @@ export default function NewBookingForm({ initialDate, initialGirlId }: Props) {
             {/* ====== STEP 1: Client ====== */}
             {step === 1 && (
               <>
-                <div className="nbf-group">
+                <div className="nbf-group" ref={suggestionsRef}>
                   <label className="nbf-label">Vyhledat klienta (kod / jmeno)</label>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input
-                      className="nbf-input"
-                      value={clientQuery}
-                      onChange={(e) => setClientQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearchClient()}
-                      placeholder="KLIENT1211 nebo Josef..."
-                    />
-                    <button className="nbf-btn-search" onClick={handleSearchClient} disabled={isPending}>
-                      {isPending ? '...' : 'Hledat'}
-                    </button>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input
+                        className="nbf-input"
+                        value={clientQuery}
+                        onChange={(e) => handleClientQueryChange(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearchClient()}
+                        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                        placeholder="242 nebo Josef..."
+                        autoComplete="off"
+                      />
+                      <button className="nbf-btn-search" onClick={handleSearchClient} disabled={isPending}>
+                        {isPending ? '...' : 'Hledat'}
+                      </button>
+                    </div>
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="nbf-suggestions">
+                        {suggestions.map((s) => (
+                          <button
+                            key={s.id}
+                            className="nbf-suggestion"
+                            onClick={() => selectSuggestion(s)}
+                            type="button"
+                          >
+                            <span className="nbf-sug-name">{s.nickname}</span>
+                            <span className="nbf-sug-code">{s.clientNumber}</span>
+                            <span className={`nbf-sug-badge nbf-badge-${s.trustLevel}`}>
+                              {s.trustLevel === 'vip' ? 'VIP' : s.trustLevel === 'new' ? 'Novy' : 'Staly'}
+                            </span>
+                            <span className="nbf-sug-visits">{s.totalVisits}x</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -567,6 +636,46 @@ const FORM_STYLES = `
 }
 .nbf-input:focus, .nbf-select:focus { border-color: var(--coral); }
 .nbf-input::placeholder { color: var(--dim); }
+
+/* Autocomplete suggestions */
+.nbf-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-top: 4px;
+  z-index: 50;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.nbf-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.nbf-suggestion:last-child { border-bottom: none; }
+.nbf-suggestion:hover { background: var(--bg-elev); }
+.nbf-sug-name { font-weight: 600; flex: 1; }
+.nbf-sug-code { font-size: 11px; color: var(--dim); }
+.nbf-sug-badge {
+  display: inline-block; padding: 1px 5px; border-radius: 4px;
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+}
+.nbf-sug-visits { font-size: 10px; color: var(--dim); }
 .nbf-row { display: flex; gap: 12px; }
 .nbf-row .nbf-group { flex: 1; }
 

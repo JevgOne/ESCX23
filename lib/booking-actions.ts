@@ -57,6 +57,40 @@ export async function searchClient(query: string): Promise<ClientSearchResult | 
   };
 }
 
+export async function searchClients(query: string): Promise<ClientSearchResult[]> {
+  await requireBooking();
+
+  const q = query.trim();
+  if (!q || q.length < 2) return [];
+
+  const result = await db.execute({
+    sql: `
+      SELECT
+        bc.id, bc.client_number, bc.nickname, bc.trust_level,
+        bc.total_visits, bc.no_show_count, bc.telegram_id,
+        (SELECT b.date FROM bookings_v2 b WHERE b.client_id = bc.id ORDER BY b.date DESC LIMIT 1) AS last_date,
+        (SELECT g.name FROM bookings_v2 b JOIN girls g ON g.id = b.girl_id WHERE b.client_id = bc.id ORDER BY b.date DESC LIMIT 1) AS last_girl
+      FROM booking_clients bc
+      WHERE bc.nickname LIKE ? OR bc.client_number LIKE ?
+      ORDER BY bc.total_visits DESC
+      LIMIT 8
+    `,
+    args: [`%${q}%`, `%${q}%`],
+  });
+
+  return result.rows.map((r) => ({
+    id: Number(r.id),
+    clientNumber: String(r.client_number),
+    nickname: String(r.nickname),
+    trustLevel: String(r.trust_level),
+    totalVisits: Number(r.total_visits),
+    noShowCount: Number(r.no_show_count),
+    telegramId: r.telegram_id ? String(r.telegram_id) : null,
+    lastVisitDate: r.last_date ? String(r.last_date) : null,
+    lastVisitGirl: r.last_girl ? String(r.last_girl) : null,
+  }));
+}
+
 // ---------------------------------------------------------------------------
 // Available girls for a given date
 // ---------------------------------------------------------------------------
