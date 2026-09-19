@@ -132,6 +132,7 @@ const NAV_ITEMS = [
   { label: 'Prehled', href: '/studio/dashboard', icon: '\u{2630}' },
   { label: 'Rozvrh', href: '/studio/schedule', icon: '\u{1F4C5}' },
   { label: 'Notifikace', href: '/studio/notifications', icon: '\u{1F514}', badgeKey: 'notifs' as const },
+  { label: 'Nastaveni', href: '/studio/settings', icon: '\u{2699}' },
 ];
 
 export default async function StudioLayout({

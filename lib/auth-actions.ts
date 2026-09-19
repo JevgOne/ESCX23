@@ -111,3 +111,42 @@ export async function logoutBookingAction() {
   await clearSession();
   redirect('/booking');
 }
+
+export async function changePassword(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect('/booking');
+  }
+
+  const currentPassword = String(formData.get('currentPassword') ?? '');
+  const newPassword = String(formData.get('newPassword') ?? '');
+  const confirmPassword = String(formData.get('confirmPassword') ?? '');
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return { error: 'Vyplnte vsechna pole' };
+  }
+
+  if (newPassword.length < 6) {
+    return { error: 'Nove heslo musi mit alespon 6 znaku' };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { error: 'Hesla se neshoduji' };
+  }
+
+  // Verify current password
+  const verified = await authenticate(user.email, currentPassword);
+  if (!verified) {
+    return { error: 'Soucasne heslo neni spravne' };
+  }
+
+  // Hash new password and update
+  const bcrypt = await import('bcryptjs');
+  const hash = await bcrypt.hash(newPassword, 12);
+  await (await import('./db')).db.execute({
+    sql: 'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    args: [hash, user.id],
+  });
+
+  return { success: true };
+}
