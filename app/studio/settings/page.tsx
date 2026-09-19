@@ -16,8 +16,8 @@ export default function StudioSettingsPage() {
     setMessage(null);
     startTransition(async () => {
       const result = await changePassword(formData);
-      if ('error' in result) {
-        setMessage({ type: 'err', text: result.error });
+      if ('error' in result && result.error) {
+        setMessage({ type: 'err', text: String(result.error) });
       } else {
         setMessage({ type: 'ok', text: 'Heslo bylo zmeneno! Zapamatuj si ho.' });
         setDone(true);
