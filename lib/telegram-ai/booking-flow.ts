@@ -20,6 +20,8 @@ import { logAudit } from '../audit';
 import { createBookingNotification } from '../booking-notifications';
 import type { ClientContext } from './types';
 
+const BREAK_MINUTES = 10; // 10-min break between bookings
+
 // ---------------------------------------------------------------------------
 // Prague timezone helpers (duplicated from tool-handlers to avoid circular deps)
 // ---------------------------------------------------------------------------
@@ -1066,20 +1068,17 @@ async function getAvailableSlots(girlId: number, date: string): Promise<string[]
     args: [girlId, date],
   });
 
-  const occupied = new Set<number>();
   const allBlocked = [
     ...bookingsResult.rows,
     ...draftsResult.rows,
     ...locksResult.rows,
   ];
 
-  for (const row of allBlocked) {
+  const blockedRanges = allBlocked.map(row => {
     const [sh, sm] = String(row.start_time).substring(0, 5).split(':').map(Number);
     const [eh, em] = String(row.end_time).substring(0, 5).split(':').map(Number);
-    for (let m = sh * 60 + sm; m < eh * 60 + em + 15; m += 30) {
-      occupied.add(m);
-    }
-  }
+    return { start: sh * 60 + sm, end: eh * 60 + em };
+  });
 
   // Generate free slots
   const [startH, startM] = shiftStart.split(':').map(Number);
@@ -1094,7 +1093,8 @@ async function getAvailableSlots(girlId: number, date: string): Promise<string[]
 
   const freeSlots: string[] = [];
   for (let m = shiftStartMin; m < shiftEndMin; m += 30) {
-    if (!occupied.has(m) && m >= currentMin) {
+    const isBlocked = blockedRanges.some(b => m < b.end + BREAK_MINUTES && m + 30 > b.start - BREAK_MINUTES);
+    if (!isBlocked && m >= currentMin) {
       freeSlots.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
     }
   }
@@ -1149,8 +1149,8 @@ async function getAvailableDurations(
     const ns = String(nextBooking.rows[0].next_start).substring(0, 5);
     const [nh, nm] = ns.split(':').map(Number);
     const nextMin = nh * 60 + nm;
-    // 15min buffer before next booking
-    maxAvailable = Math.min(maxAvailable, nextMin - startMin - 15);
+    // BREAK_MINUTES buffer before next booking
+    maxAvailable = Math.min(maxAvailable, nextMin - startMin - BREAK_MINUTES);
   }
 
   // Get pricing for available durations

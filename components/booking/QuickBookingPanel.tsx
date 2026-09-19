@@ -37,6 +37,28 @@ const STYLES = `
   letter-spacing: 0.08em; color: var(--dim); margin-bottom: 10px;
 }
 
+/* Step indicator */
+.qb-step {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--coral); color: #fff; font-size: 11px; font-weight: 800;
+  margin-right: 8px; flex-shrink: 0;
+}
+.qb-step.done { background: var(--green); }
+.qb-step.pending { background: var(--dim); }
+
+/* Days grid */
+.qb-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; }
+.qb-day {
+  padding: 10px 12px; border-radius: 8px; text-align: center;
+  background: var(--bg-elev); border: 1px solid var(--line);
+  cursor: pointer; transition: all 0.1s;
+}
+.qb-day:hover { border-color: var(--coral); }
+.qb-day.active { background: rgba(242,125,141,0.15); border-color: var(--coral); }
+.qb-day-label { font-size: 13px; font-weight: 700; color: var(--text); }
+.qb-day-count { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
 /* Girls grid */
 .qb-girls { display: flex; flex-wrap: wrap; gap: 6px; }
 .qb-girl {
@@ -46,20 +68,7 @@ const STYLES = `
 }
 .qb-girl:hover { border-color: var(--coral); color: var(--coral); }
 .qb-girl.active { background: rgba(242,125,141,0.15); border-color: var(--coral); color: var(--coral); }
-
-/* Schedule grid */
-.qb-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; }
-.qb-day {
-  padding: 10px 12px; border-radius: 8px; text-align: center;
-  background: var(--bg-elev); border: 1px solid var(--line);
-  cursor: pointer; transition: all 0.1s;
-}
-.qb-day:hover:not(.disabled) { border-color: var(--coral); }
-.qb-day.active { background: rgba(242,125,141,0.15); border-color: var(--coral); }
-.qb-day.disabled { opacity: 0.35; cursor: default; }
-.qb-day-label { font-size: 13px; font-weight: 700; color: var(--text); }
-.qb-day-shift { font-size: 11px; color: var(--muted); margin-top: 2px; }
-.qb-day.disabled .qb-day-shift { color: var(--dim); }
+.qb-girl-shift { font-size: 11px; color: var(--muted); margin-left: 6px; font-weight: 400; }
 
 /* Time slots */
 .qb-times { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -89,7 +98,7 @@ const STYLES = `
 .qb-input {
   padding: 8px 12px; border-radius: 8px; font-size: 13px;
   background: var(--bg-elev); border: 1px solid var(--line); color: var(--text);
-  font-family: inherit; outline: none; width: 200px;
+  font-family: inherit; outline: none; flex: 1; min-width: 140px;
 }
 .qb-input:focus { border-color: var(--coral); }
 .qb-btn-sm {
@@ -137,16 +146,16 @@ const STYLES = `
   border-radius: 8px; font-size: 13px; color: var(--red); margin-bottom: 12px;
 }
 
-.qb-row { display: flex; gap: 16px; }
-.qb-row > * { flex: 1; }
-@media (max-width: 640px) { .qb-row { flex-direction: column; } }
-
 .qb-loading { color: var(--muted); font-size: 13px; font-style: italic; }
+
+@media (max-width: 640px) {
+  .qb-days { grid-template-columns: repeat(3, 1fr); }
+}
 `;
 
 export default function QuickBookingPanel({ girls, weekSchedules, pricingPlans, today }: Props) {
-  const [selectedGirlId, setSelectedGirlId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedGirlId, setSelectedGirlId] = useState<number | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [duration, setDuration] = useState(60);
   const [clientQuery, setClientQuery] = useState('');
@@ -162,26 +171,59 @@ export default function QuickBookingPanel({ girls, weekSchedules, pricingPlans, 
   const [isSearching, startSearchTransition] = useTransition();
 
   const selectedGirl = girls.find((g) => g.id === selectedGirlId);
-  const girlSchedule = selectedGirlId ? (weekSchedules[selectedGirlId] ?? []) : [];
-  const selectedDayInfo = girlSchedule.find((d) => d.date === selectedDate);
 
-  function selectGirl(id: number) {
-    setSelectedGirlId(id);
-    setSelectedDate(null);
+  // Build list of next 7 days with count of working girls
+  const daysList = (() => {
+    const days: Array<{ date: string; label: string; girlCount: number }> = [];
+    const base = new Date(today + 'T12:00:00');
+    const dayNames = ['Ne', 'Po', 'Ut', 'St', 'Ct', 'Pa', 'So'];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(base);
+      d.setDate(base.getDate() + i);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const label = i === 0 ? 'DNES' : i === 1 ? 'ZITRA' : `${dayNames[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`;
+      // Count girls working this day
+      let count = 0;
+      for (const g of girls) {
+        const sched = weekSchedules[g.id] ?? [];
+        const dayInfo = sched.find((s) => s.date === dateStr);
+        if (dayInfo?.shiftStart && dayInfo?.shiftEnd) count++;
+      }
+      days.push({ date: dateStr, label, girlCount: count });
+    }
+    return days;
+  })();
+
+  // Girls working on selected date
+  const girlsForDate = selectedDate
+    ? girls.filter((g) => {
+        const sched = weekSchedules[g.id] ?? [];
+        const dayInfo = sched.find((s) => s.date === selectedDate);
+        return dayInfo?.shiftStart && dayInfo?.shiftEnd;
+      }).map((g) => {
+        const sched = weekSchedules[g.id] ?? [];
+        const dayInfo = sched.find((s) => s.date === selectedDate)!;
+        return { ...g, shiftStart: dayInfo.shiftStart!, shiftEnd: dayInfo.shiftEnd! };
+      })
+    : [];
+
+  function selectDate(date: string) {
+    setSelectedDate(date);
+    setSelectedGirlId(null);
     setSelectedTime(null);
     setSlots([]);
     setError(null);
     setSuccessId(null);
   }
 
-  function selectDate(date: string) {
-    setSelectedDate(date);
+  function selectGirl(id: number) {
+    setSelectedGirlId(id);
     setSelectedTime(null);
     setError(null);
     // Load slots
-    if (selectedGirlId) {
+    if (selectedDate) {
       startSlotTransition(async () => {
-        const s = await getAvailableSlots(selectedGirlId, date, duration);
+        const s = await getAvailableSlots(id, selectedDate, duration);
         setSlots(s);
       });
     }
@@ -191,7 +233,6 @@ export default function QuickBookingPanel({ girls, weekSchedules, pricingPlans, 
     setDuration(d);
     setSelectedTime(null);
     setError(null);
-    // Reload slots for new duration
     if (selectedGirlId && selectedDate) {
       startSlotTransition(async () => {
         const s = await getAvailableSlots(selectedGirlId, selectedDate, d);
@@ -250,8 +291,8 @@ export default function QuickBookingPanel({ girls, weekSchedules, pricingPlans, 
   }
 
   function handleReset() {
-    setSelectedGirlId(null);
     setSelectedDate(null);
+    setSelectedGirlId(null);
     setSelectedTime(null);
     setDuration(60);
     setClientQuery('');
@@ -263,7 +304,6 @@ export default function QuickBookingPanel({ girls, weekSchedules, pricingPlans, 
     setError(null);
   }
 
-  // Compute end time for summary
   const endTime = selectedTime ? (() => {
     const [h, m] = selectedTime.split(':').map(Number);
     const total = h * 60 + m + duration;
@@ -273,6 +313,11 @@ export default function QuickBookingPanel({ girls, weekSchedules, pricingPlans, 
   const canSubmit = selectedGirlId && selectedDate && selectedTime && client && !isPending;
   const selectedPlan = pricingPlans.find((p) => p.duration === duration);
 
+  // Find shift info for summary
+  const selectedGirlShift = selectedGirlId && selectedDate
+    ? girlsForDate.find((g) => g.id === selectedGirlId)
+    : null;
+
   if (successId) {
     return (
       <>
@@ -281,9 +326,9 @@ export default function QuickBookingPanel({ girls, weekSchedules, pricingPlans, 
           <div className="qb-title">RYCHLA REZERVACE</div>
           <div className="qb-success">
             Rezervace #{successId} vytvorena
-            {selectedGirl && selectedDayInfo && selectedTime && (
+            {selectedGirl && selectedDate && selectedTime && (
               <div style={{ marginTop: 8, fontSize: 14, color: 'var(--text)' }}>
-                {selectedGirl.name} &middot; {selectedDayInfo.dateLabel} &middot; {selectedTime}&#8211;{endTime} &middot; {duration} min
+                {selectedGirl.name} &middot; {selectedTime}&#8211;{endTime} &middot; {duration} min
                 {client && <> &middot; {client.nickname}</>}
               </div>
             )}
@@ -305,154 +350,161 @@ export default function QuickBookingPanel({ girls, weekSchedules, pricingPlans, 
           <a href="/booking/calendar">Kalendar</a>
         </div>
 
-        {/* GIRLS */}
+        {/* STEP 1: DEN */}
         <div className="qb-section">
-          <div className="qb-label">Divka</div>
-          <div className="qb-girls">
-            {girls.map((g) => (
-              <button
-                key={g.id}
-                className={`qb-girl${selectedGirlId === g.id ? ' active' : ''}`}
-                onClick={() => selectGirl(g.id)}
+          <div className="qb-label">
+            <span className={`qb-step${selectedDate ? ' done' : ''}`}>1</span>
+            Den
+          </div>
+          <div className="qb-days">
+            {daysList.map((day) => (
+              <div
+                key={day.date}
+                className={`qb-day${selectedDate === day.date ? ' active' : ''}`}
+                onClick={() => selectDate(day.date)}
               >
-                {g.name}
-              </button>
+                <div className="qb-day-label">{day.label}</div>
+                <div className="qb-day-count">{day.girlCount} divek</div>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* SCHEDULE — show after girl selected */}
-        {selectedGirlId && (
+        {/* STEP 2: DIVKA (only girls working that day) */}
+        {selectedDate && (
           <div className="qb-section">
-            <div className="qb-label">Smeny &mdash; {selectedGirl?.name}</div>
-            <div className="qb-days">
-              {girlSchedule.map((day) => {
-                const isWorking = day.shiftStart && day.shiftEnd;
-                const isActive = selectedDate === day.date;
-                const isToday = day.date === today;
-                return (
-                  <div
-                    key={day.date}
-                    className={`qb-day${isActive ? ' active' : ''}${!isWorking ? ' disabled' : ''}`}
-                    onClick={() => isWorking && selectDate(day.date)}
+            <div className="qb-label">
+              <span className={`qb-step${selectedGirlId ? ' done' : ''}`}>2</span>
+              Divka
+            </div>
+            {girlsForDate.length === 0 ? (
+              <div className="qb-loading">Tento den nepracuje zadna divka</div>
+            ) : (
+              <div className="qb-girls">
+                {girlsForDate.map((g) => (
+                  <button
+                    key={g.id}
+                    className={`qb-girl${selectedGirlId === g.id ? ' active' : ''}`}
+                    onClick={() => selectGirl(g.id)}
                   >
-                    <div className="qb-day-label">
-                      {isToday ? 'DNES' : ''} {day.dateLabel}
-                    </div>
-                    <div className="qb-day-shift">
-                      {isWorking ? `${day.shiftStart}\u2013${day.shiftEnd}` : '\u2014'}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* TIME + DURATION — show after date selected */}
-        {selectedDate && selectedDayInfo && (
-          <div className="qb-section">
-            <div className="qb-row">
-              <div>
-                <div className="qb-label">
-                  Cas &mdash; {selectedDayInfo.dateLabel} ({selectedDayInfo.shiftStart}&ndash;{selectedDayInfo.shiftEnd})
-                </div>
-                {isLoadingSlots ? (
-                  <div className="qb-loading">Nacitam...</div>
-                ) : (
-                  <div className="qb-times">
-                    {slots.map((s) => (
-                      <button
-                        key={s.time}
-                        className={`qb-time${selectedTime === s.time ? ' active' : ''}${!s.available ? ' unavail' : ''}`}
-                        onClick={() => s.available && setSelectedTime(s.time)}
-                        disabled={!s.available}
-                      >
-                        {s.time}
-                      </button>
-                    ))}
-                    {slots.length === 0 && <div className="qb-loading">Zadne volne sloty</div>}
-                  </div>
-                )}
-              </div>
-              <div style={{ maxWidth: 200 }}>
-                <div className="qb-label">Program</div>
-                <div className="qb-durations">
-                  {pricingPlans.map((p) => (
-                    <button
-                      key={p.duration}
-                      className={`qb-dur${duration === p.duration ? ' active' : ''}`}
-                      onClick={() => selectDuration(p.duration)}
-                    >
-                      {p.duration} min
-                      <span className="qb-dur-price">{p.price} Kc</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* CLIENT + NOTES */}
-        <div className="qb-section">
-          <div className="qb-row">
-            <div>
-              <div className="qb-label">Klient</div>
-              <div className="qb-client-row">
-                <input
-                  className="qb-input"
-                  placeholder="Jmeno nebo kod klienta"
-                  value={clientQuery}
-                  onChange={(e) => { setClientQuery(e.target.value); setClientSearched(false); setClient(null); }}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearchClient()}
-                />
-                <button className="qb-btn-sm" onClick={handleSearchClient} disabled={isSearching}>
-                  {isSearching ? '...' : 'Hledat'}
-                </button>
-                {clientSearched && !client && (
-                  <button className="qb-btn-sm" onClick={handleCreateClient} disabled={isSearching}>
-                    + Novy
+                    {g.name}
+                    <span className="qb-girl-shift">{g.shiftStart}&#8211;{g.shiftEnd}</span>
                   </button>
-                )}
+                ))}
               </div>
-              {client && (
-                <div className="qb-client-info" style={{ marginTop: 8 }}>
-                  {client.nickname} ({client.clientNumber})
-                  <span className="qb-client-meta">
-                    {client.trustLevel} &middot; {client.totalVisits} navstev
-                    {client.lastVisitGirl && <> &middot; posl. {client.lastVisitGirl}</>}
-                  </span>
-                </div>
-              )}
-              {clientSearched && !client && !isSearching && (
-                <div className="qb-client-err" style={{ marginTop: 6 }}>
-                  Klient nenalezen &mdash; kliknete &quot;+ Novy&quot; pro vytvoreni
-                </div>
-              )}
-            </div>
-            <div style={{ maxWidth: 280 }}>
-              <div className="qb-label">Poznamka</div>
-              <textarea
-                className="qb-notes"
-                placeholder="Volitelna poznamka..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={2}
-              />
-            </div>
+            )}
           </div>
-        </div>
+        )}
+
+        {/* STEP 3: CAS + PROGRAM */}
+        {selectedGirlId && selectedDate && (
+          <div className="qb-section">
+            <div className="qb-label">
+              <span className={`qb-step${selectedTime ? ' done' : ''}`}>3</span>
+              Cas a program
+              {selectedGirlShift && (
+                <span style={{ marginLeft: 8, fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 11, color: 'var(--muted)' }}>
+                  {selectedGirl?.name} {selectedGirlShift.shiftStart}&#8211;{selectedGirlShift.shiftEnd}
+                </span>
+              )}
+            </div>
+
+            <div className="qb-durations" style={{ marginBottom: 12 }}>
+              {pricingPlans.map((p) => (
+                <button
+                  key={p.duration}
+                  className={`qb-dur${duration === p.duration ? ' active' : ''}`}
+                  onClick={() => selectDuration(p.duration)}
+                >
+                  {p.duration} min
+                  <span className="qb-dur-price">{p.price} Kc</span>
+                </button>
+              ))}
+            </div>
+
+            {isLoadingSlots ? (
+              <div className="qb-loading">Nacitam...</div>
+            ) : (
+              <div className="qb-times">
+                {slots.map((s) => (
+                  <button
+                    key={s.time}
+                    className={`qb-time${selectedTime === s.time ? ' active' : ''}${!s.available ? ' unavail' : ''}`}
+                    onClick={() => s.available && setSelectedTime(s.time)}
+                    disabled={!s.available}
+                  >
+                    {s.time}
+                  </button>
+                ))}
+                {slots.length === 0 && <div className="qb-loading">Zadne volne sloty</div>}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* STEP 4: KLIENT */}
+        {selectedTime && (
+          <div className="qb-section">
+            <div className="qb-label">
+              <span className={`qb-step${client ? ' done' : ''}`}>4</span>
+              Klient
+            </div>
+            <div className="qb-client-row">
+              <input
+                className="qb-input"
+                placeholder="Jmeno nebo kod klienta"
+                value={clientQuery}
+                onChange={(e) => { setClientQuery(e.target.value); setClientSearched(false); setClient(null); }}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearchClient()}
+              />
+              <button className="qb-btn-sm" onClick={handleSearchClient} disabled={isSearching}>
+                {isSearching ? '...' : 'Hledat'}
+              </button>
+              {clientSearched && !client && (
+                <button className="qb-btn-sm" onClick={handleCreateClient} disabled={isSearching}>
+                  + Novy
+                </button>
+              )}
+            </div>
+            {client && (
+              <div className="qb-client-info" style={{ marginTop: 8 }}>
+                {client.nickname} ({client.clientNumber})
+                <span className="qb-client-meta">
+                  {client.trustLevel} &middot; {client.totalVisits} navstev
+                  {client.lastVisitGirl && <> &middot; posl. {client.lastVisitGirl}</>}
+                </span>
+              </div>
+            )}
+            {clientSearched && !client && !isSearching && (
+              <div className="qb-client-err" style={{ marginTop: 6 }}>
+                Klient nenalezen &mdash; kliknete &quot;+ Novy&quot; pro vytvoreni
+              </div>
+            )}
+
+            {client && (
+              <div style={{ marginTop: 12 }}>
+                <div className="qb-label">Poznamka (volitelna)</div>
+                <textarea
+                  className="qb-notes"
+                  placeholder="..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={2}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ERROR */}
         {error && <div className="qb-error">{error}</div>}
 
         {/* SUMMARY + SUBMIT */}
-        {(selectedGirl || selectedTime) && (
+        {selectedTime && (
           <div className="qb-summary">
             <div className="qb-summary-text">
               {selectedGirl?.name ?? '...'}
-              {selectedDayInfo && <> &middot; {selectedDayInfo.dateLabel}</>}
+              {selectedDate && <> &middot; {daysList.find(d => d.date === selectedDate)?.label}</>}
               {selectedTime && endTime && <> &middot; {selectedTime}&#8211;{endTime}</>}
               {selectedPlan && <> &middot; {duration} min ({selectedPlan.price} Kc)</>}
               {client && <> &middot; {client.nickname}</>}

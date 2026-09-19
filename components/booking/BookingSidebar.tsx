@@ -156,8 +156,13 @@ const SIDEBAR_STYLES = `
 }
 
 @media (max-width: 768px) {
-  .sf-sidebar { display: none; }
+  .sf-sidebar {
+    left: -260px;
+    transition: left 0.28s ease;
+    height: 100dvh;
+  }
 }
+
 `;
 
 export default function BookingSidebar({
@@ -173,6 +178,7 @@ export default function BookingSidebar({
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: SIDEBAR_STYLES }} />
+
       <nav className="sf-sidebar">
         <div className="sf-sidebar-brand">
           <div className="sf-sidebar-logo">STUDIO<span>FLOW</span></div>

@@ -5,6 +5,7 @@
  * Booking detail overlay via ?detail=ID.
  */
 
+import { headers } from 'next/headers';
 import {
   getCalendarGirls,
   getCalendarBookings,
@@ -12,6 +13,7 @@ import {
 } from '@/lib/booking-queries';
 import CalendarDayView from '@/components/booking/CalendarDayView';
 import CalendarWeekView from '@/components/booking/CalendarWeekView';
+import CalendarMobileList from '@/components/booking/CalendarMobileList';
 import BookingDetailOverlay from '@/components/booking/BookingDetailOverlay';
 
 export const dynamic = 'force-dynamic';
@@ -49,7 +51,10 @@ interface Props {
 
 export default async function BookingCalendarPage({ searchParams }: Props) {
   const params = await searchParams;
-  const view = params.view === 'day' ? 'day' : 'week';
+  const hdrs = await headers();
+  const ua = hdrs.get('user-agent') ?? '';
+  const isMobile = /iPhone|Android|Mobile/i.test(ua);
+  const view = params.view === 'day' ? 'day' : params.view === 'week' ? 'week' : (isMobile ? 'day' : 'week');
   const pragueNow = getPragueNow();
   const today = toISODate(pragueNow);
 
@@ -149,6 +154,9 @@ export default async function BookingCalendarPage({ searchParams }: Props) {
           <a href={`/booking/calendar/new?date=${dateParam}`} className="cal-btn-new">
             + Nova rezervace
           </a>
+          <a href={`/booking/calendar/break?date=${dateParam}`} className="cal-btn-break">
+            + Pauza
+          </a>
         </div>
       </div>
 
@@ -193,13 +201,20 @@ export default async function BookingCalendarPage({ searchParams }: Props) {
 
       {/* Calendar view */}
       {view === 'day' ? (
-        <CalendarDayView
-          girls={girls}
-          bookings={dayBookings}
-          date={dateParam}
-          pragueHour={pragueNow.getHours()}
-          pragueMinute={pragueNow.getMinutes()}
-        />
+        <>
+          <CalendarDayView
+            girls={girls}
+            bookings={dayBookings}
+            date={dateParam}
+            pragueHour={pragueNow.getHours()}
+            pragueMinute={pragueNow.getMinutes()}
+          />
+          <CalendarMobileList
+            girls={girls}
+            bookings={dayBookings}
+            date={dateParam}
+          />
+        </>
       ) : (
         <CalendarWeekView
           girls={girls}
@@ -231,6 +246,10 @@ export default async function BookingCalendarPage({ searchParams }: Props) {
             <div className="cal-legend-item">
               <div className="cal-legend-sw" style={{ background: 'rgba(251,191,36,0.12)', borderLeftColor: 'var(--yellow)' }} />
               Ceka na potvrzeni
+            </div>
+            <div className="cal-legend-item">
+              <div className="cal-legend-sw" style={{ background: 'rgba(45,212,191,0.10)', borderLeftColor: 'var(--teal)', borderLeftStyle: 'dotted' } as React.CSSProperties} />
+              Pauza
             </div>
             <div className="cal-legend-item">
               <div className="cal-legend-sw" style={{ background: 'rgba(74,222,128,0.04)', borderLeftColor: 'rgba(74,222,128,0.3)' }} />
@@ -301,6 +320,13 @@ const PAGE_STYLES = `
   text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
 }
 .cal-btn-new:hover { opacity: 0.9; }
+.cal-btn-break {
+  padding: 8px 16px; border-radius: 8px;
+  background: var(--teal); color: #0c0a0e;
+  font-size: 13px; font-weight: 600;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+}
+.cal-btn-break:hover { opacity: 0.9; }
 
 /* Date bar */
 .cal-date-bar {
@@ -352,5 +378,18 @@ const PAGE_STYLES = `
 .cal-legend-sw {
   width: 12px; height: 12px; border-radius: 3px;
   border-left: 3px solid;
+}
+
+@media (max-width: 768px) {
+  .cal-topbar { margin: 0 -24px; flex-wrap: wrap; gap: 8px; padding: 10px 16px; }
+  .cal-topbar-left { min-width: 0; }
+  .cal-topbar-date { font-size: 12px; }
+  .cal-topbar-right { flex-wrap: wrap; gap: 6px; }
+  .cal-btn-new, .cal-btn-break { padding: 6px 12px; font-size: 12px; white-space: nowrap; }
+  .cal-date-bar { margin: 0 -24px; padding: 8px 12px; overflow-x: auto; }
+  .cal-date-day { width: 40px; min-width: 40px; padding: 4px 2px; }
+  .cal-date-num { font-size: 14px; }
+  .cal-stats-bar { margin: 0 -24px; padding: 8px 16px; gap: 12px; flex-wrap: wrap; font-size: 11px; }
+  .cal-legend { margin: 0 -24px; padding: 10px 16px; gap: 10px; }
 }
 `;

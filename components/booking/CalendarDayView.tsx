@@ -174,9 +174,10 @@ export default function CalendarDayView({ girls, bookings, date, pragueHour, pra
                 {girlBookings.map((b) => {
                   const top = timeToSlotOffset(b.startTime) + 4;
                   const height = durationToHeight(b.startTime, b.endTime) - 4;
-                  const srcCls = getSourceClass(b.channel);
-                  const statusCls = getStatusClass(b.status);
-                  const badge = getTrustBadge(b.clientTrustLevel);
+                  const isBreak = b.bookingType === 'break';
+                  const srcCls = isBreak ? 'cal-bk-break' : getSourceClass(b.channel);
+                  const statusCls = isBreak ? '' : getStatusClass(b.status);
+                  const badge = isBreak ? null : getTrustBadge(b.clientTrustLevel);
 
                   return (
                     <a
@@ -187,12 +188,15 @@ export default function CalendarDayView({ girls, bookings, date, pragueHour, pra
                       data-booking-id={b.isDraft ? undefined : b.id}
                     >
                       <div className="cal-bk-client">
-                        {b.clientNickname}
+                        {isBreak ? 'Pauza' : b.clientNickname}
                         {badge && <span className={`cal-bk-badge ${badge.cls}`}>{badge.label}</span>}
-                        {b.status === 'pending' && <span className="cal-bk-badge cal-badge-pending">Ceka</span>}
+                        {b.status === 'pending' && !isBreak && <span className="cal-bk-badge cal-badge-pending">Ceka</span>}
                       </div>
-                      <div className="cal-bk-meta">{b.startTime} - {b.endTime} ({b.durationMinutes} min)</div>
-                      {b.locationName && <div className="cal-bk-meta">{b.locationName}</div>}
+                      <div className="cal-bk-meta">
+                        {b.startTime} - {b.endTime} ({b.durationMinutes} min)
+                        {isBreak && b.notes && b.notes !== 'Pauza' ? ` \u2014 ${b.notes}` : ''}
+                      </div>
+                      {b.locationName && !isBreak && <div className="cal-bk-meta">{b.locationName}</div>}
                     </a>
                   );
                 })}
@@ -380,6 +384,16 @@ const DAY_VIEW_STYLES = `
   border-left-color: var(--yellow) !important;
   border-style: dashed;
   opacity: 0.7;
+}
+
+/* Break/pause */
+.cal-bk-break {
+  background: rgba(45, 212, 191, 0.10) !important;
+  border-left-color: var(--teal) !important;
+  border-left-style: dotted;
+}
+.cal-bk-break .cal-bk-client {
+  color: var(--teal);
 }
 
 .cal-bk-client {

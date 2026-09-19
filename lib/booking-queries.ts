@@ -37,6 +37,7 @@ export interface CalendarBooking {
   locationName: string | null;
   notes: string | null;
   isDraft: boolean;
+  bookingType: string; // 'booking' | 'break'
 }
 
 export interface WeekGirlSchedule {
@@ -131,6 +132,7 @@ export async function getCalendarBookings(
         b.id, b.client_id, b.girl_id, b.date, b.start_time, b.end_time,
         b.duration_minutes, b.status, b.channel, b.points_earned,
         b.price, b.notes, b.source,
+        COALESCE(b.booking_type, 'booking') AS booking_type,
         bc.nickname AS client_nickname,
         bc.trust_level AS client_trust,
         g.name AS girl_name,
@@ -166,6 +168,7 @@ export async function getCalendarBookings(
     locationName: r.location_name ? String(r.location_name) : null,
     notes: r.notes ? String(r.notes) : null,
     isDraft: false,
+    bookingType: String(r.booking_type ?? 'booking'),
   }));
 
   // Active drafts from booking_drafts (show as yellow dashed blocks)
@@ -207,6 +210,7 @@ export async function getCalendarBookings(
       locationName: null,
       notes: null,
       isDraft: true,
+      bookingType: 'booking',
     });
   }
 
@@ -441,6 +445,7 @@ function getDemoBookings(dateFrom: string, dateTo: string): CalendarBooking[] {
         locationName: DEMO_GIRLS.find((g) => g.id === slot.girlId)?.locationName ?? null,
         notes: null,
         isDraft: false,
+        bookingType: 'booking',
       };
     })
     .filter((b) => {

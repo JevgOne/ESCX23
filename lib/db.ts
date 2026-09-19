@@ -564,6 +564,19 @@ async function runMigrations(client: Client) {
     await client.execute('ALTER TABLE bookings_v2 ADD COLUMN discount_amount INTEGER DEFAULT 0');
   } catch { /* OK */ }
 
+  // Break/pause booking type
+  try {
+    await client.execute("ALTER TABLE bookings_v2 ADD COLUMN booking_type TEXT NOT NULL DEFAULT 'booking'");
+  } catch { /* OK — column already exists */ }
+
+  // System client for breaks (no real client needed)
+  try {
+    await client.execute(`
+      INSERT OR IGNORE INTO booking_clients (id, client_number, nickname, source, trust_level, total_visits, total_spent, total_points, no_show_count)
+      VALUES (0, 'SYSTEM', 'SYSTEM', 'phone', 'verified', 0, 0, 0, 0)
+    `);
+  } catch { /* OK */ }
+
   // Telegram users (bot deep-link activation)
   try {
     await client.execute(`

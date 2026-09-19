@@ -3,6 +3,8 @@
 import { db } from './db';
 import { requireBooking } from './auth';
 
+const BREAK_MINUTES = 10; // 10-min break between bookings
+
 // ---------------------------------------------------------------------------
 // Client lookup by phone HMAC or nickname
 // ---------------------------------------------------------------------------
@@ -214,13 +216,13 @@ export async function getAvailableSlots(
     const endM = endMin % 60;
     const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 
-    // Check overlap with existing bookings
+    // Check overlap with existing bookings (including BREAK_MINUTES buffer)
     const isAvailable = !bookedRanges.some((b) => {
       const [bsh, bsm] = b.start.split(':').map(Number);
       const [beh, bem] = b.end.split(':').map(Number);
       const bStart = bsh * 60 + bsm;
       const bEnd = beh * 60 + bem;
-      return min < bEnd && endMin > bStart;
+      return min < bEnd + BREAK_MINUTES && endMin > bStart - BREAK_MINUTES;
     });
 
     slots.push({ time, available: isAvailable });
@@ -253,7 +255,13 @@ export async function createBooking(input: CreateBookingInput): Promise<{ id: nu
   const endM = endMin % 60;
   const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 
-  // Check for conflicts
+  // Buffered times for 10-min break check
+  const bufStartMin = h * 60 + m - BREAK_MINUTES;
+  const bufStart = `${String(Math.floor(bufStartMin / 60)).padStart(2, '0')}:${String(bufStartMin % 60).padStart(2, '0')}`;
+  const bufEndMin2 = endMin + BREAK_MINUTES;
+  const bufEnd = `${String(Math.floor(bufEndMin2 / 60)).padStart(2, '0')}:${String(bufEndMin2 % 60).padStart(2, '0')}`;
+
+  // Check for conflicts (including BREAK_MINUTES buffer)
   const conflicts = await db.execute({
     sql: `
       SELECT id FROM bookings_v2
@@ -263,7 +271,7 @@ export async function createBooking(input: CreateBookingInput): Promise<{ id: nu
           (start_time < ? AND end_time > ?)
         )
     `,
-    args: [input.girlId, input.date, endTime, input.startTime],
+    args: [input.girlId, input.date, bufEnd, bufStart],
   });
 
   if (conflicts.rows.length > 0) {
@@ -327,6 +335,79 @@ export async function createBooking(input: CreateBookingInput): Promise<{ id: nu
   });
 
   return { id: bookingId };
+}
+
+// ---------------------------------------------------------------------------
+// Create break/pause (no client)
+// ---------------------------------------------------------------------------
+
+export async function createBreak(input: {
+  girlId: number;
+  date: string;
+  startTime: string;
+  durationMinutes: number;
+  notes?: string;
+}): Promise<{ id: number } | { error: string }> {
+  const user = await requireBooking();
+
+  // Calculate end time
+  const [h, m] = input.startTime.split(':').map(Number);
+  const endMin = h * 60 + m + input.durationMinutes;
+  const endTime = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
+
+  // Buffered times for 10-min break check
+  const bufStartMin = h * 60 + m - BREAK_MINUTES;
+  const bufStart = `${String(Math.floor(Math.max(0, bufStartMin) / 60)).padStart(2, '0')}:${String(Math.max(0, bufStartMin) % 60).padStart(2, '0')}`;
+  const bufEndMin2 = endMin + BREAK_MINUTES;
+  const bufEnd = `${String(Math.floor(bufEndMin2 / 60)).padStart(2, '0')}:${String(bufEndMin2 % 60).padStart(2, '0')}`;
+
+  // Check for conflicts (including BREAK_MINUTES buffer)
+  const conflicts = await db.execute({
+    sql: `
+      SELECT id FROM bookings_v2
+      WHERE girl_id = ? AND date = ?
+        AND status NOT IN ('expired', 'cancelled_client', 'cancelled_girl')
+        AND (start_time < ? AND end_time > ?)
+    `,
+    args: [input.girlId, input.date, bufEnd, bufStart],
+  });
+
+  if (conflicts.rows.length > 0) {
+    return { error: 'Casovy konflikt — termin je obsazeny.' };
+  }
+
+  // Get location from girl's schedule for this date
+  const d = new Date(input.date + 'T12:00:00');
+  const jsDay = d.getDay();
+  const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
+  const locRes = await db.execute({
+    sql: `
+      SELECT gs.location_id FROM girl_schedules gs
+      WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
+        AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
+      ORDER BY gs.effective_from DESC NULLS LAST LIMIT 1
+    `,
+    args: [input.girlId, dayOfWeek, input.date],
+  });
+  const locationId = locRes.rows[0] ? Number(locRes.rows[0].location_id) : null;
+
+  const result = await db.execute({
+    sql: `
+      INSERT INTO bookings_v2 (
+        client_id, girl_id, location_id, date, start_time, end_time,
+        duration_minutes, price, points_earned, status, channel,
+        source, booking_type, notes, created_by, created_at, updated_at
+      ) VALUES (0, ?, ?, ?, ?, ?, ?, 0, 0, 'confirmed', 'admin', 'manual', 'break', ?, ?,
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `,
+    args: [
+      input.girlId, locationId, input.date,
+      input.startTime, endTime, input.durationMinutes,
+      input.notes ?? 'Pauza', user.id,
+    ],
+  });
+
+  return { id: Number(result.lastInsertRowid) };
 }
 
 // ---------------------------------------------------------------------------
