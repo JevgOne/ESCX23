@@ -682,7 +682,6 @@ async function runMigrations(client: Client) {
       // OK
     }
   }
-}
 
   // Force password change flag for girls
   try {
