@@ -359,11 +359,18 @@ async function getWeekSchedule(input: Record<string, unknown>): Promise<string> 
   const days: Array<{ day: string; date: string; working: boolean; shift: string | null; location: string | null }> = [];
   const dayNames = ['Ne', 'Po', 'Ut', 'St', 'Ct', 'Pa', 'So'];
 
+  const today = getPragueToday();
+
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const jsDay = d.getDay();
+
+    // Skip past days — bot should never suggest booking in the past
+    if (dateStr < today) {
+      continue;
+    }
 
     // Use the same query as the calendar for consistency
     const calendarGirls = await getCalendarGirls(dateStr);

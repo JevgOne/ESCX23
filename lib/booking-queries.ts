@@ -109,8 +109,8 @@ export async function getCalendarGirls(date: string): Promise<CalendarGirl[]> {
     };
   });
 
-  // Fallback: if no girls found, use demo data
-  if (girls.length === 0) {
+  // Fallback: if no girls found, use demo data (only in dev, never for API consumers)
+  if (girls.length === 0 && process.env.NODE_ENV !== 'production') {
     return getDemoGirls();
   }
 

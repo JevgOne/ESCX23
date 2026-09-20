@@ -18,6 +18,7 @@ import { db } from '../db';
 import { sendMessage } from '../telegram';
 import { logAudit } from '../audit';
 import { createBookingNotification } from '../booking-notifications';
+import { getCalendarGirls } from '../booking-queries';
 import type { ClientContext } from './types';
 
 const BREAK_MINUTES = 10; // 10-min break between bookings
@@ -69,6 +70,12 @@ export async function startBookingFlow(
   // Validate client can book
   if (!ctx.isRegistered || !ctx.clientId) {
     throw new Error('Pro rezervaci musis byt registrovany klient. Rekni mi sve jmeno a zaregistruji te.');
+  }
+
+  // Reject past dates
+  const today = getPragueToday();
+  if (date < today) {
+    throw new Error(`Nelze bookovat v minulosti. Dnes je ${today}.`);
   }
 
   // Cancel any existing active draft for this chat
@@ -210,18 +217,10 @@ export async function handleDurationSelected(
     args: [endTime, durationMinutes, sessionId],
   });
 
-  // Get location for summary
-  const jsDay = new Date(draft.date + 'T12:00:00').getDay();
-  const dow = jsDay === 0 ? 6 : jsDay - 1;
-  const locResult = await db.execute({
-    sql: `SELECT l.display_name AS location_name
-          FROM girl_schedules gs
-          LEFT JOIN locations l ON l.id = gs.location_id
-          WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
-          LIMIT 1`,
-    args: [draft.girlId, dow],
-  });
-  const location = locResult.rows[0]?.location_name ? String(locResult.rows[0].location_name) : null;
+  // Get location for summary using the same query as the calendar
+  const calGirls = await getCalendarGirls(draft.date);
+  const calGirl = calGirls.find((g) => g.id === draft.girlId);
+  const location = calGirl?.locationName ?? null;
 
   // Show confirmation — flowing text summary
   await showConfirmation(chatId, sessionId, draft.girlName, draft.date, draft.startTime, endTime, durationMinutes, price, location, null);
@@ -531,22 +530,9 @@ async function sendBookingCreatedNotifications(params: {
   // 2) Notify the girl — ONLY if she works on the booking date
   try {
     const bookingDate = date;
-    const jsDay = new Date(bookingDate + 'T12:00:00').getDay();
-    const dow = jsDay === 0 ? 6 : jsDay - 1; // JS 0=Sun → DB 0=Mon
-
-    const shiftCheck = await db.execute({
-      sql: `SELECT gs.id, se.exception_type AS ex_type
-            FROM girl_schedules gs
-            LEFT JOIN schedule_exceptions se ON se.girl_id = gs.girl_id AND se.date = ?
-            WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
-              AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
-            ORDER BY gs.effective_from DESC NULLS LAST
-            LIMIT 1`,
-      args: [bookingDate, girlId, dow, bookingDate],
-    });
-
-    const hasShift = shiftCheck.rows.length > 0
-      && String(shiftCheck.rows[0].ex_type ?? '') !== 'unavailable';
+    const calGirlsForNotif = await getCalendarGirls(bookingDate);
+    const girlForNotif = calGirlsForNotif.find((g) => g.id === girlId);
+    const hasShift = girlForNotif?.isWorking ?? false;
 
     if (hasShift) {
       const girlLink = await db.execute({
@@ -713,16 +699,10 @@ async function reshowConfirmation(
     ? (isNight && priceRow.night_price ? Number(priceRow.night_price) : Number(priceRow.price))
     : 0;
 
-  // Get location
-  const jsDay = new Date(date + 'T12:00:00').getDay();
-  const dow = jsDay === 0 ? 6 : jsDay - 1;
-  const locResult = await db.execute({
-    sql: `SELECT l.display_name AS location_name FROM girl_schedules gs
-          LEFT JOIN locations l ON l.id = gs.location_id
-          WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1 LIMIT 1`,
-    args: [Number(r.girl_id), dow],
-  });
-  const location = locResult.rows[0]?.location_name ? String(locResult.rows[0].location_name) : null;
+  // Get location using the same query as the calendar
+  const calGirlsLoc = await getCalendarGirls(date);
+  const calGirlLoc = calGirlsLoc.find((g) => g.id === Number(r.girl_id));
+  const location = calGirlLoc?.locationName ?? null;
 
   // If no discount passed, check if one was stored
   if (!discount && r.discount_code_id) {
@@ -1018,33 +998,14 @@ async function expireDraft(sessionId: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 async function getAvailableSlots(girlId: number, date: string): Promise<string[]> {
-  const jsDay = new Date(date + 'T12:00:00').getDay();
-  const dow = jsDay === 0 ? 6 : jsDay - 1;
+  // Use the same query as the calendar for consistency
+  const calendarGirls = await getCalendarGirls(date);
+  const girl = calendarGirls.find((g) => g.id === girlId);
 
-  // Get shift
-  const shiftResult = await db.execute({
-    sql: `SELECT gs.start_time, gs.end_time,
-                 se.exception_type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
-          FROM girl_schedules gs
-          LEFT JOIN schedule_exceptions se ON se.girl_id = gs.girl_id AND se.date = ?
-          WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
-            AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
-          ORDER BY gs.effective_from DESC NULLS LAST
-          LIMIT 1`,
-    args: [date, girlId, dow, date],
-  });
+  if (!girl || !girl.isWorking || !girl.shiftStart || !girl.shiftEnd) return [];
 
-  if (shiftResult.rows.length === 0) return [];
-
-  const sr = shiftResult.rows[0];
-  if (String(sr.ex_type) === 'unavailable') return [];
-
-  let shiftStart = String(sr.start_time).substring(0, 5);
-  let shiftEnd = String(sr.end_time).substring(0, 5);
-  if (String(sr.ex_type) === 'custom_hours') {
-    if (sr.ex_start) shiftStart = String(sr.ex_start).substring(0, 5);
-    if (sr.ex_end) shiftEnd = String(sr.ex_end).substring(0, 5);
-  }
+  const shiftStart = girl.shiftStart;
+  const shiftEnd = girl.shiftEnd;
 
   // Get occupied slots
   const bookingsResult = await db.execute({
@@ -1107,28 +1068,11 @@ async function getAvailableDurations(
   date: string,
   startTime: string,
 ): Promise<Array<{ minutes: number; price: number; title: string }>> {
-  // Get shift end time
-  const jsDay = new Date(date + 'T12:00:00').getDay();
-  const dow = jsDay === 0 ? 6 : jsDay - 1;
-  const shiftResult = await db.execute({
-    sql: `SELECT gs.end_time, se.exception_type AS ex_type, se.end_time AS ex_end
-          FROM girl_schedules gs
-          LEFT JOIN schedule_exceptions se ON se.girl_id = gs.girl_id AND se.date = ?
-          WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
-            AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
-          ORDER BY gs.effective_from DESC NULLS LAST
-          LIMIT 1`,
-    args: [date, girlId, dow, date],
-  });
+  // Get shift end time using the same query as the calendar
+  const calendarGirls = await getCalendarGirls(date);
+  const girl = calendarGirls.find((g) => g.id === girlId);
 
-  let shiftEnd = '23:59';
-  if (shiftResult.rows.length > 0) {
-    const sr = shiftResult.rows[0];
-    shiftEnd = String(sr.end_time).substring(0, 5);
-    if (String(sr.ex_type) === 'custom_hours' && sr.ex_end) {
-      shiftEnd = String(sr.ex_end).substring(0, 5);
-    }
-  }
+  const shiftEnd = girl?.shiftEnd ?? '23:59';
 
   const [sh, sm] = startTime.split(':').map(Number);
   const [eh, em] = shiftEnd.split(':').map(Number);
