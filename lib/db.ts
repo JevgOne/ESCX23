@@ -96,6 +96,29 @@ async function runMigrations(client: Client) {
     console.error('[db] day_of_week migration error:', e);
   }
 
+  // REVERT: dow_js_to_mon was wrong — data was already in Mon=0 convention.
+  // The -1 shift moved all schedules back by one day (Mon→Sun etc.).
+  // This +1 shift restores the correct values.
+  try {
+    const reverted = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = ?`,
+      args: ['dow_revert_shift'],
+    });
+    if (reverted.rows.length === 0) {
+      await client.execute(`
+        UPDATE girl_schedules
+        SET day_of_week = CASE WHEN day_of_week = 6 THEN 0 ELSE day_of_week + 1 END
+      `);
+      await client.execute({
+        sql: `INSERT INTO _migrations (name) VALUES (?)`,
+        args: ['dow_revert_shift'],
+      });
+      console.log('[db] Reverted day_of_week shift (+1) — data was already in Mon=0 convention');
+    }
+  } catch (e) {
+    console.error('[db] dow_revert_shift migration error:', e);
+  }
+
   for (const sql of migrations) {
     try {
       await client.execute(sql);
