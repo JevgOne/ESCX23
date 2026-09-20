@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og';
 import { getSiteFacts, districtList } from '@/lib/site-facts';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 export const alt = 'LovelyGirls Prague — Verified Companions';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';

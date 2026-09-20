@@ -2,6 +2,7 @@ import { renderOgImage, OG_SIZE } from '@/lib/seo/og-template';
 import { getSiteFacts } from '@/lib/site-facts';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 export const alt = 'LovelyGirls Prague — Our companions';
 export const size = OG_SIZE;
 export const contentType = 'image/png';
