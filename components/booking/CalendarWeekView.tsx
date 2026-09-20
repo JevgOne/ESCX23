@@ -106,7 +106,12 @@ export default function CalendarWeekView({ girls, bookings, weekDays }: Props) {
                   : girl.name.charAt(0)
                 }
               </div>
-              <span className="cal-wg-girl-nm">{girl.name}</span>
+              <div>
+                <span className="cal-wg-girl-nm">{girl.name}</span>
+                {girl.locationName && (
+                  <span className="cal-wg-girl-loc">{girl.locationName}</span>
+                )}
+              </div>
             </div>,
 
             /* Day cells */
@@ -223,6 +228,11 @@ const WEEK_VIEW_STYLES = `
   object-fit: cover; display: block;
 }
 .cal-wg-girl-nm { font-size: 12px; font-weight: 600; }
+.cal-wg-girl-loc {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  color: var(--blue); background: rgba(96,165,250,0.12);
+  padding: 1px 6px; border-radius: 4px; margin-top: 2px;
+}
 
 .cal-wg-cell {
   border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);

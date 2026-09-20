@@ -61,6 +61,9 @@ export default function CalendarMobileList({ girls, bookings, date }: Props) {
                       ? `${girl.shiftStart} – ${girl.shiftEnd}`
                       : 'Nepracuje'
                     }
+                    {girl.locationName && (
+                      <span className="cal-ml-loc">{girl.locationName}</span>
+                    )}
                   </span>
                 </div>
                 <span className="cal-ml-count">{girlBookings.length} rez.</span>
@@ -87,6 +90,7 @@ export default function CalendarMobileList({ girls, bookings, date }: Props) {
                     >
                       <span className="cal-ml-time">{b.startTime}–{endTime}</span>
                       <span className="cal-ml-client">{isBreak ? 'Pauza' : (b.clientNickname || 'Klient')}</span>
+                      {b.locationName && !isBreak && <span className="cal-ml-bk-loc">{b.locationName}</span>}
                       {b.status === 'pending' && !isBreak && <span className="cal-ml-badge">Čeká</span>}
                     </a>
                   );
@@ -257,6 +261,18 @@ const MOBILE_LIST_STYLES = `
     border-radius: 6px;
   }
   .cal-ml-free-shift { color: var(--dim); font-size: 10px; }
+  .cal-ml-loc {
+    font-size: 11px; font-weight: 600;
+    padding: 1px 6px; border-radius: 4px;
+    background: rgba(96,165,250,0.12); color: var(--blue);
+    margin-left: 6px;
+  }
+  .cal-ml-bk-loc {
+    font-size: 11px; font-weight: 600;
+    padding: 1px 6px; border-radius: 4px;
+    background: rgba(96,165,250,0.12); color: var(--blue);
+    margin-left: auto; flex-shrink: 0;
+  }
 
   /* Break/pause booking */
   .cal-ml-break {

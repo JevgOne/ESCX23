@@ -63,7 +63,7 @@ export async function getCalendarGirls(date: string): Promise<CalendarGirl[]> {
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url,
         gs.start_time AS shift_start,
         gs.end_time AS shift_end,
-        l.name AS location_name,
+        l.display_name AS location_name,
         se.exception_type AS exception_type,
         se.start_time AS ex_start,
         se.end_time AS ex_end
@@ -136,7 +136,7 @@ export async function getCalendarBookings(
         bc.nickname AS client_nickname,
         bc.trust_level AS client_trust,
         g.name AS girl_name,
-        l.name AS location_name
+        l.display_name AS location_name
       FROM bookings_v2 b
       LEFT JOIN booking_clients bc ON bc.id = b.client_id
       LEFT JOIN girls g ON g.id = b.girl_id
@@ -233,7 +233,7 @@ export async function getWeekSchedules(
     sql: `
       SELECT
         gs.girl_id, gs.day_of_week, gs.start_time, gs.end_time,
-        l.name AS location_name
+        l.display_name AS location_name
       FROM girl_schedules gs
       LEFT JOIN locations l ON l.id = gs.location_id
       WHERE gs.is_active = 1

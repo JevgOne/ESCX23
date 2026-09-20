@@ -69,6 +69,11 @@ const STYLES = `
 .qb-girl:hover { border-color: var(--coral); color: var(--coral); }
 .qb-girl.active { background: rgba(242,125,141,0.15); border-color: var(--coral); color: var(--coral); }
 .qb-girl-shift { font-size: 11px; color: var(--muted); margin-left: 6px; font-weight: 400; }
+.qb-girl-loc {
+  font-size: 11px; font-weight: 600; color: var(--blue);
+  background: rgba(96,165,250,0.12); padding: 1px 6px; border-radius: 4px;
+  margin-left: 4px;
+}
 
 /* Time slots */
 .qb-times { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -381,16 +386,23 @@ export default function QuickBookingPanel({ girls, weekSchedules, pricingPlans, 
               <div className="qb-loading">Tento den nepracuje zadna divka</div>
             ) : (
               <div className="qb-girls">
-                {girlsForDate.map((g) => (
-                  <button
-                    key={g.id}
-                    className={`qb-girl${selectedGirlId === g.id ? ' active' : ''}`}
-                    onClick={() => selectGirl(g.id)}
-                  >
-                    {g.name}
-                    <span className="qb-girl-shift">{g.shiftStart}&#8211;{g.shiftEnd}</span>
-                  </button>
-                ))}
+                {girlsForDate.map((g) => {
+                  const sched = weekSchedules[g.id] ?? [];
+                  const dayInfo = sched.find((s) => s.date === selectedDate);
+                  return (
+                    <button
+                      key={g.id}
+                      className={`qb-girl${selectedGirlId === g.id ? ' active' : ''}`}
+                      onClick={() => selectGirl(g.id)}
+                    >
+                      {g.name}
+                      <span className="qb-girl-shift">{g.shiftStart}&#8211;{g.shiftEnd}</span>
+                      {dayInfo?.locationName && (
+                        <span className="qb-girl-loc">{dayInfo.locationName}</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

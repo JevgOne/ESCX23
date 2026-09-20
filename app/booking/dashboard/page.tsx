@@ -60,6 +60,7 @@ export default async function BookingDashboardPage() {
     topGirlsResult,
     workingGirls,
     recentBookingsResult,
+    todayAllResult,
   ] = await Promise.all([
     // Today's bookings count
     db.execute({
@@ -77,10 +78,12 @@ export default async function BookingDashboardPage() {
     db.execute({
       sql: `SELECT b.id, b.date, b.start_time, b.duration_minutes,
                    g.name AS girl_name,
-                   bc.nickname AS client_nickname
+                   bc.nickname AS client_nickname,
+                   l.display_name AS location_name
             FROM bookings_v2 b
             LEFT JOIN girls g ON g.id = b.girl_id
             LEFT JOIN booking_clients bc ON bc.id = b.client_id
+            LEFT JOIN locations l ON l.id = b.location_id
             WHERE b.status = 'pending'
             ORDER BY b.date, b.start_time
             LIMIT 10`,
@@ -135,13 +138,31 @@ export default async function BookingDashboardPage() {
       sql: `SELECT b.id, b.date, b.start_time, b.end_time, b.status, b.price,
                    b.channel, b.duration_minutes,
                    g.name AS girl_name,
-                   bc.nickname AS client_nickname
+                   bc.nickname AS client_nickname,
+                   l.display_name AS location_name
             FROM bookings_v2 b
             LEFT JOIN girls g ON g.id = b.girl_id
             LEFT JOIN booking_clients bc ON bc.id = b.client_id
+            LEFT JOIN locations l ON l.id = b.location_id
             WHERE b.date >= ? AND b.status NOT IN ('expired', 'cancelled_client', 'cancelled_girl')
             ORDER BY b.created_at DESC
             LIMIT 5`,
+      args: [today],
+    }),
+    // All today's bookings for "Dnešní přehled" section
+    db.execute({
+      sql: `SELECT b.id, b.date, b.start_time, b.end_time, b.status,
+                   b.duration_minutes, b.channel,
+                   g.name AS girl_name,
+                   bc.nickname AS client_nickname,
+                   l.display_name AS location_name
+            FROM bookings_v2 b
+            LEFT JOIN girls g ON g.id = b.girl_id
+            LEFT JOIN booking_clients bc ON bc.id = b.client_id
+            LEFT JOIN locations l ON l.id = b.location_id
+            WHERE b.date = ?
+              AND b.status NOT IN ('expired', 'cancelled_client', 'cancelled_girl')
+            ORDER BY b.start_time, g.name`,
       args: [today],
     }),
   ]);
@@ -159,6 +180,7 @@ export default async function BookingDashboardPage() {
   const topGirls = topGirlsResult.rows;
   const girlsWorking = workingGirls.filter(g => g.isWorking);
   const recentBookings = recentBookingsResult.rows;
+  const todayAllBookings = todayAllResult.rows;
 
   const formatCZK = (n: number) => n.toLocaleString('cs-CZ') + ' Kc';
 
@@ -200,6 +222,46 @@ export default async function BookingDashboardPage() {
       <div className="db-header">
         <h1 className="db-title">Dashboard</h1>
         <span className="db-date">{formatDateShort(today)} {currentTime}</span>
+      </div>
+
+      {/* Dnešní přehled — mobile-first overview */}
+      <div className="db-today">
+        <div className="db-today-header">
+          <h2 className="db-today-title">Dnes</h2>
+          <span className="db-today-date">{formatDateShort(today)}</span>
+          <span className="db-today-count">{todayAllBookings.length} rez.</span>
+        </div>
+        {todayAllBookings.length === 0 ? (
+          <div className="db-empty">Dnes zadne rezervace</div>
+        ) : (
+          <div className="db-today-list">
+            {todayAllBookings.map((b) => {
+              const status = String(b.status);
+              const startTime = String(b.start_time);
+              const startHHMM = formatTime(startTime);
+              // Determine if this booking is currently happening
+              const endTime = String(b.end_time);
+              const isNow = currentTime >= formatTime(startTime) && currentTime < formatTime(endTime) && (status === 'confirmed' || status === 'in_progress');
+              const isPast = currentTime >= formatTime(endTime) || status === 'completed';
+
+              return (
+                <a
+                  key={Number(b.id)}
+                  href={`/booking/calendar?date=${today}&detail=${Number(b.id)}`}
+                  className={`db-today-row${isNow ? ' db-today-now' : ''}${isPast ? ' db-today-past' : ''}`}
+                >
+                  <span className="db-today-time">{startHHMM}</span>
+                  <span className="db-dot" style={{ background: statusColors[status] ?? 'var(--dim)' }} />
+                  <span className="db-today-girl">{String(b.girl_name ?? '?')}</span>
+                  <span className="db-today-client">{String(b.client_nickname ?? 'Neznamy')}</span>
+                  {b.location_name && (
+                    <span className="db-today-loc">{String(b.location_name)}</span>
+                  )}
+                </a>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* KPI Cards */}
@@ -248,6 +310,7 @@ export default async function BookingDashboardPage() {
                     <span className="db-dot" style={{ background: 'var(--yellow)' }} />
                     <span className="db-list-name">{String(b.girl_name ?? '?')}</span>
                     <span className="db-list-client">{String(b.client_nickname ?? 'Neznamy')}</span>
+                    {b.location_name && <span className="db-list-loc">{String(b.location_name)}</span>}
                   </div>
                   <div className="db-list-meta">
                     <span>{formatDateShort(String(b.date))}</span>
@@ -333,6 +396,7 @@ export default async function BookingDashboardPage() {
                       <span className="db-dot" style={{ background: statusColors[status] ?? 'var(--dim)' }} />
                       <span className="db-list-name">{String(b.girl_name ?? '?')}</span>
                       <span className="db-list-client">{String(b.client_nickname ?? 'Neznamy')}</span>
+                      {b.location_name && <span className="db-list-loc">{String(b.location_name)}</span>}
                       <span className="db-list-status" style={{ color: statusColors[status] ?? 'var(--dim)' }}>
                         {statusLabels[status] ?? status}
                       </span>
@@ -487,8 +551,9 @@ const DASHBOARD_STYLES = `
   }
   .db-list-loc {
     font-size: 11px;
-    color: var(--dim);
-    background: rgba(255,255,255,0.05);
+    font-weight: 600;
+    color: var(--blue);
+    background: rgba(96,165,250,0.12);
     padding: 1px 6px;
     border-radius: 4px;
   }
@@ -517,6 +582,90 @@ const DASHBOARD_STYLES = `
     padding: 12px 10px;
   }
 
+  /* Today overview */
+  .db-today {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .db-today-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .db-today-title {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .db-today-date {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .db-today-count {
+    font-size: 12px;
+    color: var(--dim);
+    margin-left: auto;
+  }
+  .db-today-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .db-today-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text);
+    transition: background 0.15s;
+  }
+  .db-today-row:hover {
+    background: rgba(255,255,255,0.04);
+  }
+  .db-today-now {
+    background: rgba(96,165,250,0.1);
+    border: 1px solid rgba(96,165,250,0.25);
+  }
+  .db-today-past {
+    opacity: 0.5;
+  }
+  .db-today-time {
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 44px;
+    flex-shrink: 0;
+  }
+  .db-today-girl {
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .db-today-client {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .db-today-loc {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--blue);
+    background: rgba(96,165,250,0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
   /* Responsive */
   @media (max-width: 1024px) {
     .db-grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -524,5 +673,12 @@ const DASHBOARD_STYLES = `
   @media (max-width: 768px) {
     .db-grid-4 { grid-template-columns: 1fr; }
     .db-grid-2 { grid-template-columns: 1fr; }
+    .db-today-time {
+      font-size: 17px;
+      min-width: 48px;
+    }
+    .db-today-girl {
+      font-size: 14px;
+    }
   }
 `;

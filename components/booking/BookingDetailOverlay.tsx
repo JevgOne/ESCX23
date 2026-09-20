@@ -8,14 +8,19 @@ import { updateBookingStatus } from '@/lib/booking-actions';
 interface Props {
   booking: CalendarBooking;
   backUrl: string;
+  userRole: 'admin' | 'manager' | 'operator' | 'girl';
 }
 
-export default function BookingDetailOverlay({ booking, backUrl }: Props) {
+export default function BookingDetailOverlay({ booking, backUrl, userRole }: Props) {
   const router = useRouter();
   const b = booking;
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [pendingCancelStatus, setPendingCancelStatus] = useState<string | null>(null);
 
+  const isAdmin = userRole === 'admin';
   const isFinalized = ['completed', 'no_show', 'cancelled_client', 'cancelled_girl', 'declined', 'expired'].includes(b.status);
 
   const statusLabels: Record<string, string> = {
@@ -65,16 +70,43 @@ export default function BookingDetailOverlay({ booking, backUrl }: Props) {
   }
 
   function handleAction(newStatus: string, confirmMsg?: string) {
+    // For cancel/decline actions: admin can do without reason, operator must provide reason
+    if (['cancelled_client', 'cancelled_girl', 'declined'].includes(newStatus)) {
+      if (isAdmin) {
+        if (confirmMsg && !window.confirm(confirmMsg)) return;
+        doStatusChange(newStatus);
+      } else {
+        // Operator — show reason modal
+        setPendingCancelStatus(newStatus);
+        setCancelReason('');
+        setShowCancelModal(true);
+      }
+      return;
+    }
     if (confirmMsg && !window.confirm(confirmMsg)) return;
+    doStatusChange(newStatus);
+  }
+
+  function doStatusChange(newStatus: string, reason?: string) {
     setError(null);
     startTransition(async () => {
-      const result = await updateBookingStatus(b.id, newStatus);
+      const result = await updateBookingStatus(b.id, newStatus, reason);
       if ('error' in result) {
         setError(result.error);
       } else {
+        setShowCancelModal(false);
         router.refresh();
       }
     });
+  }
+
+  function handleCancelConfirm() {
+    if (!pendingCancelStatus) return;
+    if (!cancelReason.trim()) {
+      setError('Musis zadat duvod zruseni');
+      return;
+    }
+    doStatusChange(pendingCancelStatus, cancelReason.trim());
   }
 
   return (
@@ -92,7 +124,7 @@ export default function BookingDetailOverlay({ booking, backUrl }: Props) {
             <div className="bdo-datetime">{dateStr} &middot; {b.startTime} - {b.endTime}</div>
             <div className="bdo-program">
               {b.durationMinutes} min{b.price ? ` / ${b.price.toLocaleString('cs-CZ')} Kc` : ''}
-              {b.locationName ? ` \u00b7 ${b.locationName}` : ''}
+              {b.locationName && <span className="bdo-loc-badge">{b.locationName}</span>}
             </div>
             <div className="bdo-meta">
               <span className={`bdo-src ${sourceColorClass}`}>{sourceLabel}</span>
@@ -112,8 +144,15 @@ export default function BookingDetailOverlay({ booking, backUrl }: Props) {
               <span className={`bdo-client-badge ${trustClass}`}>{trustLabel}</span>
             </div>
           </div>
-          {isFinalized ? (
+          {isFinalized && !isAdmin ? (
             <div className="bdo-finalized">Uzavreno</div>
+          ) : isFinalized && isAdmin ? (
+            <div className="bdo-actions">
+              <div className="bdo-finalized" style={{ gridColumn: '1 / -1', padding: '8px 0' }}>Uzavreno — {statusLabel}</div>
+              <button className="bdo-btn bdo-danger" onClick={() => handleAction('cancelled_client', 'Zrusit tuto rezervaci?')} disabled={isPending} style={{ gridColumn: '1 / -1' }}>
+                <span className="bdo-icon">&#128465;</span> Zrusit rezervaci
+              </button>
+            </div>
           ) : (
             <div className="bdo-actions">
               {b.status === 'pending' ? (
@@ -142,6 +181,27 @@ export default function BookingDetailOverlay({ booking, backUrl }: Props) {
             </div>
           )}
           {error && <div className="bdo-error">{error}</div>}
+
+          {/* Cancel reason modal (for operator) */}
+          {showCancelModal && (
+            <div className="bdo-cancel-modal">
+              <div className="bdo-cancel-title">Duvod zruseni</div>
+              <textarea
+                className="bdo-cancel-input"
+                placeholder="Napis duvod zruseni rezervace..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={3}
+                autoFocus
+              />
+              <div className="bdo-cancel-btns">
+                <button className="bdo-btn" onClick={() => setShowCancelModal(false)} disabled={isPending}>Zpet</button>
+                <button className="bdo-btn bdo-danger" onClick={handleCancelConfirm} disabled={isPending || !cancelReason.trim()}>
+                  {isPending ? 'Ruším...' : 'Potvrdit zruseni'}
+                </button>
+              </div>
+            </div>
+          )}
           {b.notes && (
             <div className="bdo-notes">
               <div className="bdo-notes-label">Poznamky</div>
@@ -192,7 +252,12 @@ const OVERLAY_STYLES = `
 .bdo-hero { padding: 24px 24px 20px; border-bottom: 1px solid var(--line); }
 .bdo-girl { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
 .bdo-datetime { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-.bdo-program { font-size: 14px; color: var(--muted); }
+.bdo-program { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bdo-loc-badge {
+  font-size: 12px; font-weight: 600;
+  padding: 2px 8px; border-radius: 4px;
+  background: rgba(96,165,250,0.12); color: var(--blue);
+}
 .bdo-meta { display: flex; gap: 16px; margin-top: 12px; font-size: 12px; color: var(--dim); }
 .bdo-src { font-weight: 600; }
 .bdo-src.src-telegram { color: #229ED9; }
@@ -280,4 +345,21 @@ const OVERLAY_STYLES = `
   letter-spacing: 0.08em; font-weight: 700; margin-bottom: 4px;
 }
 .bdo-notes-text { font-size: 12px; color: var(--muted); }
+
+.bdo-cancel-modal {
+  padding: 16px 24px; border-top: 1px solid var(--line);
+  background: rgba(239,68,68,0.04);
+}
+.bdo-cancel-title {
+  font-size: 13px; font-weight: 700; color: var(--red); margin-bottom: 8px;
+}
+.bdo-cancel-input {
+  width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 8px; color: var(--text); font-size: 13px; font-family: inherit;
+  outline: none; resize: vertical;
+}
+.bdo-cancel-input:focus { border-color: var(--red); }
+.bdo-cancel-btns {
+  display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end;
+}
 `;

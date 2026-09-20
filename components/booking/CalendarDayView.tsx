@@ -130,6 +130,9 @@ export default function CalendarDayView({ girls, bookings, date, pragueHour, pra
                       : 'Nepracuje dnes'
                     }
                   </div>
+                  {girl.locationName && (
+                    <span className="cal-girl-loc">{girl.locationName}</span>
+                  )}
                 </div>
               </div>
 
@@ -196,7 +199,7 @@ export default function CalendarDayView({ girls, bookings, date, pragueHour, pra
                         {b.startTime} - {b.endTime} ({b.durationMinutes} min)
                         {isBreak && b.notes && b.notes !== 'Pauza' ? ` \u2014 ${b.notes}` : ''}
                       </div>
-                      {b.locationName && !isBreak && <div className="cal-bk-meta">{b.locationName}</div>}
+                      {b.locationName && !isBreak && <span className="cal-bk-loc">{b.locationName}</span>}
                     </a>
                   );
                 })}
@@ -268,6 +271,18 @@ const DAY_VIEW_STYLES = `
 .cal-girl-shift { font-size: 10px; }
 .cal-girl-shift.online { color: var(--green); }
 .cal-girl-shift.offline { color: var(--dim); }
+.cal-girl-loc {
+  font-size: 11px; font-weight: 600;
+  padding: 1px 6px; border-radius: 4px;
+  background: rgba(96,165,250,0.12); color: var(--blue);
+  display: inline-block; margin-top: 2px;
+}
+.cal-bk-loc {
+  font-size: 11px; font-weight: 600;
+  padding: 1px 6px; border-radius: 4px;
+  background: rgba(96,165,250,0.12); color: var(--blue);
+  display: inline-block; margin-top: 2px;
+}
 
 /* Points progress bar */
 .cal-pts-bar {

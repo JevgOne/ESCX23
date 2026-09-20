@@ -119,7 +119,7 @@ export async function getAvailableGirls(date: string): Promise<AvailableGirl[]> 
         g.id, g.name,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url,
         gs.start_time AS shift_start, gs.end_time AS shift_end,
-        l.name AS location_name,
+        l.display_name AS location_name,
         se.exception_type AS exception_type, se.start_time AS ex_start, se.end_time AS ex_end
       FROM girls g
       LEFT JOIN (
@@ -239,9 +239,17 @@ export async function getAvailableSlots(
   const shiftStartMin = sh * 60 + sm;
   const shiftEndMin = eh * 60 + em;
 
+  // For today: skip slots that already passed (Prague timezone)
+  const pragueNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Prague' }));
+  const todayStr = `${pragueNow.getFullYear()}-${String(pragueNow.getMonth() + 1).padStart(2, '0')}-${String(pragueNow.getDate()).padStart(2, '0')}`;
+  const isToday = date === todayStr;
+  const nowMin = isToday ? pragueNow.getHours() * 60 + pragueNow.getMinutes() : 0;
+
   const slots: { time: string; available: boolean }[] = [];
 
   for (let min = shiftStartMin; min + durationMinutes <= shiftEndMin; min += 30) {
+    // Skip past time slots for today
+    if (isToday && min < nowMin) continue;
     const h = Math.floor(min / 60);
     const m = min % 60;
     const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
@@ -514,6 +522,7 @@ export async function updateBookingStatus(
   cancelReason?: string,
 ): Promise<{ ok: true } | { error: string }> {
   const user = await requireBooking();
+  const isAdmin = user.role === 'admin';
 
   const validStatuses = [
     'confirmed', 'completed', 'in_progress',
@@ -522,6 +531,13 @@ export async function updateBookingStatus(
   ];
   if (!validStatuses.includes(newStatus)) {
     return { error: 'Neplatny status' };
+  }
+
+  // Operator must provide cancel reason
+  if (!isAdmin && ['cancelled_client', 'cancelled_girl', 'declined'].includes(newStatus)) {
+    if (!cancelReason || cancelReason.trim().length === 0) {
+      return { error: 'Musis zadat duvod zruseni' };
+    }
   }
 
   const current = await db.execute({
@@ -535,15 +551,18 @@ export async function updateBookingStatus(
   const booking = current.rows[0];
   const oldStatus = String(booking.status);
 
-  const allowedTransitions: Record<string, string[]> = {
-    pending: ['confirmed', 'declined', 'cancelled_client'],
-    confirmed: ['completed', 'in_progress', 'no_show', 'cancelled_client', 'cancelled_girl', 'rescheduled'],
-    in_progress: ['completed', 'no_show'],
-  };
+  // Admin can change status from ANY state
+  if (!isAdmin) {
+    const allowedTransitions: Record<string, string[]> = {
+      pending: ['confirmed', 'declined', 'cancelled_client'],
+      confirmed: ['completed', 'in_progress', 'no_show', 'cancelled_client', 'cancelled_girl', 'rescheduled'],
+      in_progress: ['completed', 'no_show'],
+    };
 
-  const allowed = allowedTransitions[oldStatus];
-  if (!allowed || !allowed.includes(newStatus)) {
-    return { error: `Nelze zmenit stav z "${oldStatus}" na "${newStatus}"` };
+    const allowed = allowedTransitions[oldStatus];
+    if (!allowed || !allowed.includes(newStatus)) {
+      return { error: `Nelze zmenit stav z "${oldStatus}" na "${newStatus}"` };
+    }
   }
 
   const setClauses = ['status = ?', 'updated_at = CURRENT_TIMESTAMP'];
@@ -621,11 +640,17 @@ export async function getWeekSchedulesForAll(): Promise<{
 }> {
   await requireBooking();
 
-  // Build 7-day range starting from today (Prague timezone)
+  // Build day range: from today to Sunday of the current week (Prague timezone)
+  // After midnight Sunday → shows next Mon-Sun
   const now = new Date();
   const pragueDate = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Prague' }));
+  const jsToday = pragueDate.getDay(); // 0=Sun..6=Sat
+  // Days remaining until Sunday (inclusive): Sun=0, Mon=6, Tue=5, ..., Sat=1
+  const daysUntilSunday = jsToday === 0 ? 0 : 7 - jsToday;
+  // Include today + remaining days until Sunday
+  const totalDays = daysUntilSunday + 1;
   const days: { date: string; dayOfWeek: number }[] = [];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < totalDays; i++) {
     const d = new Date(pragueDate);
     d.setDate(d.getDate() + i);
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -655,7 +680,7 @@ export async function getWeekSchedulesForAll(): Promise<{
   // Get all schedules for these girls for all 7 day_of_week values
   const schedulesRes = await db.execute({
     sql: `
-      SELECT gs.girl_id, gs.day_of_week, gs.start_time, gs.end_time, l.name AS location_name
+      SELECT gs.girl_id, gs.day_of_week, gs.start_time, gs.end_time, l.display_name AS location_name
       FROM girl_schedules gs
       LEFT JOIN locations l ON l.id = gs.location_id
       WHERE gs.girl_id IN (${girlIds.map(() => '?').join(',')})

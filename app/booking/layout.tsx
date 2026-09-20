@@ -239,6 +239,10 @@ export default async function BookingLayout({
               {children}
             </div>
             <nav className="sf-bottom-nav">
+              <a href="/booking/dashboard" className={pathname === '/booking/dashboard' ? 'active' : ''}>
+                <span className="sf-bn-icon">{'\u{1F4CA}'}</span>
+                <span>Dnes</span>
+              </a>
               <a href="/booking/quick" className={pathname === '/booking/quick' ? 'active' : ''}>
                 <span className="sf-bn-icon">{'\u26A1'}</span>
                 <span>Rychlá</span>

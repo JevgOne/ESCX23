@@ -93,7 +93,7 @@ export async function getGirlShift(
 
   const result = await db.execute({
     sql: `
-      SELECT gs.start_time, gs.end_time, l.name AS location_name,
+      SELECT gs.start_time, gs.end_time, l.display_name AS location_name,
              se.exception_type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
       FROM girl_schedules gs
       LEFT JOIN locations l ON l.id = gs.location_id
@@ -150,7 +150,7 @@ export async function getGirlWeekSchedule(
 
     const shiftResult = await db.execute({
       sql: `
-        SELECT gs.start_time, gs.end_time, l.name AS location_name,
+        SELECT gs.start_time, gs.end_time, l.display_name AS location_name,
                se.exception_type AS ex_type, se.start_time AS ex_start, se.end_time AS ex_end
         FROM girl_schedules gs
         LEFT JOIN locations l ON l.id = gs.location_id

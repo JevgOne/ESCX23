@@ -55,6 +55,18 @@ async function runMigrations(client: Client) {
     // OK
   }
 
+  // One-time fix: assign primary location to schedules missing location_id
+  try {
+    await client.execute(`
+      UPDATE girl_schedules
+      SET location_id = (SELECT id FROM locations WHERE is_primary = 1 LIMIT 1)
+      WHERE location_id IS NULL
+        AND (SELECT id FROM locations WHERE is_primary = 1 LIMIT 1) IS NOT NULL
+    `);
+  } catch {
+    // OK
+  }
+
   for (const sql of migrations) {
     try {
       await client.execute(sql);
