@@ -6,6 +6,7 @@
  */
 
 import { headers } from 'next/headers';
+import { getCurrentUser } from '@/lib/auth';
 import {
   getCalendarGirls,
   getCalendarBookings,
@@ -95,10 +96,12 @@ export default async function BookingCalendarPage({ searchParams }: Props) {
   const dateFrom = view === 'day' ? dateParam : weekStart;
   const dateTo = view === 'day' ? dateParam : weekEnd;
 
-  const [girls, bookings] = await Promise.all([
+  const [girls, bookings, user] = await Promise.all([
     getCalendarGirls(dateParam),
     getCalendarBookings(dateFrom, dateTo),
+    getCurrentUser(),
   ]);
+  const userRole = (user?.role ?? 'operator') as 'admin' | 'manager' | 'operator' | 'girl';
 
   // Stats for day view
   const dayBookings = bookings.filter((b) => b.date === dateParam);
@@ -151,7 +154,7 @@ export default async function BookingCalendarPage({ searchParams }: Props) {
               Tyden
             </a>
           </div>
-          <a href={`/booking/calendar/new?date=${dateParam}`} className="cal-btn-new">
+          <a href="/booking/quick" className="cal-btn-new">
             + Nova rezervace
           </a>
           <a href={`/booking/calendar/break?date=${dateParam}`} className="cal-btn-break">
@@ -280,7 +283,7 @@ export default async function BookingCalendarPage({ searchParams }: Props) {
 
       {/* Booking detail overlay */}
       {detailBooking && (
-        <BookingDetailOverlay booking={detailBooking} backUrl={backUrl} />
+        <BookingDetailOverlay booking={detailBooking} backUrl={backUrl} userRole={userRole} />
       )}
     </>
   );
