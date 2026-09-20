@@ -67,6 +67,31 @@ async function runMigrations(client: Client) {
     // OK
   }
 
+  // One-time fix: migrate day_of_week from JS convention (0=Sun..6=Sat) to
+  // app convention (0=Mon..6=Sun). The admin schedule editor writes 0=Mon,
+  // but the original Secretstory import used 0=Sun. Uses a flag table to
+  // ensure this runs only once.
+  try {
+    await client.execute(`CREATE TABLE IF NOT EXISTS _migrations (name TEXT PRIMARY KEY)`);
+    const done = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = ?`,
+      args: ['dow_js_to_mon'],
+    });
+    if (done.rows.length === 0) {
+      await client.execute(`
+        UPDATE girl_schedules
+        SET day_of_week = CASE WHEN day_of_week = 0 THEN 6 ELSE day_of_week - 1 END
+      `);
+      await client.execute({
+        sql: `INSERT INTO _migrations (name) VALUES (?)`,
+        args: ['dow_js_to_mon'],
+      });
+      console.log('[db] Migrated girl_schedules day_of_week from JS(0=Sun) to app(0=Mon) convention');
+    }
+  } catch (e) {
+    console.error('[db] day_of_week migration error:', e);
+  }
+
   for (const sql of migrations) {
     try {
       await client.execute(sql);
