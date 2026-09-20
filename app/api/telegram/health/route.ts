@@ -33,12 +33,69 @@ export async function GET() {
     }
   }
 
+  // 6. Diagnostics: migrations state
+  let migrations: string[] = [];
+  try {
+    const migRes = await db.execute('SELECT name FROM _migrations ORDER BY name');
+    migrations = migRes.rows.map((r) => String(r.name));
+  } catch {
+    // _migrations table may not exist
+  }
+
+  // 7. Diagnostics: girl_schedules for all days (with girl name)
+  let sundaySchedules: Array<{ girl_id: number; name: string; day_of_week: number; start: string; end: string }> = [];
+  try {
+    const sunRes = await db.execute(`
+      SELECT gs.girl_id, g.name, gs.day_of_week, gs.start_time, gs.end_time
+      FROM girl_schedules gs
+      JOIN girls g ON g.id = gs.girl_id
+      WHERE gs.day_of_week = 6 AND gs.is_active = 1
+      ORDER BY g.name
+    `);
+    sundaySchedules = sunRes.rows.map((r) => ({
+      girl_id: Number(r.girl_id),
+      name: String(r.name),
+      day_of_week: Number(r.day_of_week),
+      start: String(r.start_time).substring(0, 5),
+      end: String(r.end_time).substring(0, 5),
+    }));
+  } catch { /* OK */ }
+
+  // 8. Diagnostics: active girls count
+  let activeGirlsCount = 0;
+  try {
+    const countRes = await db.execute("SELECT COUNT(*) AS c FROM girls WHERE status = 'active'");
+    activeGirlsCount = Number(countRes.rows[0]?.c ?? 0);
+  } catch { /* OK */ }
+
+  // 9. Diagnostics: all day_of_week distribution
+  let dowDistribution: Array<{ day_of_week: number; count: number }> = [];
+  try {
+    const dowRes = await db.execute(`
+      SELECT day_of_week, COUNT(*) AS c FROM girl_schedules WHERE is_active = 1
+      GROUP BY day_of_week ORDER BY day_of_week
+    `);
+    dowDistribution = dowRes.rows.map((r) => ({
+      day_of_week: Number(r.day_of_week),
+      count: Number(r.c),
+    }));
+  } catch { /* OK */ }
+
   const hasError = Object.values(checks).some(
     (v) => v === 'MISSING' || v.startsWith('error'),
   );
 
   return NextResponse.json(
-    { status: hasError ? 'unhealthy' : 'healthy', checks },
+    {
+      status: hasError ? 'unhealthy' : 'healthy',
+      checks,
+      diagnostics: {
+        migrations,
+        activeGirlsCount,
+        sundaySchedules_dow6: sundaySchedules,
+        dowDistribution,
+      },
+    },
     { status: hasError ? 503 : 200 },
   );
 }
