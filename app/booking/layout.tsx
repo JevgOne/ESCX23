@@ -10,6 +10,14 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: { default: 'STUDIOFLOW', template: '%s · STUDIOFLOW' },
   robots: { index: false, follow: false, nocache: true },
+  icons: {
+    icon: [
+      { url: '/sf-favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/studio-manifest.json',
 };
 
 const SHELL_STYLES = `

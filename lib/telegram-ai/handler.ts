@@ -169,8 +169,17 @@ export async function handleAIMessage(
       return;
     }
 
-    // 5. Load conversation history
-    const history = await loadHistory(String(chatId));
+    // 5. Load conversation history (fallback to empty if DB fails)
+    let history: ApiMessage[];
+    try {
+      history = await loadHistory(String(chatId));
+    } catch (histError) {
+      console.error('[telegram-ai] History load failed:', {
+        chatId,
+        error: histError instanceof Error ? histError.message : String(histError),
+      });
+      history = []; // Continue without history
+    }
 
     // 6. Save user message
     await saveMessage(String(chatId), 'user', userText);
@@ -190,13 +199,27 @@ export async function handleAIMessage(
     let totalTokensOut = 0;
 
     for (let round = 0; round < MAX_TOOL_ROUNDS + 1; round++) {
-      const response = await client.messages.create({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: systemPrompt,
-        messages,
-        tools: TOOLS,
-      });
+      let response: Anthropic.Message;
+      try {
+        response = await client.messages.create({
+          model: MODEL,
+          max_tokens: MAX_TOKENS,
+          system: systemPrompt,
+          messages,
+          tools: TOOLS,
+        });
+      } catch (apiError) {
+        console.error('[telegram-ai] Anthropic API error:', {
+          chatId,
+          model: MODEL,
+          round,
+          error: apiError instanceof Error ? apiError.message : String(apiError),
+          errorName: apiError instanceof Error ? apiError.name : 'unknown',
+          messageCount: messages.length,
+        });
+        await sendMessage(chatId, 'Omlouvam se, mam drobny problem s AI. Zkus to za chvili.');
+        return;
+      }
 
       totalTokensIn += response.usage.input_tokens;
       totalTokensOut += response.usage.output_tokens;
@@ -278,7 +301,12 @@ export async function handleAIMessage(
       await sendMessage(chatId, 'Omlouvam se, neco se pokazilo. Zkus to znovu.');
     }
   } catch (error) {
-    console.error('[telegram-ai] Handler error:', error);
+    console.error('[telegram-ai] Handler error:', {
+      chatId,
+      errorName: error instanceof Error ? error.name : 'unknown',
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join('\n') : undefined,
+    });
     try {
       await sendMessage(chatId, 'Omlouvam se, nastala chyba. Zkus to za chvili.');
     } catch {

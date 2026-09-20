@@ -11,6 +11,13 @@ export const metadata: Metadata = {
   title: { default: 'Studio · STUDIOFLOW', template: '%s · Studio' },
   robots: { index: false, follow: false, nocache: true },
   manifest: '/studio-manifest.json',
+  icons: {
+    icon: [
+      { url: '/sf-favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
   appleWebApp: {
     capable: true,
     title: 'STUDIOFLOW',
