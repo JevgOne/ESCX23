@@ -46,6 +46,10 @@ async function runMigrations(client: Client) {
     'ALTER TABLE girl_schedules ADD COLUMN effective_from DATE DEFAULT NULL',
     'ALTER TABLE girls ADD COLUMN style_wardrobe TEXT DEFAULT NULL',
     'ALTER TABLE pricing_plans ADD COLUMN night_price INTEGER DEFAULT NULL',
+    // Per-girl booking rules (Task #24 — Emily individual booking config)
+    'ALTER TABLE girls ADD COLUMN booking_start_offset INTEGER DEFAULT NULL',
+    'ALTER TABLE girls ADD COLUMN booking_allowed_durations TEXT DEFAULT NULL',
+    'ALTER TABLE girls ADD COLUMN booking_break_minutes INTEGER DEFAULT NULL',
   ];
 
   // One-time fix: clear future effective_from that hid schedules from public page
@@ -117,6 +121,17 @@ async function runMigrations(client: Client) {
     } catch {
       // OK — table may not exist yet
     }
+  }
+
+  // Emily (id=28) — individual booking rules: start 30min after shift, only 60min duration
+  try {
+    await client.execute({
+      sql: `UPDATE girls SET booking_start_offset = 30, booking_allowed_durations = '[60]'
+            WHERE id = 28 AND booking_start_offset IS NULL`,
+      args: [],
+    });
+  } catch {
+    // OK — girls table may not exist yet
   }
 
   // Create admin_notifications table if it doesn't exist

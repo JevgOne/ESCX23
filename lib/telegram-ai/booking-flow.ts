@@ -21,7 +21,32 @@ import { createBookingNotification } from '../booking-notifications';
 import { getCalendarGirls } from '../booking-queries';
 import type { ClientContext } from './types';
 
-const BREAK_MINUTES = 10; // 10-min break between bookings
+const BREAK_MINUTES = 10; // 10-min break between bookings (global default)
+
+// ---------------------------------------------------------------------------
+// Per-girl booking config (Emily etc.)
+// ---------------------------------------------------------------------------
+
+interface GirlBookingConfig {
+  startOffset: number;       // minutes from shift start (0 = default)
+  allowedDurations: number[] | null; // null = all durations allowed
+  breakMinutes: number;      // per-girl break override
+}
+
+async function getGirlBookingConfig(girlId: number): Promise<GirlBookingConfig> {
+  const result = await db.execute({
+    sql: 'SELECT booking_start_offset, booking_allowed_durations, booking_break_minutes FROM girls WHERE id = ? LIMIT 1',
+    args: [girlId],
+  });
+  const row = result.rows[0];
+  return {
+    startOffset: row?.booking_start_offset ? Number(row.booking_start_offset) : 0,
+    allowedDurations: row?.booking_allowed_durations
+      ? JSON.parse(String(row.booking_allowed_durations)) as number[]
+      : null,
+    breakMinutes: row?.booking_break_minutes ? Number(row.booking_break_minutes) : BREAK_MINUTES,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Prague timezone helpers (duplicated from tool-handlers to avoid circular deps)
@@ -1004,6 +1029,9 @@ async function getAvailableSlots(girlId: number, date: string): Promise<string[]
 
   if (!girl || !girl.isWorking || !girl.shiftStart || !girl.shiftEnd) return [];
 
+  // Per-girl booking config (Emily etc.)
+  const config = await getGirlBookingConfig(girlId);
+
   const shiftStart = girl.shiftStart;
   const shiftEnd = girl.shiftEnd;
 
@@ -1044,7 +1072,7 @@ async function getAvailableSlots(girlId: number, date: string): Promise<string[]
   // Generate free slots
   const [startH, startM] = shiftStart.split(':').map(Number);
   const [endH, endM] = shiftEnd.split(':').map(Number);
-  const shiftStartMin = startH * 60 + startM;
+  const shiftStartMin = startH * 60 + startM + config.startOffset; // Apply booking_start_offset
   const shiftEndMin = endH * 60 + endM;
 
   // Filter out past times if date is today
@@ -1054,7 +1082,7 @@ async function getAvailableSlots(girlId: number, date: string): Promise<string[]
 
   const freeSlots: string[] = [];
   for (let m = shiftStartMin; m < shiftEndMin; m += 30) {
-    const isBlocked = blockedRanges.some(b => m < b.end + BREAK_MINUTES && m + 30 > b.start - BREAK_MINUTES);
+    const isBlocked = blockedRanges.some(b => m < b.end + config.breakMinutes && m + 30 > b.start - config.breakMinutes);
     if (!isBlocked && m >= currentMin) {
       freeSlots.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
     }
@@ -1071,6 +1099,9 @@ async function getAvailableDurations(
   // Get shift end time using the same query as the calendar
   const calendarGirls = await getCalendarGirls(date);
   const girl = calendarGirls.find((g) => g.id === girlId);
+
+  // Per-girl booking config (Emily etc.)
+  const config = await getGirlBookingConfig(girlId);
 
   const shiftEnd = girl?.shiftEnd ?? '23:59';
 
@@ -1093,12 +1124,12 @@ async function getAvailableDurations(
     const ns = String(nextBooking.rows[0].next_start).substring(0, 5);
     const [nh, nm] = ns.split(':').map(Number);
     const nextMin = nh * 60 + nm;
-    // BREAK_MINUTES buffer before next booking
-    maxAvailable = Math.min(maxAvailable, nextMin - startMin - BREAK_MINUTES);
+    maxAvailable = Math.min(maxAvailable, nextMin - startMin - config.breakMinutes);
   }
 
-  // Get pricing for available durations
-  const durations = [30, 45, 60, 90, 120].filter((d) => d <= maxAvailable);
+  // Get pricing for available durations — filter by per-girl allowed durations
+  const allDurations = config.allowedDurations ?? [30, 45, 60, 90, 120];
+  const durations = allDurations.filter((d) => d <= maxAvailable);
 
   const [startH] = startTime.split(':').map(Number);
   const isNight = startH >= 22 || startH < 6;

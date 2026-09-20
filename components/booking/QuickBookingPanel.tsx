@@ -225,10 +225,17 @@ export default function QuickBookingPanel({ girls, weekSchedules, pricingPlans, 
     setSelectedGirlId(id);
     setSelectedTime(null);
     setError(null);
+    // If girl has allowedDurations and current duration is not allowed, pick first allowed
+    const girl = girls.find((g) => g.id === id);
+    let dur = duration;
+    if (girl?.allowedDurations && !girl.allowedDurations.includes(duration)) {
+      dur = girl.allowedDurations[0] ?? 60;
+      setDuration(dur);
+    }
     // Load slots
     if (selectedDate) {
       startSlotTransition(async () => {
-        const s = await getAvailableSlots(id, selectedDate, duration);
+        const s = await getAvailableSlots(id, selectedDate, dur);
         setSlots(s);
       });
     }
@@ -422,7 +429,9 @@ export default function QuickBookingPanel({ girls, weekSchedules, pricingPlans, 
             </div>
 
             <div className="qb-durations" style={{ marginBottom: 12 }}>
-              {pricingPlans.map((p) => (
+              {pricingPlans
+                .filter((p) => !selectedGirl?.allowedDurations || selectedGirl.allowedDurations.includes(p.duration))
+                .map((p) => (
                 <button
                   key={p.duration}
                   className={`qb-dur${duration === p.duration ? ' active' : ''}`}

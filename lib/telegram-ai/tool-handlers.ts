@@ -288,6 +288,15 @@ async function checkAvailability(input: Record<string, unknown>): Promise<string
     return JSON.stringify({ available: false, reason: 'Divka v tento den nepracuje.' });
   }
 
+  // Per-girl booking config (Emily etc.)
+  const configResult = await db.execute({
+    sql: 'SELECT booking_start_offset, booking_break_minutes FROM girls WHERE id = ? LIMIT 1',
+    args: [girlId],
+  });
+  const configRow = configResult.rows[0];
+  const startOffset = configRow?.booking_start_offset ? Number(configRow.booking_start_offset) : 0;
+  const breakMin = configRow?.booking_break_minutes ? Number(configRow.booking_break_minutes) : 10;
+
   const shiftStart = girl.shiftStart;
   const shiftEnd = girl.shiftEnd;
 
@@ -325,8 +334,8 @@ async function checkAvailability(input: Record<string, unknown>): Promise<string
   for (const row of allBlocked) {
     const [sh, sm] = String(row.start_time).substring(0, 5).split(':').map(Number);
     const [eh, em] = String(row.end_time).substring(0, 5).split(':').map(Number);
-    // Add 15min buffer after each booking
-    for (let m = sh * 60 + sm; m < eh * 60 + em + 15; m += 30) {
+    // Add break buffer after each booking
+    for (let m = sh * 60 + sm; m < eh * 60 + em + breakMin; m += 30) {
       occupied.add(m);
     }
   }
@@ -334,7 +343,7 @@ async function checkAvailability(input: Record<string, unknown>): Promise<string
   // Generate free 30min slots
   const [startH, startM] = shiftStart.split(':').map(Number);
   const [endH, endM] = shiftEnd.split(':').map(Number);
-  const shiftStartMin = startH * 60 + startM;
+  const shiftStartMin = startH * 60 + startM + startOffset; // Apply booking_start_offset
   const shiftEndMin = endH * 60 + endM;
 
   const freeSlots: string[] = [];

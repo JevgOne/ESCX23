@@ -104,6 +104,7 @@ export interface AvailableGirl {
   locationName: string | null;
   isWorking: boolean;
   bookedSlots: string[]; // ["14:00-15:00", "17:00-18:00"]
+  allowedDurations: number[] | null; // null = all durations, e.g. [60] = only 60min
 }
 
 export async function getAvailableGirls(date: string): Promise<AvailableGirl[]> {
@@ -116,7 +117,7 @@ export async function getAvailableGirls(date: string): Promise<AvailableGirl[]> 
   const result = await db.execute({
     sql: `
       SELECT
-        g.id, g.name,
+        g.id, g.name, g.booking_allowed_durations,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url,
         gs.start_time AS shift_start, gs.end_time AS shift_end,
         l.display_name AS location_name,
@@ -171,6 +172,9 @@ export async function getAvailableGirls(date: string): Promise<AvailableGirl[]> 
       locationName: r.location_name ? String(r.location_name) : null,
       isWorking: shiftStart !== null && shiftEnd !== null,
       bookedSlots: bookedByGirl.get(Number(r.id)) ?? [],
+      allowedDurations: r.booking_allowed_durations
+        ? JSON.parse(String(r.booking_allowed_durations)) as number[]
+        : null,
     };
   });
 }
@@ -222,6 +226,15 @@ export async function getAvailableSlots(
 
   if (!shiftStart || !shiftEnd) return [];
 
+  // Per-girl booking config (Emily etc.)
+  const configRes = await db.execute({
+    sql: 'SELECT booking_start_offset, booking_break_minutes FROM girls WHERE id = ? LIMIT 1',
+    args: [girlId],
+  });
+  const configRow = configRes.rows[0];
+  const startOffset = configRow?.booking_start_offset ? Number(configRow.booking_start_offset) : 0;
+  const girlBreak = configRow?.booking_break_minutes ? Number(configRow.booking_break_minutes) : BREAK_MINUTES;
+
   // Get existing bookings
   const bookingsRes = await db.execute({
     sql: `SELECT start_time, end_time FROM bookings_v2 WHERE girl_id = ? AND date = ? AND status NOT IN ('expired', 'cancelled_client', 'cancelled_girl')`,
@@ -236,7 +249,7 @@ export async function getAvailableSlots(
   // Generate 30-min slots within shift
   const [sh, sm] = shiftStart.split(':').map(Number);
   const [eh, em] = shiftEnd.split(':').map(Number);
-  const shiftStartMin = sh * 60 + sm;
+  const shiftStartMin = sh * 60 + sm + startOffset; // Apply booking_start_offset
   const shiftEndMin = eh * 60 + em;
 
   // For today: skip slots that already passed (Prague timezone)
@@ -258,13 +271,13 @@ export async function getAvailableSlots(
     const endM = endMin % 60;
     const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 
-    // Check overlap with existing bookings (including BREAK_MINUTES buffer)
+    // Check overlap with existing bookings (including break buffer)
     const isAvailable = !bookedRanges.some((b) => {
       const [bsh, bsm] = b.start.split(':').map(Number);
       const [beh, bem] = b.end.split(':').map(Number);
       const bStart = bsh * 60 + bsm;
       const bEnd = beh * 60 + bem;
-      return min < bEnd + BREAK_MINUTES && endMin > bStart - BREAK_MINUTES;
+      return min < bEnd + girlBreak && endMin > bStart - girlBreak;
     });
 
     slots.push({ time, available: isAvailable });
@@ -625,6 +638,7 @@ export interface GirlSummary {
   id: number;
   name: string;
   photoUrl: string | null;
+  allowedDurations: number[] | null; // null = all durations, e.g. [60] = only 60min
 }
 
 const CZECH_DAYS = ['NEDELE', 'PONDELI', 'UTERY', 'STREDA', 'CTVRTEK', 'PATEK', 'SOBOTA'];
@@ -661,7 +675,7 @@ export async function getWeekSchedulesForAll(): Promise<{
   // Get all active girls
   const girlsRes = await db.execute({
     sql: `
-      SELECT g.id, g.name,
+      SELECT g.id, g.name, g.booking_allowed_durations,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
       FROM girls g WHERE g.status = 'active' ORDER BY g.name
     `,
@@ -672,6 +686,9 @@ export async function getWeekSchedulesForAll(): Promise<{
     id: Number(r.id),
     name: String(r.name),
     photoUrl: r.photo_url ? String(r.photo_url) : null,
+    allowedDurations: r.booking_allowed_durations
+      ? JSON.parse(String(r.booking_allowed_durations)) as number[]
+      : null,
   }));
 
   const girlIds = girls.map((g) => g.id);
