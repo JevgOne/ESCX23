@@ -858,6 +858,11 @@ async function runMigrations(client: Client) {
     console.error('[db] ICS import migration error:', e);
   }
 
+  // Cleanup: delete ICS-imported bookings before this week (user sees stale data in calendar)
+  try {
+    await client.execute(`DELETE FROM bookings_v2 WHERE source = 'ics_import' AND date < '2026-09-21'`);
+  } catch { /* OK */ }
+
   // Set exact addresses for locations (Task #35)
   try {
     await client.execute({
