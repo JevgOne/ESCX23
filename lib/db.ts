@@ -863,6 +863,97 @@ async function runMigrations(client: Client) {
     await client.execute(`DELETE FROM bookings_v2 WHERE source = 'ics_import' AND date < '2026-09-21'`);
   } catch { /* OK */ }
 
+  // Re-import ICS bookings — previous migration registered in _migrations but data not inserted
+  try {
+    const reimportDone = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = ?`,
+      args: ['ics_reimport_sep2026_v2'],
+    });
+    if (reimportDone.rows.length === 0) {
+      const existingIcs = await client.execute({
+        sql: `SELECT COUNT(*) AS cnt FROM bookings_v2 WHERE source = 'ics_import' AND date >= '2026-09-21'`,
+        args: [],
+      });
+      const existingCount = Number(existingIcs.rows[0]?.cnt ?? 0);
+
+      if (existingCount < 17) {
+        // Clean partial data
+        await client.execute(`DELETE FROM bookings_v2 WHERE source = 'ics_import' AND date >= '2026-09-21'`);
+        await client.execute(`DELETE FROM booking_clients WHERE client_number LIKE 'ICS-%'`);
+
+        const gMap: Record<string, number> = {
+          'Kim': 46, 'Caty': 31, 'Emily': 28, 'Nika': 25, 'Viktoria': 50,
+        };
+        const pMap: Record<number, number> = {
+          30: 1500, 45: 2000, 60: 2500, 90: 3500, 120: 4500,
+        };
+        const bkData: [string, string, string, string, number, string][] = [
+          ['Kim',      '2026-09-21', '12:30', '13:30', 60, 'mila12'],
+          ['Kim',      '2026-09-21', '14:30', '16:00', 90, 'Vojtech Salomoun'],
+          ['Caty',     '2026-09-21', '16:30', '17:30', 60, 'Henry2109'],
+          ['Emily',    '2026-09-22', '10:30', '11:30', 60, 'Cizinec140301'],
+          ['Emily',    '2026-09-22', '11:40', '12:40', 60, 'Klient23071'],
+          ['Emily',    '2026-09-22', '12:45', '13:45', 60, 'HynekSvoboda'],
+          ['Emily',    '2026-09-22', '14:00', '15:00', 60, 'Lukas01/26b'],
+          ['Emily',    '2026-09-22', '15:15', '16:15', 60, 'Belkacem0402'],
+          ['Kim',      '2026-09-22', '16:30', '17:30', 60, 'David 2309'],
+          ['Viktoria', '2026-09-22', '16:30', '17:15', 45, 'Nov0412'],
+          ['Nika',     '2026-09-23', '10:00', '11:00', 60, 'Kl0711'],
+          ['Nika',     '2026-09-23', '15:00', '16:00', 60, 'Tcr 2109'],
+          ['Emily',    '2026-09-24', '10:30', '12:30', 120, 'N0172 HIGH SOCKS'],
+          ['Emily',    '2026-09-24', '14:00', '15:00', 60, 'NO1108'],
+          ['Emily',    '2026-09-24', '15:15', '16:15', 60, 'Novy999'],
+          ['Nika',     '2026-09-25', '10:00', '11:00', 60, 'Pepicek1007'],
+          ['Viktoria', '2026-09-26', '20:00', '21:00', 60, 'Vojtech2109'],
+        ];
+
+        let insertedCount = 0;
+        for (const [girl, date, startTime, endTime, dur, nickname] of bkData) {
+          const girlId = gMap[girl];
+          if (!girlId) continue;
+
+          let clientId: number;
+          const ex = await client.execute({
+            sql: 'SELECT id FROM booking_clients WHERE nickname = ? LIMIT 1',
+            args: [nickname],
+          });
+          if (ex.rows.length > 0) {
+            clientId = Number(ex.rows[0].id);
+          } else {
+            const mx = await client.execute(
+              "SELECT MAX(CAST(REPLACE(client_number, 'ICS-', '') AS INTEGER)) AS mx FROM booking_clients WHERE client_number LIKE 'ICS-%'",
+            );
+            const maxNum = Number(mx.rows[0]?.mx ?? 0);
+            const ins = await client.execute({
+              sql: `INSERT INTO booking_clients (client_number, nickname, source, trust_level, total_visits, created_at, updated_at)
+                    VALUES (?, ?, 'phone', 'verified', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+              args: [`ICS-${maxNum + 1}`, nickname],
+            });
+            clientId = Number(ins.lastInsertRowid);
+          }
+
+          const price = pMap[dur] ?? 2500;
+          await client.execute({
+            sql: `INSERT INTO bookings_v2 (
+                    client_id, girl_id, date, start_time, end_time, duration_minutes,
+                    price, points_earned, status, channel, source, created_at, updated_at
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', 'phone', 'ics_import', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            args: [clientId, girlId, date, startTime, endTime, dur, price, price],
+          });
+          insertedCount++;
+        }
+        console.log(`[db] Re-imported ${insertedCount}/${bkData.length} ICS bookings (ics_reimport_sep2026_v2)`);
+      }
+
+      await client.execute({
+        sql: `INSERT INTO _migrations (name) VALUES (?)`,
+        args: ['ics_reimport_sep2026_v2'],
+      });
+    }
+  } catch (e) {
+    console.error('[db] ICS reimport error:', e);
+  }
+
   // Recalculate total_visits for all clients based on actual completed/confirmed bookings
   try {
     const recalcDone = await client.execute({
