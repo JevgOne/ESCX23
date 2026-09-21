@@ -131,6 +131,7 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
           }
         } catch (err) {
           console.error('[telegram-bot] Booking callback error:', err);
+          await sendMessage(chatId, 'Omlouvam se, nastala chyba pri zpracovani rezervace. Zkus to prosim znovu.').catch(() => {});
         }
       }
 

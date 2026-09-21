@@ -34,18 +34,23 @@ interface GirlBookingConfig {
 }
 
 async function getGirlBookingConfig(girlId: number): Promise<GirlBookingConfig> {
-  const result = await db.execute({
-    sql: 'SELECT booking_start_offset, booking_allowed_durations, booking_break_minutes FROM girls WHERE id = ? LIMIT 1',
-    args: [girlId],
-  });
-  const row = result.rows[0];
-  return {
-    startOffset: row?.booking_start_offset ? Number(row.booking_start_offset) : 0,
-    allowedDurations: row?.booking_allowed_durations
-      ? JSON.parse(String(row.booking_allowed_durations)) as number[]
-      : null,
-    breakMinutes: row?.booking_break_minutes ? Number(row.booking_break_minutes) : BREAK_MINUTES,
-  };
+  try {
+    const result = await db.execute({
+      sql: 'SELECT booking_start_offset, booking_allowed_durations, booking_break_minutes FROM girls WHERE id = ? LIMIT 1',
+      args: [girlId],
+    });
+    const row = result.rows[0];
+    return {
+      startOffset: row?.booking_start_offset ? Number(row.booking_start_offset) : 0,
+      allowedDurations: row?.booking_allowed_durations
+        ? JSON.parse(String(row.booking_allowed_durations)) as number[]
+        : null,
+      breakMinutes: row?.booking_break_minutes ? Number(row.booking_break_minutes) : BREAK_MINUTES,
+    };
+  } catch (e) {
+    console.error('[booking-flow] getGirlBookingConfig failed, using defaults:', e);
+    return { startOffset: 0, allowedDurations: null, breakMinutes: BREAK_MINUTES };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -184,6 +189,25 @@ export async function handleTimeSelected(
 
   // Get available durations based on remaining shift time
   const durations = await getAvailableDurations(draft.girlId, draft.date, time);
+
+  if (durations.length === 0) {
+    // Not enough time for any program — go back to time selection
+    await db.execute({
+      sql: `UPDATE booking_drafts SET start_time = NULL, step = 'select_time', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
+      args: [sessionId],
+    });
+    const slots = await getAvailableSlots(draft.girlId, draft.date);
+    const keyboard = buildTimeSlotKeyboard(sessionId, slots);
+    await sendMessage(chatId, `V ${time} uz neni dost casu na zadny program. Vyber jiny cas:`, {
+      replyMarkup: {
+        inline_keyboard: [
+          ...keyboard,
+          [{ text: '\u274C Zrusit', callback_data: `bk_cancel:${sessionId}` }],
+        ],
+      },
+    });
+    return;
+  }
 
   // Build duration keyboard — include program title from DB
   const keyboard = durations.map((d) => [{
