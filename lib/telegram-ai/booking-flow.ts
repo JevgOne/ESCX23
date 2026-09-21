@@ -179,6 +179,9 @@ export async function handleTimeSelected(
     return;
   }
 
+  // Deduplicate: ignore if step already advanced (double-click)
+  if (draft.step !== 'select_time') return;
+
   // Update draft
   await db.execute({
     sql: `UPDATE booking_drafts
@@ -243,6 +246,9 @@ export async function handleDurationSelected(
     await sendMessage(chatId, 'Tato rezervace vyprsela. Zacni prosim znovu.');
     return;
   }
+
+  // Deduplicate: ignore if step already advanced (double-click)
+  if (draft.step !== 'select_duration') return;
 
   const endTime = addMinutes(draft.startTime, durationMinutes);
 
@@ -330,6 +336,9 @@ export async function handleConfirm(
     await sendMessage(chatId, 'Tato rezervace vyprsela. Zacni prosim znovu.');
     return;
   }
+
+  // Deduplicate: ignore if step already advanced (double-click on confirm)
+  if (draft.step !== 'confirm') return;
 
   // Check slot is still available
   const conflictCheck = await db.execute({
