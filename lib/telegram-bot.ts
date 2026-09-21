@@ -3,7 +3,7 @@
  * Preserves TelegramUpdate type and handleUpdate export for webhook + polling.
  */
 
-import { answerCallbackQuery, sendMessage, verifyLinkToken, verifyUserLinkToken } from './telegram';
+import { answerCallbackQuery, editMessageReplyMarkup, sendMessage, verifyLinkToken, verifyUserLinkToken } from './telegram';
 import { handleAIMessage, handleAICallback } from './telegram-ai/handler';
 import { handleBookingCallback, handlePromoCodeInput } from './telegram-ai/booking-flow';
 import { db } from './db';
@@ -23,7 +23,7 @@ export interface TelegramUpdate {
   callback_query?: {
     id: string;
     from: { id: number; first_name?: string; username?: string };
-    message?: { chat: { id: number } };
+    message?: { message_id: number; chat: { id: number } };
     data?: string;
   };
 }
@@ -119,6 +119,12 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
     if (chatId && data) {
       // Booking flow callbacks (bk_*) — handle directly, no Claude API
       if (data.startsWith('bk_')) {
+        // Remove inline keyboard from clicked message (prevents re-clicks)
+        const msgId = cq.message?.message_id;
+        if (msgId) {
+          editMessageReplyMarkup(chatId, msgId).catch(() => {});
+        }
+
         try {
           const handled = await handleBookingCallback(chatId, data);
           if (handled) {

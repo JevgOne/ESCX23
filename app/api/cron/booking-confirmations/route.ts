@@ -210,11 +210,61 @@ export async function GET(request: Request) {
     }).catch(() => {});
   }
 
+  // ── Step 5: Send antispam booking reminders (30 min after creation) ──
+  let antispamSent = 0;
+  try {
+    const dueReminders = await db.execute({
+      sql: `SELECT br.id, br.booking_id, br.chat_id, br.booking_code,
+                   b.status, b.date, b.start_time, b.end_time, g.name AS girl_name
+            FROM booking_reminders br
+            JOIN bookings_v2 b ON b.id = br.booking_id
+            JOIN girls g ON g.id = b.girl_id
+            WHERE br.sent = 0 AND br.send_at <= ?
+            LIMIT 20`,
+      args: [new Date().toISOString()],
+    });
+
+    for (const row of dueReminders.rows) {
+      const reminderId = Number(row.id);
+      const bookingId = Number(row.booking_id);
+      const chatId = String(row.chat_id);
+      const code = row.booking_code ? String(row.booking_code) : `#${bookingId}`;
+      const status = String(row.status);
+      const girlName = String(row.girl_name);
+      const date = String(row.date);
+      const startTime = String(row.start_time).substring(0, 5);
+
+      // Only send if booking is still active
+      if (['confirmed', 'pending'].includes(status)) {
+        await sendMessage(chatId,
+          `\u{1F4AC} Stale plati tvoje rezervace ${code}? <b>${girlName}</b>, ${formatDisplayDate(date)} v ${startTime}`,
+          {
+            replyMarkup: {
+              inline_keyboard: [[
+                { text: '\u2705 Ano, prijdu', callback_data: `bk_remind_ok:${bookingId}` },
+                { text: '\u274C Rusim', callback_data: `bk_remind_cancel:${bookingId}` },
+              ]],
+            },
+          },
+        );
+        antispamSent++;
+      }
+
+      await db.execute({
+        sql: 'UPDATE booking_reminders SET sent = 1 WHERE id = ?',
+        args: [reminderId],
+      });
+    }
+  } catch (e) {
+    console.error('[cron] antispam reminders error:', e);
+  }
+
   return NextResponse.json({
     success: true,
     remindersSent,
     bookingsCancelled,
     interestNotified,
+    antispamSent,
   });
 }
 

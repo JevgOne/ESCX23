@@ -1,7 +1,7 @@
 import { db } from '../db';
 import { sendPhoto } from '../telegram';
 import { logAudit } from '../audit';
-import { startBookingFlow } from './booking-flow';
+import { startBookingFlow, getAvailableSlots } from './booking-flow';
 import { getCalendarGirls } from '../booking-queries';
 import type { ClientContext } from './types';
 
@@ -99,6 +99,14 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
       return eh * 60 + em > nowMinutes;
     });
   }
+
+  // Filter out girls with no available booking slots (fully booked)
+  const withSlots: typeof working = [];
+  for (const g of working) {
+    const slots = await getAvailableSlots(g.id, date);
+    if (slots.length > 0) withSlots.push(g);
+  }
+  working = withSlots;
 
   // Fetch extra details (age, hair, nationality, rating, photo) for working girls
   const girls: {

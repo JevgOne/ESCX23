@@ -76,6 +76,12 @@ function generateSessionId(): string {
   return `bk_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function generateBookingCode(date: string): string {
+  const datePart = date.replace(/-/g, '');
+  const hex = Math.random().toString(16).slice(2, 6).toUpperCase();
+  return `LG-${datePart}-${hex}`;
+}
+
 // ---------------------------------------------------------------------------
 // Step 1: Start booking flow — called by AI tool handler
 // ---------------------------------------------------------------------------
@@ -212,8 +218,27 @@ export async function handleTimeSelected(
     return;
   }
 
+  // Filter durations for new clients: only 30 and 60 min
+  let filteredDurations = durations;
+  if (draft.clientId) {
+    const clientRes = await db.execute({
+      sql: 'SELECT trust_level, total_visits FROM booking_clients WHERE id = ? LIMIT 1',
+      args: [draft.clientId],
+    });
+    const trustLevel = clientRes.rows[0] ? String(clientRes.rows[0].trust_level) : 'new';
+    const visits = clientRes.rows[0] ? Number(clientRes.rows[0].total_visits) : 0;
+    if (visits === 0 || trustLevel === 'new') {
+      filteredDurations = durations.filter(d => d.minutes === 30 || d.minutes === 60);
+    }
+  }
+
+  if (filteredDurations.length === 0) {
+    // Fallback: no 30/60 available — show all durations
+    filteredDurations = durations;
+  }
+
   // Build duration keyboard — include program title from DB
-  const keyboard = durations.map((d) => [{
+  const keyboard = filteredDurations.map((d) => [{
     text: `${d.title} (${d.minutes} min) — ${d.price} CZK`,
     callback_data: `bk_dur:${sessionId}:${d.minutes}`,
   }]);
@@ -440,14 +465,15 @@ export async function handleConfirm(
   const locationId = locRes.rows[0]?.location_id ? Number(locRes.rows[0].location_id) : null;
 
   // Create booking
+  const bookingCode = generateBookingCode(draft.date);
   const bookingResult = await db.execute({
     sql: `INSERT INTO bookings_v2 (
             client_id, girl_id, location_id, date, start_time, end_time, duration_minutes,
-            price, discount_code_id, discount_amount, points_earned,
+            booking_code, price, discount_code_id, discount_amount, points_earned,
             status, source, channel, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
     args: [draft.clientId, draft.girlId, locationId, draft.date, draft.startTime, draft.endTime, draft.durationMinutes,
-           finalPrice, draft.discountCodeId ?? null, discountAmount, finalPrice, bookingStatus],
+           bookingCode, finalPrice, draft.discountCodeId ?? null, discountAmount, finalPrice, bookingStatus],
   });
 
   const bookingId = Number(bookingResult.lastInsertRowid);
@@ -511,8 +537,8 @@ export async function handleConfirm(
     ` — ${priceText}`;
 
   const msg = bookingStatus === 'pending'
-    ? `\u{1F4CB} Rezervace #${bookingId} prijata!\n\n${summary}\n\nProtoze jsi u nas poprve, prosim <b>potvrd svuj prichod</b> kliknutim nize. Pokud nepotvrdis do 1h pred terminem, misto uvolnime.`
-    : `\u2705 Rezervace #${bookingId} potvrzena!\n\n${summary}\n\nTesime se na tebe!`;
+    ? `\u{1F4CB} Rezervace ${bookingCode} prijata!\n\n${summary}\n\nProtoze jsi u nas poprve, prosim <b>potvrd svuj prichod</b> kliknutim nize. Pokud nepotvrdis do 1h pred terminem, misto uvolnime.`
+    : `\u2705 Rezervace ${bookingCode} potvrzena!\n\n${summary}\n\nTesime se na tebe!`;
 
   if (bookingStatus === 'pending') {
     await sendMessage(chatId, msg, {
@@ -538,6 +564,7 @@ export async function handleConfirm(
 
   sendBookingCreatedNotifications({
     bookingId,
+    bookingCode,
     clientNickname,
     girlId: draft.girlId,
     girlName: draft.girlName,
@@ -552,10 +579,17 @@ export async function handleConfirm(
   // In-app notification for admin dashboard
   createBookingNotification({
     type: 'new_booking',
-    title: `Nova rezervace #${bookingId}`,
+    title: `Nova rezervace ${bookingCode}`,
     message: `${clientNickname} \u2192 ${draft.girlName}, ${formatDate(draft.date)} ${draft.startTime}\u2013${draft.endTime} (${finalPrice} CZK)`,
     bookingId,
     link: `/booking/calendar?date=${draft.date}`,
+  }).catch(() => {});
+
+  // Schedule antispam confirmation reminder (30 min after booking)
+  const sendAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+  db.execute({
+    sql: `INSERT INTO booking_reminders (booking_id, chat_id, booking_code, send_at) VALUES (?, ?, ?, ?)`,
+    args: [bookingId, chatId, bookingCode, sendAt],
   }).catch(() => {});
 }
 
@@ -565,6 +599,7 @@ export async function handleConfirm(
 
 async function sendBookingCreatedNotifications(params: {
   bookingId: number;
+  bookingCode: string;
   clientNickname: string;
   girlId: number;
   girlName: string;
@@ -575,12 +610,12 @@ async function sendBookingCreatedNotifications(params: {
   price: number;
   status: string;
 }): Promise<void> {
-  const { bookingId, clientNickname, girlId, girlName, date, startTime, endTime, durationMinutes, price, status } = params;
+  const { bookingId, bookingCode, clientNickname, girlId, girlName, date, startTime, endTime, durationMinutes, price, status } = params;
 
   const statusText = status === 'confirmed' ? 'Potvrzena' : 'Ceka na potvrzeni';
 
   const msg = [
-    `\u{1F4C5} <b>Nova rezervace #${bookingId}</b>`,
+    `\u{1F4C5} <b>Nova rezervace ${bookingCode}</b>`,
     '',
     `\u{1F464} Klient: ${clientNickname}`,
     `\u{1F469} ${girlName}`,
@@ -1074,7 +1109,7 @@ async function expireDraft(sessionId: string): Promise<void> {
 // Slot availability (reused logic from tool-handlers.checkAvailability)
 // ---------------------------------------------------------------------------
 
-async function getAvailableSlots(girlId: number, date: string): Promise<string[]> {
+export async function getAvailableSlots(girlId: number, date: string): Promise<string[]> {
   // Use the same query as the calendar for consistency
   const calendarGirls = await getCalendarGirls(date);
   const girl = calendarGirls.find((g) => g.id === girlId);

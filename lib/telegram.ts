@@ -86,6 +86,23 @@ export async function editMessageText(
   return res.ok;
 }
 
+export async function editMessageReplyMarkup(
+  chatId: string | number,
+  messageId: number,
+  replyMarkup?: unknown,
+): Promise<boolean> {
+  const res = await fetch(`${API}/editMessageReplyMarkup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: replyMarkup ?? { inline_keyboard: [] },
+    }),
+  });
+  return res.ok;
+}
+
 // ---------------------------------------------------------------------------
 // Deep-link token generation & verification (HMAC-SHA256)
 // ---------------------------------------------------------------------------

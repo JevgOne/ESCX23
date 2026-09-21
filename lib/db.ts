@@ -50,6 +50,8 @@ async function runMigrations(client: Client) {
     'ALTER TABLE girls ADD COLUMN booking_start_offset INTEGER DEFAULT NULL',
     'ALTER TABLE girls ADD COLUMN booking_allowed_durations TEXT DEFAULT NULL',
     'ALTER TABLE girls ADD COLUMN booking_break_minutes INTEGER DEFAULT NULL',
+    // Booking code — human-readable identifier (LG-YYYYMMDD-XXXX)
+    'ALTER TABLE bookings_v2 ADD COLUMN booking_code TEXT',
   ];
 
   // One-time fix: clear future effective_from that hid schedules from public page
@@ -866,6 +868,25 @@ async function runMigrations(client: Client) {
       sql: `UPDATE locations SET address = ? WHERE name = ? AND (address IS NULL OR address = '')`,
       args: ['Karlovo náměstí', 'praha-2'],
     });
+  } catch { /* OK */ }
+
+  // Booking confirmation reminders (antispam — sent 30 min after booking creation)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS booking_reminders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        booking_id INTEGER NOT NULL,
+        chat_id TEXT NOT NULL,
+        booking_code TEXT,
+        send_at DATETIME NOT NULL,
+        sent INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (booking_id) REFERENCES bookings_v2(id)
+      )
+    `);
+  } catch { /* OK */ }
+  try {
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_br_send ON booking_reminders(sent, send_at)');
   } catch { /* OK */ }
 
   // Push notification subscriptions
