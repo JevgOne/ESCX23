@@ -763,6 +763,99 @@ async function runMigrations(client: Client) {
     await client.execute('ALTER TABLE users ADD COLUMN force_password_change INTEGER NOT NULL DEFAULT 0');
   } catch { /* OK — column already exists */ }
 
+  // One-time import: 17 Google Calendar bookings (week 21.9.-27.9.2026)
+  try {
+    const icsImported = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = ?`,
+      args: ['ics_import_sep2026'],
+    });
+    if (icsImported.rows.length === 0) {
+      // Girl ID mapping
+      const girlMap: Record<string, number> = {
+        'Kim': 46, 'Caty': 31, 'Emily': 28, 'Nika': 25, 'Viktoria': 50,
+      };
+
+      // Duration prices (from pricing_plans)
+      const priceMap: Record<number, number> = {
+        30: 1500, 45: 2000, 60: 2500, 90: 3500, 120: 4500,
+      };
+
+      // Bookings data: [girl, date, startTime, endTime, durationMin, clientNickname]
+      const bookings: [string, string, string, string, number, string][] = [
+        ['Kim',      '2026-09-21', '12:30', '13:30', 60, 'mila12'],
+        ['Kim',      '2026-09-21', '14:30', '16:00', 90, 'Vojtech Salomoun'],
+        ['Caty',     '2026-09-21', '16:30', '17:30', 60, 'Henry2109'],
+        ['Emily',    '2026-09-22', '10:30', '11:30', 60, 'Cizinec140301'],
+        ['Emily',    '2026-09-22', '11:40', '12:40', 60, 'Klient23071'],
+        ['Emily',    '2026-09-22', '12:45', '13:45', 60, 'HynekSvoboda'],
+        ['Emily',    '2026-09-22', '14:00', '15:00', 60, 'Lukas01/26b'],
+        ['Emily',    '2026-09-22', '15:15', '16:15', 60, 'Belkacem0402'],
+        ['Kim',      '2026-09-22', '16:30', '17:30', 60, 'David 2309'],
+        ['Viktoria', '2026-09-22', '16:30', '17:15', 45, 'Nov0412'],
+        ['Nika',     '2026-09-23', '10:00', '11:00', 60, 'Kl0711'],
+        ['Nika',     '2026-09-23', '15:00', '16:00', 60, 'Tcr 2109'],
+        ['Emily',    '2026-09-24', '10:30', '12:30', 120, 'N0172 HIGH SOCKS'],
+        ['Emily',    '2026-09-24', '14:00', '15:00', 60, 'NO1108'],
+        ['Emily',    '2026-09-24', '15:15', '16:15', 60, 'Novy999'],
+        ['Nika',     '2026-09-25', '10:00', '11:00', 60, 'Pepicek1007'],
+        ['Viktoria', '2026-09-26', '20:00', '21:00', 60, 'Vojtech2109'],
+      ];
+
+      // Create clients + insert bookings
+      for (const [girl, date, startTime, endTime, dur, nickname] of bookings) {
+        const girlId = girlMap[girl];
+        if (!girlId) continue;
+
+        // Find or create client by nickname
+        let clientId: number;
+        const existing = await client.execute({
+          sql: 'SELECT id FROM booking_clients WHERE nickname = ? LIMIT 1',
+          args: [nickname],
+        });
+        if (existing.rows.length > 0) {
+          clientId = Number(existing.rows[0].id);
+        } else {
+          const maxRes = await client.execute(
+            "SELECT MAX(CAST(REPLACE(client_number, 'ICS-', '') AS INTEGER)) AS mx FROM booking_clients WHERE client_number LIKE 'ICS-%'",
+          );
+          const maxNum = Number(maxRes.rows[0]?.mx ?? 0);
+          const clientNumber = `ICS-${maxNum + 1}`;
+          const ins = await client.execute({
+            sql: `INSERT INTO booking_clients (client_number, nickname, source, trust_level, total_visits, created_at, updated_at)
+                  VALUES (?, ?, 'phone', 'verified', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            args: [clientNumber, nickname],
+          });
+          clientId = Number(ins.lastInsertRowid);
+        }
+
+        // Skip if booking already exists (girl_id + date + start_time)
+        const dup = await client.execute({
+          sql: `SELECT id FROM bookings_v2 WHERE girl_id = ? AND date = ? AND start_time = ?
+                AND status NOT IN ('cancelled_client', 'cancelled_girl', 'declined', 'expired') LIMIT 1`,
+          args: [girlId, date, startTime],
+        });
+        if (dup.rows.length > 0) continue;
+
+        const price = priceMap[dur] ?? 2500;
+        await client.execute({
+          sql: `INSERT INTO bookings_v2 (
+                  client_id, girl_id, date, start_time, end_time, duration_minutes,
+                  price, points_earned, status, channel, source, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', 'phone', 'ics_import', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          args: [clientId, girlId, date, startTime, endTime, dur, price, price],
+        });
+      }
+
+      await client.execute({
+        sql: `INSERT INTO _migrations (name) VALUES (?)`,
+        args: ['ics_import_sep2026'],
+      });
+      console.log('[db] Imported 17 Google Calendar bookings (Sep 21-27, 2026)');
+    }
+  } catch (e) {
+    console.error('[db] ICS import migration error:', e);
+  }
+
   // Push notification subscriptions
   try {
     await client.execute(`
