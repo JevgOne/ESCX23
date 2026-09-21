@@ -871,15 +871,14 @@ async function runMigrations(client: Client) {
     });
     if (reimportDone.rows.length === 0) {
       const existingIcs = await client.execute({
-        sql: `SELECT COUNT(*) AS cnt FROM bookings_v2 WHERE source = 'ics_import' AND date >= '2026-09-21'`,
+        sql: `SELECT COUNT(*) AS cnt FROM bookings_v2 WHERE source = 'ics_import' AND date BETWEEN '2026-09-21' AND '2026-09-27'`,
         args: [],
       });
       const existingCount = Number(existingIcs.rows[0]?.cnt ?? 0);
 
       if (existingCount < 17) {
-        // Clean partial data
-        await client.execute(`DELETE FROM bookings_v2 WHERE source = 'ics_import' AND date >= '2026-09-21'`);
-        await client.execute(`DELETE FROM booking_clients WHERE client_number LIKE 'ICS-%'`);
+        // Clean partial data — delete bookings only (not clients, FK constraint)
+        await client.execute(`DELETE FROM bookings_v2 WHERE source IN ('ics_import', 'gcal_import') AND date BETWEEN '2026-09-21' AND '2026-09-27'`);
 
         const gMap: Record<string, number> = {
           'Kim': 46, 'Caty': 31, 'Emily': 28, 'Nika': 25, 'Viktoria': 50,

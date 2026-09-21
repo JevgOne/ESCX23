@@ -64,30 +64,32 @@ async function loadHistory(chatId: string): Promise<ApiMessage[]> {
     } else if (role === 'assistant') {
       messages.push({ role: 'assistant', content });
     } else if (role === 'tool_use' && toolName && toolUseId) {
-      // Reconstruct as assistant message with tool_use block
-      const toolInput = safeJsonParse(content);
-      messages.push({
-        role: 'assistant',
-        content: [
-          {
-            type: 'tool_use',
-            id: toolUseId,
-            name: toolName,
-            input: toolInput,
-          },
-        ],
-      });
+      const toolBlock = {
+        type: 'tool_use' as const,
+        id: toolUseId,
+        name: toolName,
+        input: safeJsonParse(content),
+      };
+      // Merge with previous assistant message if consecutive tool_use
+      const prev = messages[messages.length - 1];
+      if (prev && prev.role === 'assistant' && Array.isArray(prev.content)) {
+        (prev.content as Anthropic.ContentBlockParam[]).push(toolBlock);
+      } else {
+        messages.push({ role: 'assistant', content: [toolBlock] });
+      }
     } else if (role === 'tool_result' && toolUseId) {
-      messages.push({
-        role: 'user',
-        content: [
-          {
-            type: 'tool_result',
-            tool_use_id: toolUseId,
-            content,
-          },
-        ],
-      });
+      const resultBlock = {
+        type: 'tool_result' as const,
+        tool_use_id: toolUseId,
+        content,
+      };
+      // Merge with previous user message if consecutive tool_result
+      const prev = messages[messages.length - 1];
+      if (prev && prev.role === 'user' && Array.isArray(prev.content)) {
+        (prev.content as Anthropic.ToolResultBlockParam[]).push(resultBlock);
+      } else {
+        messages.push({ role: 'user', content: [resultBlock] });
+      }
     }
   }
 
