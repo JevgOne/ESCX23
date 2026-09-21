@@ -415,14 +415,25 @@ export async function handleConfirm(
   }
   const finalPrice = Math.max(0, price - discountAmount);
 
+  // Get location_id from girl's schedule for this date
+  const bookingDow = (() => { const js = new Date(draft.date + 'T12:00:00').getDay(); return js === 0 ? 6 : js - 1; })();
+  const locRes = await db.execute({
+    sql: `SELECT gs.location_id FROM girl_schedules gs
+          WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
+            AND (gs.effective_from IS NULL OR gs.effective_from <= ?)
+          ORDER BY gs.effective_from DESC NULLS LAST LIMIT 1`,
+    args: [draft.girlId, bookingDow, draft.date],
+  });
+  const locationId = locRes.rows[0]?.location_id ? Number(locRes.rows[0].location_id) : null;
+
   // Create booking
   const bookingResult = await db.execute({
     sql: `INSERT INTO bookings_v2 (
-            client_id, girl_id, date, start_time, end_time, duration_minutes,
+            client_id, girl_id, location_id, date, start_time, end_time, duration_minutes,
             price, discount_code_id, discount_amount, points_earned,
             status, source, channel, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-    args: [draft.clientId, draft.girlId, draft.date, draft.startTime, draft.endTime, draft.durationMinutes,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    args: [draft.clientId, draft.girlId, locationId, draft.date, draft.startTime, draft.endTime, draft.durationMinutes,
            finalPrice, draft.discountCodeId ?? null, discountAmount, finalPrice, bookingStatus],
   });
 
