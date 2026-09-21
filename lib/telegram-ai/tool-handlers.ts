@@ -112,6 +112,7 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
     shiftStart: string;
     shiftEnd: string;
     location: string | null;
+    locationAddress: string | null;
     photoUrl: string | null;
   }[] = [];
 
@@ -137,6 +138,7 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
       shiftStart: cg.shiftStart!,
       shiftEnd: cg.shiftEnd!,
       location: cg.locationName,
+      locationAddress: cg.locationAddress,
       photoUrl: r.photo_url ? String(r.photo_url) : null,
     });
   }
@@ -147,7 +149,7 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
       const caption = `<b>${g.name}</b>, ${g.age} let` +
         (g.rating ? `\n⭐ ${g.rating}/5` + (g.reviewsCount ? ` (${g.reviewsCount} recenzi)` : '') : '') +
         `\n🟢 ${g.shiftStart} – ${g.shiftEnd}` +
-        (g.location ? `\n📍 ${g.location}` : '');
+        (g.location ? `\n📍 ${g.location}${g.locationAddress ? ' — ' + g.locationAddress : ''}` : '');
       await sendPhoto(ctx.chatId, g.photoUrl, { caption }).catch((err) => {
         console.error(`[telegram-ai] Failed to send photo for ${g.name}:`, err);
       });

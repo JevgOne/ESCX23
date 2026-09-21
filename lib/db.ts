@@ -856,6 +856,18 @@ async function runMigrations(client: Client) {
     console.error('[db] ICS import migration error:', e);
   }
 
+  // Set exact addresses for locations (Task #35)
+  try {
+    await client.execute({
+      sql: `UPDATE locations SET address = ? WHERE name = ? AND (address IS NULL OR address = '')`,
+      args: ['Kostnické náměstí', 'praha-3'],
+    });
+    await client.execute({
+      sql: `UPDATE locations SET address = ? WHERE name = ? AND (address IS NULL OR address = '')`,
+      args: ['Karlovo náměstí', 'praha-2'],
+    });
+  } catch { /* OK */ }
+
   // Push notification subscriptions
   try {
     await client.execute(`

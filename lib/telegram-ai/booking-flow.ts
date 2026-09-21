@@ -275,7 +275,11 @@ export async function handleDurationSelected(
   // Get location for summary using the same query as the calendar
   const calGirls = await getCalendarGirls(draft.date);
   const calGirl = calGirls.find((g) => g.id === draft.girlId);
-  const location = calGirl?.locationName ?? null;
+  const locationName = calGirl?.locationName ?? null;
+  const locationAddress = calGirl?.locationAddress ?? null;
+  const location = locationName
+    ? (locationAddress ? `${locationName} — ${locationAddress}` : locationName)
+    : null;
 
   // Show confirmation — flowing text summary
   await showConfirmation(chatId, sessionId, draft.girlName, draft.date, draft.startTime, endTime, durationMinutes, price, location, null);
@@ -482,14 +486,16 @@ export async function handleConfirm(
 
   // Get location for confirmation message
   const locResult = await db.execute({
-    sql: `SELECT l.display_name AS location_name
+    sql: `SELECT l.display_name AS location_name, l.address AS location_address
           FROM girl_schedules gs
           LEFT JOIN locations l ON l.id = gs.location_id
           WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
           LIMIT 1`,
     args: [draft.girlId, (() => { const js = new Date(draft.date + 'T12:00:00').getDay(); return js === 0 ? 6 : js - 1; })()],
   });
-  const location = locResult.rows[0]?.location_name ? String(locResult.rows[0].location_name) : null;
+  const locName = locResult.rows[0]?.location_name ? String(locResult.rows[0].location_name) : null;
+  const locAddr = locResult.rows[0]?.location_address ? String(locResult.rows[0].location_address) : null;
+  const location = locName ? (locAddr ? `${locName} — ${locAddr}` : locName) : null;
 
   // Build price text with discount
   let priceText: string;
@@ -771,7 +777,9 @@ async function reshowConfirmation(
   // Get location using the same query as the calendar
   const calGirlsLoc = await getCalendarGirls(date);
   const calGirlLoc = calGirlsLoc.find((g) => g.id === Number(r.girl_id));
-  const location = calGirlLoc?.locationName ?? null;
+  const locNameBack = calGirlLoc?.locationName ?? null;
+  const locAddrBack = calGirlLoc?.locationAddress ?? null;
+  const location = locNameBack ? (locAddrBack ? `${locNameBack} — ${locAddrBack}` : locNameBack) : null;
 
   // If no discount passed, check if one was stored
   if (!discount && r.discount_code_id) {
