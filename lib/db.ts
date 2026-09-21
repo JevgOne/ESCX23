@@ -863,6 +863,30 @@ async function runMigrations(client: Client) {
     await client.execute(`DELETE FROM bookings_v2 WHERE source = 'ics_import' AND date < '2026-09-21'`);
   } catch { /* OK */ }
 
+  // Recalculate total_visits for all clients based on actual completed/confirmed bookings
+  try {
+    const recalcDone = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = ?`,
+      args: ['recalc_client_visits'],
+    });
+    if (recalcDone.rows.length === 0) {
+      await client.execute(`
+        UPDATE booking_clients SET total_visits = (
+          SELECT COUNT(*) FROM bookings_v2
+          WHERE bookings_v2.client_id = booking_clients.id
+            AND bookings_v2.status IN ('confirmed', 'completed', 'in_progress')
+        ), updated_at = CURRENT_TIMESTAMP
+      `);
+      await client.execute({
+        sql: `INSERT INTO _migrations (name) VALUES (?)`,
+        args: ['recalc_client_visits'],
+      });
+      console.log('[db] Recalculated total_visits for all booking clients');
+    }
+  } catch (e) {
+    console.error('[db] recalc_client_visits error:', e);
+  }
+
   // Set exact addresses for locations (Task #35)
   try {
     await client.execute({
