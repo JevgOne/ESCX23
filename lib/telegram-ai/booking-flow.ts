@@ -1167,12 +1167,26 @@ export async function getAvailableSlots(girlId: number, date: string): Promise<s
   const now = getPragueNow();
   const currentMin = date === today ? now.getHours() * 60 + now.getMinutes() + 30 : 0; // +30min buffer
 
+  // Minimum bookable duration for this girl (Emily: 60, default: 30)
+  const minDuration = config.allowedDurations
+    ? Math.min(...config.allowedDurations)
+    : 30;
+
   const freeSlots: string[] = [];
   for (let m = shiftStartMin; m < shiftEndMin; m += 30) {
     const isBlocked = blockedRanges.some(b => m < b.end + config.breakMinutes && m + 30 > b.start - config.breakMinutes);
-    if (!isBlocked && m >= currentMin) {
-      freeSlots.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
-    }
+    if (isBlocked || m < currentMin) continue;
+
+    // Check if minimum duration fits before shift end
+    if (m + minDuration > shiftEndMin) continue;
+
+    // Check if minimum duration + break fits before next blocked range
+    const nextBlock = blockedRanges
+      .filter(b => b.start > m)
+      .sort((a, b) => a.start - b.start)[0];
+    if (nextBlock && m + minDuration + config.breakMinutes > nextBlock.start) continue;
+
+    freeSlots.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
   }
 
   return freeSlots;

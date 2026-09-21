@@ -290,7 +290,7 @@ async function checkAvailability(input: Record<string, unknown>): Promise<string
   const girlId = Number(input.girlId);
   const date = String(input.date);
 
-  // 1. Get shift using the same query as the calendar
+  // Check if girl is working
   const calendarGirls = await getCalendarGirls(date);
   const girl = calendarGirls.find((g) => g.id === girlId);
 
@@ -298,75 +298,13 @@ async function checkAvailability(input: Record<string, unknown>): Promise<string
     return JSON.stringify({ available: false, reason: 'Divka v tento den nepracuje.' });
   }
 
-  // Per-girl booking config (Emily etc.)
-  const configResult = await db.execute({
-    sql: 'SELECT booking_start_offset, booking_break_minutes FROM girls WHERE id = ? LIMIT 1',
-    args: [girlId],
-  });
-  const configRow = configResult.rows[0];
-  const startOffset = configRow?.booking_start_offset ? Number(configRow.booking_start_offset) : 0;
-  const breakMin = configRow?.booking_break_minutes ? Number(configRow.booking_break_minutes) : 10;
-
-  const shiftStart = girl.shiftStart;
-  const shiftEnd = girl.shiftEnd;
-
-  // 2. Get existing bookings
-  const bookingsResult = await db.execute({
-    sql: `SELECT start_time, end_time FROM bookings_v2
-          WHERE girl_id = ? AND date = ?
-            AND status NOT IN ('cancelled_client', 'cancelled_girl', 'declined', 'expired')`,
-    args: [girlId, date],
-  });
-
-  // 3. Get active drafts
-  const draftsResult = await db.execute({
-    sql: `SELECT start_time, end_time FROM booking_drafts
-          WHERE girl_id = ? AND date = ? AND is_converted = 0
-            AND expires_at > datetime('now')`,
-    args: [girlId, date],
-  });
-
-  // 4. Get slot locks
-  const locksResult = await db.execute({
-    sql: `SELECT start_time, end_time FROM slot_locks
-          WHERE girl_id = ? AND date = ? AND expires_at > datetime('now')`,
-    args: [girlId, date],
-  });
-
-  // Build occupied set (in minutes from 00:00)
-  const occupied = new Set<number>();
-  const allBlocked = [
-    ...bookingsResult.rows,
-    ...draftsResult.rows,
-    ...locksResult.rows,
-  ];
-
-  for (const row of allBlocked) {
-    const [sh, sm] = String(row.start_time).substring(0, 5).split(':').map(Number);
-    const [eh, em] = String(row.end_time).substring(0, 5).split(':').map(Number);
-    // Add break buffer after each booking
-    for (let m = sh * 60 + sm; m < eh * 60 + em + breakMin; m += 30) {
-      occupied.add(m);
-    }
-  }
-
-  // Generate free 30min slots
-  const [startH, startM] = shiftStart.split(':').map(Number);
-  const [endH, endM] = shiftEnd.split(':').map(Number);
-  const shiftStartMin = startH * 60 + startM + startOffset; // Apply booking_start_offset
-  const shiftEndMin = endH * 60 + endM;
-
-  const freeSlots: string[] = [];
-  for (let m = shiftStartMin; m < shiftEndMin; m += 30) {
-    if (!occupied.has(m)) {
-      freeSlots.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
-    }
-  }
+  // Get free slots using shared logic (bookings, drafts, locks, per-girl config, min duration)
+  const freeSlots = await getAvailableSlots(girlId, date);
 
   return JSON.stringify({
     available: freeSlots.length > 0,
     date,
-    shift: `${shiftStart}-${shiftEnd}`,
+    shift: `${girl.shiftStart}-${girl.shiftEnd}`,
     freeSlots,
     count: freeSlots.length,
   });
