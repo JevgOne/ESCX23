@@ -1177,8 +1177,8 @@ export async function getAvailableSlots(girlId: number, date: string): Promise<s
     const isBlocked = blockedRanges.some(b => m < b.end + config.breakMinutes && m + 30 > b.start - config.breakMinutes);
     if (isBlocked || m < currentMin) continue;
 
-    // Check if minimum duration fits before shift end
-    if (m + minDuration > shiftEndMin) continue;
+    // Check if minimum duration fits before shift end (+30min overflow tolerance)
+    if (m + minDuration > shiftEndMin + 30) continue;
 
     // Check if minimum duration + break fits before next blocked range
     const nextBlock = blockedRanges
