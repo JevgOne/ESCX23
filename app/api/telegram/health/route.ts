@@ -81,6 +81,37 @@ export async function GET() {
     }));
   } catch { /* OK */ }
 
+  // 10. Diagnostics: ICS bookings count
+  let icsBookingsCount = 0;
+  try {
+    const icsRes = await db.execute("SELECT COUNT(*) AS c FROM bookings_v2 WHERE source IN ('ics_import', 'gcal_import')");
+    icsBookingsCount = Number(icsRes.rows[0]?.c ?? 0);
+  } catch { /* OK */ }
+
+  // 11. Diagnostics: Emily Tuesday bookings
+  let emilyTuesday: Array<{ date: string; start_time: string; end_time: string; source: string }> = [];
+  try {
+    const emilyRes = await db.execute(`
+      SELECT b.date, b.start_time, b.end_time, b.source
+      FROM bookings_v2 b
+      WHERE b.girl_id = 28 AND b.date = '2026-09-22'
+      ORDER BY b.start_time
+    `);
+    emilyTuesday = emilyRes.rows.map((r) => ({
+      date: String(r.date),
+      start_time: String(r.start_time),
+      end_time: String(r.end_time),
+      source: String(r.source),
+    }));
+  } catch { /* OK */ }
+
+  // 12. Diagnostics: total bookings count
+  let totalBookingsCount = 0;
+  try {
+    const totalRes = await db.execute('SELECT COUNT(*) AS c FROM bookings_v2');
+    totalBookingsCount = Number(totalRes.rows[0]?.c ?? 0);
+  } catch { /* OK */ }
+
   const hasError = Object.values(checks).some(
     (v) => v === 'MISSING' || v.startsWith('error'),
   );
@@ -94,6 +125,9 @@ export async function GET() {
         activeGirlsCount,
         sundaySchedules_dow6: sundaySchedules,
         dowDistribution,
+        icsBookingsCount,
+        emilyTuesday,
+        totalBookingsCount,
       },
     },
     { status: hasError ? 503 : 200 },
