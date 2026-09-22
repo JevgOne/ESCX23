@@ -953,6 +953,24 @@ async function runMigrations(client: Client) {
     console.error('[db] ICS reimport error:', e);
   }
 
+  // Clear corrupt chat history — old messages with consecutive assistant roles crash the bot
+  try {
+    const clearDone = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = ?`,
+      args: ['clear_corrupt_chat_history'],
+    });
+    if (clearDone.rows.length === 0) {
+      await client.execute(`DELETE FROM telegram_messages`);
+      await client.execute({
+        sql: `INSERT INTO _migrations (name) VALUES (?)`,
+        args: ['clear_corrupt_chat_history'],
+      });
+      console.log('[db] Cleared corrupt telegram_messages history');
+    }
+  } catch (e) {
+    console.error('[db] clear_corrupt_chat_history error:', e);
+  }
+
   // Recalculate total_visits for all clients based on actual completed/confirmed bookings
   try {
     const recalcDone = await client.execute({
