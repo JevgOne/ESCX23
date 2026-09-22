@@ -72,8 +72,16 @@ async function loadHistory(chatId: string): Promise<ApiMessage[]> {
       };
       // Merge with previous assistant message if consecutive tool_use
       const prev = messages[messages.length - 1];
-      if (prev && prev.role === 'assistant' && Array.isArray(prev.content)) {
-        (prev.content as Anthropic.ContentBlockParam[]).push(toolBlock);
+      if (prev && prev.role === 'assistant') {
+        if (Array.isArray(prev.content)) {
+          (prev.content as Anthropic.ContentBlockParam[]).push(toolBlock);
+        } else {
+          // Convert string content to array format, then append tool_use
+          prev.content = [
+            { type: 'text' as const, text: String(prev.content) },
+            toolBlock,
+          ];
+        }
       } else {
         messages.push({ role: 'assistant', content: [toolBlock] });
       }
@@ -85,8 +93,15 @@ async function loadHistory(chatId: string): Promise<ApiMessage[]> {
       };
       // Merge with previous user message if consecutive tool_result
       const prev = messages[messages.length - 1];
-      if (prev && prev.role === 'user' && Array.isArray(prev.content)) {
-        (prev.content as Anthropic.ToolResultBlockParam[]).push(resultBlock);
+      if (prev && prev.role === 'user') {
+        if (Array.isArray(prev.content)) {
+          (prev.content as Anthropic.ToolResultBlockParam[]).push(resultBlock);
+        } else {
+          prev.content = [
+            { type: 'text' as const, text: String(prev.content) },
+            resultBlock,
+          ];
+        }
       } else {
         messages.push({ role: 'user', content: [resultBlock] });
       }
