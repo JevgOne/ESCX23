@@ -971,6 +971,24 @@ async function runMigrations(client: Client) {
     console.error('[db] clear_corrupt_chat_history error:', e);
   }
 
+  // Clear corrupt chat history v2 — new corrupt data created between v1 cleanup and loadHistory fix deploy
+  try {
+    const clearV2 = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = ?`,
+      args: ['clear_corrupt_chat_history_v2'],
+    });
+    if (clearV2.rows.length === 0) {
+      await client.execute(`DELETE FROM telegram_messages`);
+      await client.execute({
+        sql: `INSERT INTO _migrations (name) VALUES (?)`,
+        args: ['clear_corrupt_chat_history_v2'],
+      });
+      console.log('[db] Cleared corrupt telegram_messages history (v2)');
+    }
+  } catch (e) {
+    console.error('[db] clear_corrupt_chat_history_v2 error:', e);
+  }
+
   // Recalculate total_visits for all clients based on actual completed/confirmed bookings
   try {
     const recalcDone = await client.execute({
