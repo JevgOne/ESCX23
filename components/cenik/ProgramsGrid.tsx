@@ -38,7 +38,7 @@ const BOOK_TEXT: Record<string, (title: string, duration: number, min: string) =
 
 // Approximate, cash-desk style conversion — the CZK price is the one that counts,
 // EUR is shown rounded as a courtesy for visitors paying in euros (see PricingNotes).
-const CZK_PER_EUR = 25;
+const CZK_PER_EUR = 22;
 function toEur(czk: number): number {
   return Math.round(czk / CZK_PER_EUR / 5) * 5;
 }
