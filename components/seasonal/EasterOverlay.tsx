@@ -139,7 +139,14 @@ body[data-season="easter"] .girl-card:hover {
 }
 `;
 
-export default async function EasterOverlay() {
+const BANNER_TEXT: Record<string, string> = {
+  cs: 'Veselé Velikonoce',
+  en: 'Happy Easter',
+  de: 'Frohe Ostern',
+  uk: 'Щасливого Великодня',
+};
+
+export default async function EasterOverlay({ locale = 'cs' }: { locale?: string }) {
   const theme = await getActiveTheme();
   if (theme !== 'easter') return null;
 
@@ -159,7 +166,7 @@ export default async function EasterOverlay() {
         letterSpacing: 2,
       }}>
         <span style={{ fontSize: 16, verticalAlign: 'middle' }}>&#x1F430;</span>
-        {' '}Happy Easter{' '}
+        {' '}{BANNER_TEXT[locale] || BANNER_TEXT.en}{' '}
         <span style={{ fontSize: 16, verticalAlign: 'middle' }}>&#x1F430;</span>
       </div>
 

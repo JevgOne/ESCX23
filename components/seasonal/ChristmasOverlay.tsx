@@ -152,7 +152,14 @@ body[data-season="christmas"] .girl-card:hover {
 }
 `;
 
-export default async function ChristmasOverlay() {
+const BANNER_TEXT: Record<string, string> = {
+  cs: 'Veselé Vánoce',
+  en: 'Merry Christmas',
+  de: 'Frohe Weihnachten',
+  uk: 'Щасливого Різдва',
+};
+
+export default async function ChristmasOverlay({ locale = 'cs' }: { locale?: string }) {
   const theme = await getActiveTheme();
   if (theme !== 'christmas') return null;
 
@@ -172,7 +179,7 @@ export default async function ChristmasOverlay() {
         letterSpacing: 2,
       }}>
         <span style={{ fontSize: 16, verticalAlign: 'middle' }}>&#x2B50;</span>
-        {' '}Merry Christmas{' '}
+        {' '}{BANNER_TEXT[locale] || BANNER_TEXT.en}{' '}
         <span style={{ fontSize: 16, verticalAlign: 'middle' }}>&#x2B50;</span>
       </div>
 

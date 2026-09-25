@@ -146,7 +146,14 @@ body[data-season="valentine"] .girl-card:hover {
 }
 `;
 
-export default async function ValentineOverlay() {
+const BANNER_TEXT: Record<string, string> = {
+  cs: 'Šťastný Valentýn',
+  en: 'Happy Valentine\'s Day',
+  de: 'Frohen Valentinstag',
+  uk: 'З Днем Валентина',
+};
+
+export default async function ValentineOverlay({ locale = 'cs' }: { locale?: string }) {
   const theme = await getActiveTheme();
   if (theme !== 'valentine') return null;
 
@@ -166,7 +173,7 @@ export default async function ValentineOverlay() {
         letterSpacing: 2,
       }}>
         <span style={{ fontSize: 16, verticalAlign: 'middle' }}>&#x1F495;</span>
-        {' '}Happy Valentine&#39;s Day{' '}
+        {' '}{BANNER_TEXT[locale] || BANNER_TEXT.en}{' '}
         <span style={{ fontSize: 16, verticalAlign: 'middle' }}>&#x1F495;</span>
       </div>
 

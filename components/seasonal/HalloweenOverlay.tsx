@@ -135,7 +135,14 @@ body[data-season="halloween"] .girl-card:hover {
 }
 `;
 
-export default async function HalloweenOverlay() {
+const BANNER_TEXT: Record<string, string> = {
+  cs: 'Šťastný Halloween',
+  en: 'Happy Halloween',
+  de: 'Happy Halloween',
+  uk: 'Щасливого Хелловіну',
+};
+
+export default async function HalloweenOverlay({ locale = 'cs' }: { locale?: string }) {
   const theme = await getActiveTheme();
   if (theme !== 'halloween') return null;
 
@@ -155,7 +162,7 @@ export default async function HalloweenOverlay() {
         letterSpacing: 2,
       }}>
         <span style={{ fontSize: 16, verticalAlign: 'middle' }}>&#x1F383;</span>
-        {' '}Happy Halloween{' '}
+        {' '}{BANNER_TEXT[locale] || BANNER_TEXT.en}{' '}
         <span style={{ fontSize: 16, verticalAlign: 'middle' }}>&#x1F383;</span>
       </div>
 

@@ -143,11 +143,11 @@ export default async function LocaleLayout({
           {!isProtectedArea && <AgeGate />}
           {!isProtectedArea && isNightHours && <NightPriceBanner locale={locale} />}
           {/* Seasonal decorations — conditional render based on active theme */}
-          <HalloweenOverlay />
-          <ChristmasOverlay />
-          <NewYearOverlay />
-          <ValentineOverlay />
-          <EasterOverlay />
+          <HalloweenOverlay locale={locale} />
+          <ChristmasOverlay locale={locale} />
+          <NewYearOverlay locale={locale} />
+          <ValentineOverlay locale={locale} />
+          <EasterOverlay locale={locale} />
           <SiteHeader locale={locale} />
           {children}
           <SiteFooter />

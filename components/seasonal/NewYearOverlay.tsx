@@ -145,7 +145,14 @@ body[data-season="newyear"] .girl-card:hover {
 }
 `;
 
-export default async function NewYearOverlay() {
+const BANNER_TEXT: Record<string, string> = {
+  cs: 'Šťastný Nový Rok',
+  en: 'Happy New Year',
+  de: 'Frohes Neues Jahr',
+  uk: 'З Новим Роком',
+};
+
+export default async function NewYearOverlay({ locale = 'cs' }: { locale?: string }) {
   const theme = await getActiveTheme();
   if (theme !== 'newyear') return null;
 
@@ -165,7 +172,7 @@ export default async function NewYearOverlay() {
         letterSpacing: 2,
       }}>
         <span style={{ fontSize: 16, verticalAlign: 'middle' }}>&#x2728;</span>
-        {' '}Happy New Year{' '}
+        {' '}{BANNER_TEXT[locale] || BANNER_TEXT.en}{' '}
         <span style={{ fontSize: 16, verticalAlign: 'middle' }}>&#x2728;</span>
       </div>
 
