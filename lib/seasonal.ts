@@ -18,8 +18,8 @@ export interface SeasonalConfig {
 
 export const SEASONS: SeasonalConfig[] = [
   { theme: 'halloween',  autoStart: '10-20', autoEnd: '11-02', label: 'Halloween',  emoji: '🎃' },
-  { theme: 'christmas',  autoStart: '12-10', autoEnd: '01-06', label: 'Vánoce',     emoji: '🎄' },
   { theme: 'newyear',    autoStart: '12-28', autoEnd: '01-03', label: 'Silvestr',    emoji: '🎆' },
+  { theme: 'christmas',  autoStart: '12-17', autoEnd: '12-27', label: 'Vánoce',     emoji: '🎄' },
   { theme: 'valentine',  autoStart: '02-10', autoEnd: '02-16', label: 'Valentýn',    emoji: '💕' },
 ];
 

@@ -13,6 +13,8 @@ import MobileBottomBar from '@/components/layout/MobileBottomBar';
 import AgeGate from '@/components/AgeGate';
 import NightPriceBanner from '@/components/NightPriceBanner';
 import HalloweenOverlay from '@/components/seasonal/HalloweenOverlay';
+import ChristmasOverlay from '@/components/seasonal/ChristmasOverlay';
+import NewYearOverlay from '@/components/seasonal/NewYearOverlay';
 import { getActiveTheme } from '@/lib/seasonal';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import AhrefsAnalytics from '@/components/AhrefsAnalytics';
@@ -140,6 +142,8 @@ export default async function LocaleLayout({
           {!isProtectedArea && isNightHours && <NightPriceBanner locale={locale} />}
           {/* Seasonal decorations — conditional render based on active theme */}
           <HalloweenOverlay />
+          <ChristmasOverlay />
+          <NewYearOverlay />
           <SiteHeader locale={locale} />
           {children}
           <SiteFooter />
