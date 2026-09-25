@@ -110,7 +110,7 @@ body[data-season="christmas"] .girl-card:hover {
   100% { transform: translateY(105vh) translateX(-10px); opacity: 0; }
 }
 
-/* ── Tree glow ── */
+/* ── Tree glow + sway ── */
 @keyframes xmas-tree-glow {
   0%, 100% {
     filter: drop-shadow(0 0 15px rgba(220,180,50,0.3)) drop-shadow(0 0 30px rgba(200,50,50,0.15));
@@ -118,6 +118,23 @@ body[data-season="christmas"] .girl-card:hover {
   50% {
     filter: drop-shadow(0 0 25px rgba(220,180,50,0.5)) drop-shadow(0 0 50px rgba(200,50,50,0.25));
   }
+}
+@keyframes xmas-tree-sway {
+  0%, 70% { transform: rotate(0deg); }
+  75% { transform: rotate(-4deg); }
+  80% { transform: rotate(3deg); }
+  85% { transform: rotate(-2deg); }
+  90% { transform: rotate(1deg); }
+  95%, 100% { transform: rotate(0deg); }
+}
+
+/* ── Present bounce ── */
+@keyframes xmas-present-bounce {
+  0%, 80% { transform: scale(1) rotate(0deg); }
+  84% { transform: scale(1.15) rotate(-6deg); }
+  88% { transform: scale(0.95) rotate(4deg); }
+  92% { transform: scale(1.08) rotate(-2deg); }
+  96%, 100% { transform: scale(1) rotate(0deg); }
 }
 
 /* ── Star twinkle ── */
@@ -170,7 +187,7 @@ export default async function ChristmasOverlay() {
           fontSize: 100,
           lineHeight: 1,
           pointerEvents: 'none',
-          animation: 'xmas-tree-glow 5s ease-in-out infinite',
+          animation: 'xmas-tree-glow 5s ease-in-out infinite, xmas-tree-sway 7s ease-in-out infinite',
         }}>&#x1F384;</div>
 
         {/* ── Star on top of tree ── */}
@@ -194,6 +211,7 @@ export default async function ChristmasOverlay() {
           lineHeight: 1,
           pointerEvents: 'none',
           filter: 'drop-shadow(0 0 6px rgba(200,50,50,0.3))',
+          animation: 'xmas-present-bounce 6s ease-in-out infinite',
         }}>&#x1F381;</div>
 
         {/* ── Falling snowflakes ── */}

@@ -63,6 +63,25 @@ body[data-season="halloween"] .girl-card:hover {
   100% { transform: translate(110vw, 50vh); }
 }
 
+/* ── Pumpkin wobble ── */
+@keyframes hw-pumpkin-wobble {
+  0%, 70% { transform: rotate(0deg); }
+  75% { transform: rotate(-5deg); }
+  80% { transform: rotate(4deg); }
+  85% { transform: rotate(-3deg); }
+  90% { transform: rotate(1deg); }
+  95%, 100% { transform: rotate(0deg); }
+}
+
+/* ── Candle sway ── */
+@keyframes hw-candle-sway {
+  0%, 80% { transform: rotate(0deg); }
+  84% { transform: rotate(-3deg); }
+  88% { transform: rotate(2deg); }
+  92% { transform: rotate(-1deg); }
+  96%, 100% { transform: rotate(0deg); }
+}
+
 @keyframes hw-glow-pulse {
   0%, 100% {
     filter: drop-shadow(0 0 12px rgba(255,130,0,0.5)) drop-shadow(0 0 25px rgba(255,100,0,0.2));
@@ -158,7 +177,7 @@ export default async function HalloweenOverlay() {
             width: 140,
             height: 140,
             pointerEvents: 'none',
-            animation: 'hw-glow-pulse 4s ease-in-out infinite',
+            animation: 'hw-glow-pulse 4s ease-in-out infinite, hw-pumpkin-wobble 6s ease-in-out infinite',
           }}
         />
 
@@ -166,17 +185,17 @@ export default async function HalloweenOverlay() {
         {/* Tall candle */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="hw-candle-1" src="/seasonal/candle.png" alt="" width={45} height={110}
-          style={{ position: 'absolute', bottom: 8, left: 20, width: 45, height: 110, pointerEvents: 'none', animation: 'hw-candle-flicker 3s ease-in-out infinite' }}
+          style={{ position: 'absolute', bottom: 8, left: 20, width: 45, height: 110, pointerEvents: 'none', animation: 'hw-candle-flicker 3s ease-in-out infinite, hw-candle-sway 5s ease-in-out infinite' }}
         />
         {/* Medium candle */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="hw-candle-2" src="/seasonal/candle.png" alt="" width={35} height={75}
-          style={{ position: 'absolute', bottom: 8, left: 112, width: 35, height: 75, pointerEvents: 'none', opacity: 0.8, animation: 'hw-candle-flicker 3s ease-in-out infinite 1.5s' }}
+          style={{ position: 'absolute', bottom: 8, left: 112, width: 35, height: 75, pointerEvents: 'none', opacity: 0.8, animation: 'hw-candle-flicker 3s ease-in-out infinite 1.5s, hw-candle-sway 5s ease-in-out infinite 1s' }}
         />
         {/* Small candle */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="hw-candle-3" src="/seasonal/candle.png" alt="" width={25} height={50}
-          style={{ position: 'absolute', bottom: 8, left: 152, width: 25, height: 50, pointerEvents: 'none', opacity: 0.6, animation: 'hw-candle-flicker 3s ease-in-out infinite 0.7s' }}
+          style={{ position: 'absolute', bottom: 8, left: 152, width: 25, height: 50, pointerEvents: 'none', opacity: 0.6, animation: 'hw-candle-flicker 3s ease-in-out infinite 0.7s, hw-candle-sway 5s ease-in-out infinite 2s' }}
         />
 
         {/* Bats */}
