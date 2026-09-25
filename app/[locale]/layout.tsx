@@ -15,6 +15,8 @@ import NightPriceBanner from '@/components/NightPriceBanner';
 import HalloweenOverlay from '@/components/seasonal/HalloweenOverlay';
 import ChristmasOverlay from '@/components/seasonal/ChristmasOverlay';
 import NewYearOverlay from '@/components/seasonal/NewYearOverlay';
+import ValentineOverlay from '@/components/seasonal/ValentineOverlay';
+import EasterOverlay from '@/components/seasonal/EasterOverlay';
 import { getActiveTheme } from '@/lib/seasonal';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import AhrefsAnalytics from '@/components/AhrefsAnalytics';
@@ -144,6 +146,8 @@ export default async function LocaleLayout({
           <HalloweenOverlay />
           <ChristmasOverlay />
           <NewYearOverlay />
+          <ValentineOverlay />
+          <EasterOverlay />
           <SiteHeader locale={locale} />
           {children}
           <SiteFooter />

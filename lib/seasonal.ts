@@ -6,7 +6,7 @@
 
 import { db } from './db';
 
-export type SeasonalTheme = 'none' | 'halloween' | 'christmas' | 'valentine' | 'newyear';
+export type SeasonalTheme = 'none' | 'halloween' | 'christmas' | 'valentine' | 'newyear' | 'easter';
 
 export interface SeasonalConfig {
   theme: SeasonalTheme;
@@ -20,7 +20,8 @@ export const SEASONS: SeasonalConfig[] = [
   { theme: 'halloween',  autoStart: '10-20', autoEnd: '11-02', label: 'Halloween',  emoji: '🎃' },
   { theme: 'newyear',    autoStart: '12-28', autoEnd: '01-03', label: 'Silvestr',    emoji: '🎆' },
   { theme: 'christmas',  autoStart: '12-17', autoEnd: '12-27', label: 'Vánoce',     emoji: '🎄' },
-  { theme: 'valentine',  autoStart: '02-10', autoEnd: '02-16', label: 'Valentýn',    emoji: '💕' },
+  { theme: 'valentine',  autoStart: '02-11', autoEnd: '02-15', label: 'Valentýn',    emoji: '💕' },
+  { theme: 'easter',     autoStart: '04-10', autoEnd: '04-21', label: 'Velikonoce', emoji: '🐰' },
 ];
 
 // ---------------------------------------------------------------------------
