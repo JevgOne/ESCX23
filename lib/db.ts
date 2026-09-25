@@ -1058,6 +1058,88 @@ async function runMigrations(client: Client) {
       )
     `);
   } catch { /* OK */ }
+
+  // Client contacts — multi-channel identity (TASK-020)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS client_contacts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL,
+        channel TEXT NOT NULL CHECK(channel IN ('phone', 'whatsapp', 'telegram', 'email')),
+        value_encrypted TEXT,
+        value_hmac TEXT,
+        label TEXT,
+        is_primary INTEGER DEFAULT 0,
+        telegram_username TEXT,
+        verified INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES booking_clients(id) ON DELETE CASCADE
+      )
+    `);
+  } catch { /* OK */ }
+
+  try {
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_cc_client ON client_contacts(client_id)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_cc_hmac ON client_contacts(value_hmac)');
+    await client.execute('CREATE INDEX IF NOT EXISTS idx_cc_channel ON client_contacts(channel)');
+  } catch { /* OK */ }
+
+  // Migrate existing contacts from booking_clients → client_contacts (one-time)
+  try {
+    const ccMigrated = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = ?`,
+      args: ['client_contacts_migration'],
+    });
+    if (ccMigrated.rows.length === 0) {
+      // Phone → client_contacts
+      await client.execute(`
+        INSERT INTO client_contacts (client_id, channel, value_encrypted, value_hmac, is_primary, verified)
+        SELECT id, 'phone', phone_encrypted, phone_hmac, 1, 1
+        FROM booking_clients
+        WHERE phone_encrypted IS NOT NULL
+      `);
+
+      // Email → client_contacts
+      await client.execute(`
+        INSERT INTO client_contacts (client_id, channel, value_encrypted, is_primary)
+        SELECT id, 'email', email_encrypted, 1
+        FROM booking_clients
+        WHERE email_encrypted IS NOT NULL
+      `);
+
+      // Telegram → client_contacts (with telegram_users data)
+      await client.execute(`
+        INSERT INTO client_contacts (client_id, channel, value_encrypted, telegram_username, is_primary, verified)
+        SELECT bc.id, 'telegram', bc.telegram_id, tu.telegram_name, 1,
+          CASE WHEN tu.is_active = 1 THEN 1 ELSE 0 END
+        FROM booking_clients bc
+        LEFT JOIN telegram_users tu ON tu.client_id = bc.id
+        WHERE bc.telegram_id IS NOT NULL
+      `);
+
+      await client.execute({
+        sql: `INSERT INTO _migrations (name) VALUES (?)`,
+        args: ['client_contacts_migration'],
+      });
+      console.log('[db] Migrated existing contacts to client_contacts table');
+    }
+  } catch (e) {
+    console.error('[db] client_contacts migration error:', e);
+  }
+
+  // Site settings (key-value store for admin config, seasonal themes, etc.)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS site_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.execute(
+      "INSERT OR IGNORE INTO site_settings (key, value) VALUES ('seasonal_theme', 'auto')"
+    );
+  } catch { /* OK */ }
 }
 
 // Fire and forget on startup

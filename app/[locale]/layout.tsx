@@ -12,6 +12,8 @@ import SiteFooter from '@/components/layout/SiteFooter';
 import MobileBottomBar from '@/components/layout/MobileBottomBar';
 import AgeGate from '@/components/AgeGate';
 import NightPriceBanner from '@/components/NightPriceBanner';
+import HalloweenOverlay from '@/components/seasonal/HalloweenOverlay';
+import { getActiveTheme } from '@/lib/seasonal';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import AhrefsAnalytics from '@/components/AhrefsAnalytics';
 import { Suspense } from 'react';
@@ -120,6 +122,8 @@ export default async function LocaleLayout({
   ).getHours();
   const isNightHours = pragueHour >= 23 || pragueHour < 7;
 
+  const seasonalTheme = await getActiveTheme();
+
   return (
     <html lang={locale} className={`${inter.variable} ${playfair.variable}`}>
       <head>
@@ -127,13 +131,15 @@ export default async function LocaleLayout({
         <link rel="dns-prefetch" href="https://qktyf1ozcve7804i.public.blob.vercel-storage.com" />
         {!isProtectedArea && <AhrefsAnalytics />}
       </head>
-      <body>
+      <body data-season={seasonalTheme !== 'none' ? seasonalTheme : undefined}>
         <Suspense fallback={null}>
           <GoogleAnalytics />
         </Suspense>
         <NextIntlClientProvider>
           {!isProtectedArea && <AgeGate />}
           {!isProtectedArea && isNightHours && <NightPriceBanner locale={locale} />}
+          {/* Seasonal decorations — conditional render based on active theme */}
+          <HalloweenOverlay />
           <SiteHeader locale={locale} />
           {children}
           <SiteFooter />
