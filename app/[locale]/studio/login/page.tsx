@@ -18,22 +18,39 @@ export default async function StudioLoginPage({
   return (
     <div className="login-page">
       <div className="login-card">
-        <h1>Studio přihlášení</h1>
+        <div className="login-card-brand">
+          <div className="login-card-logo">SF</div>
+          <span className="login-card-tag">STUDIOFLOW</span>
+        </div>
+        <h1>Přihlášení</h1>
+        <p className="login-card-sub">Interní systém pro členky studia</p>
+
         {error === 'invalid' && (
           <p className="login-error">Nesprávný email nebo heslo.</p>
         )}
         {error === 'ratelimit' && (
           <p className="login-error">Příliš mnoho pokusů. Zkuste to za 15 minut.</p>
         )}
+
         <form action={loginGirl}>
-          <input name="email" type="email" required placeholder="Email" autoComplete="email" />
-          <input name="password" type="password" required placeholder="Heslo" autoComplete="current-password" />
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', margin: '4px 0' }}>
-            <input type="checkbox" name="remember" style={{ accentColor: '#f27d8d', width: '16px', height: '16px', cursor: 'pointer' }} />
+          <div className="login-card-field">
+            <label htmlFor="email">EMAIL</label>
+            <input id="email" name="email" type="email" required placeholder="vas@email.cz" autoComplete="email" />
+          </div>
+          <div className="login-card-field">
+            <label htmlFor="password">HESLO</label>
+            <input id="password" name="password" type="password" required placeholder="••••••••" autoComplete="current-password" />
+          </div>
+          <label className="login-card-remember">
+            <input type="checkbox" name="remember" />
             <span>Zapamatovat si mě (7 dní)</span>
           </label>
-          <button type="submit" className="btn-pink">Přihlásit</button>
+          <button type="submit" className="login-card-submit">Přihlásit se</button>
         </form>
+
+        <div className="login-card-foot">
+          Pouze pro autorizovaný personál
+        </div>
       </div>
     </div>
   );
