@@ -2,6 +2,7 @@
 
 import { db } from './db';
 import { requireBooking } from './auth';
+import { safeEncrypt } from './crypto';
 
 const BREAK_MINUTES = 10; // 10-min break between bookings
 
@@ -370,14 +371,14 @@ export async function createBooking(input: CreateBookingInput): Promise<{ id: nu
       INSERT INTO bookings_v2 (
         client_id, girl_id, location_id, date, start_time, end_time,
         duration_minutes, price, points_earned, status, channel,
-        source, notes, created_by, created_at, updated_at
+        source, notes_encrypted, created_by, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, 'manual', ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `,
     args: [
       input.clientId, input.girlId, locationId, input.date,
       input.startTime, endTime, input.durationMinutes,
       price, points, input.channel,
-      input.notes ?? null, user.id,
+      safeEncrypt(input.notes ?? null), user.id,
     ],
   });
 
@@ -482,14 +483,14 @@ export async function createBreak(input: {
       INSERT INTO bookings_v2 (
         client_id, girl_id, location_id, date, start_time, end_time,
         duration_minutes, price, points_earned, status, channel,
-        source, booking_type, notes, created_by, created_at, updated_at
+        source, booking_type, notes_encrypted, created_by, created_at, updated_at
       ) VALUES (0, ?, ?, ?, ?, ?, ?, 0, 0, 'confirmed', 'admin', 'manual', 'break', ?, ?,
         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `,
     args: [
       input.girlId, locationId, input.date,
       input.startTime, endTime, input.durationMinutes,
-      input.notes ?? 'Pauza', user.id,
+      safeEncrypt(input.notes ?? 'Pauza'), user.id,
     ],
   });
 

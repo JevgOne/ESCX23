@@ -2,32 +2,66 @@ import { setRequestLocale } from 'next-intl/server';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import { getAllSchedulesGrouped } from '@/lib/queries';
 import { getActiveLocations } from '@/lib/queries';
+import { db } from '@/lib/db';
 import {
   addGirlSchedule,
   deleteGirlSchedule,
   deleteAllSchedules,
+  approveShiftRequest,
+  rejectShiftRequest,
+  bulkApproveShifts,
 } from '@/lib/admin-actions';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const DAY_NAMES = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'];
+const SHIFT_LABELS: Record<string, string> = {
+  morning: 'Ranní (10–16)',
+  afternoon: 'Odpolední (16:30–22:30)',
+  fullday: 'Celý den (10–22)',
+};
 
 export default async function AdminSchedulesPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ girl?: string; modal?: string; error?: string }>;
+  searchParams: Promise<{ girl?: string; modal?: string; error?: string; tab?: string }>;
 }) {
   const { locale } = await params;
-  const { girl: girlFilter, modal, error } = await searchParams;
+  const { girl: girlFilter, modal, error, tab } = await searchParams;
   setRequestLocale(locale);
 
-  const [allData, locations] = await Promise.all([
+  const [allData, locations, pendingRes] = await Promise.all([
     getAllSchedulesGrouped(),
     getActiveLocations(),
+    db.execute(`
+      SELECT sr.*, g.name AS girl_name, g.color AS girl_color, l.display_name AS location_name
+      FROM shift_requests sr
+      JOIN girls g ON g.id = sr.girl_id
+      LEFT JOIN locations l ON l.id = sr.location_id
+      WHERE sr.status = 'pending'
+      ORDER BY g.name, sr.week_start, sr.day_of_week
+    `),
   ]);
+
+  // Group pending requests by girl
+  const pendingByGirl = new Map<number, { name: string; color: string; requests: Array<{ id: number; dayOfWeek: number; weekStart: string; shiftType: string; locationName: string | null }> }>();
+  for (const r of pendingRes.rows) {
+    const gid = Number(r.girl_id);
+    if (!pendingByGirl.has(gid)) {
+      pendingByGirl.set(gid, { name: String(r.girl_name), color: String(r.girl_color ?? ''), requests: [] });
+    }
+    pendingByGirl.get(gid)!.requests.push({
+      id: Number(r.id),
+      dayOfWeek: Number(r.day_of_week),
+      weekStart: String(r.week_start),
+      shiftType: String(r.shift_type),
+      locationName: r.location_name ? String(r.location_name) : null,
+    });
+  }
+  const pendingCount = pendingRes.rows.length;
 
   const withSchedule = allData.filter((d) => d.schedules.length > 0);
   const filtered = girlFilter
@@ -437,17 +471,132 @@ export default async function AdminSchedulesPage({
       `}} />
       <AdminTopbar title="Rozvrhy" />
 
-      {error === 'missing_girl' && (
+      {/* Tabs: Rozvrhy / Ke schválení */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <a
+          href={`/${locale}/admin/schedules`}
+          className={`admin-filter-pill${tab !== 'pending' ? ' active' : ''}`}
+        >
+          Rozvrhy
+        </a>
+        <a
+          href={`/${locale}/admin/schedules?tab=pending`}
+          className={`admin-filter-pill${tab === 'pending' ? ' active' : ''}`}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+        >
+          Ke schválení
+          {pendingCount > 0 && (
+            <span style={{
+              background: 'var(--color-coral)',
+              color: '#fff',
+              borderRadius: 999,
+              padding: '1px 7px',
+              fontSize: 11,
+              fontWeight: 700,
+              minWidth: 18,
+              textAlign: 'center',
+            }}>
+              {pendingCount}
+            </span>
+          )}
+        </a>
+      </div>
+
+      {/* Pending shift requests tab */}
+      {tab === 'pending' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {pendingByGirl.size === 0 ? (
+            <div className="sched-empty">
+              Žádné čekající žádosti o směny.
+            </div>
+          ) : (
+            Array.from(pendingByGirl.entries()).map(([girlId, girl]) => (
+              <div key={girlId} className="sched-card">
+                <div className="sched-card-head">
+                  <div className="sched-avatar" style={{ background: girl.color || 'var(--color-pink)' }}>
+                    <span>{girl.name.charAt(0)}</span>
+                  </div>
+                  <div className="sched-card-info">
+                    <div className="sched-card-name">{girl.name}</div>
+                    <div className="sched-card-meta">{girl.requests.length} čekajících směn</div>
+                  </div>
+                  <form action={bulkApproveShifts} style={{ display: 'inline' }}>
+                    <input type="hidden" name="girl_id" value={girlId} />
+                    <button type="submit" className="admin-btn-submit" style={{ fontSize: 12, padding: '6px 14px' }}>
+                      Schválit vše
+                    </button>
+                  </form>
+                </div>
+                <div style={{ padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {girl.requests.map(req => (
+                    <div key={req.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '10px 14px',
+                      background: 'var(--color-bg-elev)',
+                      borderRadius: 10,
+                      border: '1px solid var(--color-line)',
+                    }}>
+                      <span style={{
+                        minWidth: 36,
+                        height: 28,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 8,
+                        background: 'rgba(251,191,36,0.15)',
+                        color: '#fbbf24',
+                        fontSize: 11,
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                      }}>
+                        {DAY_NAMES[req.dayOfWeek]?.substring(0, 2)}
+                      </span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
+                          {SHIFT_LABELS[req.shiftType] ?? req.shiftType}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-dim)' }}>
+                          Týden od {req.weekStart}
+                          {req.locationName && ` · ${req.locationName}`}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <form action={approveShiftRequest}>
+                          <input type="hidden" name="request_id" value={req.id} />
+                          <button type="submit" className="admin-action-btn edit" style={{ fontSize: 11, padding: '4px 10px' }}>
+                            Schválit
+                          </button>
+                        </form>
+                        <form action={rejectShiftRequest}>
+                          <input type="hidden" name="request_id" value={req.id} />
+                          <button type="submit" className="admin-action-btn danger" style={{ fontSize: 11, padding: '4px 10px' }}>
+                            Zamítnout
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {tab !== 'pending' && error === 'missing_girl' && (
         <div style={{ padding: '10px 16px', marginBottom: 16, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#fca5a5', fontSize: 13 }}>
           Vyberte dívku před přidáním rozvrhu.
         </div>
       )}
-      {error === 'no_days' && (
+      {tab !== 'pending' && error === 'no_days' && (
         <div style={{ padding: '10px 16px', marginBottom: 16, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#fca5a5', fontSize: 13 }}>
           Vyberte alespoň jeden den.
         </div>
       )}
 
+      {tab !== 'pending' && (<>
       <div className="sched-header">
         <h2 className="sched-title">
           Pracovní doba dívek
@@ -788,6 +937,7 @@ export default async function AdminSchedulesPage({
           </form>
         </div>
       )}
+      </>)}
     </>
   );
 }

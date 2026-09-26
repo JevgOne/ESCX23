@@ -52,7 +52,62 @@ async function runMigrations(client: Client) {
     'ALTER TABLE girls ADD COLUMN booking_break_minutes INTEGER DEFAULT NULL',
     // Booking code — human-readable identifier (LG-YYYYMMDD-XXXX)
     'ALTER TABLE bookings_v2 ADD COLUMN booking_code TEXT',
+    // P0 encryption: booking_clients.telegram_id
+    'ALTER TABLE booking_clients ADD COLUMN telegram_id_encrypted TEXT',
+    'ALTER TABLE booking_clients ADD COLUMN telegram_id_hmac TEXT',
+    // P0 encryption: telegram_users
+    'ALTER TABLE telegram_users ADD COLUMN telegram_user_id_encrypted TEXT',
+    'ALTER TABLE telegram_users ADD COLUMN telegram_user_id_hmac TEXT',
+    'ALTER TABLE telegram_users ADD COLUMN telegram_name_encrypted TEXT',
+    'ALTER TABLE telegram_users ADD COLUMN chat_id_encrypted TEXT',
+    'ALTER TABLE telegram_users ADD COLUMN chat_id_hmac TEXT',
+    // P0 encryption: girl_applications contacts
+    'ALTER TABLE girl_applications ADD COLUMN phone_encrypted TEXT',
+    'ALTER TABLE girl_applications ADD COLUMN email_encrypted TEXT',
+    'ALTER TABLE girl_applications ADD COLUMN telegram_encrypted TEXT',
+    'ALTER TABLE girl_applications ADD COLUMN name_encrypted TEXT',
+    // P1 encryption: bookings_v2 notes
+    'ALTER TABLE bookings_v2 ADD COLUMN notes_encrypted TEXT',
+    'ALTER TABLE bookings_v2 ADD COLUMN girl_notes_encrypted TEXT',
+    // P1 encryption: telegram_messages content
+    'ALTER TABLE telegram_messages ADD COLUMN content_encrypted TEXT',
+    'ALTER TABLE telegram_messages ADD COLUMN content_hmac TEXT',
+    // P1 encryption: client_contacts.telegram_username
+    'ALTER TABLE client_contacts ADD COLUMN telegram_username_encrypted TEXT',
   ];
+
+  // Migrate shift_requests CHECK constraint to include 'activated' status
+  try {
+    await client.execute(`CREATE TABLE IF NOT EXISTS _migrations (name TEXT PRIMARY KEY)`);
+    const srDone = await client.execute({ sql: `SELECT 1 FROM _migrations WHERE name = 'shift_requests_activated' LIMIT 1`, args: [] });
+    if (srDone.rows.length === 0) {
+      // Recreate table with updated CHECK (preserving data)
+      await client.execute(`ALTER TABLE shift_requests RENAME TO shift_requests_old`);
+      await client.execute(`
+        CREATE TABLE shift_requests (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          girl_id INTEGER NOT NULL,
+          week_start TEXT NOT NULL,
+          day_of_week INTEGER NOT NULL,
+          shift_type TEXT NOT NULL CHECK (shift_type IN ('morning', 'afternoon', 'fullday')),
+          start_time TEXT NOT NULL,
+          end_time TEXT NOT NULL,
+          location_id INTEGER,
+          status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'activated')),
+          approved_by INTEGER,
+          approved_at DATETIME,
+          reject_reason TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (girl_id) REFERENCES girls(id),
+          FOREIGN KEY (approved_by) REFERENCES users(id),
+          UNIQUE(girl_id, week_start, day_of_week)
+        )
+      `);
+      await client.execute(`INSERT INTO shift_requests SELECT * FROM shift_requests_old`);
+      await client.execute(`DROP TABLE shift_requests_old`);
+      await client.execute({ sql: `INSERT INTO _migrations (name) VALUES (?)`, args: ['shift_requests_activated'] });
+    }
+  } catch { /* table may not exist yet */ }
 
   // One-time fix: clear future effective_from that hid schedules from public page
   try {
@@ -1127,6 +1182,50 @@ async function runMigrations(client: Client) {
     console.error('[db] client_contacts migration error:', e);
   }
 
+  // Shift requests (Studio PWA — girls pick shifts, admin approves)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS shift_requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        girl_id INTEGER NOT NULL,
+        week_start TEXT NOT NULL,
+        day_of_week INTEGER NOT NULL,
+        shift_type TEXT NOT NULL CHECK (shift_type IN ('morning', 'afternoon', 'fullday')),
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        location_id INTEGER,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'activated')),
+        approved_by INTEGER,
+        approved_at DATETIME,
+        reject_reason TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (girl_id) REFERENCES girls(id),
+        FOREIGN KEY (approved_by) REFERENCES users(id),
+        UNIQUE(girl_id, week_start, day_of_week)
+      )
+    `);
+  } catch { /* OK */ }
+
+  // Shift closures (cleaning checklist — girl closes shift after work)
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS shift_closures (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        girl_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        shift_type TEXT NOT NULL CHECK (shift_type IN ('morning', 'afternoon', 'fullday')),
+        status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed', 'penalty')),
+        checklist_json TEXT,
+        closed_at DATETIME,
+        penalty_amount INTEGER DEFAULT 0,
+        penalty_reason TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (girl_id) REFERENCES girls(id),
+        UNIQUE(girl_id, date, shift_type)
+      )
+    `);
+  } catch { /* OK */ }
+
   // Site settings (key-value store for admin config, seasonal themes, etc.)
   try {
     await client.execute(`
@@ -1140,6 +1239,147 @@ async function runMigrations(client: Client) {
       "INSERT OR IGNORE INTO site_settings (key, value) VALUES ('seasonal_theme', 'auto')"
     );
   } catch { /* OK */ }
+
+  // One-time encryption migration: encrypt existing plaintext PII
+  await migrateEncryption(client);
+}
+
+async function migrateEncryption(client: Client) {
+  // Only run if encryption key is configured
+  if (!process.env.BOOKING_ENCRYPTION_KEY && !process.env.ENCRYPTION_KEY) return;
+
+  try {
+    await client.execute(`CREATE TABLE IF NOT EXISTS _migrations (name TEXT PRIMARY KEY)`);
+  } catch { /* OK */ }
+
+  try {
+    const done = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = ?`,
+      args: ['encrypt_pii_p0'],
+    });
+    if (done.rows.length > 0) return;
+
+    // Dynamic import to avoid circular deps
+    const { encrypt, hashForSearch } = await import('./crypto');
+
+    // 1. booking_clients.telegram_id → telegram_id_encrypted + telegram_id_hmac
+    const bcRows = await client.execute(
+      `SELECT id, telegram_id FROM booking_clients WHERE telegram_id IS NOT NULL AND telegram_id_encrypted IS NULL`
+    );
+    for (const r of bcRows.rows) {
+      const tgId = String(r.telegram_id);
+      await client.execute({
+        sql: `UPDATE booking_clients SET telegram_id_encrypted = ?, telegram_id_hmac = ? WHERE id = ?`,
+        args: [encrypt(tgId), hashForSearch(tgId), Number(r.id)],
+      });
+    }
+
+    // 2. telegram_users — encrypt telegram_user_id, telegram_name, chat_id
+    const tuRows = await client.execute(
+      `SELECT id, telegram_user_id, telegram_name, chat_id FROM telegram_users WHERE telegram_user_id_encrypted IS NULL`
+    );
+    for (const r of tuRows.rows) {
+      const userId = String(r.telegram_user_id);
+      const name = r.telegram_name ? String(r.telegram_name) : null;
+      const chatId = r.chat_id ? String(r.chat_id) : null;
+      await client.execute({
+        sql: `UPDATE telegram_users SET
+                telegram_user_id_encrypted = ?, telegram_user_id_hmac = ?,
+                telegram_name_encrypted = ?,
+                chat_id_encrypted = ?, chat_id_hmac = ?
+              WHERE id = ?`,
+        args: [
+          encrypt(userId), hashForSearch(userId),
+          name ? encrypt(name) : null,
+          chatId ? encrypt(chatId) : null, chatId ? hashForSearch(chatId) : null,
+          Number(r.id),
+        ],
+      });
+    }
+
+    // 3. girl_applications — encrypt name, phone, email, telegram
+    const gaRows = await client.execute(
+      `SELECT id, name, phone, email, telegram FROM girl_applications WHERE phone_encrypted IS NULL AND phone IS NOT NULL`
+    );
+    for (const r of gaRows.rows) {
+      const name = r.name ? String(r.name) : null;
+      const phone = r.phone ? String(r.phone) : null;
+      const email = r.email ? String(r.email) : null;
+      const telegram = r.telegram ? String(r.telegram) : null;
+      await client.execute({
+        sql: `UPDATE girl_applications SET
+                name_encrypted = ?, phone_encrypted = ?, email_encrypted = ?, telegram_encrypted = ?
+              WHERE id = ?`,
+        args: [
+          name ? encrypt(name) : null,
+          phone ? encrypt(phone) : null,
+          email ? encrypt(email) : null,
+          telegram ? encrypt(telegram) : null,
+          Number(r.id),
+        ],
+      });
+    }
+
+    await client.execute({
+      sql: `INSERT INTO _migrations (name) VALUES (?)`,
+      args: ['encrypt_pii_p0'],
+    });
+    console.log('[db] Encrypted existing PII data (P0 migration)');
+  } catch (e) {
+    console.error('[db] PII encryption migration error:', e);
+  }
+
+  // --- P1 migration: bookings_v2 notes, telegram_messages content, client_contacts telegram_username ---
+  try {
+    const doneP1 = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = 'encrypt_pii_p1' LIMIT 1`,
+      args: [],
+    });
+    if (doneP1.rows.length > 0) return;
+
+    const { encrypt: enc } = await import('./crypto');
+
+    // 4. bookings_v2.notes → notes_encrypted
+    const bkRows = await client.execute(
+      `SELECT id, notes FROM bookings_v2 WHERE notes IS NOT NULL AND notes != '' AND notes_encrypted IS NULL`
+    );
+    for (const r of bkRows.rows) {
+      await client.execute({
+        sql: `UPDATE bookings_v2 SET notes_encrypted = ? WHERE id = ?`,
+        args: [enc(String(r.notes)), Number(r.id)],
+      });
+    }
+
+    // 5. telegram_messages.content → content_encrypted
+    const tmRows = await client.execute(
+      `SELECT id, content FROM telegram_messages WHERE content IS NOT NULL AND content != '' AND content_encrypted IS NULL LIMIT 500`
+    );
+    for (const r of tmRows.rows) {
+      await client.execute({
+        sql: `UPDATE telegram_messages SET content_encrypted = ? WHERE id = ?`,
+        args: [enc(String(r.content)), Number(r.id)],
+      });
+    }
+
+    // 6. client_contacts.telegram_username → telegram_username_encrypted
+    const ccRows = await client.execute(
+      `SELECT id, telegram_username FROM client_contacts WHERE telegram_username IS NOT NULL AND telegram_username_encrypted IS NULL`
+    );
+    for (const r of ccRows.rows) {
+      await client.execute({
+        sql: `UPDATE client_contacts SET telegram_username_encrypted = ? WHERE id = ?`,
+        args: [enc(String(r.telegram_username)), Number(r.id)],
+      });
+    }
+
+    await client.execute({
+      sql: `INSERT INTO _migrations (name) VALUES (?)`,
+      args: ['encrypt_pii_p1'],
+    });
+    console.log('[db] Encrypted existing PII data (P1 migration)');
+  } catch (e) {
+    console.error('[db] PII P1 encryption migration error:', e);
+  }
 }
 
 // Fire and forget on startup

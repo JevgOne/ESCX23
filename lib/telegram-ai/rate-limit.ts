@@ -1,4 +1,5 @@
 import { db } from '../db';
+import { hashForSearch } from '../crypto';
 
 const MAX_PER_MINUTE = 20;
 const MAX_PER_HOUR = 100;
@@ -60,10 +61,11 @@ export async function checkRateLimit(chatId: string): Promise<string | null> {
 export async function checkSpam(chatId: string, message: string): Promise<boolean> {
   try {
     const minuteAgo = new Date(Date.now() - 60_000).toISOString();
+    const msgHmac = hashForSearch(message);
     const result = await db.execute({
       sql: `SELECT COUNT(*) AS cnt FROM telegram_messages
-            WHERE chat_id = ? AND role = 'user' AND content = ? AND created_at >= ?`,
-      args: [chatId, message, minuteAgo],
+            WHERE chat_id = ? AND role = 'user' AND content_hmac = ? AND created_at >= ?`,
+      args: [chatId, msgHmac, minuteAgo],
     });
     return Number(result.rows[0]?.cnt ?? 0) >= 3;
   } catch {

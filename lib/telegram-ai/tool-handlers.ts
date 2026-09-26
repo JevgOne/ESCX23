@@ -1,6 +1,7 @@
 import { db } from '../db';
 import { sendPhoto } from '../telegram';
 import { logAudit } from '../audit';
+import { safeEncrypt, hashForSearch } from '../crypto';
 import { startBookingFlow, getAvailableSlots } from './booking-flow';
 import { getCalendarGirls } from '../booking-queries';
 import type { ClientContext } from './types';
@@ -510,23 +511,28 @@ async function handleRegisterNewClient(
   const crypto = await import('crypto');
   const deepLinkToken = crypto.randomBytes(8).toString('hex');
 
-  // Create client record
+  // Create client record (plaintext + encrypted + HMAC)
   const result = await db.execute({
     sql: `INSERT INTO booking_clients
-            (client_number, nickname, telegram_id, source, trust_level,
-             total_visits, deep_link_token, created_at, updated_at)
-          VALUES (?, ?, ?, 'telegram', 'new', 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-    args: [clientNumber, nickname, ctx.chatId, deepLinkToken],
+            (client_number, nickname, telegram_id, telegram_id_encrypted, telegram_id_hmac,
+             source, trust_level, total_visits, deep_link_token, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, 'telegram', 'new', 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    args: [clientNumber, nickname, ctx.chatId, safeEncrypt(ctx.chatId), hashForSearch(ctx.chatId), deepLinkToken],
   });
 
   const clientId = Number(result.lastInsertRowid);
 
-  // Also create telegram_users record
+  // Also create telegram_users record (plaintext + encrypted + HMAC)
   await db.execute({
     sql: `INSERT OR IGNORE INTO telegram_users
-            (telegram_user_id, client_id, chat_id, is_active, activated_at)
-          VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)`,
-    args: [ctx.chatId, clientId, ctx.chatId],
+            (telegram_user_id, client_id, chat_id, is_active, activated_at,
+             telegram_user_id_encrypted, telegram_user_id_hmac, chat_id_encrypted, chat_id_hmac)
+          VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP, ?, ?, ?, ?)`,
+    args: [
+      ctx.chatId, clientId, ctx.chatId,
+      safeEncrypt(ctx.chatId), hashForSearch(ctx.chatId),
+      safeEncrypt(ctx.chatId), hashForSearch(ctx.chatId),
+    ],
   });
 
   // Audit

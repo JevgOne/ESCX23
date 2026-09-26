@@ -7,6 +7,7 @@ import { answerCallbackQuery, editMessageReplyMarkup, sendMessage, verifyLinkTok
 import { handleAIMessage, handleAICallback } from './telegram-ai/handler';
 import { handleBookingCallback, handlePromoCodeInput } from './telegram-ai/booking-flow';
 import { db } from './db';
+import { safeEncrypt, hashForSearch } from './crypto';
 
 // ---------------------------------------------------------------------------
 // Telegram Update type
@@ -190,19 +191,26 @@ async function handleDeepLinkActivation(chatId: string, token: string): Promise<
     return;
   }
 
-  // Link telegram_id to client
+  // Link telegram_id to client (plaintext + encrypted + HMAC)
   await db.execute({
-    sql: 'UPDATE booking_clients SET telegram_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-    args: [chatId, clientId],
+    sql: `UPDATE booking_clients SET telegram_id = ?, telegram_id_encrypted = ?, telegram_id_hmac = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    args: [chatId, safeEncrypt(chatId), hashForSearch(chatId), clientId],
   });
 
-  // Upsert telegram_users
+  // Upsert telegram_users (plaintext + encrypted + HMAC)
   try {
     await db.execute({
-      sql: `INSERT INTO telegram_users (telegram_user_id, client_id, chat_id, activation_token, is_active, activated_at)
-            VALUES (?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
-            ON CONFLICT(telegram_user_id) DO UPDATE SET client_id = ?, chat_id = ?, activated_at = CURRENT_TIMESTAMP`,
-      args: [chatId, clientId, chatId, token, clientId, chatId],
+      sql: `INSERT INTO telegram_users (telegram_user_id, client_id, chat_id, activation_token, is_active, activated_at,
+              telegram_user_id_encrypted, telegram_user_id_hmac, chat_id_encrypted, chat_id_hmac)
+            VALUES (?, ?, ?, ?, 1, CURRENT_TIMESTAMP, ?, ?, ?, ?)
+            ON CONFLICT(telegram_user_id) DO UPDATE SET client_id = ?, chat_id = ?, activated_at = CURRENT_TIMESTAMP,
+              chat_id_encrypted = ?, chat_id_hmac = ?`,
+      args: [
+        chatId, clientId, chatId, token,
+        safeEncrypt(chatId), hashForSearch(chatId), safeEncrypt(chatId), hashForSearch(chatId),
+        clientId, chatId,
+        safeEncrypt(chatId), hashForSearch(chatId),
+      ],
     });
   } catch { /* telegram_users table might not exist yet */ }
 

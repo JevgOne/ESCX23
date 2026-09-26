@@ -154,3 +154,26 @@ export function isEncrypted(value: string): boolean {
   const parts = value.split(':');
   return parts.length === 3 && parts.every(p => p.length > 0);
 }
+
+/**
+ * Safely decrypt a value — returns null if the value is null/empty or decryption fails.
+ * Useful for reading columns that may contain plaintext (pre-migration) or encrypted data.
+ */
+export function safeDecrypt(value: string | null | undefined): string | null {
+  if (!value) return null;
+  if (!isEncrypted(value)) return value; // plaintext fallback (pre-migration data)
+  try {
+    return decrypt(value);
+  } catch {
+    return value; // fallback to raw value if decryption fails
+  }
+}
+
+/**
+ * Encrypt a value if not already encrypted. Returns null for null input.
+ */
+export function safeEncrypt(value: string | null | undefined): string | null {
+  if (!value) return null;
+  if (isEncrypted(value)) return value; // already encrypted
+  return encrypt(value);
+}

@@ -4,6 +4,7 @@
  */
 
 import { db } from './db';
+import { safeDecrypt } from './crypto';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -134,7 +135,7 @@ export async function getCalendarBookings(
       SELECT
         b.id, b.client_id, b.girl_id, b.date, b.start_time, b.end_time,
         b.duration_minutes, b.status, b.channel, b.points_earned,
-        b.price, b.notes, b.source,
+        b.price, b.notes, b.notes_encrypted, b.source,
         COALESCE(b.booking_type, 'booking') AS booking_type,
         bc.nickname AS client_nickname,
         bc.trust_level AS client_trust,
@@ -154,9 +155,13 @@ export async function getCalendarBookings(
   const bookings: CalendarBooking[] = bookingsResult.rows.map((r) => ({
     id: Number(r.id),
     clientId: r.client_id != null ? Number(r.client_id) : null,
-    clientNickname: String(r.source) === 'gcal_import' && r.notes
-      ? String(r.notes)
-      : r.client_nickname ? String(r.client_nickname) : 'Neznámý',
+    clientNickname: (() => {
+      if (String(r.source) === 'gcal_import') {
+        const n = safeDecrypt(r.notes_encrypted ? String(r.notes_encrypted) : null) ?? (r.notes ? String(r.notes) : null);
+        if (n) return n;
+      }
+      return r.client_nickname ? String(r.client_nickname) : 'Neznámý';
+    })(),
     clientTrustLevel: r.client_trust ? String(r.client_trust) : 'new',
     girlId: Number(r.girl_id),
     girlName: r.girl_name ? String(r.girl_name) : '?',
@@ -169,7 +174,7 @@ export async function getCalendarBookings(
     pointsEarned: Number(r.points_earned),
     price: r.price != null ? Number(r.price) : null,
     locationName: r.location_name ? String(r.location_name) : null,
-    notes: r.notes ? String(r.notes) : null,
+    notes: safeDecrypt(r.notes_encrypted ? String(r.notes_encrypted) : null) ?? (r.notes ? String(r.notes) : null),
     isDraft: false,
     bookingType: String(r.booking_type ?? 'booking'),
   }));

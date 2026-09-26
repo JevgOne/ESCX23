@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
+import { safeEncrypt } from '@/lib/crypto';
 import { createAdminNotification } from '@/lib/admin-notifications';
 
 export async function submitApplication(formData: FormData) {
@@ -53,12 +54,14 @@ export async function submitApplication(formData: FormData) {
   await db.execute({
     sql: `INSERT INTO girl_applications
       (name, age, height, weight, bust, bust_natural, email, phone, telegram,
+       name_encrypted, phone_encrypted, email_encrypted, telegram_encrypted,
        hair, eyes, tattoo, tattoo_description, tattoo_percentage, piercing, nationality,
        languages, services, availability, bio_cs, bio_en, experience, style_wardrobe, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
     args: [
       name, age, height, weight, bust, bustNatural,
       email, phone, telegram,
+      safeEncrypt(name), safeEncrypt(phone), safeEncrypt(email), safeEncrypt(telegram),
       hair, eyes, tattoo, tattooDescription, tattooPercentage, piercing, nationality,
       languages, services, availability, bio_cs, bio_en, experience, styleWardrobe,
     ],

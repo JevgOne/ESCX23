@@ -1231,6 +1231,74 @@ export async function fixScheduleColors(formData: FormData) {
   await adminRedirect('/admin/schedules');
 }
 
+/** Approve a shift request. Actual girl_schedules update happens via shift-activate cron. */
+export async function approveShiftRequest(formData: FormData) {
+  const user = await requireAdmin();
+  const requestId = Number(formData.get('request_id'));
+  if (!requestId) throw new Error('Missing request_id');
+
+  // Verify request exists and is pending
+  const req = await db.execute({
+    sql: `SELECT id FROM shift_requests WHERE id = ? AND status = 'pending'`,
+    args: [requestId],
+  });
+  if (req.rows.length === 0) {
+    await adminRedirect('/admin/schedules?tab=pending');
+    return;
+  }
+
+  // Mark as approved (girl_schedules update happens via shift-activate cron at week start)
+  await db.execute({
+    sql: `UPDATE shift_requests SET status = 'approved', approved_by = ?, approved_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    args: [user.id, requestId],
+  });
+
+  revalidatePath('/cs/studio/dostupnost');
+  revalidatePath('/cs/admin/schedules');
+  await adminRedirect('/admin/schedules?tab=pending');
+}
+
+/** Reject a shift request with optional reason. */
+export async function rejectShiftRequest(formData: FormData) {
+  await requireAdmin();
+  const requestId = Number(formData.get('request_id'));
+  const reason = formData.get('reason') ? String(formData.get('reason')).trim() : null;
+  if (!requestId) throw new Error('Missing request_id');
+
+  await db.execute({
+    sql: `UPDATE shift_requests SET status = 'rejected', reject_reason = ? WHERE id = ? AND status = 'pending'`,
+    args: [reason, requestId],
+  });
+
+  revalidatePath('/cs/studio/dostupnost');
+  revalidatePath('/cs/admin/schedules');
+  await adminRedirect('/admin/schedules?tab=pending');
+}
+
+/** Bulk-approve all pending shift requests for a given girl. */
+export async function bulkApproveShifts(formData: FormData) {
+  const user = await requireAdmin();
+  const girlId = Number(formData.get('girl_id'));
+  if (!girlId) throw new Error('Missing girl_id');
+
+  const pending = await db.execute({
+    sql: `SELECT * FROM shift_requests WHERE girl_id = ? AND status = 'pending'`,
+    args: [girlId],
+  });
+
+  // Mark all as approved (girl_schedules update happens via shift-activate cron at week start)
+  for (const r of pending.rows) {
+    await db.execute({
+      sql: `UPDATE shift_requests SET status = 'approved', approved_by = ?, approved_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      args: [user.id, Number(r.id)],
+    });
+  }
+
+  revalidatePath('/cs/studio/dostupnost');
+  revalidatePath('/cs/admin/schedules');
+  await adminRedirect('/admin/schedules?tab=pending');
+}
+
 /** Rewrite the denormalised rating / reviews_count on girls from the approved reviews.
  *  The nightly recalc-stats cron does the same thing, but a review approved during the
  *  day must show up on the profile and on the girl cards straight away, not tomorrow. */

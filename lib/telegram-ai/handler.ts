@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { db } from '../db';
 import { sendMessage } from '../telegram';
+import { safeEncrypt, safeDecrypt, hashForSearch } from '../crypto';
 import { buildSystemPrompt } from './system-prompt';
 import { buildClientContext } from './context';
 import { TOOLS } from './tools';
@@ -41,7 +42,7 @@ type ApiMessage = Anthropic.MessageParam;
 
 async function loadHistory(chatId: string): Promise<ApiMessage[]> {
   const result = await db.execute({
-    sql: `SELECT role, content, tool_name, tool_use_id
+    sql: `SELECT role, content, content_encrypted, tool_name, tool_use_id
           FROM telegram_messages
           WHERE chat_id = ?
           ORDER BY created_at DESC
@@ -55,7 +56,7 @@ async function loadHistory(chatId: string): Promise<ApiMessage[]> {
   const messages: ApiMessage[] = [];
   for (const row of rows) {
     const role = String(row.role);
-    const content = String(row.content);
+    const content = safeDecrypt(row.content_encrypted ? String(row.content_encrypted) : null) ?? (row.content ? String(row.content) : '');
     const toolName = row.tool_name ? String(row.tool_name) : undefined;
     const toolUseId = row.tool_use_id ? String(row.tool_use_id) : undefined;
 
@@ -122,9 +123,9 @@ async function saveMessage(
 ): Promise<void> {
   try {
     await db.execute({
-      sql: `INSERT INTO telegram_messages (chat_id, role, content, tool_name, tool_use_id, tokens_in, tokens_out, model)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [chatId, role, content, toolName ?? null, toolUseId ?? null, tokensIn ?? 0, tokensOut ?? 0, MODEL],
+      sql: `INSERT INTO telegram_messages (chat_id, role, content, content_encrypted, content_hmac, tool_name, tool_use_id, tokens_in, tokens_out, model)
+            VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [chatId, role, safeEncrypt(content), hashForSearch(content), toolName ?? null, toolUseId ?? null, tokensIn ?? 0, tokensOut ?? 0, MODEL],
     });
   } catch (error) {
     console.error('[telegram-ai] Failed to save message:', error);

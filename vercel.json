@@ -34,6 +34,22 @@
     {
       "path": "/api/cron/booking-confirmations",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/shift-penalty",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/shift-reminder",
+      "schedule": "0 16 * * 0"
+    },
+    {
+      "path": "/api/cron/shift-deadline",
+      "schedule": "0 20 * * 0"
+    },
+    {
+      "path": "/api/cron/shift-activate",
+      "schedule": "0 22 * * 0"
     }
   ]
 }
