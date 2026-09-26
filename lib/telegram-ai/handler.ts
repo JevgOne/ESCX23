@@ -214,6 +214,10 @@ export async function handleAIMessage(
     let finalText = '';
     let totalTokensIn = 0;
     let totalTokensOut = 0;
+    // Tools that send messages directly to the user — Claude correctly returns
+    // empty text after these, so we must NOT treat empty response as an error.
+    const SILENT_TOOLS = new Set(['startBookingFlow', 'sendGirlPhoto']);
+    let silentToolCalled = false;
 
     for (let round = 0; round < MAX_TOOL_ROUNDS + 1; round++) {
       let response: Anthropic.Message;
@@ -274,6 +278,9 @@ export async function handleAIMessage(
         const toolResults: Anthropic.ToolResultBlockParam[] = [];
         for (const tu of toolUseBlocks) {
           const result = await handleToolCall(tu.name, tu.input, ctx);
+          if (SILENT_TOOLS.has(tu.name) && !result.includes('"error"')) {
+            silentToolCalled = true;
+          }
           toolResults.push({
             type: 'tool_result',
             tool_use_id: tu.id,
@@ -314,7 +321,7 @@ export async function handleAIMessage(
       for (const chunk of chunks) {
         await sendMessage(chatId, chunk);
       }
-    } else {
+    } else if (!silentToolCalled) {
       await sendMessage(chatId, 'Omlouvam se, neco se pokazilo. Zkus to znovu.');
     }
   } catch (error) {
