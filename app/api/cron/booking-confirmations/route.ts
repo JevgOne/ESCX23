@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendMessage } from '@/lib/telegram';
+import { safeEncrypt } from '@/lib/crypto';
 
 /**
  * Cron: every 15 minutes.
@@ -117,9 +118,10 @@ export async function GET(request: Request) {
     await db.execute({
       sql: `UPDATE bookings_v2
             SET status = 'expired', cancel_reason = 'Nepotvrzeno novym klientem',
+                cancel_reason_encrypted = ?,
                 cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
             WHERE id = ? AND status = 'pending'`,
-      args: [bookingId],
+      args: [safeEncrypt('Nepotvrzeno novym klientem'), bookingId],
     });
 
     await db.execute({
@@ -164,9 +166,10 @@ export async function GET(request: Request) {
     await db.execute({
       sql: `UPDATE bookings_v2
             SET status = 'expired', cancel_reason = 'Nepotvrzeno novym klientem',
+                cancel_reason_encrypted = ?,
                 cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
             WHERE id = ? AND status = 'confirmed'`,
-      args: [bookingId],
+      args: [safeEncrypt('Nepotvrzeno novym klientem'), bookingId],
     });
 
     await db.execute({

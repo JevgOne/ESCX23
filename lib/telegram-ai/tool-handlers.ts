@@ -451,9 +451,11 @@ async function cancelBooking(
   const result = await db.execute({
     sql: `UPDATE bookings_v2
           SET status = 'cancelled_client', cancelled_at = CURRENT_TIMESTAMP,
-              cancel_reason = 'Klient zrusil pres AI bota', updated_at = CURRENT_TIMESTAMP
+              cancel_reason = 'Klient zrusil pres AI bota',
+              cancel_reason_encrypted = ?,
+              updated_at = CURRENT_TIMESTAMP
           WHERE id = ? AND client_id = ? AND status IN ('confirmed', 'pending')`,
-    args: [bookingId, ctx.clientId],
+    args: [safeEncrypt('Klient zrusil pres AI bota'), bookingId, ctx.clientId],
   });
 
   if (result.rowsAffected === 0) {

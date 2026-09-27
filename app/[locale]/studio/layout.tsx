@@ -1,4 +1,5 @@
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import StudioSidebar from '@/components/studio/StudioSidebar';
@@ -25,7 +26,11 @@ export default async function StudioLayout({
   const isLogin = pathname.endsWith('/studio/login');
 
   if (!isLogin) {
-    await requireGirl();
+    const user = await requireGirl();
+    // First login → redirect to onboarding wizard (unless already there)
+    if (user.force_password_change && !pathname.includes('/studio/onboarding')) {
+      redirect(`/${locale}/studio/onboarding`);
+    }
   }
 
   if (isLogin) {

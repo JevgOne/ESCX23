@@ -74,6 +74,18 @@ async function runMigrations(client: Client) {
     'ALTER TABLE telegram_messages ADD COLUMN content_hmac TEXT',
     // P1 encryption: client_contacts.telegram_username
     'ALTER TABLE client_contacts ADD COLUMN telegram_username_encrypted TEXT',
+    // Seniority: audit rank at submission time + admin override tracking
+    'ALTER TABLE shift_requests ADD COLUMN seniority_rank INTEGER',
+    'ALTER TABLE shift_requests ADD COLUMN override_by INTEGER',
+    'ALTER TABLE shift_requests ADD COLUMN override_reason TEXT',
+    // Capacity: max girls per shift per location (default 3)
+    'ALTER TABLE locations ADD COLUMN max_girls_per_shift INTEGER DEFAULT 3',
+    // P2 encryption: bookings_v2 program_id + extras + reasons, shift_requests reject_reason
+    'ALTER TABLE bookings_v2 ADD COLUMN program_id_encrypted TEXT',
+    'ALTER TABLE bookings_v2 ADD COLUMN extras_encrypted TEXT',
+    'ALTER TABLE bookings_v2 ADD COLUMN decline_reason_encrypted TEXT',
+    'ALTER TABLE bookings_v2 ADD COLUMN cancel_reason_encrypted TEXT',
+    'ALTER TABLE shift_requests ADD COLUMN reject_reason_encrypted TEXT',
   ];
 
   // Migrate shift_requests CHECK constraint to include 'activated' status
@@ -1379,6 +1391,99 @@ async function migrateEncryption(client: Client) {
     console.log('[db] Encrypted existing PII data (P1 migration)');
   } catch (e) {
     console.error('[db] PII P1 encryption migration error:', e);
+  }
+
+  // --- P2 migration: bookings_v2 program_id/extras, shift_requests reject_reason ---
+  try {
+    const doneP2 = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = 'encrypt_pii_p2' LIMIT 1`,
+      args: [],
+    });
+    if (doneP2.rows.length > 0) return;
+
+    const { encrypt: enc } = await import('./crypto');
+
+    // bookings_v2.program_id → program_id_encrypted
+    const progRows = await client.execute(
+      `SELECT id, program_id FROM bookings_v2 WHERE program_id IS NOT NULL AND program_id_encrypted IS NULL`
+    );
+    for (const r of progRows.rows) {
+      await client.execute({
+        sql: `UPDATE bookings_v2 SET program_id_encrypted = ? WHERE id = ?`,
+        args: [enc(String(r.program_id)), Number(r.id)],
+      });
+    }
+
+    // bookings_v2.extras → extras_encrypted
+    const extRows = await client.execute(
+      `SELECT id, extras FROM bookings_v2 WHERE extras IS NOT NULL AND extras != '[]' AND extras_encrypted IS NULL`
+    );
+    for (const r of extRows.rows) {
+      await client.execute({
+        sql: `UPDATE bookings_v2 SET extras_encrypted = ? WHERE id = ?`,
+        args: [enc(String(r.extras)), Number(r.id)],
+      });
+    }
+
+    // shift_requests.reject_reason → reject_reason_encrypted
+    const rejRows = await client.execute(
+      `SELECT id, reject_reason FROM shift_requests WHERE reject_reason IS NOT NULL AND reject_reason_encrypted IS NULL`
+    );
+    for (const r of rejRows.rows) {
+      await client.execute({
+        sql: `UPDATE shift_requests SET reject_reason_encrypted = ? WHERE id = ?`,
+        args: [enc(String(r.reject_reason)), Number(r.id)],
+      });
+    }
+
+    await client.execute({
+      sql: `INSERT INTO _migrations (name) VALUES (?)`,
+      args: ['encrypt_pii_p2'],
+    });
+    console.log('[db] Encrypted existing data (P2 migration: program_id, extras, reject_reason)');
+  } catch (e) {
+    console.error('[db] P2 encryption migration error:', e);
+  }
+
+  // --- P2b migration: bookings_v2 decline_reason + cancel_reason ---
+  try {
+    const doneP2b = await client.execute({
+      sql: `SELECT 1 FROM _migrations WHERE name = 'encrypt_pii_p2b' LIMIT 1`,
+      args: [],
+    });
+    if (doneP2b.rows.length > 0) return;
+
+    const { encrypt: enc2 } = await import('./crypto');
+
+    // bookings_v2.decline_reason → decline_reason_encrypted
+    const decRows = await client.execute(
+      `SELECT id, decline_reason FROM bookings_v2 WHERE decline_reason IS NOT NULL AND decline_reason_encrypted IS NULL`
+    );
+    for (const r of decRows.rows) {
+      await client.execute({
+        sql: `UPDATE bookings_v2 SET decline_reason_encrypted = ? WHERE id = ?`,
+        args: [enc2(String(r.decline_reason)), Number(r.id)],
+      });
+    }
+
+    // bookings_v2.cancel_reason → cancel_reason_encrypted
+    const canRows = await client.execute(
+      `SELECT id, cancel_reason FROM bookings_v2 WHERE cancel_reason IS NOT NULL AND cancel_reason_encrypted IS NULL`
+    );
+    for (const r of canRows.rows) {
+      await client.execute({
+        sql: `UPDATE bookings_v2 SET cancel_reason_encrypted = ? WHERE id = ?`,
+        args: [enc2(String(r.cancel_reason)), Number(r.id)],
+      });
+    }
+
+    await client.execute({
+      sql: `INSERT INTO _migrations (name) VALUES (?)`,
+      args: ['encrypt_pii_p2b'],
+    });
+    console.log('[db] Encrypted existing data (P2b migration: decline_reason, cancel_reason)');
+  } catch (e) {
+    console.error('[db] P2b encryption migration error:', e);
   }
 }
 

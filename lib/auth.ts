@@ -46,6 +46,7 @@ export interface AuthUser {
   email: string;
   role: 'admin' | 'manager' | 'operator' | 'girl';
   girl_id: number | null;
+  force_password_change: boolean;
 }
 
 export async function hashPassword(plain: string): Promise<string> {
@@ -117,7 +118,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   if (!verified) return null;
 
   const result = await db.execute({
-    sql: 'SELECT id, email, role, girl_id FROM users WHERE id = ? LIMIT 1',
+    sql: 'SELECT id, email, role, girl_id, force_password_change FROM users WHERE id = ? LIMIT 1',
     args: [verified.userId],
   });
   if (result.rows.length === 0) return null;
@@ -146,6 +147,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     email: String(row.email),
     role,
     girl_id: row.girl_id != null ? Number(row.girl_id) : null,
+    force_password_change: Number(row.force_password_change ?? 0) === 1,
   };
 }
 
@@ -154,7 +156,7 @@ export async function authenticate(
   password: string
 ): Promise<AuthUser | null> {
   const result = await db.execute({
-    sql: 'SELECT id, email, password_hash, role, girl_id FROM users WHERE email = ? LIMIT 1',
+    sql: 'SELECT id, email, password_hash, role, girl_id, force_password_change FROM users WHERE email = ? LIMIT 1',
     args: [email.trim().toLowerCase()],
   });
   if (result.rows.length === 0) return null;
@@ -168,6 +170,7 @@ export async function authenticate(
     email: String(row.email),
     role: row.role as 'admin' | 'manager' | 'operator' | 'girl',
     girl_id: row.girl_id != null ? Number(row.girl_id) : null,
+    force_password_change: Number(row.force_password_change ?? 0) === 1,
   };
 }
 

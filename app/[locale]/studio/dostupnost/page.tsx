@@ -3,8 +3,9 @@ import { requireGirl } from '@/lib/auth';
 import { pragueDateISO } from '@/lib/utils';
 import { db } from '@/lib/db';
 import { getSchedulesForGirl, getActiveLocations } from '@/lib/queries';
+import { safeDecrypt } from '@/lib/crypto';
 import StudioTopbar from '@/components/studio/StudioTopbar';
-import { submitShiftRequest, cancelShiftRequest } from './actions';
+import { submitShiftRequest, cancelShiftRequest, getSeniorityStatus, getShiftCapacity } from './actions';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -55,13 +56,14 @@ export default async function StudioDostupnostPage({
   const thisMonday = getMonday(nowPrague);
   const nextMonday = addDays(thisMonday, 7);
 
-  const [schedules, locations, shiftRes] = await Promise.all([
+  const [schedules, locations, shiftRes, seniority] = await Promise.all([
     getSchedulesForGirl(girlId),
     getActiveLocations(),
     db.execute({
       sql: `SELECT * FROM shift_requests WHERE girl_id = ? AND week_start IN (?, ?) ORDER BY week_start, day_of_week`,
       args: [girlId, thisMonday, nextMonday],
     }),
+    getSeniorityStatus(girlId, nextMonday),
   ]);
 
   // Map existing shifts by week_start + day_of_week
@@ -78,7 +80,7 @@ export default async function StudioDostupnostPage({
       startTime: String(r.start_time),
       endTime: String(r.end_time),
       locationId: r.location_id ? Number(r.location_id) : null,
-      rejectReason: r.reject_reason ? String(r.reject_reason) : null,
+      rejectReason: r.reject_reason_encrypted ? safeDecrypt(String(r.reject_reason_encrypted)) : (r.reject_reason ? String(r.reject_reason) : null),
     });
   }
 
@@ -99,6 +101,16 @@ export default async function StudioDostupnostPage({
 
   // Default location: most recent or primary
   const defaultLocationId = locations.find(l => l.isPrimary)?.id ?? locations[0]?.id ?? null;
+
+  // Fetch shift capacity for both weeks
+  const [capacityThisWeek, capacityNextWeek] = await Promise.all([
+    getShiftCapacity(thisMonday, defaultLocationId),
+    getShiftCapacity(nextMonday, defaultLocationId),
+  ]);
+  const capacityMap: Record<string, Record<number, { morning: { taken: number; max: number }; afternoon: { taken: number; max: number } }>> = {
+    [thisMonday]: capacityThisWeek,
+    [nextMonday]: capacityNextWeek,
+  };
 
   // Weekly schedule map (current active schedule for reference)
   const schedMap: Record<number, { from: string; to: string }> = {};
@@ -324,6 +336,46 @@ export default async function StudioDostupnostPage({
           .shift-badge { font-size: 8px; padding: 3px 5px; }
           .shift-type-label { font-size: 8px; }
           .shift-cancel-btn { font-size: 8px; padding: 2px 6px; }
+          .shift-seniority-banner { font-size: 12px; padding: 10px 14px; }
+        }
+
+        .shift-seniority-banner {
+          padding: 14px 18px;
+          border-radius: 12px;
+          font-size: 13px;
+          font-weight: 600;
+          margin-bottom: 20px;
+        }
+        .shift-seniority-banner.locked {
+          background: rgba(148,163,184,0.1);
+          border: 1px solid rgba(148,163,184,0.3);
+          color: #94a3b8;
+        }
+        .shift-seniority-banner.open {
+          background: rgba(34,197,94,0.1);
+          border: 1px solid rgba(34,197,94,0.3);
+          color: #86efac;
+        }
+
+        .shift-btn.full {
+          opacity: 0.35;
+          cursor: not-allowed;
+          pointer-events: none;
+          border-color: rgba(239,68,68,0.2);
+        }
+        .shift-cap {
+          display: inline;
+          font-size: 9px;
+          font-weight: 500;
+          opacity: 0.7;
+        }
+        .shift-cap.cap-full {
+          color: #ef4444;
+          opacity: 1;
+        }
+        .shift-cap.cap-last {
+          color: #fbbf24;
+          opacity: 1;
         }
       `}} />
 
@@ -348,10 +400,31 @@ export default async function StudioDostupnostPage({
           </div>
         )}
 
+        {/* Seniority banner for next week */}
+        {seniority.rank > 0 && !seniority.isOpen && (
+          <div className="shift-seniority-banner locked">
+            Čekáš na výběr senior kolegyně (seniorita #{seniority.rank}/{seniority.totalGirls})
+            {seniority.opensAt && (() => {
+              const opensDate = new Date(seniority.opensAt);
+              const h = opensDate.getHours().toString().padStart(2, '0');
+              const m = opensDate.getMinutes().toString().padStart(2, '0');
+              return <span> — otevře se v {h}:{m}</span>;
+            })()}
+          </div>
+        )}
+        {seniority.rank > 0 && seniority.isOpen && (
+          <div className="shift-seniority-banner open">
+            Tvůj výběr je otevřený! (seniorita #{seniority.rank}/{seniority.totalGirls})
+          </div>
+        )}
+
         {/* Two weeks */}
         {weeks.map(week => {
           const activeCount = countActiveShifts(week.monday);
           const isMinMet = activeCount >= 2;
+          const isNextWeek = week.monday === nextMonday;
+          // Next week is locked if seniority window not open (this week is always editable)
+          const isLocked = isNextWeek && !seniority.isOpen;
 
           return (
             <div key={week.monday}>
@@ -374,9 +447,10 @@ export default async function StudioDostupnostPage({
                   const isPast = dateStr <= today;
                   const key = `${week.monday}_${i}`;
                   const existing = shiftMap.get(key);
+                  const isDayDisabled = isPast || isLocked;
 
                   return (
-                    <div key={i} className={`shift-day${isPast ? ' past' : ''}`}>
+                    <div key={i} className={`shift-day${isDayDisabled ? ' past' : ''}`}>
                       <span className="shift-day-label">{DAY_SHORT[i]}</span>
                       <span className="shift-day-date">{formatDateShort(dateStr)}</span>
 
@@ -392,7 +466,7 @@ export default async function StudioDostupnostPage({
                             {existing.shiftType === 'afternoon' && 'Odpolední'}
                             {existing.shiftType === 'fullday' && 'Celý den'}
                           </span>
-                          {existing.status === 'pending' && (
+                          {existing.status === 'pending' && !isLocked && (
                             <form action={cancelShiftRequest}>
                               <input type="hidden" name="request_id" value={existing.id} />
                               <button type="submit" className="shift-cancel-btn">Zrušit</button>
@@ -404,19 +478,46 @@ export default async function StudioDostupnostPage({
                             </span>
                           )}
                         </>
-                      ) : !isPast ? (
+                      ) : !isDayDisabled ? (
                         <div className="shift-select-form">
-                          {SHIFT_PRESETS.map(preset => (
-                            <form key={preset.type} action={submitShiftRequest}>
-                              <input type="hidden" name="shift_type" value={preset.type} />
-                              <input type="hidden" name="day_of_week" value={i} />
-                              <input type="hidden" name="week_start" value={week.monday} />
-                              <input type="hidden" name="location_id" value={defaultLocationId ?? ''} />
-                              <button type="submit" className="shift-btn">
-                                {preset.label}
-                              </button>
-                            </form>
-                          ))}
+                          {SHIFT_PRESETS.map(preset => {
+                            const cap = capacityMap[week.monday]?.[i];
+                            // Determine if this shift type has capacity
+                            let isFull = false;
+                            let capacityLabel = '';
+                            if (cap) {
+                              if (preset.type === 'morning') {
+                                isFull = cap.morning.taken >= cap.morning.max;
+                                capacityLabel = `${cap.morning.taken}/${cap.morning.max}`;
+                              } else if (preset.type === 'afternoon') {
+                                isFull = cap.afternoon.taken >= cap.afternoon.max;
+                                capacityLabel = `${cap.afternoon.taken}/${cap.afternoon.max}`;
+                              } else if (preset.type === 'fullday') {
+                                isFull = cap.morning.taken >= cap.morning.max || cap.afternoon.taken >= cap.afternoon.max;
+                                const morningLabel = `${cap.morning.taken}/${cap.morning.max}`;
+                                const afternoonLabel = `${cap.afternoon.taken}/${cap.afternoon.max}`;
+                                capacityLabel = morningLabel === afternoonLabel ? morningLabel : `${morningLabel}+${afternoonLabel}`;
+                              }
+                            }
+
+                            return (
+                              <form key={preset.type} action={submitShiftRequest}>
+                                <input type="hidden" name="shift_type" value={preset.type} />
+                                <input type="hidden" name="day_of_week" value={i} />
+                                <input type="hidden" name="week_start" value={week.monday} />
+                                <input type="hidden" name="location_id" value={defaultLocationId ?? ''} />
+                                <button
+                                  type="submit"
+                                  className={`shift-btn${isFull ? ' full' : ''}`}
+                                  disabled={isFull}
+                                  title={isFull ? 'Plná směna' : `${preset.label} (${capacityLabel})`}
+                                >
+                                  {preset.label}
+                                  {capacityLabel && <span className={`shift-cap${isFull ? ' cap-full' : cap && (preset.type === 'fullday' ? (cap.morning.max - cap.morning.taken <= 1 || cap.afternoon.max - cap.afternoon.taken <= 1) : (preset.type === 'morning' ? cap.morning.max - cap.morning.taken <= 1 : cap.afternoon.max - cap.afternoon.taken <= 1)) ? ' cap-last' : ''}`}> ({capacityLabel})</span>}
+                                </button>
+                              </form>
+                            );
+                          })}
                         </div>
                       ) : (
                         <span className="shift-type-label">—</span>

@@ -583,8 +583,8 @@ export async function updateBookingStatus(
   const args: (string | number | null)[] = [newStatus];
 
   if (['cancelled_client', 'cancelled_girl', 'declined'].includes(newStatus)) {
-    setClauses.push('cancel_reason = ?', 'cancelled_at = CURRENT_TIMESTAMP');
-    args.push(cancelReason ?? null);
+    setClauses.push('cancel_reason = ?', 'cancel_reason_encrypted = ?', 'cancelled_at = CURRENT_TIMESTAMP');
+    args.push(cancelReason ?? null, safeEncrypt(cancelReason ?? null));
   }
 
   if (newStatus === 'completed') {

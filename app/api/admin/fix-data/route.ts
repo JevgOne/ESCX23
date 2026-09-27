@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { safeEncrypt } from '@/lib/crypto';
 import bcrypt from 'bcryptjs';
 
 // Hardcoded girl name → ID mapping (primary, reliable)
@@ -96,9 +97,10 @@ export async function POST(request: Request) {
     if (body.fixPending) {
       const res = await db.execute({
         sql: `UPDATE bookings_v2 SET status = 'expired', cancel_reason = 'Auto-expired: old pending',
+              cancel_reason_encrypted = ?,
               cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
               WHERE status = 'pending'`,
-        args: [],
+        args: [safeEncrypt('Auto-expired: old pending')],
       });
       results.push(`Fixed ${res.rowsAffected} pending bookings → expired`);
     }

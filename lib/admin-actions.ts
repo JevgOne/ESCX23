@@ -19,6 +19,7 @@ import {
   deleteGirlById,
 } from './queries';
 import { toStorageTime } from './utils';
+import { safeEncrypt } from './crypto';
 
 export async function updateGirl(formData: FormData) {
   await requireAdmin();
@@ -402,10 +403,77 @@ export async function createGirlFromApplication(formData: FormData) {
     args: [newId, appId],
   });
 
+  // --- Create user account for Studio login ---
+  const cryptoMod = await import('crypto');
+  const bcryptMod = await import('bcryptjs');
+  const password = cryptoMod.randomBytes(4).toString('hex'); // 8-char hex password
+  const passwordHash = await bcryptMod.hash(password, 12);
+  const username = (email || `${slug}@lovelygirls.cz`).toLowerCase();
+
+  try {
+    await db.execute({
+      sql: `INSERT INTO users (email, password_hash, role, girl_id, force_password_change)
+            VALUES (?, ?, 'girl', ?, 1)`,
+      args: [username, passwordHash, newId],
+    });
+    console.log(`[onboarding] Created user account for ${name} (${username})`);
+  } catch (e) {
+    // Username collision — account already exists
+    console.error(`[onboarding] Failed to create user for ${name}:`, e);
+  }
+
+  // Send credentials via Telegram (if available)
+  const studioUrl = 'https://www.lovelygirls.cz/cs/studio';
+  const tgHandle = app.telegram ? String(app.telegram).trim() : null;
+  if (tgHandle) {
+    try {
+      await sendOnboardingCredentialsTG(tgHandle, username, password, studioUrl);
+    } catch (e) {
+      console.error('[onboarding] Failed to send TG credentials:', e);
+    }
+  }
+
   try { revalidatePath('/cs/admin/divky'); } catch {}
   try { revalidatePath('/cs/admin/aplikace'); } catch {}
 
   await adminRedirect(`/admin/divky/${newId}/edit`);
+}
+
+/** Send Studio login credentials via Telegram bot (best-effort). */
+async function sendOnboardingCredentialsTG(
+  telegramHandle: string,
+  username: string,
+  password: string,
+  studioUrl: string,
+) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) return;
+
+  // Try to find chat_id for this user (they may have interacted with bot before)
+  const res = await db.execute({
+    sql: `SELECT chat_id FROM telegram_links WHERE girl_id IN (
+      SELECT girl_id FROM users WHERE email = ? LIMIT 1
+    ) LIMIT 1`,
+    args: [username],
+  });
+  const chatId = res.rows[0]?.chat_id ? String(res.rows[0].chat_id) : null;
+  if (!chatId) return;
+
+  const text = [
+    'Vitej ve StudioFlow! Tvuj ucet je pripraveny.',
+    '',
+    `Prihlaseni: ${studioUrl}`,
+    `Login: ${username}`,
+    `Heslo: ${password}`,
+    '',
+    'Pri prvnim prihlaseni si heslo zmenis.',
+  ].join('\n');
+
+  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text }),
+  });
 }
 
 function slugify(name: string): string {
@@ -1266,8 +1334,8 @@ export async function rejectShiftRequest(formData: FormData) {
   if (!requestId) throw new Error('Missing request_id');
 
   await db.execute({
-    sql: `UPDATE shift_requests SET status = 'rejected', reject_reason = ? WHERE id = ? AND status = 'pending'`,
-    args: [reason, requestId],
+    sql: `UPDATE shift_requests SET status = 'rejected', reject_reason = ?, reject_reason_encrypted = ? WHERE id = ? AND status = 'pending'`,
+    args: [reason, safeEncrypt(reason), requestId],
   });
 
   revalidatePath('/cs/studio/dostupnost');
@@ -1297,6 +1365,112 @@ export async function bulkApproveShifts(formData: FormData) {
   revalidatePath('/cs/studio/dostupnost');
   revalidatePath('/cs/admin/schedules');
   await adminRedirect('/admin/schedules?tab=pending');
+}
+
+/**
+ * Admin override: add or change a shift for a girl, bypassing capacity and seniority limits.
+ * If a shift_request exists for that girl+week+day, it gets updated.
+ * If not, a new one is inserted directly as 'approved'.
+ */
+export async function adminOverrideShift(formData: FormData) {
+  const user = await requireAdmin();
+  const girlId = Number(formData.get('girl_id'));
+  const weekStart = formData.get('week_start') as string;
+  const dayOfWeek = Number(formData.get('day_of_week'));
+  const shiftType = formData.get('shift_type') as string;
+  const locationId = formData.get('location_id') ? Number(formData.get('location_id')) : null;
+  const overrideReason = formData.get('override_reason') ? String(formData.get('override_reason')).trim() : null;
+
+  if (!girlId || !weekStart || !shiftType) throw new Error('Missing required fields');
+  if (dayOfWeek < 0 || dayOfWeek > 6) throw new Error('Invalid day_of_week');
+
+  const SHIFT_TIMES: Record<string, { start: string; end: string }> = {
+    morning:   { start: '10:00', end: '16:00' },
+    afternoon: { start: '16:30', end: '22:30' },
+    fullday:   { start: '10:00', end: '22:00' },
+  };
+  const times = SHIFT_TIMES[shiftType];
+  if (!times) throw new Error('Invalid shift_type');
+
+  // Check if a request already exists for this girl+week+day
+  const existing = await db.execute({
+    sql: `SELECT id, status FROM shift_requests WHERE girl_id = ? AND week_start = ? AND day_of_week = ?`,
+    args: [girlId, weekStart, dayOfWeek],
+  });
+
+  if (existing.rows.length > 0) {
+    // Update existing request
+    await db.execute({
+      sql: `UPDATE shift_requests
+            SET shift_type = ?, start_time = ?, end_time = ?, location_id = ?,
+                status = 'approved', approved_by = ?, approved_at = CURRENT_TIMESTAMP,
+                override_by = ?, override_reason = ?
+            WHERE id = ?`,
+      args: [shiftType, times.start, times.end, locationId, user.id, user.id, overrideReason, Number(existing.rows[0].id)],
+    });
+  } else {
+    // Insert new request directly as approved (admin override)
+    await db.execute({
+      sql: `INSERT INTO shift_requests (girl_id, week_start, day_of_week, shift_type, start_time, end_time, location_id, status, approved_by, approved_at, override_by, override_reason)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'approved', ?, CURRENT_TIMESTAMP, ?, ?)`,
+      args: [girlId, weekStart, dayOfWeek, shiftType, times.start, times.end, locationId, user.id, user.id, overrideReason],
+    });
+  }
+
+  // Notify the girl
+  try {
+    await db.execute({
+      sql: `INSERT INTO girl_notifications (girl_id, type, message) VALUES (?, 'shift_override', ?)`,
+      args: [girlId, `Admin změnil tvůj rozvrh (${['Po','Út','St','Čt','Pá','So','Ne'][dayOfWeek]} — ${shiftType})${overrideReason ? ': ' + overrideReason : ''}`],
+    });
+  } catch {
+    // Notification insert failed — non-critical
+  }
+
+  revalidatePath('/cs/studio/dostupnost');
+  revalidatePath('/cs/admin/schedules');
+  await adminRedirect('/admin/schedules?tab=override');
+}
+
+/** Admin delete: remove a shift request entirely. Notifies the girl. */
+export async function adminDeleteShift(formData: FormData) {
+  const user = await requireAdmin();
+  const requestId = Number(formData.get('request_id'));
+  if (!requestId) throw new Error('Missing request_id');
+
+  // Get request details for notification
+  const req = await db.execute({
+    sql: `SELECT girl_id, day_of_week, shift_type, week_start FROM shift_requests WHERE id = ?`,
+    args: [requestId],
+  });
+  if (req.rows.length === 0) {
+    await adminRedirect('/admin/schedules?tab=override');
+    return;
+  }
+
+  const girlId = Number(req.rows[0].girl_id);
+  const dayOfWeek = Number(req.rows[0].day_of_week);
+  const shiftType = String(req.rows[0].shift_type);
+
+  await db.execute({
+    sql: `DELETE FROM shift_requests WHERE id = ?`,
+    args: [requestId],
+  });
+
+  // Notify the girl
+  try {
+    await db.execute({
+      sql: `INSERT INTO girl_notifications (girl_id, type, message) VALUES (?, 'shift_deleted', ?)`,
+      args: [girlId, `Admin odstranil tvou směnu (${['Po','Út','St','Čt','Pá','So','Ne'][dayOfWeek]} — ${shiftType})`],
+    });
+  } catch {
+    // Non-critical
+  }
+
+  void user;
+  revalidatePath('/cs/studio/dostupnost');
+  revalidatePath('/cs/admin/schedules');
+  await adminRedirect('/admin/schedules?tab=override');
 }
 
 /** Rewrite the denormalised rating / reviews_count on girls from the approved reviews.

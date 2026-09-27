@@ -10,6 +10,8 @@ import {
   approveShiftRequest,
   rejectShiftRequest,
   bulkApproveShifts,
+  adminOverrideShift,
+  adminDeleteShift,
 } from '@/lib/admin-actions';
 
 export const dynamic = 'force-dynamic';
@@ -33,7 +35,7 @@ export default async function AdminSchedulesPage({
   const { girl: girlFilter, modal, error, tab } = await searchParams;
   setRequestLocale(locale);
 
-  const [allData, locations, pendingRes] = await Promise.all([
+  const [allData, locations, pendingRes, allRequestsRes, activeGirlsRes] = await Promise.all([
     getAllSchedulesGrouped(),
     getActiveLocations(),
     db.execute(`
@@ -44,6 +46,17 @@ export default async function AdminSchedulesPage({
       WHERE sr.status = 'pending'
       ORDER BY g.name, sr.week_start, sr.day_of_week
     `),
+    db.execute(`
+      SELECT sr.*, g.name AS girl_name, g.color AS girl_color, l.display_name AS location_name,
+             u.email AS override_by_email
+      FROM shift_requests sr
+      JOIN girls g ON g.id = sr.girl_id
+      LEFT JOIN locations l ON l.id = sr.location_id
+      LEFT JOIN users u ON u.id = sr.override_by
+      WHERE sr.week_start >= date('now', '-7 days')
+      ORDER BY sr.week_start DESC, g.name, sr.day_of_week
+    `),
+    db.execute(`SELECT id, name, color FROM girls WHERE status = 'active' ORDER BY name`),
   ]);
 
   // Group pending requests by girl
@@ -62,6 +75,67 @@ export default async function AdminSchedulesPage({
     });
   }
   const pendingCount = pendingRes.rows.length;
+
+  // All requests grouped by week for override tab
+  type ShiftRequestRow = {
+    id: number; girlId: number; girlName: string; girlColor: string;
+    dayOfWeek: number; weekStart: string; shiftType: string; status: string;
+    locationName: string | null; overrideBy: number | null; overrideByEmail: string | null;
+    overrideReason: string | null;
+  };
+  const allRequests: ShiftRequestRow[] = allRequestsRes.rows.map(r => ({
+    id: Number(r.id),
+    girlId: Number(r.girl_id),
+    girlName: String(r.girl_name),
+    girlColor: String(r.girl_color ?? ''),
+    dayOfWeek: Number(r.day_of_week),
+    weekStart: String(r.week_start),
+    shiftType: String(r.shift_type),
+    status: String(r.status),
+    locationName: r.location_name ? String(r.location_name) : null,
+    overrideBy: r.override_by ? Number(r.override_by) : null,
+    overrideByEmail: r.override_by_email ? String(r.override_by_email) : null,
+    overrideReason: r.override_reason ? String(r.override_reason) : null,
+  }));
+
+  // Group by week
+  const requestsByWeek = new Map<string, ShiftRequestRow[]>();
+  for (const r of allRequests) {
+    const arr = requestsByWeek.get(r.weekStart) ?? [];
+    arr.push(r);
+    requestsByWeek.set(r.weekStart, arr);
+  }
+
+  // Active girls for override form
+  const activeGirls = activeGirlsRes.rows.map(r => ({
+    id: Number(r.id),
+    name: String(r.name),
+    color: String(r.color ?? ''),
+  }));
+
+  // Compute current and next week Monday
+  const nowPrague = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Prague' }));
+  const dayOfW = nowPrague.getDay();
+  const diffToMon = dayOfW === 0 ? -6 : 1 - dayOfW;
+  const thisMon = new Date(nowPrague);
+  thisMon.setDate(thisMon.getDate() + diffToMon);
+  const thisMonday = thisMon.toISOString().slice(0, 10);
+  const nextMon = new Date(thisMon);
+  nextMon.setDate(nextMon.getDate() + 7);
+  const nextMonday = nextMon.toISOString().slice(0, 10);
+
+  const STATUS_LABELS: Record<string, string> = {
+    pending: 'Čeká',
+    approved: 'Schváleno',
+    rejected: 'Zamítnuto',
+    activated: 'Aktivováno',
+  };
+  const STATUS_COLORS: Record<string, string> = {
+    pending: '#fbbf24',
+    approved: '#22c55e',
+    rejected: '#ef4444',
+    activated: '#60a5fa',
+  };
 
   const withSchedule = allData.filter((d) => d.schedules.length > 0);
   const filtered = girlFilter
@@ -471,11 +545,11 @@ export default async function AdminSchedulesPage({
       `}} />
       <AdminTopbar title="Rozvrhy" />
 
-      {/* Tabs: Rozvrhy / Ke schválení */}
+      {/* Tabs: Rozvrhy / Ke schválení / Override */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         <a
           href={`/${locale}/admin/schedules`}
-          className={`admin-filter-pill${tab !== 'pending' ? ' active' : ''}`}
+          className={`admin-filter-pill${!tab ? ' active' : ''}`}
         >
           Rozvrhy
         </a>
@@ -499,6 +573,12 @@ export default async function AdminSchedulesPage({
               {pendingCount}
             </span>
           )}
+        </a>
+        <a
+          href={`/${locale}/admin/schedules?tab=override`}
+          className={`admin-filter-pill${tab === 'override' ? ' active' : ''}`}
+        >
+          Override směn
         </a>
       </div>
 
@@ -585,18 +665,176 @@ export default async function AdminSchedulesPage({
         </div>
       )}
 
-      {tab !== 'pending' && error === 'missing_girl' && (
+      {/* Override tab — admin can add/change/delete shifts bypassing limits */}
+      {tab === 'override' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Add override form */}
+          <div className="sched-card">
+            <div className="sched-card-head">
+              <div className="sched-card-info">
+                <div className="sched-card-name">Přidat / změnit směnu</div>
+                <div className="sched-card-meta">Ignoruje kapacitní limit i senioritu</div>
+              </div>
+            </div>
+            <form action={adminOverrideShift} style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Girl selector */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-dim)' }}>Dívka</label>
+                <select name="girl_id" required style={{
+                  background: 'var(--color-bg-elev)', border: '1px solid var(--color-line)',
+                  borderRadius: 8, padding: '8px 12px', color: 'var(--color-text)', fontSize: 13,
+                }}>
+                  <option value="">Vyberte dívku...</option>
+                  {activeGirls.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Week + Day */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-dim)' }}>Týden od</label>
+                  <select name="week_start" required style={{
+                    background: 'var(--color-bg-elev)', border: '1px solid var(--color-line)',
+                    borderRadius: 8, padding: '8px 12px', color: 'var(--color-text)', fontSize: 13,
+                  }}>
+                    <option value={thisMonday}>{thisMonday} (tento)</option>
+                    <option value={nextMonday}>{nextMonday} (příští)</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-dim)' }}>Den</label>
+                  <select name="day_of_week" required style={{
+                    background: 'var(--color-bg-elev)', border: '1px solid var(--color-line)',
+                    borderRadius: 8, padding: '8px 12px', color: 'var(--color-text)', fontSize: 13,
+                  }}>
+                    {DAY_NAMES.map((d, i) => (
+                      <option key={i} value={i}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Shift type + Location */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-dim)' }}>Typ směny</label>
+                  <select name="shift_type" required style={{
+                    background: 'var(--color-bg-elev)', border: '1px solid var(--color-line)',
+                    borderRadius: 8, padding: '8px 12px', color: 'var(--color-text)', fontSize: 13,
+                  }}>
+                    <option value="morning">Ranní (10–16)</option>
+                    <option value="afternoon">Odpolední (16:30–22:30)</option>
+                    <option value="fullday">Celý den (10–22)</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-dim)' }}>Pobočka</label>
+                  <select name="location_id" style={{
+                    background: 'var(--color-bg-elev)', border: '1px solid var(--color-line)',
+                    borderRadius: 8, padding: '8px 12px', color: 'var(--color-text)', fontSize: 13,
+                  }}>
+                    <option value="">Žádná</option>
+                    {locations.map(loc => (
+                      <option key={loc.id} value={loc.id}>{loc.displayName}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Override reason */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-dim)' }}>Důvod (volitelný)</label>
+                <input
+                  type="text" name="override_reason"
+                  placeholder="Např. záskok za nemocnou kolegyni"
+                  style={{
+                    background: 'var(--color-bg-elev)', border: '1px solid var(--color-line)',
+                    borderRadius: 8, padding: '8px 12px', color: 'var(--color-text)', fontSize: 13,
+                  }}
+                />
+              </div>
+
+              <button type="submit" className="admin-btn-submit" style={{ alignSelf: 'flex-start' }}>
+                Přidat / přepsat směnu
+              </button>
+            </form>
+          </div>
+
+          {/* Existing requests by week */}
+          {Array.from(requestsByWeek.entries()).map(([weekStart, requests]) => (
+            <div key={weekStart}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-coral)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Týden od {weekStart}
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--color-text-dim)', marginLeft: 8, textTransform: 'none', letterSpacing: 0 }}>
+                  ({requests.length} směn)
+                </span>
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {requests.map(req => (
+                  <div key={req.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 14px',
+                    background: 'var(--color-bg-card)', borderRadius: 10,
+                    border: '1px solid var(--color-line)',
+                  }}>
+                    <span style={{
+                      minWidth: 36, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      borderRadius: 8, background: `${STATUS_COLORS[req.status] ?? '#94a3b8'}22`,
+                      color: STATUS_COLORS[req.status] ?? '#94a3b8',
+                      fontSize: 11, fontWeight: 800, textTransform: 'uppercase',
+                    }}>
+                      {DAY_NAMES[req.dayOfWeek]?.substring(0, 2)}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: req.girlColor || 'var(--color-pink)', flexShrink: 0 }} />
+                        {req.girlName}
+                        <span style={{ fontSize: 11, fontWeight: 500, color: STATUS_COLORS[req.status], marginLeft: 4 }}>
+                          {STATUS_LABELS[req.status]}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--color-text-dim)' }}>
+                        {SHIFT_LABELS[req.shiftType] ?? req.shiftType}
+                        {req.locationName && ` · ${req.locationName}`}
+                        {req.overrideBy && (
+                          <span style={{ color: '#f59e0b' }}> · Override{req.overrideByEmail ? ` (${req.overrideByEmail})` : ''}{req.overrideReason ? `: ${req.overrideReason}` : ''}</span>
+                        )}
+                      </div>
+                    </div>
+                    <form action={adminDeleteShift}>
+                      <input type="hidden" name="request_id" value={req.id} />
+                      <button type="submit" className="admin-action-btn danger" style={{ fontSize: 11, padding: '4px 10px' }}>
+                        Smazat
+                      </button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {requestsByWeek.size === 0 && (
+            <div className="sched-empty">
+              Žádné směny v posledních 2 týdnech.
+            </div>
+          )}
+        </div>
+      )}
+
+      {!tab && error === 'missing_girl' && (
         <div style={{ padding: '10px 16px', marginBottom: 16, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#fca5a5', fontSize: 13 }}>
           Vyberte dívku před přidáním rozvrhu.
         </div>
       )}
-      {tab !== 'pending' && error === 'no_days' && (
+      {!tab && error === 'no_days' && (
         <div style={{ padding: '10px 16px', marginBottom: 16, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#fca5a5', fontSize: 13 }}>
           Vyberte alespoň jeden den.
         </div>
       )}
 
-      {tab !== 'pending' && (<>
+      {!tab && (<>
       <div className="sched-header">
         <h2 className="sched-title">
           Pracovní doba dívek

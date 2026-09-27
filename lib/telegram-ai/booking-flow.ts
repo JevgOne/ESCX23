@@ -19,6 +19,7 @@ import { sendMessage } from '../telegram';
 import { logAudit } from '../audit';
 import { createBookingNotification } from '../booking-notifications';
 import { getCalendarGirls } from '../booking-queries';
+import { safeEncrypt } from '../crypto';
 import type { ClientContext } from './types';
 
 const BREAK_MINUTES = 10; // 10-min break between bookings (global default)
@@ -1029,9 +1030,10 @@ async function handleClientCancel(chatId: string, bookingId: number): Promise<vo
   await db.execute({
     sql: `UPDATE bookings_v2 SET status = 'cancelled_client',
           cancel_reason = 'Klient zrusil pred potvrzenim',
+          cancel_reason_encrypted = ?,
           cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
           WHERE id = ? AND status = 'pending'`,
-    args: [bookingId],
+    args: [safeEncrypt('Klient zrusil pred potvrzenim'), bookingId],
   });
 
   // Release slot lock
