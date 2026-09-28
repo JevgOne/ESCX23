@@ -61,9 +61,10 @@ export const TOOLS: Anthropic.Tool[] = [
       type: 'object' as const,
       properties: {
         girlId: { type: 'integer', description: 'ID divky' },
+        girlName: { type: 'string', description: 'Jmeno divky (fuzzy match — pouzij kdyz nemas ID)' },
         date: { type: 'string', description: 'Datum YYYY-MM-DD' },
       },
-      required: ['girlId', 'date'],
+      required: ['date'],
     },
   },
   {
@@ -73,8 +74,9 @@ export const TOOLS: Anthropic.Tool[] = [
       type: 'object' as const,
       properties: {
         girlId: { type: 'integer', description: 'ID divky' },
+        girlName: { type: 'string', description: 'Jmeno divky (fuzzy match — pouzij kdyz nemas ID)' },
       },
-      required: ['girlId'],
+      required: [],
     },
   },
   {
@@ -118,8 +120,9 @@ export const TOOLS: Anthropic.Tool[] = [
       type: 'object' as const,
       properties: {
         girlId: { type: 'integer', description: 'ID divky k sledovani' },
+        girlName: { type: 'string', description: 'Jmeno divky (fuzzy match — pouzij kdyz nemas ID)' },
       },
-      required: ['girlId'],
+      required: [],
     },
   },
   {
@@ -148,9 +151,10 @@ export const TOOLS: Anthropic.Tool[] = [
       type: 'object' as const,
       properties: {
         girlId: { type: 'integer', description: 'ID divky' },
+        girlName: { type: 'string', description: 'Jmeno divky (fuzzy match — pouzij kdyz nemas ID)' },
         caption: { type: 'string', description: 'Volitelny popisek pod fotkou (HTML)' },
       },
-      required: ['girlId'],
+      required: [],
     },
   },
   {
@@ -165,9 +169,10 @@ export const TOOLS: Anthropic.Tool[] = [
       type: 'object' as const,
       properties: {
         girlId: { type: 'integer', description: 'ID divky' },
+        girlName: { type: 'string', description: 'Jmeno divky (fuzzy match — pouzij kdyz nemas ID)' },
         date: { type: 'string', description: 'Datum YYYY-MM-DD' },
       },
-      required: ['girlId', 'date'],
+      required: ['date'],
     },
   },
 ];

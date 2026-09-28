@@ -4,6 +4,7 @@ import { logAudit } from '../audit';
 import { safeEncrypt, hashForSearch } from '../crypto';
 import { startBookingFlow, getAvailableSlots } from './booking-flow';
 import { getCalendarGirls } from '../booking-queries';
+import { fuzzyMatchGirls, resolveGirlId } from './fuzzy-match';
 import type { ClientContext } from './types';
 
 // ---------------------------------------------------------------------------
@@ -169,29 +170,17 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
 }
 
 async function getGirlProfile(input: Record<string, unknown>): Promise<string> {
-  const girlId = input.girlId as number | undefined;
-  const girlName = input.girlName as string | undefined;
+  const resolved = await resolveGirlId(db, input);
+  if (!resolved.ok) return JSON.stringify({ error: resolved.error, suggestions: resolved.suggestions });
 
-  let sql: string;
-  let args: (string | number)[];
+  const result = await db.execute({
+    sql: `SELECT id, name, age, height, weight, bust, hair, eyes, nationality,
+                languages, bio_cs, rating, reviews_count,
+                tattoo_description_cs, piercing, piercing_description_cs
+         FROM girls WHERE id = ? AND status = 'active' LIMIT 1`,
+    args: [resolved.girlId],
+  });
 
-  if (girlId) {
-    sql = `SELECT id, name, age, height, weight, bust, hair, eyes, nationality,
-                  languages, bio_cs, rating, reviews_count,
-                  tattoo_description_cs, piercing, piercing_description_cs
-           FROM girls WHERE id = ? AND status = 'active' LIMIT 1`;
-    args = [girlId];
-  } else if (girlName) {
-    sql = `SELECT id, name, age, height, weight, bust, hair, eyes, nationality,
-                  languages, bio_cs, rating, reviews_count,
-                  tattoo_description_cs, piercing, piercing_description_cs
-           FROM girls WHERE LOWER(name) = LOWER(?) AND status = 'active' LIMIT 1`;
-    args = [girlName];
-  } else {
-    return JSON.stringify({ error: 'Zadej girlId nebo girlName' });
-  }
-
-  const result = await db.execute({ sql, args });
   if (result.rows.length === 0) {
     return JSON.stringify({ error: 'Divka nenalezena' });
   }
@@ -288,7 +277,9 @@ async function searchGirls(input: Record<string, unknown>): Promise<string> {
 }
 
 async function checkAvailability(input: Record<string, unknown>): Promise<string> {
-  const girlId = Number(input.girlId);
+  const resolved = await resolveGirlId(db, input);
+  if (!resolved.ok) return JSON.stringify({ error: resolved.error, suggestions: resolved.suggestions });
+  const girlId = resolved.girlId;
   const date = String(input.date);
 
   // Check if girl is working
@@ -312,7 +303,9 @@ async function checkAvailability(input: Record<string, unknown>): Promise<string
 }
 
 async function getWeekSchedule(input: Record<string, unknown>): Promise<string> {
-  const girlId = Number(input.girlId);
+  const resolved = await resolveGirlId(db, input);
+  if (!resolved.ok) return JSON.stringify({ error: resolved.error, suggestions: resolved.suggestions });
+  const girlId = resolved.girlId;
   const monday = new Date(getWeekMonday() + 'T12:00:00');
   const days: Array<{ day: string; date: string; working: boolean; shift: string | null; location: string | null }> = [];
   const dayNames = ['Ne', 'Po', 'Ut', 'St', 'Ct', 'Pa', 'So'];
@@ -560,7 +553,9 @@ async function handleSendGirlPhoto(
   input: Record<string, unknown>,
   ctx: ClientContext,
 ): Promise<string> {
-  const girlId = Number(input.girlId);
+  const resolved = await resolveGirlId(db, input);
+  if (!resolved.ok) return JSON.stringify({ error: resolved.error, suggestions: resolved.suggestions });
+  const girlId = resolved.girlId;
   const caption = input.caption as string | undefined;
 
   // Get girl name + primary photo URL
@@ -605,7 +600,9 @@ async function handleStartBookingFlow(
   input: Record<string, unknown>,
   ctx: ClientContext,
 ): Promise<string> {
-  const girlId = Number(input.girlId);
+  const resolved = await resolveGirlId(db, input);
+  if (!resolved.ok) return JSON.stringify({ error: resolved.error, suggestions: resolved.suggestions });
+  const girlId = resolved.girlId;
   const date = String(input.date);
 
   try {
@@ -628,7 +625,9 @@ async function subscribeToGirl(
   input: Record<string, unknown>,
   ctx: ClientContext,
 ): Promise<string> {
-  const girlId = Number(input.girlId);
+  const resolved = await resolveGirlId(db, input);
+  if (!resolved.ok) return JSON.stringify({ error: resolved.error, suggestions: resolved.suggestions });
+  const girlId = resolved.girlId;
 
   try {
     await db.execute({
