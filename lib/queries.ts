@@ -783,6 +783,7 @@ export interface Location {
   city?: string | null;
   isPrimary: boolean;
   openingDate: string | null;
+  status: string; // 'active' | 'reconstruction' | 'closed'
 }
 
 export interface FooterStats {
@@ -835,6 +836,7 @@ export async function getLocationBySlug(slug: string, locale = 'cs') {
     hoursText: localized('hours_text') ?? 'Denně 10:00 — 22:30',
     isPrimary: Number(r.is_primary) === 1,
     openingDate: r.opening_date ? String(r.opening_date) : null,
+    status: r.status ? String(r.status) : 'active',
   };
 }
 
@@ -850,6 +852,7 @@ async function getActiveLocations_uncached(): Promise<Location[]> {
     city: (r as Record<string, unknown>).city ? String((r as Record<string, unknown>).city) : null,
     isPrimary: Number((r as Record<string, unknown>).is_primary ?? 0) === 1,
     openingDate: (r as Record<string, unknown>).opening_date ? String((r as Record<string, unknown>).opening_date) : null,
+    status: (r as Record<string, unknown>).status ? String((r as Record<string, unknown>).status) : 'active',
   }));
 }
 

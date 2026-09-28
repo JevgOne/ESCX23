@@ -373,12 +373,20 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
 
   const today = pragueDateISO();
   const isUpcoming = loc.openingDate != null && loc.openingDate > today;
+  const isReconstruction = loc.status === 'reconstruction';
 
   const openingBanner: Record<string, { title: string; datePrefix: string }> = {
     cs: { title: 'Nový apartmán — otevíráme brzy!', datePrefix: 'Plánované otevření' },
     en: { title: 'New apartment — opening soon!', datePrefix: 'Planned opening' },
     de: { title: 'Neues Apartment — Eröffnung bald!', datePrefix: 'Geplante Eröffnung' },
     uk: { title: 'Новий апартамент — незабаром відкриття!', datePrefix: 'Планове відкриття' },
+  };
+
+  const reconstructionBanner: Record<string, { title: string; subtitle: string }> = {
+    cs: { title: 'Apartmán je v rekonstrukci', subtitle: 'Pracujeme na vylepšení. Rezervace jsou dočasně pozastaveny.' },
+    en: { title: 'Apartment under renovation', subtitle: 'We are making improvements. Bookings are temporarily paused.' },
+    de: { title: 'Apartment wird renoviert', subtitle: 'Wir verbessern unser Angebot. Buchungen sind vorübergehend pausiert.' },
+    uk: { title: 'Апартамент на реконструкції', subtitle: 'Ми працюємо над покращенням. Бронювання тимчасово призупинено.' },
   };
 
   /* Show today's companions at this location */
@@ -461,6 +469,24 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
                 </div>
                 <div className="pobocka-opening-date">
                   {(openingBanner[locale] ?? openingBanner.en).datePrefix}: {formatOpeningDate(loc.openingDate, locale)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {isReconstruction && (
+        <section className="section" style={{ paddingBottom: 0 }}>
+          <div className="container">
+            <div className="pobocka-reconstruction-banner">
+              <span className="pobocka-reconstruction-icon">&#128679;</span>
+              <div>
+                <div className="pobocka-reconstruction-title">
+                  {(reconstructionBanner[locale] ?? reconstructionBanner.en).title}
+                </div>
+                <div className="pobocka-reconstruction-subtitle">
+                  {(reconstructionBanner[locale] ?? reconstructionBanner.en).subtitle}
                 </div>
               </div>
             </div>

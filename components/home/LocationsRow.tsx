@@ -15,6 +15,13 @@ const PREPARING_LABEL: Record<string, string> = {
   uk: 'Відкриття',
 };
 
+const RECONSTRUCTION_LABEL: Record<string, string> = {
+  cs: 'Rekonstrukce',
+  en: 'Under renovation',
+  de: 'Renovierung',
+  uk: 'Реконструкція',
+};
+
 const PRIMARY_LABEL: Record<string, string> = {
   cs: 'Hlavní apartmán',
   en: 'Main apartment',
@@ -30,6 +37,7 @@ export default async function LocationsRow({ locale }: LocationsRowProps) {
 
   const preparingLabel = PREPARING_LABEL[locale] ?? PREPARING_LABEL.en;
   const primaryLabel = PRIMARY_LABEL[locale] ?? PRIMARY_LABEL.en;
+  const reconstructionLabel = RECONSTRUCTION_LABEL[locale] ?? RECONSTRUCTION_LABEL.en;
   const today = pragueDateISO();
 
   return (
@@ -43,6 +51,8 @@ export default async function LocationsRow({ locale }: LocationsRowProps) {
         <div className="loc-list">
           {dbLocations.map((loc) => {
             const isPreparing = loc.openingDate != null && loc.openingDate > today;
+            const isReconstruction = loc.status === 'reconstruction';
+            const isUnavailable = isPreparing || isReconstruction;
             const displayParts = (loc.displayName ?? loc.name).split(', ');
             const districtName = displayParts[0] ?? loc.name;
             const prahaNum = displayParts[1] ?? loc.district ?? 'Praha';
@@ -51,7 +61,7 @@ export default async function LocationsRow({ locale }: LocationsRowProps) {
               <Link
                 key={loc.id}
                 href={`${localePrefix(locale)}/pobocka/${loc.name}`}
-                className={`loc-row-card${loc.isPrimary ? ' loc-row-primary' : ''}${isPreparing ? ' loc-row-preparing' : ''}`}
+                className={`loc-row-card${loc.isPrimary ? ' loc-row-primary' : ''}${isPreparing ? ' loc-row-preparing' : ''}${isReconstruction ? ' loc-row-reconstruction' : ''}`}
               >
                 <div className="loc-row-pin">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -72,8 +82,13 @@ export default async function LocationsRow({ locale }: LocationsRowProps) {
                       {preparingLabel}{loc.openingDate ? ` · ${formatOpeningDate(loc.openingDate, locale)}` : ''}
                     </span>
                   )}
+                  {isReconstruction && (
+                    <span className="loc-row-badge-reconstruction">
+                      {reconstructionLabel}
+                    </span>
+                  )}
                 </div>
-                {!isPreparing && (
+                {!isUnavailable && (
                   <div className="loc-row-hours">
                     <span className="loc-row-dot" />
                     10:00 — 22:30

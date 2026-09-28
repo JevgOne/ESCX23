@@ -3,6 +3,7 @@
 import { db } from './db';
 import { requireBooking } from './auth';
 import { encrypt, hmacSearch, hashForSearch } from './crypto';
+import { logAudit } from './audit';
 
 // ---------------------------------------------------------------------------
 // Update client notes
@@ -374,6 +375,24 @@ export async function mergeClients(
       keepId,
     ],
   });
+
+  // Audit log — merge is irreversible, record before deleting
+  await logAudit({
+    userId: user.id,
+    action: 'client.merge',
+    actorType: 'user',
+    entityType: 'client',
+    entityId: keepId,
+    severity: 'warn',
+    details: {
+      keepId,
+      mergeId,
+      mergedClientNumber: String(mergeRow.client_number),
+      mergedNickname: mergeRow.nickname ? String(mergeRow.nickname) : null,
+      mergedVisits: Number(mergeRow.total_visits),
+      mergedSpent: Number(mergeRow.total_spent),
+    },
+  }).catch(() => {});
 
   // Delete merged client
   await db.execute({

@@ -4,7 +4,7 @@
  */
 
 import { db } from './db';
-import { decrypt, isEncrypted, safeDecrypt } from './crypto';
+import { decrypt, isEncrypted, safeDecrypt, hmacSearch } from './crypto';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -114,11 +114,32 @@ export async function getClientList(opts: {
     where += ' AND bc.is_banned = 1';
   }
 
-  // Search by nickname or client_number
+  // Search by nickname, client_number, phone (HMAC), or telegram username
   if (search && search.trim()) {
-    where += ' AND (bc.nickname LIKE ? OR bc.client_number LIKE ?)';
-    const term = `%${search.trim()}%`;
-    args.push(term, term);
+    const term = search.trim();
+    const phoneLike = /^\+?\d[\d\s\-()]{5,}$/.test(term);
+
+    if (phoneLike) {
+      // Phone search via HMAC in client_contacts
+      const phoneHmac = hmacSearch(term);
+      where += ` AND bc.id IN (
+        SELECT cc.client_id FROM client_contacts cc
+        WHERE cc.value_hmac = ? AND cc.channel IN ('phone', 'whatsapp')
+      )`;
+      args.push(phoneHmac);
+    } else {
+      // Text search: nickname, client_number, or telegram username
+      where += ` AND (
+        bc.nickname LIKE ?
+        OR bc.client_number LIKE ?
+        OR bc.id IN (
+          SELECT cc.client_id FROM client_contacts cc
+          WHERE cc.telegram_username LIKE ? AND cc.channel = 'telegram'
+        )
+      )`;
+      const likeTerm = `%${term}%`;
+      args.push(likeTerm, likeTerm, likeTerm);
+    }
   }
 
   // Count

@@ -521,13 +521,23 @@ async function handleRegisterNewClient(
   await db.execute({
     sql: `INSERT OR IGNORE INTO telegram_users
             (telegram_user_id, client_id, chat_id, is_active, activated_at,
-             telegram_user_id_encrypted, telegram_user_id_hmac, chat_id_encrypted, chat_id_hmac)
-          VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP, ?, ?, ?, ?)`,
+             telegram_user_id_encrypted, telegram_user_id_hmac, chat_id_encrypted, chat_id_hmac,
+             telegram_name)
+          VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?)`,
     args: [
       ctx.chatId, clientId, ctx.chatId,
       safeEncrypt(ctx.chatId), hashForSearch(ctx.chatId),
       safeEncrypt(ctx.chatId), hashForSearch(ctx.chatId),
+      ctx.telegramUsername,
     ],
+  });
+
+  // Create client_contacts record for telegram channel
+  await db.execute({
+    sql: `INSERT OR IGNORE INTO client_contacts
+            (client_id, channel, value_encrypted, telegram_username, is_primary, verified)
+          VALUES (?, 'telegram', ?, ?, 1, 1)`,
+    args: [clientId, ctx.chatId, ctx.telegramUsername],
   });
 
   // Audit

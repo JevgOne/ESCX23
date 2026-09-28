@@ -13758,6 +13758,51 @@ a.psd-pill-link:hover { border-color: var(--color-coral); background: rgba(242,1
   color: var(--color-text-muted);
   margin-top: 4px;
 }
+/* Reconstruction banner — location under renovation */
+.pobocka-reconstruction-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(245,166,35,0.12), rgba(245,166,35,0.06));
+  border: 1px solid #e8a020;
+  border-radius: 16px;
+  padding: 20px 28px;
+  margin-bottom: 32px;
+}
+.pobocka-reconstruction-icon {
+  font-size: 32px;
+}
+.pobocka-reconstruction-title {
+  font-weight: 700;
+  font-size: 18px;
+  color: #c88a10;
+}
+.pobocka-reconstruction-subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+/* Location row — reconstruction card */
+.loc-row-reconstruction {
+  opacity: 0.55;
+  border-style: dashed;
+}
+.loc-row-reconstruction:hover {
+  opacity: 0.75;
+}
+.loc-row-badge-reconstruction {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c88a10;
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(245,166,35,0.1);
+  border: 1px solid rgba(245,166,35,0.3);
+}
 
 /* ============================================================
    POBOČKA — detail apartmánu

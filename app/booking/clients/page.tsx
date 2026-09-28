@@ -9,7 +9,7 @@ import { getClientList } from '@/lib/client-queries';
 export const dynamic = 'force-dynamic';
 
 interface Props {
-  searchParams: Promise<{ q?: string; filter?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; filter?: string; sort?: string; page?: string }>;
 }
 
 const TRUST_BADGES: Record<string, { label: string; cls: string }> = {
@@ -32,15 +32,32 @@ function formatDateCS(dateStr: string): string {
   return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
 }
 
+const SORT_OPTIONS = [
+  { key: '', label: 'Vychozi' },
+  { key: 'name', label: 'Jmeno' },
+  { key: 'visits', label: 'Navstevy' },
+  { key: 'last_visit', label: 'Posledni' },
+  { key: 'spent', label: 'Utrata' },
+];
+
+const CHANNEL_ICONS: Record<string, string> = {
+  phone: 'T',
+  whatsapp: 'WA',
+  telegram: 'TG',
+  email: '@',
+};
+
 export default async function ClientListPage({ searchParams }: Props) {
   const params = await searchParams;
   const search = params.q ?? '';
   const filter = params.filter ?? 'all';
+  const sort = params.sort ?? '';
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
 
   const { clients, total } = await getClientList({
     search: search || undefined,
     filter,
+    sort: sort || undefined,
     page,
     pageSize: 50,
   });
@@ -64,18 +81,19 @@ export default async function ClientListPage({ searchParams }: Props) {
       <div className="cl-search-bar">
         <form method="GET" action="/booking/clients" className="cl-search-form">
           <input type="hidden" name="filter" value={filter} />
+          {sort && <input type="hidden" name="sort" value={sort} />}
           <input
             className="cl-search-input"
             type="text"
             name="q"
             defaultValue={search}
-            placeholder="Hledat podle jmena, kodu..."
+            placeholder="Jmeno, kod, telefon nebo @telegram"
           />
           <button type="submit" className="cl-search-btn">Hledat</button>
         </form>
         <div className="cl-filters">
           {FILTER_OPTIONS.map((f) => {
-            const href = `/booking/clients?filter=${f.key}${search ? `&q=${encodeURIComponent(search)}` : ''}`;
+            const href = `/booking/clients?filter=${f.key}${search ? `&q=${encodeURIComponent(search)}` : ''}${sort ? `&sort=${sort}` : ''}`;
             return (
               <a
                 key={f.key}
@@ -83,6 +101,21 @@ export default async function ClientListPage({ searchParams }: Props) {
                 className={`cl-filter-chip${filter === f.key ? ' active' : ''}`}
               >
                 {f.label}
+              </a>
+            );
+          })}
+        </div>
+        <div className="cl-sort">
+          <span className="cl-sort-label">Razeni:</span>
+          {SORT_OPTIONS.map((s) => {
+            const href = `/booking/clients?filter=${filter}${search ? `&q=${encodeURIComponent(search)}` : ''}${s.key ? `&sort=${s.key}` : ''}`;
+            return (
+              <a
+                key={s.key}
+                href={href}
+                className={`cl-sort-chip${sort === s.key ? ' active' : ''}`}
+              >
+                {s.label}
               </a>
             );
           })}
@@ -122,6 +155,15 @@ export default async function ClientListPage({ searchParams }: Props) {
                   {highNoShows ? '!' : ''}
                 </span>
               </div>
+              {client.channels.length > 0 && (
+                <div className="cl-channels">
+                  {client.channels.map((ch) => (
+                    <span key={ch} className={`cl-ch-icon cl-ch-${ch}`}>
+                      {CHANNEL_ICONS[ch] ?? ch}
+                    </span>
+                  ))}
+                </div>
+              )}
               {isBanned ? (
                 <span className="cl-badge cl-badge-banned">Banovany</span>
               ) : (
@@ -140,7 +182,7 @@ export default async function ClientListPage({ searchParams }: Props) {
         <div className="cl-pagination">
           {page > 1 && (
             <a
-              href={`/booking/clients?filter=${filter}${search ? `&q=${encodeURIComponent(search)}` : ''}&page=${page - 1}`}
+              href={`/booking/clients?filter=${filter}${search ? `&q=${encodeURIComponent(search)}` : ''}${sort ? `&sort=${sort}` : ''}&page=${page - 1}`}
               className="cl-page-btn"
             >
               &lt; Predchozi
@@ -151,7 +193,7 @@ export default async function ClientListPage({ searchParams }: Props) {
           </span>
           {page < totalPages && (
             <a
-              href={`/booking/clients?filter=${filter}${search ? `&q=${encodeURIComponent(search)}` : ''}&page=${page + 1}`}
+              href={`/booking/clients?filter=${filter}${search ? `&q=${encodeURIComponent(search)}` : ''}${sort ? `&sort=${sort}` : ''}&page=${page + 1}`}
               className="cl-page-btn"
             >
               Dalsi &gt;
@@ -269,4 +311,35 @@ const STYLES = `
 }
 .cl-page-btn:hover { border-color: var(--coral); color: var(--coral); }
 .cl-page-info { font-size: 12px; color: var(--dim); }
+
+/* Sort */
+.cl-sort {
+  display: flex; gap: 4px; align-items: center;
+}
+.cl-sort-label {
+  font-size: 11px; color: var(--dim); margin-right: 4px; white-space: nowrap;
+}
+.cl-sort-chip {
+  padding: 6px 10px; border-radius: 6px;
+  background: var(--bg-elev); border: 1px solid transparent;
+  color: var(--dim); font-size: 11px; font-weight: 600;
+  text-decoration: none;
+}
+.cl-sort-chip:hover { color: var(--coral); }
+.cl-sort-chip.active { color: var(--coral); border-color: var(--coral); }
+
+/* Channel icons in list */
+.cl-channels {
+  display: flex; gap: 3px; align-items: center; flex-shrink: 0;
+}
+.cl-ch-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 18px; border-radius: 3px;
+  font-size: 8px; font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.cl-ch-phone { background: rgba(74,222,128,0.12); color: #4ade80; }
+.cl-ch-whatsapp { background: rgba(37,211,102,0.12); color: #25D366; }
+.cl-ch-telegram { background: rgba(34,158,217,0.12); color: #229ED9; }
+.cl-ch-email { background: rgba(96,165,250,0.12); color: #60a5fa; }
 `;

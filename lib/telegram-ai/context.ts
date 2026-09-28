@@ -54,6 +54,19 @@ export async function buildClientContext(
       args: [clientId],
     });
 
+    // Update telegram username if changed
+    if (username && clientId) {
+      db.execute({
+        sql: `UPDATE telegram_users SET telegram_name = ? WHERE client_id = ? AND (telegram_name IS NULL OR telegram_name != ?)`,
+        args: [username, clientId, username],
+      }).catch(() => {});
+
+      db.execute({
+        sql: `UPDATE client_contacts SET telegram_username = ? WHERE client_id = ? AND channel = 'telegram' AND (telegram_username IS NULL OR telegram_username != ?)`,
+        args: [username, clientId, username],
+      }).catch(() => {});
+    }
+
     return {
       ...base,
       isRegistered: true,

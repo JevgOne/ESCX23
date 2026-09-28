@@ -86,6 +86,8 @@ async function runMigrations(client: Client) {
     'ALTER TABLE bookings_v2 ADD COLUMN decline_reason_encrypted TEXT',
     'ALTER TABLE bookings_v2 ADD COLUMN cancel_reason_encrypted TEXT',
     'ALTER TABLE shift_requests ADD COLUMN reject_reason_encrypted TEXT',
+    // Location status: active / reconstruction / closed
+    "ALTER TABLE locations ADD COLUMN status TEXT DEFAULT 'active'",
   ];
 
   // Migrate shift_requests CHECK constraint to include 'activated' status
@@ -1090,6 +1092,8 @@ async function runMigrations(client: Client) {
       sql: `UPDATE locations SET address = ? WHERE name = ? AND (address IS NULL OR address = '')`,
       args: ['Karlovo náměstí', 'praha-2'],
     });
+    // Mark Praha 2 and Praha 5 as under reconstruction
+    await client.execute(`UPDATE locations SET status = 'reconstruction' WHERE name IN ('praha-2', 'praha-5')`);
   } catch { /* OK */ }
 
   // Booking confirmation reminders (antispam — sent 30 min after booking creation)
