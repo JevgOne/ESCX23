@@ -12,34 +12,94 @@ import { db } from '../db';
 // ---------------------------------------------------------------------------
 
 const NAME_ALIASES: Record<string, string[]> = {
-  katy: ['caty', 'kathy', 'katie', 'kati', 'cathy'],
-  caty: ['katy', 'kathy', 'katie', 'kati', 'cathy'],
-  viktoria: ['viktorie', 'victoria', 'viktorka', 'viki', 'vikki'],
-  viktorie: ['viktoria', 'victoria', 'viktorka', 'viki', 'vikki'],
-  katarina: ['katerina', 'katka', 'kata'],
-  katerina: ['katarina', 'katka', 'kata'],
-  natalia: ['natalie', 'natalka', 'nata'],
-  natalie: ['natalia', 'natalka', 'nata'],
-  emily: ['emilly', 'emilie', 'emili'],
-  emilie: ['emily', 'emilly', 'emili'],
-  nicole: ['nikola', 'nikol', 'nicolle'],
-  nikola: ['nicole', 'nikol', 'nicolle'],
-  kristyna: ['kristina', 'kristy', 'kristi'],
-  kristina: ['kristyna', 'kristy', 'kristi'],
-  lucie: ['lucia', 'lucka', 'lucy'],
-  lucia: ['lucie', 'lucka', 'lucy'],
-  tereza: ['teresa', 'teri', 'terka'],
-  teresa: ['tereza', 'teri', 'terka'],
-  aneta: ['anetta', 'anet'],
-  andrea: ['andrejka', 'andi'],
-  simona: ['simone', 'simi'],
-  daniela: ['danielle', 'daniella', 'dani'],
-  barbora: ['barbara', 'barborka', 'bára'],
-  monika: ['monica', 'monca'],
-  petra: ['petruska'],
-  veronika: ['veronica', 'verunka', 'vera'],
-  dominika: ['dominique', 'domca'],
-  karolina: ['carolina', 'karolinka'],
+  // K/C swap variants
+  katy: ['caty', 'kathy', 'katie', 'kati', 'cathy', 'katka', 'katuska'],
+  caty: ['katy', 'kathy', 'katie', 'kati', 'cathy', 'katka', 'katuska'],
+  katka: ['katy', 'caty', 'kathy', 'katie', 'kati'],
+  // Viktoria variants + Czech diminutives
+  viktoria: ['viktorie', 'victoria', 'viktorka', 'viki', 'vikki', 'viky', 'vikca'],
+  viktorie: ['viktoria', 'victoria', 'viktorka', 'viki', 'vikki', 'viky', 'vikca'],
+  viky: ['viktoria', 'viktorie', 'victoria', 'viktorka', 'viki', 'vikki'],
+  viktorka: ['viktoria', 'viktorie', 'viki', 'viky'],
+  // Katerina/Katarina
+  katarina: ['katerina', 'katka', 'kata', 'katuska'],
+  katerina: ['katarina', 'katka', 'kata', 'katuska'],
+  // Natalia/Natalie
+  natalia: ['natalie', 'natalka', 'nata', 'natka', 'natuska'],
+  natalie: ['natalia', 'natalka', 'nata', 'natka', 'natuska'],
+  natalka: ['natalia', 'natalie', 'nata'],
+  // Emily + Czech diminutives
+  emily: ['emilly', 'emilie', 'emili', 'emca', 'emicka'],
+  emilie: ['emily', 'emilly', 'emili', 'emca', 'emicka'],
+  emca: ['emily', 'emilie', 'emilly'],
+  emicka: ['emily', 'emilie', 'emilly'],
+  // Nicole/Nikola/Nika + diminutives
+  nicole: ['nikola', 'nikol', 'nicolle', 'nika', 'niky', 'nikca', 'nikuska'],
+  nikola: ['nicole', 'nikol', 'nicolle', 'nika', 'niky', 'nikca', 'nikuska'],
+  nika: ['nicole', 'nikola', 'nikol', 'niky', 'nikca'],
+  niky: ['nicole', 'nikola', 'nikol', 'nika', 'nikca'],
+  // Kim + diminutives
+  kim: ['kimca', 'kimicka', 'kimmy'],
+  kimca: ['kim', 'kimicka', 'kimmy'],
+  // Anna + Czech diminutives
+  anna: ['anicka', 'anka', 'aninka', 'anecka', 'anulka'],
+  anicka: ['anna', 'anka', 'aninka'],
+  anka: ['anna', 'anicka', 'aninka'],
+  // Kristyna/Kristina
+  kristyna: ['kristina', 'kristy', 'kristi', 'kristynka'],
+  kristina: ['kristyna', 'kristy', 'kristi', 'kristynka'],
+  // Lucie/Lucia
+  lucie: ['lucia', 'lucka', 'lucy', 'lucinka'],
+  lucia: ['lucie', 'lucka', 'lucy', 'lucinka'],
+  lucka: ['lucie', 'lucia', 'lucy'],
+  // Tereza/Teresa
+  tereza: ['teresa', 'teri', 'terka', 'terezka'],
+  teresa: ['tereza', 'teri', 'terka', 'terezka'],
+  terka: ['tereza', 'teresa', 'teri'],
+  // Aneta
+  aneta: ['anetta', 'anet', 'anetka'],
+  anetka: ['aneta', 'anetta'],
+  // Andrea
+  andrea: ['andrejka', 'andi', 'andulka'],
+  // Simona
+  simona: ['simone', 'simi', 'simonka'],
+  // Daniela
+  daniela: ['danielle', 'daniella', 'dani', 'danka', 'danecka'],
+  danka: ['daniela', 'danielle', 'daniella', 'dani'],
+  // Barbora
+  barbora: ['barbara', 'barborka', 'bara', 'barca', 'baruska'],
+  barborka: ['barbora', 'barbara', 'bara'],
+  // Monika
+  monika: ['monica', 'monca', 'monicka'],
+  monca: ['monika', 'monica'],
+  // Petra
+  petra: ['petruska', 'petricka', 'petruse'],
+  // Veronika
+  veronika: ['veronica', 'verunka', 'vera', 'veruse', 'verca'],
+  verunka: ['veronika', 'veronica', 'vera'],
+  // Dominika
+  dominika: ['dominique', 'domca', 'dominicka'],
+  domca: ['dominika', 'dominique'],
+  // Karolina
+  karolina: ['carolina', 'karolinka', 'karla'],
+  karolinka: ['karolina', 'carolina'],
+  // Sara
+  sara: ['sarka', 'saruska', 'sarah'],
+  sarka: ['sara', 'saruska'],
+  // Dana
+  dana: ['danuska', 'danka', 'danuse'],
+  // Eliska
+  eliska: ['eliza', 'elizabeth', 'eli', 'elicka'],
+  elizabeth: ['eliska', 'eliza', 'eli', 'elicka'],
+  // Jessica
+  jessica: ['jesicka', 'jess', 'jessie'],
+  // Luna
+  luna: ['lunka', 'lunicka'],
+  // Lyra
+  lyra: ['lyrka'],
+  // Rebeca
+  rebeca: ['rebeka', 'rebecca', 'rebi', 'rebecka'],
+  rebeka: ['rebeca', 'rebecca', 'rebi'],
 };
 
 // ---------------------------------------------------------------------------
