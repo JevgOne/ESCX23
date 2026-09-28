@@ -8,11 +8,15 @@ import {
   getClientDetail,
   getClientBookingHistory,
   getClientGirlStats,
+  getClientContacts,
 } from '@/lib/client-queries';
+import type { ClientContact } from '@/lib/client-queries';
 import { getCurrentUser } from '@/lib/auth';
 import { auditClientDecrypt } from '@/lib/audit';
 import ClientNotes from '@/components/booking/ClientNotes';
 import ClientTrustActions from '@/components/booking/ClientTrustActions';
+import ContactSection from '@/components/booking/ContactSection';
+import ClientDuplicates from '@/components/booking/ClientDuplicates';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,15 +56,75 @@ function fmtMoney(n: number): string {
   return n.toLocaleString('cs-CZ') + ' Kc';
 }
 
+const CONTACT_CHANNEL_META: Record<string, { icon: string; label: string; color: string; bg: string }> = {
+  phone: { icon: 'T', label: 'Telefon', color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
+  whatsapp: { icon: 'WA', label: 'WhatsApp', color: '#25D366', bg: 'rgba(37,211,102,0.12)' },
+  telegram: { icon: 'TG', label: 'Telegram', color: '#229ED9', bg: 'rgba(34,158,217,0.12)' },
+  email: { icon: '@', label: 'Email', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
+};
+
+function ContactRow({
+  contact,
+  isAdmin,
+  telegramActive,
+  telegramLastInteraction,
+}: {
+  contact: ClientContact;
+  isAdmin: boolean;
+  telegramActive: boolean;
+  telegramLastInteraction: string | null;
+}) {
+  const meta = CONTACT_CHANNEL_META[contact.channel] ?? CONTACT_CHANNEL_META.phone;
+  const displayValue = isAdmin ? contact.valueDecrypted : null;
+
+  return (
+    <div className="cc-contact-row">
+      <span className="cc-contact-icon" style={{ background: meta.bg, color: meta.color }}>{meta.icon}</span>
+      <div className="cc-contact-content">
+        <span className="cc-contact-label">
+          {meta.label}
+          {contact.label ? ` (${contact.label})` : ''}
+          {contact.isPrimary && <span className="cc-primary-badge">PRIMARY</span>}
+        </span>
+        {displayValue ? (
+          contact.channel === 'phone' || contact.channel === 'whatsapp' ? (
+            <a href={`tel:${displayValue}`} className="cc-contact-value cc-link-coral">{displayValue}</a>
+          ) : contact.channel === 'email' ? (
+            <a href={`mailto:${displayValue}`} className="cc-contact-value" style={{ color: '#60a5fa', textDecoration: 'none' }}>{displayValue}</a>
+          ) : (
+            <span className="cc-contact-value" style={{ color: meta.color }}>
+              {contact.telegramUsername ? `@${contact.telegramUsername}` : displayValue}
+            </span>
+          )
+        ) : contact.valueEncrypted ? (
+          <span className="cc-encrypted">sifrovano</span>
+        ) : (
+          <span className="cc-contact-empty">--</span>
+        )}
+        {contact.channel === 'telegram' && (
+          <div className="cc-tg-status">
+            {telegramActive && <span className="cc-tg-active">Aktivni</span>}
+            {!telegramActive && contact.verified && <span className="cc-tg-inactive">Neaktivni</span>}
+            {telegramLastInteraction && (
+              <span className="cc-tg-last">Posl. interakce: {fmtDate(telegramLastInteraction)}</span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default async function ClientDetailPage({ params }: Props) {
   const { id } = await params;
   const clientId = parseInt(id, 10);
   if (isNaN(clientId)) notFound();
 
-  const [client, history, girlStats] = await Promise.all([
+  const [client, history, girlStats, contacts] = await Promise.all([
     getClientDetail(clientId),
     getClientBookingHistory(clientId),
     getClientGirlStats(clientId),
+    getClientContacts(clientId),
   ]);
 
   if (!client) notFound();
@@ -131,57 +195,76 @@ export default async function ClientDetailPage({ params }: Props) {
             </a>
           </div>
 
-          {/* Contact card */}
+          {/* Contact card — multi-channel */}
           <div className="cc-card">
-            <div className="cc-card-title">Kontakt</div>
-            <div className="cc-contact-rows">
-              <div className="cc-contact-row">
-                <span className="cc-contact-icon">T</span>
-                <div className="cc-contact-content">
-                  <span className="cc-contact-label">Telefon</span>
-                  {phone ? (
-                    <a href={`tel:${phone}`} className="cc-contact-value cc-link-coral">{phone}</a>
-                  ) : client.phoneEncrypted ? (
-                    <span className="cc-encrypted">sifrovano</span>
-                  ) : (
-                    <span className="cc-contact-empty">--</span>
-                  )}
-                </div>
-              </div>
-              <div className="cc-contact-row">
-                <span className="cc-contact-icon" style={{ background: 'rgba(34,158,217,0.12)', color: '#229ED9' }}>TG</span>
-                <div className="cc-contact-content">
-                  <span className="cc-contact-label">Telegram</span>
-                  <span className="cc-contact-value" style={{ color: client.telegramId ? '#229ED9' : 'var(--dim)' }}>
-                    {client.telegramId ?? '--'}
-                  </span>
-                </div>
-              </div>
-              {client.deepLinkToken && !client.telegramId && (
-                <div className="cc-contact-row">
-                  <span className="cc-contact-icon" style={{ background: 'rgba(34,158,217,0.12)', color: '#229ED9' }}>DL</span>
-                  <div className="cc-contact-content">
-                    <span className="cc-contact-label">Deep-link</span>
-                    <span className="cc-contact-value" style={{ fontSize: '11px', fontFamily: 'monospace', wordBreak: 'break-all', color: '#229ED9', userSelect: 'all' }}>
-                      t.me/studioflow3_bot?start=LG_{client.deepLinkToken}
-                    </span>
-                  </div>
-                </div>
-              )}
-              <div className="cc-contact-row">
-                <span className="cc-contact-icon" style={{ background: 'rgba(96,165,250,0.12)', color: '#60a5fa' }}>@</span>
-                <div className="cc-contact-content">
-                  <span className="cc-contact-label">Email</span>
-                  {email ? (
-                    <a href={`mailto:${email}`} className="cc-contact-value" style={{ color: '#60a5fa', textDecoration: 'none' }}>{email}</a>
-                  ) : client.emailEncrypted ? (
-                    <span className="cc-encrypted">sifrovano</span>
-                  ) : (
-                    <span className="cc-contact-empty">--</span>
-                  )}
-                </div>
-              </div>
+            <div className="cc-card-title-row">
+              <span className="cc-card-title">Kontakty</span>
+              <span className="cc-count-badge">{contacts.length}</span>
             </div>
+            <ContactSection clientId={client.id}>
+              <div className="cc-contact-rows">
+                {contacts.length === 0 && !client.phoneEncrypted && !client.telegramId && !client.emailEncrypted && (
+                  <div className="cc-contact-empty" style={{ padding: '8px 0', fontSize: '12px' }}>Zadne kontakty</div>
+                )}
+                {contacts.length > 0 ? (
+                  contacts.map((c) => (
+                    <ContactRow key={c.id} contact={c} isAdmin={isAdmin} telegramActive={client.telegramActive} telegramLastInteraction={client.telegramLastInteraction} />
+                  ))
+                ) : (
+                  <>
+                    {/* Fallback: show legacy contacts from booking_clients */}
+                    {(phone || client.phoneEncrypted) && (
+                      <div className="cc-contact-row">
+                        <span className="cc-contact-icon" style={{ background: 'rgba(74,222,128,0.12)', color: '#4ade80' }}>T</span>
+                        <div className="cc-contact-content">
+                          <span className="cc-contact-label">Telefon</span>
+                          {phone ? (
+                            <a href={`tel:${phone}`} className="cc-contact-value cc-link-coral">{phone}</a>
+                          ) : (
+                            <span className="cc-encrypted">sifrovano</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {client.telegramId && (
+                      <div className="cc-contact-row">
+                        <span className="cc-contact-icon" style={{ background: 'rgba(34,158,217,0.12)', color: '#229ED9' }}>TG</span>
+                        <div className="cc-contact-content">
+                          <span className="cc-contact-label">Telegram</span>
+                          <span className="cc-contact-value" style={{ color: '#229ED9' }}>{client.telegramId}</span>
+                        </div>
+                      </div>
+                    )}
+                    {(email || client.emailEncrypted) && (
+                      <div className="cc-contact-row">
+                        <span className="cc-contact-icon" style={{ background: 'rgba(96,165,250,0.12)', color: '#60a5fa' }}>@</span>
+                        <div className="cc-contact-content">
+                          <span className="cc-contact-label">Email</span>
+                          {email ? (
+                            <a href={`mailto:${email}`} className="cc-contact-value" style={{ color: '#60a5fa', textDecoration: 'none' }}>{email}</a>
+                          ) : (
+                            <span className="cc-encrypted">sifrovano</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Deep-link — always visible for copying */}
+                {client.deepLinkToken && (
+                  <div className="cc-contact-row">
+                    <span className="cc-contact-icon" style={{ background: 'rgba(34,158,217,0.12)', color: '#229ED9' }}>DL</span>
+                    <div className="cc-contact-content">
+                      <span className="cc-contact-label">Deep-link {client.telegramId ? '(aktivovan)' : ''}</span>
+                      <span className="cc-contact-value" style={{ fontSize: '11px', fontFamily: 'monospace', wordBreak: 'break-all', color: '#229ED9', userSelect: 'all' }}>
+                        t.me/studioflow3_bot?start=LG_{client.deepLinkToken}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ContactSection>
           </div>
 
           {/* Visited girls */}
@@ -204,6 +287,15 @@ export default async function ClientDetailPage({ params }: Props) {
 
         {/* ─── RIGHT COLUMN: Stats + History + Notes + Actions ─── */}
         <div className="cc-right">
+
+          {/* Duplicates warning */}
+          {isAdmin && (
+            <ClientDuplicates
+              clientId={client.id}
+              clientNickname={client.nickname}
+              clientNumber={client.clientNumber}
+            />
+          )}
 
           {/* Revenue stats */}
           <div className="cc-stats-bar">
@@ -468,6 +560,30 @@ const STYLES = `
   display: inline-block; font-size: 10px; padding: 2px 8px;
   background: rgba(167,139,250,0.12); color: var(--purple);
   border-radius: 4px; font-weight: 600;
+}
+.cc-primary-badge {
+  display: inline-block; font-size: 8px; padding: 1px 5px;
+  background: rgba(74,222,128,0.12); color: #4ade80;
+  border-radius: 3px; font-weight: 700; margin-left: 6px;
+  letter-spacing: 0.05em; vertical-align: middle;
+}
+.cc-tg-status {
+  display: flex; gap: 8px; align-items: center; margin-top: 2px;
+  flex-wrap: wrap;
+}
+.cc-tg-active {
+  font-size: 10px; color: #4ade80; font-weight: 600;
+  display: flex; align-items: center; gap: 3px;
+}
+.cc-tg-active::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: #4ade80; display: inline-block;
+}
+.cc-tg-inactive {
+  font-size: 10px; color: var(--dim); font-weight: 600;
+}
+.cc-tg-last {
+  font-size: 10px; color: var(--dim);
 }
 
 /* ─── Girls list ─── */

@@ -8,7 +8,7 @@ import NewBookingForm from '@/components/booking/NewBookingForm';
 export const dynamic = 'force-dynamic';
 
 interface Props {
-  searchParams: Promise<{ date?: string; girl?: string }>;
+  searchParams: Promise<{ date?: string; girl?: string; time?: string }>;
 }
 
 export default async function NewBookingPage({ searchParams }: Props) {
@@ -27,10 +27,15 @@ export default async function NewBookingPage({ searchParams }: Props) {
 
   const initialGirlId = params.girl ? parseInt(params.girl, 10) : null;
 
+  const initialTime = params.time && /^\d{2}:\d{2}$/.test(params.time)
+    ? params.time
+    : null;
+
   return (
     <NewBookingForm
       initialDate={initialDate}
       initialGirlId={isNaN(initialGirlId as number) ? null : initialGirlId}
+      initialTime={initialTime}
     />
   );
 }

@@ -5,6 +5,7 @@
  */
 
 import { getClientList } from '@/lib/client-queries';
+import ClientSearchAutocomplete from '@/components/booking/ClientSearchAutocomplete';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,18 +80,7 @@ export default async function ClientListPage({ searchParams }: Props) {
 
       {/* Search + Filters */}
       <div className="cl-search-bar">
-        <form method="GET" action="/booking/clients" className="cl-search-form">
-          <input type="hidden" name="filter" value={filter} />
-          {sort && <input type="hidden" name="sort" value={sort} />}
-          <input
-            className="cl-search-input"
-            type="text"
-            name="q"
-            defaultValue={search}
-            placeholder="Jmeno, kod, telefon nebo @telegram"
-          />
-          <button type="submit" className="cl-search-btn">Hledat</button>
-        </form>
+        <ClientSearchAutocomplete defaultValue={search} filter={filter} sort={sort} />
         <div className="cl-filters">
           {FILTER_OPTIONS.map((f) => {
             const href = `/booking/clients?filter=${f.key}${search ? `&q=${encodeURIComponent(search)}` : ''}${sort ? `&sort=${sort}` : ''}`;
@@ -342,4 +332,55 @@ const STYLES = `
 .cl-ch-whatsapp { background: rgba(37,211,102,0.12); color: #25D366; }
 .cl-ch-telegram { background: rgba(34,158,217,0.12); color: #229ED9; }
 .cl-ch-email { background: rgba(96,165,250,0.12); color: #60a5fa; }
+
+/* Autocomplete wrapper */
+.cl-search-wrap { position: relative; display: flex; flex: 1; min-width: 200px; }
+.cl-search-wrap .cl-search-form { display: flex; gap: 8px; flex: 1; }
+.cl-search-spinner {
+  position: absolute; right: 100px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; border: 2px solid var(--line);
+  border-top-color: var(--coral); border-radius: 50%;
+  animation: cl-spin 0.6s linear infinite;
+}
+@keyframes cl-spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+/* Autocomplete dropdown */
+.cl-autocomplete-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+  margin-top: 4px;
+  background: var(--bg-elev); border: 1px solid var(--line);
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  max-height: 360px; overflow-y: auto;
+}
+.cl-ac-row {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 10px 14px;
+  background: none; border: none; border-bottom: 1px solid var(--line);
+  color: inherit; cursor: pointer; text-align: left; font-family: inherit;
+}
+.cl-ac-row:last-child { border-bottom: none; }
+.cl-ac-row:hover { background: rgba(242,125,141,0.06); }
+.cl-ac-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: var(--coral); font-size: 12px;
+  flex-shrink: 0;
+}
+.cl-ac-avatar.banned { border-color: var(--red); color: var(--red); }
+.cl-ac-info { flex: 1; min-width: 0; }
+.cl-ac-name { font-weight: 600; font-size: 13px; margin-right: 6px; }
+.cl-ac-code { font-size: 11px; color: var(--muted); }
+.cl-ac-visits { font-size: 11px; color: var(--dim); flex-shrink: 0; }
+.cl-ac-more {
+  display: block; width: 100%; padding: 10px;
+  background: none; border: none; border-top: 1px solid var(--line);
+  color: var(--coral); font-size: 12px; font-weight: 600;
+  cursor: pointer; text-align: center; font-family: inherit;
+}
+.cl-ac-more:hover { background: rgba(242,125,141,0.06); }
+.cl-ac-empty {
+  padding: 16px; text-align: center;
+  color: var(--dim); font-size: 13px;
+}
 `;

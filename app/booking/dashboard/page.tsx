@@ -6,7 +6,8 @@
 
 import { db } from '@/lib/db';
 import { requireBooking } from '@/lib/auth';
-import { getCalendarGirls } from '@/lib/booking-queries';
+import { getCalendarGirls, getCalendarBookings } from '@/lib/booking-queries';
+import type { CalendarGirl, CalendarBooking } from '@/lib/booking-queries';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +62,7 @@ export default async function BookingDashboardPage() {
     workingGirls,
     recentBookingsResult,
     todayAllResult,
+    timelineBookings,
   ] = await Promise.all([
     // Today's bookings count
     db.execute({
@@ -165,6 +167,8 @@ export default async function BookingDashboardPage() {
             ORDER BY b.start_time, g.name`,
       args: [today],
     }),
+    // Timeline bookings (includes drafts)
+    getCalendarBookings(today, today),
   ]);
 
   const todayCount = Number(todayBookingsResult.rows[0]?.cnt ?? 0);
@@ -181,6 +185,45 @@ export default async function BookingDashboardPage() {
   const girlsWorking = workingGirls.filter(g => g.isWorking);
   const recentBookings = recentBookingsResult.rows;
   const todayAllBookings = todayAllResult.rows;
+
+  // --- Timeline grid computation ---
+  const TIMELINE_START = 10; // 10:00
+  const TIMELINE_END = 23; // 23:00
+  const SLOT_MINUTES = 30;
+  const TOTAL_SLOTS = ((TIMELINE_END - TIMELINE_START) * 60) / SLOT_MINUTES; // 26 slots
+
+  const timeSlotLabels: string[] = [];
+  for (let i = 0; i < TOTAL_SLOTS; i++) {
+    const totalMin = TIMELINE_START * 60 + i * SLOT_MINUTES;
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    timeSlotLabels.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+  }
+
+  function timeToSlot(timeStr: string): number {
+    const [h, m] = timeStr.split(':').map(Number);
+    return ((h * 60 + m) - TIMELINE_START * 60) / SLOT_MINUTES;
+  }
+
+  function slotSpan(startTime: string, endTime: string): { start: number; span: number } {
+    let s = timeToSlot(startTime);
+    let e = timeToSlot(endTime);
+    if (s < 0) s = 0;
+    if (e > TOTAL_SLOTS) e = TOTAL_SLOTS;
+    return { start: s, span: Math.max(1, Math.round(e - s)) };
+  }
+
+  // Group bookings by girl
+  const bookingsByGirl = new Map<number, CalendarBooking[]>();
+  for (const b of timelineBookings) {
+    const arr = bookingsByGirl.get(b.girlId) ?? [];
+    arr.push(b);
+    bookingsByGirl.set(b.girlId, arr);
+  }
+
+  // Separate working and not-working girls
+  const tlWorkingGirls = workingGirls.filter(g => g.isWorking);
+  const tlNotWorkingGirls = workingGirls.filter(g => !g.isWorking);
 
   const formatCZK = (n: number) => n.toLocaleString('cs-CZ') + ' Kc';
 
@@ -263,6 +306,144 @@ export default async function BookingDashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Timeline Grid */}
+      {tlWorkingGirls.length > 0 && (
+        <div className="tl-wrap">
+          <div className="tl-header">
+            <h2 className="tl-title">Timeline</h2>
+            <span className="tl-subtitle">{tlWorkingGirls.length} pracuje, {timelineBookings.filter(b => !b.isDraft).length} rez.</span>
+          </div>
+          <div className="tl-scroll">
+            <div className="tl-grid" style={{ gridTemplateColumns: `120px repeat(${TOTAL_SLOTS}, 48px)` }}>
+              {/* Header row */}
+              <div className="tl-corner" />
+              {timeSlotLabels.map((label, i) => (
+                <div key={i} className={`tl-time-header${i % 2 === 0 ? ' tl-hour' : ''}`}>
+                  {i % 2 === 0 ? label : ''}
+                </div>
+              ))}
+
+              {/* Girl rows */}
+              {tlWorkingGirls.map((girl) => {
+                const girlBookings = bookingsByGirl.get(girl.id) ?? [];
+                // Build occupied slots set
+                const occupiedSlots = new Set<number>();
+                for (const b of girlBookings) {
+                  const { start, span } = slotSpan(b.startTime, b.endTime);
+                  for (let s = start; s < start + span; s++) occupiedSlots.add(s);
+                }
+                // Girl shift bounds
+                const shiftStartSlot = girl.shiftStart ? timeToSlot(girl.shiftStart) : 0;
+                const shiftEndSlot = girl.shiftEnd ? timeToSlot(girl.shiftEnd) : TOTAL_SLOTS;
+
+                return (
+                  <div key={girl.id} className="tl-row" style={{ display: 'contents' }}>
+                    {/* Girl name cell */}
+                    <div className="tl-girl">
+                      <span className="tl-girl-name">{girl.name}</span>
+                      {girl.locationName && <span className="tl-girl-loc">{girl.locationName}</span>}
+                    </div>
+                    {/* Time cells */}
+                    {timeSlotLabels.map((_, slotIdx) => {
+                      // Check if a booking starts here
+                      const booking = girlBookings.find(b => {
+                        const { start } = slotSpan(b.startTime, b.endTime);
+                        return Math.round(start) === slotIdx;
+                      });
+
+                      if (booking) {
+                        const { span } = slotSpan(booking.startTime, booking.endTime);
+                        const isBreak = booking.bookingType === 'break';
+                        const isDraft = booking.isDraft;
+                        const statusClass = isDraft ? 'draft' : isBreak ? 'break' : booking.status;
+                        return (
+                          <a
+                            key={slotIdx}
+                            href={isDraft ? undefined : `/booking/calendar?date=${today}&detail=${booking.id}`}
+                            className={`tl-booking tl-st-${statusClass}`}
+                            style={{ gridColumn: `span ${span}` }}
+                            title={`${booking.clientNickname} / ${booking.durationMinutes}min / ${booking.startTime}-${booking.endTime}`}
+                          >
+                            <span className="tl-bk-client">{isBreak ? 'Prestavka' : booking.clientNickname}</span>
+                            <span className="tl-bk-dur">{booking.durationMinutes}m</span>
+                          </a>
+                        );
+                      }
+
+                      // Skip cells covered by a multi-slot booking
+                      if (occupiedSlots.has(slotIdx)) return null;
+
+                      // Outside shift = grey
+                      if (slotIdx < shiftStartSlot || slotIdx >= shiftEndSlot) {
+                        return <div key={slotIdx} className="tl-cell tl-off" />;
+                      }
+
+                      // Free slot = clickable [+]
+                      const slotTime = timeSlotLabels[slotIdx];
+                      return (
+                        <a
+                          key={slotIdx}
+                          href={`/booking/calendar/new?date=${today}&girl=${girl.id}&time=${slotTime}`}
+                          className="tl-cell tl-free"
+                          title={`Pridat rezervaci: ${girl.name} ${slotTime}`}
+                        >
+                          +
+                        </a>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Mobile vertical list */}
+          <div className="tl-mobile">
+            {tlWorkingGirls.map((girl) => {
+              const girlBookings = (bookingsByGirl.get(girl.id) ?? []).sort((a, b) => a.startTime.localeCompare(b.startTime));
+              return (
+                <div key={girl.id} className="tl-m-girl">
+                  <div className="tl-m-girl-header">
+                    <span className="tl-m-girl-name">{girl.name}</span>
+                    {girl.locationName && <span className="tl-m-girl-loc">{girl.locationName}</span>}
+                    <span className="tl-m-girl-shift">{girl.shiftStart} - {girl.shiftEnd}</span>
+                  </div>
+                  {girlBookings.length === 0 ? (
+                    <a href={`/booking/calendar/new?date=${today}&girl=${girl.id}`} className="tl-m-free">
+                      + Pridat rezervaci
+                    </a>
+                  ) : (
+                    <div className="tl-m-bookings">
+                      {girlBookings.map(b => (
+                        <a
+                          key={b.id}
+                          href={b.isDraft ? undefined : `/booking/calendar?date=${today}&detail=${b.id}`}
+                          className={`tl-m-bk tl-st-${b.isDraft ? 'draft' : b.bookingType === 'break' ? 'break' : b.status}`}
+                        >
+                          <span className="tl-m-bk-time">{b.startTime}-{b.endTime}</span>
+                          <span className="tl-m-bk-client">{b.bookingType === 'break' ? 'Prestavka' : b.clientNickname}</span>
+                          <span className="tl-m-bk-dur">{b.durationMinutes}m</span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Non-working girls */}
+          {tlNotWorkingGirls.length > 0 && (
+            <div className="tl-notworking">
+              {tlNotWorkingGirls.map(g => (
+                <span key={g.id} className="tl-nw-name">{g.name}</span>
+              ))}
+              <span className="tl-nw-label">— dnes nepracuje</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="db-grid-4">
@@ -666,6 +847,157 @@ const DASHBOARD_STYLES = `
     flex-shrink: 0;
   }
 
+  /* Timeline */
+  .tl-wrap {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .tl-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .tl-title {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .tl-subtitle {
+    font-size: 12px;
+    color: var(--dim);
+  }
+  .tl-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tl-grid {
+    display: grid;
+    gap: 0;
+    min-width: max-content;
+  }
+  .tl-corner {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--bg-elev);
+  }
+  .tl-time-header {
+    font-size: 10px;
+    color: var(--dim);
+    text-align: center;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--line);
+    font-variant-numeric: tabular-nums;
+  }
+  .tl-time-header.tl-hour {
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .tl-girl {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--bg-elev);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 36px;
+  }
+  .tl-girl-name {
+    font-weight: 600;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .tl-girl-loc {
+    font-size: 10px;
+    color: var(--blue);
+  }
+  .tl-cell {
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid rgba(255,255,255,0.03);
+    min-height: 36px;
+  }
+  .tl-off {
+    background: rgba(255,255,255,0.02);
+  }
+  .tl-free {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dim);
+    font-size: 14px;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid rgba(255,255,255,0.03);
+    min-height: 36px;
+  }
+  .tl-free:hover {
+    background: rgba(74,222,128,0.1);
+    color: var(--green);
+  }
+  .tl-booking {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    text-decoration: none;
+    color: #fff;
+    overflow: hidden;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+    min-height: 36px;
+    transition: filter 0.15s;
+  }
+  a.tl-booking:hover {
+    filter: brightness(1.15);
+  }
+  .tl-st-confirmed { background: rgba(74,222,128,0.25); color: var(--green); }
+  .tl-st-in_progress { background: rgba(96,165,250,0.3); color: var(--blue); }
+  .tl-st-pending { background: rgba(251,191,36,0.25); color: var(--yellow); }
+  .tl-st-completed { background: rgba(255,255,255,0.08); color: var(--muted); }
+  .tl-st-draft {
+    background: rgba(251,191,36,0.12);
+    color: var(--yellow);
+    border: 1px dashed rgba(251,191,36,0.4);
+  }
+  .tl-st-break { background: rgba(255,255,255,0.06); color: var(--dim); }
+  .tl-bk-client {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tl-bk-dur {
+    font-size: 9px;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+  .tl-notworking {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .tl-nw-name {
+    font-size: 12px;
+    color: var(--dim);
+  }
+  .tl-nw-label {
+    font-size: 11px;
+    color: var(--dim);
+    opacity: 0.6;
+  }
+
   /* Responsive */
   @media (max-width: 1024px) {
     .db-grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -680,5 +1012,84 @@ const DASHBOARD_STYLES = `
     .db-today-girl {
       font-size: 14px;
     }
+    .tl-scroll { display: none; }
+    .tl-mobile { display: flex !important; }
+  }
+
+  /* Mobile timeline list (hidden on desktop) */
+  .tl-mobile {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tl-m-girl {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .tl-m-girl-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.03);
+  }
+  .tl-m-girl-name {
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .tl-m-girl-loc {
+    font-size: 10px;
+    color: var(--blue);
+    background: rgba(96,165,250,0.12);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .tl-m-girl-shift {
+    font-size: 11px;
+    color: var(--dim);
+    margin-left: auto;
+  }
+  .tl-m-bookings {
+    display: flex;
+    flex-direction: column;
+  }
+  .tl-m-bk {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    text-decoration: none;
+    border-top: 1px solid var(--line);
+  }
+  .tl-m-bk-time {
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    min-width: 80px;
+  }
+  .tl-m-bk-client {
+    font-size: 12px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tl-m-bk-dur {
+    font-size: 10px;
+    opacity: 0.6;
+  }
+  .tl-m-free {
+    display: block;
+    padding: 8px 10px;
+    text-align: center;
+    color: var(--dim);
+    text-decoration: none;
+    font-size: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .tl-m-free:hover {
+    color: var(--green);
+    background: rgba(74,222,128,0.06);
   }
 `;

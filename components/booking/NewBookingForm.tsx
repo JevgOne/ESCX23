@@ -28,9 +28,10 @@ const DURATIONS = [30, 45, 60, 90, 120];
 interface Props {
   initialDate: string;
   initialGirlId: number | null;
+  initialTime?: string | null;
 }
 
-export default function NewBookingForm({ initialDate, initialGirlId }: Props) {
+export default function NewBookingForm({ initialDate, initialGirlId, initialTime }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -56,7 +57,7 @@ export default function NewBookingForm({ initialDate, initialGirlId }: Props) {
 
   // Step 3: Time
   const [slots, setSlots] = useState<{ time: string; available: boolean }[]>([]);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(initialTime ?? null);
   const [duration, setDuration] = useState(60);
   const [notes, setNotes] = useState('');
 
@@ -196,8 +197,12 @@ export default function NewBookingForm({ initialDate, initialGirlId }: Props) {
       return;
     }
 
-    // Success — redirect to calendar with detail
-    router.push(`/booking/calendar?view=day&date=${date}&detail=${result.id}`);
+    // Success — redirect to dashboard if came from timeline, else calendar
+    if (initialTime) {
+      router.push('/booking/dashboard');
+    } else {
+      router.push(`/booking/calendar?view=day&date=${date}&detail=${result.id}`);
+    }
   }
 
   // Calculate end time for display
