@@ -456,7 +456,7 @@ export default function NewBookingForm({ initialDate, initialGirlId, initialTime
                 <div className="nbf-group">
                   <label className="nbf-label">Lokace (z rozvrhu)</label>
                   <div className="nbf-input" style={{ color: 'var(--muted)', cursor: 'default' }}>
-                    {selectedGirl?.locationName ?? 'Neurcena'}
+                    {selectedGirl?.girlType === 'escort_only' ? 'Escort — k klientovi' : (selectedGirl?.locationName ?? 'Neurcena')}
                   </div>
                 </div>
 
@@ -501,7 +501,7 @@ export default function NewBookingForm({ initialDate, initialGirlId, initialTime
                   </div>
                   <div className="nbf-sum-row">
                     <span className="nbf-sum-label">Lokace</span>
-                    <span className="nbf-sum-value">{selectedGirl?.locationName ?? 'Neurcena'}</span>
+                    <span className="nbf-sum-value">{selectedGirl?.girlType === 'escort_only' ? 'Escort — k klientovi' : (selectedGirl?.locationName ?? 'Neurcena')}</span>
                   </div>
                   <div className="nbf-sum-row">
                     <span className="nbf-sum-label">Zdroj</span>

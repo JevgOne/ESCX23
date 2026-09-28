@@ -513,16 +513,20 @@ export async function handleConfirm(
 
   // Get location for confirmation message
   const locResult = await db.execute({
-    sql: `SELECT l.display_name AS location_name, l.address AS location_address
-          FROM girl_schedules gs
+    sql: `SELECT l.display_name AS location_name, l.address AS location_address, g.girl_type
+          FROM girls g
+          LEFT JOIN girl_schedules gs ON gs.girl_id = g.id AND gs.day_of_week = ? AND gs.is_active = 1
           LEFT JOIN locations l ON l.id = gs.location_id
-          WHERE gs.girl_id = ? AND gs.day_of_week = ? AND gs.is_active = 1
+          WHERE g.id = ?
           LIMIT 1`,
-    args: [draft.girlId, (() => { const js = new Date(draft.date + 'T12:00:00').getDay(); return js === 0 ? 6 : js - 1; })()],
+    args: [(() => { const js = new Date(draft.date + 'T12:00:00').getDay(); return js === 0 ? 6 : js - 1; })(), draft.girlId],
   });
+  const girlType = locResult.rows[0]?.girl_type ? String(locResult.rows[0].girl_type) : 'apartment';
   const locName = locResult.rows[0]?.location_name ? String(locResult.rows[0].location_name) : null;
   const locAddr = locResult.rows[0]?.location_address ? String(locResult.rows[0].location_address) : null;
-  const location = locName ? (locAddr ? `${locName} — ${locAddr}` : locName) : null;
+  const location = (girlType === 'escort_only' || girlType === 'both')
+    ? 'Escort'
+    : (locName ? (locAddr ? `${locName} — ${locAddr}` : locName) : null);
 
   // Build price text with discount
   let priceText: string;

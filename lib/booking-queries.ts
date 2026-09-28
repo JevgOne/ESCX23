@@ -19,6 +19,7 @@ export interface CalendarGirl {
   locationName: string | null;
   locationAddress: string | null;
   isWorking: boolean;
+  girlType: string; // 'apartment' | 'escort_only' | 'both'
 }
 
 export interface CalendarBooking {
@@ -62,6 +63,7 @@ export async function getCalendarGirls(date: string): Promise<CalendarGirl[]> {
       SELECT
         g.id,
         g.name,
+        g.girl_type,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url,
         gs.start_time AS shift_start,
         gs.end_time AS shift_end,
@@ -101,15 +103,17 @@ export async function getCalendarGirls(date: string): Promise<CalendarGirl[]> {
       shiftEnd = r.ex_end ? String(r.ex_end).substring(0, 5) : shiftEnd;
     }
 
+    const gt = String(r.girl_type ?? 'apartment');
     return {
       id: Number(r.id),
       name: String(r.name),
       photoUrl: r.photo_url ? String(r.photo_url) : null,
       shiftStart,
       shiftEnd,
-      locationName: r.location_name ? String(r.location_name) : null,
-      locationAddress: r.location_address ? String(r.location_address) : null,
+      locationName: gt === 'escort_only' ? 'Escort' : (r.location_name ? String(r.location_name) : null),
+      locationAddress: gt === 'escort_only' ? null : (r.location_address ? String(r.location_address) : null),
       isWorking: shiftStart !== null && shiftEnd !== null,
+      girlType: gt,
     };
   });
 
@@ -302,15 +306,15 @@ export function computeDayStats(
 // ---------------------------------------------------------------------------
 
 const DEMO_GIRLS: CalendarGirl[] = [
-  { id: 41, name: 'Aneta', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/41/1781886676034-237b1200-7c66-4c09-a881-2a429b15bfec.webp', shiftStart: '10:00', shiftEnd: '20:00', locationName: 'Vinohrady', locationAddress: null, isWorking: true },
-  { id: 31, name: 'Caty', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/31/1766987005779.jpg', shiftStart: '10:00', shiftEnd: '20:00', locationName: 'Karlin', locationAddress: null, isWorking: true },
-  { id: 44, name: 'Eliska', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/44/1779557426027.png', shiftStart: '12:00', shiftEnd: '21:00', locationName: 'Vinohrady', locationAddress: null, isWorking: true },
-  { id: 28, name: 'Emily', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/28/1766928171377.jpg', shiftStart: '10:00', shiftEnd: '21:00', locationName: 'Vinohrady', locationAddress: null, isWorking: true },
-  { id: 46, name: 'Kim', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/46/1779618571371.jpg', shiftStart: '12:00', shiftEnd: '18:00', locationName: 'Smichov', locationAddress: null, isWorking: true },
-  { id: 22, name: 'Luna', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/22/1766737202940.jpeg', shiftStart: '12:00', shiftEnd: '20:00', locationName: 'Vinohrady', locationAddress: null, isWorking: true },
-  { id: 26, name: 'Natalie', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/26/1766927460248.jpg', shiftStart: '11:00', shiftEnd: '20:00', locationName: 'Zizkov', locationAddress: null, isWorking: true },
-  { id: 25, name: 'Nika', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/25/1781852134764-27ecbb5e-4b5d-4166-be0d-af06b0ac2cd8.jpg', shiftStart: '10:00', shiftEnd: '20:00', locationName: 'Smichov', locationAddress: null, isWorking: true },
-  { id: 56, name: 'Nina', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/56/1787423439144-91fb48af-d84b-480a-b55f-624f3c047b39.webp', shiftStart: '12:00', shiftEnd: '21:00', locationName: 'Karlin', locationAddress: null, isWorking: true },
+  { id: 41, name: 'Aneta', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/41/1781886676034-237b1200-7c66-4c09-a881-2a429b15bfec.webp', shiftStart: '10:00', shiftEnd: '20:00', locationName: 'Vinohrady', locationAddress: null, isWorking: true, girlType: 'apartment' },
+  { id: 31, name: 'Caty', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/31/1766987005779.jpg', shiftStart: '10:00', shiftEnd: '20:00', locationName: 'Karlin', locationAddress: null, isWorking: true, girlType: 'apartment' },
+  { id: 44, name: 'Eliska', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/44/1779557426027.png', shiftStart: '12:00', shiftEnd: '21:00', locationName: 'Vinohrady', locationAddress: null, isWorking: true, girlType: 'apartment' },
+  { id: 28, name: 'Emily', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/28/1766928171377.jpg', shiftStart: '10:00', shiftEnd: '21:00', locationName: 'Vinohrady', locationAddress: null, isWorking: true, girlType: 'apartment' },
+  { id: 46, name: 'Kim', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/46/1779618571371.jpg', shiftStart: '12:00', shiftEnd: '18:00', locationName: 'Smichov', locationAddress: null, isWorking: true, girlType: 'apartment' },
+  { id: 22, name: 'Luna', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/22/1766737202940.jpeg', shiftStart: '12:00', shiftEnd: '20:00', locationName: 'Vinohrady', locationAddress: null, isWorking: true, girlType: 'apartment' },
+  { id: 26, name: 'Natalie', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/26/1766927460248.jpg', shiftStart: '11:00', shiftEnd: '20:00', locationName: 'Zizkov', locationAddress: null, isWorking: true, girlType: 'apartment' },
+  { id: 25, name: 'Nika', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/25/1781852134764-27ecbb5e-4b5d-4166-be0d-af06b0ac2cd8.jpg', shiftStart: '10:00', shiftEnd: '20:00', locationName: 'Smichov', locationAddress: null, isWorking: true, girlType: 'apartment' },
+  { id: 56, name: 'Nina', photoUrl: 'https://qktyf1ozcve7804i.public.blob.vercel-storage.com/girls/56/1787423439144-91fb48af-d84b-480a-b55f-624f3c047b39.webp', shiftStart: '12:00', shiftEnd: '21:00', locationName: 'Karlin', locationAddress: null, isWorking: true, girlType: 'apartment' },
 ];
 
 export function getDemoGirls(): CalendarGirl[] {

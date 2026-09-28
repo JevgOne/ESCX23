@@ -1,4 +1,5 @@
 import { requireGirl } from '@/lib/auth';
+import { db } from '@/lib/db';
 import {
   getGirlDayBookings,
   getGirlDayPoints,
@@ -181,12 +182,16 @@ export default async function StudioDashboardPage({ searchParams }: Props) {
   const now = getPragueDate();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-  const [bookings, shift, points, girlName] = await Promise.all([
+  const [bookings, shift, points, girlName, girlTypeRes] = await Promise.all([
     getGirlDayBookings(user.girl_id, todayStr),
     getGirlShift(user.girl_id, todayStr),
     getGirlDayPoints(user.girl_id, todayStr),
     getGirlName(user.girl_id),
+    db.execute({ sql: 'SELECT girl_type FROM girls WHERE id = ? LIMIT 1', args: [user.girl_id] }),
   ]);
+
+  const girlType = String(girlTypeRes.rows[0]?.girl_type ?? 'apartment');
+  const isEscort = girlType === 'escort_only';
 
   const pointsPct = Math.min(100, Math.round((points / POINTS_DAILY_TARGET) * 100));
 
@@ -279,9 +284,7 @@ export default async function StudioDashboardPage({ searchParams }: Props) {
           <div className="shift-date">{formatCzechDate(now)}</div>
           <div className="shift-info">
             <span className="shift-tag shift-tag-time">{shift.startTime} - {shift.endTime}</span>
-            {shift.locationName && (
-              <span className="shift-tag shift-tag-loc">{shift.locationName}</span>
-            )}
+            <span className="shift-tag shift-tag-loc">{isEscort ? 'Escort' : (shift.locationName ?? '')}</span>
           </div>
         </div>
       ) : (

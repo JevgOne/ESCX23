@@ -389,10 +389,11 @@ export default async function PobockaDetailPage({ params, searchParams }: Props 
     uk: { title: 'Апартамент на реконструкції', subtitle: 'Ми працюємо над покращенням. Бронювання тимчасово призупинено.' },
   };
 
-  /* Show today's companions at this location */
+  /* Show today's companions at this location — escort-only girls have no apartment */
   const allGirls = await getGirlsWithToday().catch(() => []);
-  // Filter by district match
+  // Filter by district match, exclude escort_only (they don't belong to any apartment)
   const districtGirls = allGirls.filter((g) => {
+    if (g.girlType === 'escort_only') return false;
     const gLoc = (g.location ?? '').toLowerCase();
     const districtLc = district.toLowerCase();
     const cityLc = (loc.city ?? 'praha').toLowerCase();

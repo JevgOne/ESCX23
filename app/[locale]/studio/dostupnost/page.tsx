@@ -56,7 +56,7 @@ export default async function StudioDostupnostPage({
   const thisMonday = getMonday(nowPrague);
   const nextMonday = addDays(thisMonday, 7);
 
-  const [schedules, locations, shiftRes, seniority] = await Promise.all([
+  const [schedules, locations, shiftRes, seniority, girlTypeRes] = await Promise.all([
     getSchedulesForGirl(girlId),
     getActiveLocations(),
     db.execute({
@@ -64,7 +64,11 @@ export default async function StudioDostupnostPage({
       args: [girlId, thisMonday, nextMonday],
     }),
     getSeniorityStatus(girlId, nextMonday),
+    db.execute({ sql: 'SELECT girl_type FROM girls WHERE id = ? LIMIT 1', args: [girlId] }),
   ]);
+
+  const girlType = String(girlTypeRes.rows[0]?.girl_type ?? 'apartment');
+  const isEscort = girlType === 'escort_only';
 
   // Map existing shifts by week_start + day_of_week
   type ShiftRow = { id: number; weekStart: string; dayOfWeek: number; shiftType: string; status: string; startTime: string; endTime: string; locationId: number | null; rejectReason: string | null };
@@ -382,8 +386,8 @@ export default async function StudioDostupnostPage({
       <StudioTopbar title="Směny" />
 
       <div className="studio-content">
-        {/* Location selector — form-based, uses hidden input */}
-        {locations.length > 1 && (
+        {/* Location selector — hidden for escort-only girls */}
+        {!isEscort && locations.length > 1 && (
           <div className="shift-loc-select">
             <label>Pobočka</label>
             <div className="shift-loc-pills">
@@ -397,6 +401,11 @@ export default async function StudioDostupnostPage({
                 </a>
               ))}
             </div>
+          </div>
+        )}
+        {isEscort && (
+          <div className="shift-status-banner ok" style={{ marginBottom: '20px' }}>
+            Escort — zadej vlastní časy pro každý den. Pobočku nevybíráš.
           </div>
         )}
 
@@ -462,6 +471,7 @@ export default async function StudioDostupnostPage({
                             {existing.status === 'rejected' && 'Zamítnuto'}
                           </span>
                           <span className="shift-type-label">
+                            {existing.shiftType === 'custom' && `${existing.startTime}–${existing.endTime}`}
                             {existing.shiftType === 'morning' && 'Ranní'}
                             {existing.shiftType === 'afternoon' && 'Odpolední'}
                             {existing.shiftType === 'fullday' && 'Celý den'}
@@ -479,6 +489,22 @@ export default async function StudioDostupnostPage({
                           )}
                         </>
                       ) : !isDayDisabled ? (
+                        isEscort ? (
+                          <form action={submitShiftRequest} className="shift-select-form">
+                            <input type="hidden" name="shift_type" value="custom" />
+                            <input type="hidden" name="day_of_week" value={i} />
+                            <input type="hidden" name="week_start" value={week.monday} />
+                            <label style={{ fontSize: '9px', color: 'var(--color-text-dim)' }}>
+                              Od
+                              <input type="time" name="start_time" defaultValue="12:00" min="08:00" max="23:00" step={1800} style={{ width: '100%', padding: '4px', borderRadius: '6px', border: '1px solid var(--color-line)', background: 'var(--color-bg-elev)', color: 'var(--color-text)', fontSize: '10px' }} />
+                            </label>
+                            <label style={{ fontSize: '9px', color: 'var(--color-text-dim)' }}>
+                              Do
+                              <input type="time" name="end_time" defaultValue="20:00" min="10:00" max="23:59" step={1800} style={{ width: '100%', padding: '4px', borderRadius: '6px', border: '1px solid var(--color-line)', background: 'var(--color-bg-elev)', color: 'var(--color-text)', fontSize: '10px' }} />
+                            </label>
+                            <button type="submit" className="shift-btn">OK</button>
+                          </form>
+                        ) : (
                         <div className="shift-select-form">
                           {SHIFT_PRESETS.map(preset => {
                             const cap = capacityMap[week.monday]?.[i];
@@ -519,6 +545,7 @@ export default async function StudioDostupnostPage({
                             );
                           })}
                         </div>
+                        )
                       ) : (
                         <span className="shift-type-label">—</span>
                       )}

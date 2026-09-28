@@ -124,6 +124,7 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
     location: string | null;
     locationAddress: string | null;
     photoUrl: string | null;
+    girlType: string;
   }[] = [];
 
   for (const cg of working) {
@@ -150,16 +151,20 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
       location: cg.locationName,
       locationAddress: cg.locationAddress,
       photoUrl: r.photo_url ? String(r.photo_url) : null,
+      girlType: cg.girlType,
     });
   }
 
   // Send photos of all available girls directly into the chat
   for (const g of girls) {
     if (g.photoUrl) {
+      const isEscort = g.girlType === 'escort_only' || g.girlType === 'both';
       const caption = `<b>${g.name}</b>, ${g.age} let` +
         (g.rating ? `\n⭐ ${g.rating}/5` + (g.reviewsCount ? ` (${g.reviewsCount} recenzi)` : '') : '') +
         `\n🟢 ${g.shiftStart} – ${g.shiftEnd}` +
-        (g.location ? `\n📍 ${g.location}${g.locationAddress ? ' — ' + g.locationAddress : ''}` : '');
+        (isEscort
+          ? `\n🚗 Escort — jezdí k vám`
+          : (g.location ? `\n📍 ${g.location}${g.locationAddress ? ' — ' + g.locationAddress : ''}` : ''));
       await sendPhoto(ctx.chatId, g.photoUrl, { caption }).catch((err) => {
         console.error(`[telegram-ai] Failed to send photo for ${g.name}:`, err);
       });

@@ -36,15 +36,28 @@ const config: NextConfig = {
       },
 
       // === A) Profile old URLs ===
-      { source: '/cs/girls/:slug', destination: '/cs/profil/:slug', permanent: true },
-      { source: '/cs/profily/:slug', destination: '/cs/profil/:slug', permanent: true },
+      { source: '/cs/girls/:slug', destination: '/cs/divka/:slug', permanent: true },
+      { source: '/cs/profily/:slug', destination: '/cs/divka/:slug', permanent: true },
       { source: '/cs/profiles', destination: '/cs/divky', permanent: true },
       { source: '/cz/profiles', destination: '/cs/divky', permanent: true },
       // EN old profile URL pattern — `/girls` itself (no slug) stays the live EN listing
       // page, this only matches when a slug segment follows it.
-      { source: '/girls/:slug', destination: '/profile/:slug', permanent: true },
+      { source: '/girls/:slug', destination: '/girl/:slug', permanent: true },
       { source: '/girls-cz/:slug', destination: '/cs/profil/:slug', permanent: true },
       { source: '/girls-cz', destination: '/cs/divky', permanent: true },
+
+      // Old URL slugs → new SEO keyword URLs (301 redirects)
+      { source: '/cs/faq', destination: '/cs/caste-dotazy', permanent: true },
+      { source: '/de/faq', destination: '/de/haeufige-fragen', permanent: true },
+      { source: '/uk/faq', destination: '/uk/zapytannya', permanent: true },
+      { source: '/location/:slug', destination: '/apartment/:slug', permanent: true },
+
+      // Old /profile/ and /profil/ → new /girl/ and /divka/ (SEO keyword URLs)
+      { source: '/profile/:slug', destination: '/girl/:slug', permanent: true },
+      { source: '/cs/profil/:slug', destination: '/cs/divka/:slug', permanent: true },
+      { source: '/de/profil/:slug', destination: '/de/maedchen/:slug', permanent: true },
+      { source: '/uk/profil/:slug', destination: '/uk/divchyna/:slug', permanent: true },
+      { source: '/en/profile/:slug', destination: '/girl/:slug', permanent: true },
 
       // === B) Landing pages ===
       { source: '/cs/landing/escort-prague', destination: '/cs/hashtag/escort-praha', permanent: true },
@@ -96,7 +109,7 @@ const config: NextConfig = {
       { source: '/cs/discount', destination: '/cs/slevy', permanent: true },
       { source: '/cs/sluzby', destination: '/cs/divky', permanent: true },
       { source: '/cz/blog', destination: '/cs/blog', permanent: true },
-      { source: '/cz/faq', destination: '/cs/faq', permanent: true },
+      { source: '/cz/faq', destination: '/cs/caste-dotazy', permanent: true },
 
       // === E) WordPress-era / bare URLs ===
       { source: '/escort-praha', destination: '/cs/hashtag/escort-praha', permanent: true },
@@ -120,14 +133,14 @@ const config: NextConfig = {
       ...(() => {
         // Localised path segments, verified against production.
         const L = {
-          '':    { girls: '/girls',       pricing: '/pricing',   service: '/service',     profile: '/profile',   hashtag: '/hashtag',    schedule: '/schedule',     root: '/' },
+          '':    { girls: '/girls',       pricing: '/pricing',    service: '/service',     profile: '/girl',        hashtag: '/hashtag',    schedule: '/schedule',      root: '/' },
           // EN is prefix-free, so without this /en/praktiky/bdsm takes two hops:
           // next-intl strips the prefix (307), and only the resulting
           // /praktiky/bdsm matches the rule below (308). Same targets as ''.
-          '/en': { girls: '/girls',       pricing: '/pricing',   service: '/service',     profile: '/profile',   hashtag: '/hashtag',    schedule: '/schedule',     root: '/' },
-          '/cs': { girls: '/cs/divky',    pricing: '/cs/cenik',  service: '/cs/sluzba',   profile: '/cs/profil', hashtag: '/cs/hashtag', schedule: '/cs/rozvrh',    root: '/cs' },
-          '/de': { girls: '/de/maedchen', pricing: '/de/preise', service: '/de/leistung', profile: '/de/profil', hashtag: '/de/hashtag', schedule: '/de/zeitplan',  root: '/de' },
-          '/uk': { girls: '/uk/divchata', pricing: '/uk/tsiny',  service: '/uk/posluha',  profile: '/uk/profil', hashtag: '/uk/hashtag', schedule: '/uk/rozklad',   root: '/uk' },
+          '/en': { girls: '/girls',       pricing: '/pricing',    service: '/service',     profile: '/girl',        hashtag: '/hashtag',    schedule: '/schedule',      root: '/' },
+          '/cs': { girls: '/cs/divky',    pricing: '/cs/cenik',  service: '/cs/sluzba',   profile: '/cs/divka',    hashtag: '/cs/hashtag', schedule: '/cs/rozvrh',    root: '/cs' },
+          '/de': { girls: '/de/maedchen', pricing: '/de/preise', service: '/de/leistung', profile: '/de/maedchen', hashtag: '/de/hashtag', schedule: '/de/zeitplan',  root: '/de' },
+          '/uk': { girls: '/uk/divchata', pricing: '/uk/tsiny',  service: '/uk/posluha',  profile: '/uk/divchyna', hashtag: '/uk/hashtag', schedule: '/uk/rozklad',   root: '/uk' },
         };
 
         // Old /sluzby/* used Czech marketing slugs; the live catalogue uses the

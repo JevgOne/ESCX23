@@ -20,10 +20,10 @@ export const routing = defineRouting({
       uk: '/divchata',
     },
     '/profil/[slug]': {
-      cs: '/profil/[slug]',
-      en: '/profile/[slug]',
-      de: '/profil/[slug]',
-      uk: '/profil/[slug]',
+      cs: '/divka/[slug]',
+      en: '/girl/[slug]',
+      de: '/maedchen/[slug]',
+      uk: '/divchyna/[slug]',
     },
     '/cenik': {
       cs: '/cenik',
@@ -43,7 +43,12 @@ export const routing = defineRouting({
       de: '/rabatte',
       uk: '/znyzhky',
     },
-    '/faq': '/faq',
+    '/faq': {
+      cs: '/caste-dotazy',
+      en: '/faq',
+      de: '/haeufige-fragen',
+      uk: '/zapytannya',
+    },
     '/recenze': {
       cs: '/recenze',
       en: '/reviews',
@@ -89,7 +94,7 @@ export const routing = defineRouting({
     },
     '/pobocka/[slug]': {
       cs: '/pobocka/[slug]',
-      en: '/location/[slug]',
+      en: '/apartment/[slug]',
       de: '/standort/[slug]',
       uk: '/lokatsiya/[slug]',
     },

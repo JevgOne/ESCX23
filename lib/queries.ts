@@ -58,6 +58,7 @@ export interface GirlCard {
   reviewsCount: number;
   hashtags: string[];
   shiftCategory: ShiftCategory | null;
+  girlType: string;
 }
 
 /** Dívky nabízející konkrétní službu (pro /sluzba/[slug]). */
@@ -69,7 +70,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
   const result = await db.execute({
     sql: `
       SELECT
-        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
+        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location, g.girl_type,
         g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count, g.status,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
@@ -155,6 +156,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
         hashtags: parseLangs(r.hashtags),
         shiftCategory: category,
+        girlType: String(r.girl_type ?? 'apartment'),
       };
     })
     .filter((g): g is GirlCard => g !== null)
@@ -181,7 +183,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
   const result = await db.execute({
     sql: `
       SELECT
-        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
+        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location, g.girl_type,
         g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count, g.status,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
@@ -294,6 +296,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
         hashtags: parseLangs(r.hashtags),
         shiftCategory: category,
+        girlType: String(r.girl_type ?? 'apartment'),
       };
     })
     .filter((g): g is GirlCard => g !== null)
@@ -885,7 +888,7 @@ export async function getGirlsForDay(
   const result = await db.execute({
     sql: `
       SELECT
-        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
+        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location, g.girl_type,
         g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count,
         gs.start_time AS shift_from, gs.end_time AS shift_to, gs.is_active AS gs_active,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
@@ -964,10 +967,18 @@ export async function getGirlsForDay(
         ? (r.prev_schedule_location ? String(r.prev_schedule_location) : null)
         : (r.schedule_location ? String(r.schedule_location) : null);
       const loc = scheduleLoc;
+      const gt = String(r.girl_type ?? 'apartment');
       if (locationFilter && locationFilter !== 'all') {
-        if (!loc) return null;
-        const locSlug = loc.toLowerCase().replace(/\s/g, '-').replace(/\./g, '');
-        if (!locSlug.includes(locationFilter.toLowerCase())) return null;
+        if (locationFilter === 'escort') {
+          // Only show escort_only girls
+          if (gt !== 'escort_only') return null;
+        } else {
+          // Apartment filter — skip escort_only girls (they have no location)
+          if (gt === 'escort_only') return null;
+          if (!loc) return null;
+          const locSlug = loc.toLowerCase().replace(/\s/g, '-').replace(/\./g, '');
+          if (!locSlug.includes(locationFilter.toLowerCase())) return null;
+        }
       }
 
       const isNew = computeIsNew(r.is_new, r.created_at, r.badge_type);
@@ -1038,6 +1049,7 @@ export async function getGirlsForDay(
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
         hashtags: parseLangs(r.hashtags),
         shiftCategory: category,
+        girlType: gt,
       };
     })
     .filter((g): g is GirlCard => g !== null)
@@ -1218,6 +1230,7 @@ export interface GirlUpdateData {
   og_description_uk?: string | null;
   calendar_embed_url?: string | null;
   style_wardrobe?: string | null;
+  girl_type?: string | null;
 }
 
 export async function updateGirlById(id: number, data: GirlUpdateData): Promise<void> {
@@ -1236,6 +1249,7 @@ export async function updateGirlById(id: number, data: GirlUpdateData): Promise<
       og_description_cs=?, og_description_en=?, og_description_de=?, og_description_uk=?,
       calendar_embed_url=?,
       style_wardrobe=?,
+      girl_type=?,
       updated_at=CURRENT_TIMESTAMP
     WHERE id=?`,
     args: [
@@ -1252,6 +1266,7 @@ export async function updateGirlById(id: number, data: GirlUpdateData): Promise<
       data.og_description_cs ?? null, data.og_description_en ?? null, data.og_description_de ?? null, data.og_description_uk ?? null,
       data.calendar_embed_url ?? null,
       data.style_wardrobe ?? null,
+      data.girl_type ?? 'apartment',
       id,
     ],
   });
@@ -1419,6 +1434,7 @@ export interface GirlListingFilters {
   q?: string;
   sort?: string;
   service?: string;
+  type?: string;
   page?: number;
   pageSize?: number;
 }
@@ -2138,6 +2154,12 @@ export async function getGirlsForListing(
     args.push(f.service);
   }
 
+  if (f.type === 'escort_only') {
+    whereClauses.push(`g.girl_type = 'escort_only'`);
+  } else if (f.type === 'apartment') {
+    whereClauses.push(`(g.girl_type = 'apartment' OR g.girl_type IS NULL)`);
+  }
+
   const whereSQL = whereClauses.join(' AND ');
 
   // Default: priority by status (working → later → tomorrow → off → paused),
@@ -2157,7 +2179,7 @@ export async function getGirlsForListing(
 
   const baseSql = `
     SELECT
-      g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
+      g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location, g.girl_type,
       g.created_at, g.is_new, g.languages, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count, g.status,
       gs.start_time AS shift_from, gs.end_time AS shift_to,
       se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
@@ -2302,6 +2324,7 @@ export async function getGirlsForListing(
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
         hashtags: parseLangs(r.hashtags),
         shiftCategory: category,
+        girlType: String(r.girl_type ?? 'apartment'),
       };
     });
 
@@ -2318,7 +2341,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
   const result = await db.execute({
     sql: `
       SELECT
-        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location,
+        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.location, g.girl_type,
         g.created_at, g.is_new, g.languages, g.hashtags, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count,
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
@@ -2404,6 +2427,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
         hashtags: tags,
         shiftCategory: category,
+        girlType: String(r.girl_type ?? 'apartment'),
       };
     })
     .filter((g): g is GirlCard => g !== null);
@@ -2553,7 +2577,7 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
   const result = await db.execute({
     sql: `
       SELECT
-        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust,
+        g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.girl_type,
         g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count, g.status,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
         COALESCE(
@@ -2600,6 +2624,7 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
       reviewsCount: r.reviews_count != null ? Number(r.reviews_count) : 0,
       hashtags: parseLangs(r.hashtags),
       shiftCategory: null,
+      girlType: String(r.girl_type ?? 'apartment'),
     }));
 }
 

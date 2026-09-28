@@ -17,6 +17,7 @@ interface ProfilStickyCtaProps {
   shiftStatus?: 'working' | 'later' | 'off';
   locale?: string;
   scheduleLocation?: string | null;
+  girlType?: string;
 }
 
 const STICKY_LABELS: Record<string, { today: string; later: string; appt: string }> = {
@@ -26,11 +27,11 @@ const STICKY_LABELS: Record<string, { today: string; later: string; appt: string
   uk: { today: 'Сьогодні', later: 'Пізніше', appt: 'Сьогодні — за домовленістю' },
 };
 
-export default function ProfilStickyCta({ girl, labels, shiftFrom, shiftTo, shiftStatus = 'off', locale = 'cs', scheduleLocation }: ProfilStickyCtaProps) {
+export default function ProfilStickyCta({ girl, labels, shiftFrom, shiftTo, shiftStatus = 'off', locale = 'cs', scheduleLocation, girlType = 'apartment' }: ProfilStickyCtaProps) {
   const name = String(girl.name ?? '');
   const age = String(girl.age ?? '');
   const phone = girl.phone ? String(girl.phone) : null;
-  const district = scheduleLocation;
+  const district = girlType === 'escort_only' ? 'Escort' : scheduleLocation;
 
   const waPhone = phone ? phone.replace(/\s+/g, '').replace(/^\+/, '') : null;
   const WA_GREETING: Record<string, (n: string) => string> = {

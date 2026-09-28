@@ -9,7 +9,7 @@ interface ServiceOption {
 }
 
 interface FiltersBarProps {
-  searchParams: { status?: string; q?: string; sort?: string; service?: string; page?: string };
+  searchParams: { status?: string; q?: string; sort?: string; service?: string; type?: string; page?: string };
   searchPlaceholder: string;
   labelAll: string;
   labelAvailable: string;
@@ -23,11 +23,11 @@ interface FiltersBarProps {
   servicesAllLabel?: string;
 }
 
-const LABELS: Record<string, { all: string; available: string; sortBy: string; filter: string; service: string; serviceAny: string }> = {
-  cs: { all: 'Všechny', available: 'Online nyní', sortBy: 'Řadit', filter: 'Filtrovat', service: 'Služby', serviceAny: 'Jakákoli' },
-  en: { all: 'All', available: 'Online now', sortBy: 'Sort', filter: 'Filter', service: 'Service', serviceAny: 'Any' },
-  de: { all: 'Alle', available: 'Jetzt online', sortBy: 'Sortieren', filter: 'Filtern', service: 'Service', serviceAny: 'Beliebig' },
-  uk: { all: 'Усі', available: 'Онлайн зараз', sortBy: 'Сортувати', filter: 'Фільтр', service: 'Послуги', serviceAny: 'Будь-яка' },
+const LABELS: Record<string, { all: string; available: string; sortBy: string; filter: string; service: string; serviceAny: string; typeAll: string; typeApartment: string; typeEscort: string }> = {
+  cs: { all: 'Všechny', available: 'Online nyní', sortBy: 'Řadit', filter: 'Filtrovat', service: 'Služby', serviceAny: 'Jakákoli', typeAll: 'Všechny', typeApartment: 'V apartmánu', typeEscort: 'Escort' },
+  en: { all: 'All', available: 'Online now', sortBy: 'Sort', filter: 'Filter', service: 'Service', serviceAny: 'Any', typeAll: 'All', typeApartment: 'Apartment', typeEscort: 'Escort' },
+  de: { all: 'Alle', available: 'Jetzt online', sortBy: 'Sortieren', filter: 'Filtern', service: 'Service', serviceAny: 'Beliebig', typeAll: 'Alle', typeApartment: 'Apartment', typeEscort: 'Escort' },
+  uk: { all: 'Усі', available: 'Онлайн зараз', sortBy: 'Сортувати', filter: 'Фільтр', service: 'Послуги', serviceAny: 'Будь-яка', typeAll: 'Усі', typeApartment: 'Апартамент', typeEscort: 'Ескорт' },
 };
 
 function nameFor(s: ServiceOption, locale: string): string {
@@ -44,6 +44,7 @@ export default function FiltersBar({
   const currentStatus = searchParams.status ?? '';
   const currentSort = searchParams.sort ?? '';
   const currentService = searchParams.service ?? '';
+  const currentType = searchParams.type ?? '';
   const currentQ = searchParams.q ?? '';
   const L = LABELS[locale] ?? LABELS.en;
 
@@ -75,6 +76,21 @@ export default function FiltersBar({
                 <input type="radio" name="status" value="available" defaultChecked={currentStatus === 'available'} />
                 <span className="filter-online-dot" />
                 <span>{L.available}</span>
+              </label>
+            </div>
+
+            <div className="filter-type-toggle">
+              <label className={`filter-toggle-opt${currentType === '' ? ' is-active' : ''}`}>
+                <input type="radio" name="type" value="" defaultChecked={currentType === ''} />
+                <span>{L.typeAll}</span>
+              </label>
+              <label className={`filter-toggle-opt${currentType === 'apartment' ? ' is-active' : ''}`}>
+                <input type="radio" name="type" value="apartment" defaultChecked={currentType === 'apartment'} />
+                <span>{L.typeApartment}</span>
+              </label>
+              <label className={`filter-toggle-opt${currentType === 'escort_only' ? ' is-active' : ''}`}>
+                <input type="radio" name="type" value="escort_only" defaultChecked={currentType === 'escort_only'} />
+                <span>{L.typeEscort}</span>
               </label>
             </div>
 

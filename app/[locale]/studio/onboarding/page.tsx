@@ -405,15 +405,19 @@ async function Step4({ locale, girlId }: { locale: string; girlId: number }) {
   const thisMonday = getMonday(nowPrague);
   const nextMonday = addDays(thisMonday, 7);
 
-  const [locations, shiftRes] = await Promise.all([
+  const [locations, shiftRes, girlTypeRes] = await Promise.all([
     getActiveLocations(),
     db.execute({
       sql: 'SELECT * FROM shift_requests WHERE girl_id = ? AND week_start IN (?, ?) ORDER BY week_start, day_of_week',
       args: [girlId, thisMonday, nextMonday],
     }),
+    db.execute({ sql: 'SELECT girl_type FROM girls WHERE id = ? LIMIT 1', args: [girlId] }),
   ]);
 
-  type ShiftRow = { id: number; weekStart: string; dayOfWeek: number; shiftType: string; status: string };
+  const girlType = String(girlTypeRes.rows[0]?.girl_type ?? 'apartment');
+  const isEscort = girlType === 'escort_only';
+
+  type ShiftRow = { id: number; weekStart: string; dayOfWeek: number; shiftType: string; status: string; startTime: string; endTime: string };
   const shiftMap = new Map<string, ShiftRow>();
   for (const r of shiftRes.rows) {
     const key = `${r.week_start}_${r.day_of_week}`;
@@ -423,6 +427,8 @@ async function Step4({ locale, girlId }: { locale: string; girlId: number }) {
       dayOfWeek: Number(r.day_of_week),
       shiftType: String(r.shift_type),
       status: String(r.status),
+      startTime: String(r.start_time ?? ''),
+      endTime: String(r.end_time ?? ''),
     });
   }
 
@@ -459,6 +465,12 @@ async function Step4({ locale, girlId }: { locale: string; girlId: number }) {
         <div className="ob-info-box ok">Minimum splneno ({totalShifts} smen).</div>
       )}
 
+      {isEscort && (
+        <div className="ob-info-box ok">
+          Escort -- zadej vlastni casy pro kazdy den. Pobocku nevybiras.
+        </div>
+      )}
+
       <div className="ob-info-box neutral">
         Smeny zadavej kazdou nedeli do 22:00. Admin schvali a zobrazis se na webu. Schvalene smeny nelze rusit.
       </div>
@@ -486,6 +498,7 @@ async function Step4({ locale, girlId }: { locale: string; girlId: number }) {
                         {existing.status === 'rejected' && 'X'}
                       </span>
                       <span className="ob-shift-type">
+                        {existing.shiftType === 'custom' && `${existing.startTime}\u2013${existing.endTime}`}
                         {existing.shiftType === 'morning' && 'Ranni'}
                         {existing.shiftType === 'afternoon' && 'Odp.'}
                         {existing.shiftType === 'fullday' && 'Cely'}
@@ -498,6 +511,22 @@ async function Step4({ locale, girlId }: { locale: string; girlId: number }) {
                       )}
                     </>
                   ) : !isPast ? (
+                    isEscort ? (
+                      <form action={submitShiftRequest} className="ob-shift-btns">
+                        <input type="hidden" name="shift_type" value="custom" />
+                        <input type="hidden" name="day_of_week" value={i} />
+                        <input type="hidden" name="week_start" value={week.monday} />
+                        <label style={{ fontSize: '8px', color: 'var(--color-text-dim, #888)', width: '100%' }}>
+                          Od
+                          <input type="time" name="start_time" defaultValue="12:00" min="08:00" max="23:00" step={1800} style={{ width: '100%', padding: '3px', borderRadius: '5px', border: '1px solid var(--color-line, #2a2a3e)', background: 'var(--color-bg-elev, #1a1a2e)', color: 'var(--color-text, #fff)', fontSize: '9px' }} />
+                        </label>
+                        <label style={{ fontSize: '8px', color: 'var(--color-text-dim, #888)', width: '100%' }}>
+                          Do
+                          <input type="time" name="end_time" defaultValue="20:00" min="10:00" max="23:59" step={1800} style={{ width: '100%', padding: '3px', borderRadius: '5px', border: '1px solid var(--color-line, #2a2a3e)', background: 'var(--color-bg-elev, #1a1a2e)', color: 'var(--color-text, #fff)', fontSize: '9px' }} />
+                        </label>
+                        <button type="submit" className="ob-shift-btn">OK</button>
+                      </form>
+                    ) : (
                     <div className="ob-shift-btns">
                       {SHIFT_PRESETS.map(preset => (
                         <form key={preset.type} action={submitShiftRequest}>
@@ -509,6 +538,7 @@ async function Step4({ locale, girlId }: { locale: string; girlId: number }) {
                         </form>
                       ))}
                     </div>
+                    )
                   ) : (
                     <span className="ob-shift-type">--</span>
                   )}

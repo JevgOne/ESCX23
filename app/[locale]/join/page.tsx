@@ -225,6 +225,27 @@ export default async function JoinPage({ params, searchParams }: Props) {
           <input type="hidden" name="locale" value={locale} />
 
           <fieldset className="apply-form-section">
+            <legend>{locale === 'cs' ? 'Typ spolupráce' : 'Type of cooperation'}</legend>
+            <div className="form-group">
+              <div className="jn-svc-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+                <label className="jn-svc-chk">
+                  <input type="radio" name="girl_type" value="apartment" defaultChecked />
+                  <span>{locale === 'cs' ? 'Práce v apartmánu' : 'Work in apartment'}</span>
+                </label>
+                <label className="jn-svc-chk">
+                  <input type="radio" name="girl_type" value="escort_only" />
+                  <span>{locale === 'cs' ? 'Pouze Escort' : 'Escort only'}</span>
+                </label>
+              </div>
+              <p className="jn-svc-hint" style={{ marginTop: '8px' }}>
+                {locale === 'cs'
+                  ? 'Escort — jezdíte přímo ke klientovi, pracujete ve svém čase, bez apartmánu.'
+                  : 'Escort — you travel directly to the client, work on your own schedule, no apartment.'}
+              </p>
+            </div>
+          </fieldset>
+
+          <fieldset className="apply-form-section">
             <legend>{t('section.personal')}</legend>
             <div className="form-row">
               <div className="form-group">

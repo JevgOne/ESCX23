@@ -55,6 +55,7 @@ export const HASHTAGS: Hashtag[] = [
   { id: 'asiatky', category: 'origin', translations: { cs: 'asiatky', en: 'asians', de: 'asiatinnen', uk: 'азіатки' } },
 
   // General
+  { id: 'escort-praha', category: 'profession', translations: { cs: 'escort praha', en: 'escort prague', de: 'escort prag', uk: 'ескорт прага' } },
   { id: 'holky-praha', category: 'origin', translations: { cs: 'holky praha', en: 'girls prague', de: 'mädchen prag', uk: 'дівчата прага' } },
   { id: 'spolecnice-praha', category: 'profession', translations: { cs: 'společnice praha', en: 'escorts prague', de: 'begleiterinnen prag', uk: 'супроводжувальниці прага' } },
   { id: 'girlfriend-experience', category: 'style', translations: { cs: 'girlfriend experience', en: 'girlfriend experience', de: 'girlfriend experience', uk: 'girlfriend experience' } },

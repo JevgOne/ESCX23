@@ -88,6 +88,9 @@ async function runMigrations(client: Client) {
     'ALTER TABLE shift_requests ADD COLUMN reject_reason_encrypted TEXT',
     // Location status: active / reconstruction / closed
     "ALTER TABLE locations ADD COLUMN status TEXT DEFAULT 'active'",
+    // Escort-only girls: apartment / escort_only / both
+    "ALTER TABLE girls ADD COLUMN girl_type TEXT DEFAULT 'apartment'",
+    "ALTER TABLE girl_applications ADD COLUMN girl_type TEXT DEFAULT 'apartment'",
   ];
 
   // Migrate shift_requests CHECK constraint to include 'activated' status
@@ -103,7 +106,7 @@ async function runMigrations(client: Client) {
           girl_id INTEGER NOT NULL,
           week_start TEXT NOT NULL,
           day_of_week INTEGER NOT NULL,
-          shift_type TEXT NOT NULL CHECK (shift_type IN ('morning', 'afternoon', 'fullday')),
+          shift_type TEXT NOT NULL CHECK (shift_type IN ('morning', 'afternoon', 'fullday', 'custom')),
           start_time TEXT NOT NULL,
           end_time TEXT NOT NULL,
           location_id INTEGER,
@@ -123,6 +126,41 @@ async function runMigrations(client: Client) {
     }
   } catch { /* table may not exist yet */ }
 
+  // Migrate shift_requests CHECK constraint to include 'custom' for escort-only girls
+  try {
+    const srCustomDone = await client.execute({ sql: `SELECT 1 FROM _migrations WHERE name = 'shift_requests_custom' LIMIT 1`, args: [] });
+    if (srCustomDone.rows.length === 0) {
+      await client.execute(`ALTER TABLE shift_requests RENAME TO shift_requests_old2`);
+      await client.execute(`
+        CREATE TABLE shift_requests (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          girl_id INTEGER NOT NULL,
+          week_start TEXT NOT NULL,
+          day_of_week INTEGER NOT NULL,
+          shift_type TEXT NOT NULL CHECK (shift_type IN ('morning', 'afternoon', 'fullday', 'custom')),
+          start_time TEXT NOT NULL,
+          end_time TEXT NOT NULL,
+          location_id INTEGER,
+          status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'activated')),
+          approved_by INTEGER,
+          approved_at DATETIME,
+          reject_reason TEXT,
+          reject_reason_encrypted TEXT,
+          seniority_rank INTEGER,
+          override_by INTEGER,
+          override_reason TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (girl_id) REFERENCES girls(id),
+          FOREIGN KEY (approved_by) REFERENCES users(id),
+          UNIQUE(girl_id, week_start, day_of_week)
+        )
+      `);
+      await client.execute(`INSERT INTO shift_requests (id, girl_id, week_start, day_of_week, shift_type, start_time, end_time, location_id, status, approved_by, approved_at, reject_reason, reject_reason_encrypted, seniority_rank, override_by, override_reason, created_at) SELECT id, girl_id, week_start, day_of_week, shift_type, start_time, end_time, location_id, status, approved_by, approved_at, reject_reason, reject_reason_encrypted, seniority_rank, override_by, override_reason, created_at FROM shift_requests_old2`);
+      await client.execute(`DROP TABLE shift_requests_old2`);
+      await client.execute({ sql: `INSERT INTO _migrations (name) VALUES (?)`, args: ['shift_requests_custom'] });
+    }
+  } catch { /* table may not exist yet */ }
+
   // One-time fix: clear future effective_from that hid schedules from public page
   try {
     await client.execute("UPDATE girl_schedules SET effective_from = NULL WHERE effective_from > date('now')");
@@ -131,12 +169,14 @@ async function runMigrations(client: Client) {
   }
 
   // One-time fix: assign primary location to schedules missing location_id
+  // GUARD: skip escort-only girls who intentionally have NULL location_id
   try {
     await client.execute(`
       UPDATE girl_schedules
       SET location_id = (SELECT id FROM locations WHERE is_primary = 1 LIMIT 1)
       WHERE location_id IS NULL
         AND (SELECT id FROM locations WHERE is_primary = 1 LIMIT 1) IS NOT NULL
+        AND girl_id NOT IN (SELECT id FROM girls WHERE girl_type IN ('escort_only', 'both'))
     `);
   } catch {
     // OK
@@ -1206,7 +1246,7 @@ async function runMigrations(client: Client) {
         girl_id INTEGER NOT NULL,
         week_start TEXT NOT NULL,
         day_of_week INTEGER NOT NULL,
-        shift_type TEXT NOT NULL CHECK (shift_type IN ('morning', 'afternoon', 'fullday')),
+        shift_type TEXT NOT NULL CHECK (shift_type IN ('morning', 'afternoon', 'fullday', 'custom')),
         start_time TEXT NOT NULL,
         end_time TEXT NOT NULL,
         location_id INTEGER,
@@ -1229,7 +1269,7 @@ async function runMigrations(client: Client) {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         girl_id INTEGER NOT NULL,
         date TEXT NOT NULL,
-        shift_type TEXT NOT NULL CHECK (shift_type IN ('morning', 'afternoon', 'fullday')),
+        shift_type TEXT NOT NULL CHECK (shift_type IN ('morning', 'afternoon', 'fullday', 'custom')),
         status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed', 'penalty')),
         checklist_json TEXT,
         closed_at DATETIME,

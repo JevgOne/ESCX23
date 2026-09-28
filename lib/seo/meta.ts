@@ -98,21 +98,21 @@ export function getAlternates(path: string): Record<string, string> {
 
 export function getProfileCanonical(locale: string, slug: string): string {
   const pathByLocale: Record<string, string> = {
-    en: `${BASE}/profile/${slug}`,
-    cs: `${BASE}/cs/profil/${slug}`,
-    de: `${BASE}/de/profil/${slug}`,
-    uk: `${BASE}/uk/profil/${slug}`,
+    en: `${BASE}/girl/${slug}`,
+    cs: `${BASE}/cs/divka/${slug}`,
+    de: `${BASE}/de/maedchen/${slug}`,
+    uk: `${BASE}/uk/divchyna/${slug}`,
   };
-  return pathByLocale[locale] ?? `${BASE}/profile/${slug}`;
+  return pathByLocale[locale] ?? `${BASE}/girl/${slug}`;
 }
 
 export function getProfileAlternates(slug: string): Record<string, string> {
   return {
-    en: `${BASE}/profile/${slug}`,
-    cs: `${BASE}/cs/profil/${slug}`,
-    de: `${BASE}/de/profil/${slug}`,
-    uk: `${BASE}/uk/profil/${slug}`,
-    'x-default': `${BASE}/profile/${slug}`,
+    en: `${BASE}/girl/${slug}`,
+    cs: `${BASE}/cs/divka/${slug}`,
+    de: `${BASE}/de/maedchen/${slug}`,
+    uk: `${BASE}/uk/divchyna/${slug}`,
+    'x-default': `${BASE}/girl/${slug}`,
   };
 }
 

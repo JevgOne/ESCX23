@@ -9,6 +9,7 @@ export async function submitApplication(formData: FormData) {
   const name = String(formData.get('name') ?? '').trim();
   const age = Number(formData.get('age') ?? 0);
   const phone = String(formData.get('phone') ?? '').trim();
+  const girlType = formData.get('girl_type') === 'escort_only' ? 'escort_only' : 'apartment';
   const localeRaw = String(formData.get('locale') ?? 'cs');
   const locale = ['cs', 'en', 'de', 'uk'].includes(localeRaw) ? localeRaw : 'cs';
 
@@ -56,14 +57,14 @@ export async function submitApplication(formData: FormData) {
       (name, age, height, weight, bust, bust_natural, email, phone, telegram,
        name_encrypted, phone_encrypted, email_encrypted, telegram_encrypted,
        hair, eyes, tattoo, tattoo_description, tattoo_percentage, piercing, nationality,
-       languages, services, availability, bio_cs, bio_en, experience, style_wardrobe, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+       languages, services, availability, bio_cs, bio_en, experience, style_wardrobe, girl_type, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
     args: [
       name, age, height, weight, bust, bustNatural,
       email, phone, telegram,
       safeEncrypt(name), safeEncrypt(phone), safeEncrypt(email), safeEncrypt(telegram),
       hair, eyes, tattoo, tattooDescription, tattooPercentage, piercing, nationality,
-      languages, services, availability, bio_cs, bio_en, experience, styleWardrobe,
+      languages, services, availability, bio_cs, bio_en, experience, styleWardrobe, girlType,
     ],
   });
 

@@ -15,6 +15,7 @@ const FLAG_MAP: Record<string, string> = {
 };
 
 const CITY: Record<string, string> = { en: 'Prague', de: 'Prag', uk: 'Прага', cs: 'Praha' };
+const ESCORT_LABEL: Record<string, string> = { cs: 'Escort', en: 'Escort', de: 'Escort', uk: 'Ескорт' };
 const PAUSED_LABEL: Record<string, string> = { cs: 'Dočasně nedostupná', en: 'Temporarily unavailable', de: 'Vorübergehend nicht verfügbar', uk: 'Тимчасово недоступна' };
 const LATER_LABEL: Record<string, string> = { cs: 'Později', en: 'Later', de: 'Später', uk: 'Пізніше' };
 const TMRW_LABEL: Record<string, string> = { cs: 'Zítra', en: 'Tmrw', de: 'Morgen', uk: 'Завтра' };
@@ -165,13 +166,23 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
         </div>
 
         <div className="girl-loc-row">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          {/* Not working today → the city still holds, and an empty row reads
-              as something that failed to load. */}
-          <span>{girl.location ? translateLocation(girl.location, locale) : (CITY[locale] ?? CITY.en)}</span>
+          {girl.girlType === 'escort_only' ? (
+            <>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
+                <polygon points="12 15 17 21 7 21 12 15" />
+              </svg>
+              <span>{ESCORT_LABEL[locale] ?? 'Escort'}</span>
+            </>
+          ) : (
+            <>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span>{girl.location ? translateLocation(girl.location, locale) : (CITY[locale] ?? CITY.en)}</span>
+            </>
+          )}
         </div>
 
 

@@ -50,7 +50,7 @@ export const revalidate = 0;
 
 interface Props {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ status?: string; q?: string; sort?: string; service?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; sort?: string; service?: string; type?: string; page?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -93,6 +93,7 @@ export default async function DivkyPage({ params, searchParams }: Props) {
     q: sp.q,
     sort: sp.sort,
     service: sp.service,
+    type: sp.type,
     page: 1,
     pageSize: 999,
   }).catch(() => ({ girls: [] as Awaited<ReturnType<typeof getGirlsForListing>>['girls'], total: 0 }));

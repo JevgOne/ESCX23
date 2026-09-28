@@ -200,9 +200,25 @@ export async function submitShiftRequest(formData: FormData) {
   const weekStart = formData.get('week_start') as string;
   const locationId = formData.get('location_id') ? Number(formData.get('location_id')) : null;
 
-  if (!shiftType || !SHIFT_TIMES[shiftType]) return;
+  if (!shiftType || (!SHIFT_TIMES[shiftType] && shiftType !== 'custom')) return;
   if (dayOfWeek < 0 || dayOfWeek > 6) return;
   if (!weekStart) return;
+
+  // Resolve start/end times based on shift type
+  let startTime: string;
+  let endTime: string;
+  if (shiftType === 'custom') {
+    startTime = formData.get('start_time') as string;
+    endTime = formData.get('end_time') as string;
+    if (!startTime || !endTime) return;
+    // Basic validation: both must be HH:MM format and start < end
+    if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) return;
+    if (startTime >= endTime) return;
+  } else {
+    const times = SHIFT_TIMES[shiftType];
+    startTime = times.start;
+    endTime = times.end;
+  }
 
   // Validate: date must not be in the past or today
   const today = pragueDateISO();
@@ -226,9 +242,18 @@ export async function submitShiftRequest(formData: FormData) {
     if (!seniority.isOpen) return; // Window not open yet — silently reject
   }
 
-  // Capacity check: ensure shift is not full
-  const capacity = await getShiftCapacity(weekStart, locationId);
-  if (!hasCapacity(capacity, dayOfWeek, shiftType)) return; // Full — silently reject
+  // Determine girl_type for capacity check
+  const girlTypeRes = await db.execute({
+    sql: 'SELECT girl_type FROM girls WHERE id = ? LIMIT 1',
+    args: [girlId],
+  });
+  const girlType = String(girlTypeRes.rows[0]?.girl_type ?? 'apartment');
+
+  // Capacity check: skip for escort-only girls (they don't occupy apartment slots)
+  if (girlType !== 'escort_only') {
+    const capacity = await getShiftCapacity(weekStart, locationId);
+    if (!hasCapacity(capacity, dayOfWeek, shiftType)) return; // Full — silently reject
+  }
 
   // Get seniority rank for audit
   const rankRes = await db.execute(
@@ -237,12 +262,13 @@ export async function submitShiftRequest(formData: FormData) {
   const activeIds = rankRes.rows.map(r => Number(r.id));
   const rank = activeIds.indexOf(girlId) + 1;
 
-  const times = SHIFT_TIMES[shiftType];
+  // Escort-only: location_id is always NULL
+  const effectiveLocationId = girlType === 'escort_only' ? null : locationId;
 
   await db.execute({
     sql: `INSERT OR REPLACE INTO shift_requests (girl_id, week_start, day_of_week, shift_type, start_time, end_time, location_id, status, seniority_rank)
           VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
-    args: [girlId, weekStart, dayOfWeek, shiftType, times.start, times.end, locationId, rank || null],
+    args: [girlId, weekStart, dayOfWeek, shiftType, startTime, endTime, effectiveLocationId, rank || null],
   });
 
   revalidatePath('/cs/studio/dostupnost');

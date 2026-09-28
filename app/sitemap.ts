@@ -20,13 +20,13 @@ const prefix = (locale: Locale): string => (locale === 'en' ? '' : `/${locale}`)
 const PATHS: Record<string, Record<Locale, string>> = {
   '/divky': { en: '/girls', cs: '/divky', de: '/maedchen', uk: '/divchata' },
   '/profil/[slug]': {
-    en: '/profile/[slug]',
-    cs: '/profil/[slug]',
-    de: '/profil/[slug]',
-    uk: '/profil/[slug]',
+    en: '/girl/[slug]',
+    cs: '/divka/[slug]',
+    de: '/maedchen/[slug]',
+    uk: '/divchyna/[slug]',
   },
   '/pobocka/[slug]': {
-    en: '/location/[slug]',
+    en: '/apartment/[slug]',
     cs: '/pobocka/[slug]',
     de: '/standort/[slug]',
     uk: '/lokatsiya/[slug]',
@@ -46,7 +46,7 @@ const PATHS: Record<string, Record<Locale, string>> = {
   '/cenik': { en: '/pricing', cs: '/cenik', de: '/preise', uk: '/tsiny' },
   '/rozvrh': { en: '/schedule', cs: '/rozvrh', de: '/zeitplan', uk: '/rozklad' },
   '/slevy': { en: '/discounts', cs: '/slevy', de: '/rabatte', uk: '/znyzhky' },
-  '/faq': { en: '/faq', cs: '/faq', de: '/faq', uk: '/faq' },
+  '/faq': { en: '/faq', cs: '/caste-dotazy', de: '/haeufige-fragen', uk: '/zapytannya' },
   '/recenze': { en: '/reviews', cs: '/recenze', de: '/rezensionen', uk: '/vidhuky' },
   '/o-nas': { en: '/about', cs: '/o-nas', de: '/ueber-uns', uk: '/pro-nas' },
   '/kontakt': { en: '/contact', cs: '/kontakt', de: '/kontakt', uk: '/kontakt' },

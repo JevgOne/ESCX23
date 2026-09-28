@@ -107,6 +107,7 @@ export async function updateGirl(formData: FormData) {
         ? JSON.stringify({ style: styleTypes, wardrobe: wardrobeItems })
         : null;
     })(),
+    girl_type: getStr('girl_type') ?? 'apartment',
   });
 
   const serviceIds = formData.getAll('service_ids').map(Number).filter((n) => n > 0);
@@ -176,6 +177,7 @@ export async function createGirl(formData: FormData) {
       og_description_cs, og_description_en, og_description_de, og_description_uk,
       calendar_embed_url,
       style_wardrobe,
+      girl_type,
       created_at, updated_at
     ) VALUES (
       ?, ?, ?, ?, ?, ?,
@@ -191,6 +193,7 @@ export async function createGirl(formData: FormData) {
       ?, ?, ?, ?,
       ?, ?, ?, ?,
       ?, ?, ?, ?,
+      ?,
       ?,
       ?,
       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
@@ -226,6 +229,7 @@ export async function createGirl(formData: FormData) {
           ? JSON.stringify({ style: styleTypes, wardrobe: wardrobeItems })
           : null;
       })(),
+      getStr('girl_type') ?? 'apartment',
     ],
   });
   } catch (err) {
@@ -339,6 +343,8 @@ export async function createGirlFromApplication(formData: FormData) {
   const bioEn = app.bio_en != null ? String(app.bio_en) : null;
   const styleWardrobe = app.style_wardrobe != null ? String(app.style_wardrobe) : null;
 
+  const girlType = app.girl_type ? String(app.girl_type) : 'apartment';
+
   const insertRes = await db.execute({
     sql: `INSERT INTO girls (
       name, slug, age, email, phone, status,
@@ -348,6 +354,7 @@ export async function createGirlFromApplication(formData: FormData) {
       nationality, languages,
       description_cs, description_en,
       style_wardrobe,
+      girl_type,
       created_at, updated_at
     ) VALUES (
       ?, ?, ?, ?, ?, 'pending',
@@ -356,6 +363,7 @@ export async function createGirlFromApplication(formData: FormData) {
       ?, ?,
       ?, ?,
       ?, ?,
+      ?,
       ?,
       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
     )`,
@@ -367,6 +375,7 @@ export async function createGirlFromApplication(formData: FormData) {
       nationality, languages,
       bioCs, bioEn,
       styleWardrobe,
+      girlType,
     ],
   });
   const newId = Number(insertRes.lastInsertRowid);

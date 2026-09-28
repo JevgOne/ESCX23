@@ -17,6 +17,11 @@ const STATUS_OPTIONS = [
   { value: 'inactive', label: 'Dočasně nedostupná' },
   { value: 'archived', label: 'Archivovaná' },
 ];
+const GIRL_TYPE_OPTIONS = [
+  { value: 'apartment', label: 'Apartmán (v pobočce)' },
+  { value: 'escort_only', label: 'Pouze Escort (jezdí ke klientovi)' },
+  { value: 'both', label: 'Obojí (apartmán + escort)' },
+];
 const BADGE_OPTIONS = [
   { value: '', label: '— žádný —' },
   { value: 'new', label: 'NEW (nová)' },
@@ -426,6 +431,7 @@ export default async function AdminGirlEditPage({
     online: Boolean(gr.online),
     calendar_embed_url: gr.calendar_embed_url ? String(gr.calendar_embed_url) : '',
     voice_url: gr.voice_url ? String(gr.voice_url) : '',
+    girl_type: gr.girl_type ? String(gr.girl_type) : 'apartment',
   };
 
   const styleWardrobeRaw = gr.style_wardrobe ? String(gr.style_wardrobe) : null;
@@ -527,6 +533,17 @@ export default async function AdminGirlEditPage({
             <div className="gf2-field">
               <label className="gf2-label" htmlFor="nationality">Národnost</label>
               <input id="nationality" name="nationality" type="text" defaultValue={g.nationality} placeholder="Česká, Slovenka, Ukrajinka..." />
+            </div>
+          </div>
+
+          <div className="gf2-row">
+            <div className="gf2-field">
+              <label className="gf2-label" htmlFor="girl_type">Typ</label>
+              <select id="girl_type" name="girl_type" defaultValue={g.girl_type}>
+                {GIRL_TYPE_OPTIONS.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 

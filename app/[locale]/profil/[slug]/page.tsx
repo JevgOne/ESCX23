@@ -55,6 +55,13 @@ const PROFILE_FALLBACK_DESC: Record<string, (name: string, age: number) => strin
   uk: (n, a) => `${n}, ${a} років, перевірена супутниця у Празі. Дискретні апартаменти, прозорі ціни.`,
 };
 
+const PROFILE_ESCORT_DESC: Record<string, (name: string, age: number) => string> = {
+  cs: (n, a) => `${n}, ${a} let — escort společnice v Praze. Přijede k vám do hotelu nebo bytu. Diskrétní setkání, transparentní ceny.`,
+  en: (n, a) => `${n}, ${a} — escort companion in Prague. Comes to your hotel or apartment. Discreet meetings, transparent pricing.`,
+  de: (n, a) => `${n}, ${a} — Escort-Begleiterin in Prag. Kommt zu Ihrem Hotel oder Apartment. Diskrete Treffen, transparente Preise.`,
+  uk: (n, a) => `${n}, ${a} — ескорт-супутниця у Празі. Приїде до вашого готелю або квартири. Дискретні зустрічі, прозорі ціни.`,
+};
+
 /** Pick first non-empty localized field with priority chain: meta_desc → og_desc → description → fallback locale → bio. */
 function pickLocalizedText(
   girl: Record<string, unknown>,
@@ -95,7 +102,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Meta description — chain: meta_description_{loc} → og_description_{loc} → description_{loc} → EN fallback → bio → generic
   const metaDescRaw = pickLocalizedText(girlRec, locale, ['meta_description', 'og_description', 'description']);
-  const fallbackFn = PROFILE_FALLBACK_DESC[locale] ?? PROFILE_FALLBACK_DESC.en;
+  const girlType = String(girlRec.girl_type ?? 'apartment');
+  const fallbackFn = girlType === 'escort_only'
+    ? (PROFILE_ESCORT_DESC[locale] ?? PROFILE_ESCORT_DESC.en)
+    : (PROFILE_FALLBACK_DESC[locale] ?? PROFILE_FALLBACK_DESC.en);
   const metaDesc = metaDescRaw
     ? metaDescRaw.substring(0, 160)
     : fallbackFn(name, age);
@@ -311,7 +321,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
 
   const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.lovelygirls.cz';
   const localePrefix = locale === 'en' ? '' : `/${locale}`;
-  const profileSegment = locale === 'en' ? 'profile' : 'profil';
+  const profileSegment = { en: 'girl', cs: 'divka', de: 'maedchen', uk: 'divchyna' }[locale] ?? 'girl';
   const divkyTranslated = locale === 'en' ? 'girls' : locale === 'de' ? 'maedchen' : locale === 'uk' ? 'divchata' : 'divky';
   const breadcrumbSchema = breadcrumbListJsonLd([
     { name: girlsLabel, url: `${BASE}${localePrefix}/${divkyTranslated}` },
@@ -403,6 +413,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
                 return g.style_wardrobe ? String(g.style_wardrobe) : null;
               })()}
               videos={videos.filter((v) => v.vimeo_id).map((v) => ({ id: v.id, vimeo_id: v.vimeo_id, url: v.url }))}
+              girlType={String((girl as unknown as Record<string, unknown>).girl_type ?? 'apartment')}
             />
             <ProfilDetails
               girl={girlTyped}
@@ -471,6 +482,7 @@ export default async function ProfilPage({ params, searchParams }: Props) {
         shiftStatus={todaySchedule.status}
         locale={locale}
         scheduleLocation={todaySchedule.scheduleLocation}
+        girlType={String((girl as unknown as Record<string, unknown>).girl_type ?? 'apartment')}
       />
     </main>
   );

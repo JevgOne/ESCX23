@@ -111,6 +111,13 @@ interface VideoItem {
   url: string;
 }
 
+const ESCORT_BADGE: Record<string, string> = {
+  cs: 'Pouze Escort', en: 'Escort Only', de: 'Nur Escort', uk: 'Лише Ескорт',
+};
+const ESCORT_LOC: Record<string, string> = {
+  cs: 'Jezdím k vám — Praha a okolí', en: 'I come to you — Prague & surroundings', de: 'Ich komme zu Ihnen — Prag & Umgebung', uk: 'Я приїду до вас — Прага та околиці',
+};
+
 interface ProfilHeroProps {
   girl: Girl;
   photos: Photo[];
@@ -137,6 +144,7 @@ interface ProfilHeroProps {
   activeMedia?: 'photo' | 'video';
   slug?: string;
   subtitle?: string | null;
+  girlType?: string;
 }
 
 const NEW_LABEL: Record<string, string> = { cs: 'NOVÁ', en: 'NEW', de: 'NEU', uk: 'НОВА' };
@@ -160,7 +168,7 @@ const BADGE_CONFIG: Record<string, { label: Record<string, string>; css: string 
   },
 };
 
-export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, shiftStatus = 'off', topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleLocationSlug, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '', subtitle }: ProfilHeroProps) {
+export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs', shiftFrom, shiftTo, shiftStatus = 'off', topServices = [], bio = '', personalMessage, voiceUrl, scheduleLocation, scheduleLocationSlug, scheduleAddress, stylH, stylSub, stylNote, styleWardrobe, isNew, isVip, badgeType, videos = [], activeMedia = 'photo', slug = '', subtitle, girlType = 'apartment' }: ProfilHeroProps) {
   const primaryPhoto = photos.find((p) => p.is_primary) ?? photos[0];
   const allPhotos = photos.slice(0, 8);
   const name = String(girl.name ?? '');
@@ -170,10 +178,14 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
   const altBase = age != null
     ? `${name}, ${age}, ${city} ${altNoun}`
     : `${name}, ${city} ${altNoun}`;
+  const isEscort = girlType === 'escort_only';
   const locText = translateLocation(scheduleLocation ?? null, locale);
+  // Escort girls show "I come to you" instead of an apartment address.
   // Not working today → fall back to the city. The district shown is always
   // today's; the rest of the week lives on /rozvrh.
-  const locLabel = scheduleAddress ?? locText ?? city;
+  const locLabel = isEscort
+    ? (ESCORT_LOC[locale] ?? ESCORT_LOC.en)
+    : (scheduleAddress ?? locText ?? city);
   const todayLbl = TODAY_LBL[locale] ?? TODAY_LBL.en;
   const laterLbl = LATER_LBL[locale] ?? LATER_LBL.en;
   const statusText = shiftStatus === 'working' && shiftFrom && shiftTo
@@ -258,7 +270,15 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
               <span>{statusText}</span>
             </div>
           )}
-          {locLabel && (
+          {isEscort ? (
+            <div className="ig-loc ig-loc-escort">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
+                <polygon points="12 15 17 21 7 21 12 15" />
+              </svg>
+              <span>{ESCORT_BADGE[locale] ?? ESCORT_BADGE.en}</span>
+            </div>
+          ) : locLabel && (
             <div className="ig-loc">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -526,8 +546,8 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
       </div>
 
       {(() => {
-        const profileSegment = locale === 'en' ? 'profile' : 'profil';
-        const photoHref = `/${locale}/${profileSegment}/${slug}`;
+        const profileSegment: Record<string, string> = { en: 'girl', cs: 'divka', de: 'maedchen', uk: 'divchyna' };
+        const photoHref = locale === 'en' ? `/girl/${slug}` : `/${locale}/${profileSegment[locale] ?? 'girl'}/${slug}`;
         const videoHref = localeHref(locale, `/profil/${slug}`) + '?media=video';
         return (
           <div className="media-tabs">

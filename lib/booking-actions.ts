@@ -106,6 +106,7 @@ export interface AvailableGirl {
   isWorking: boolean;
   bookedSlots: string[]; // ["14:00-15:00", "17:00-18:00"]
   allowedDurations: number[] | null; // null = all durations, e.g. [60] = only 60min
+  girlType: string; // 'apartment' | 'escort_only' | 'both'
 }
 
 export async function getAvailableGirls(date: string): Promise<AvailableGirl[]> {
@@ -118,7 +119,7 @@ export async function getAvailableGirls(date: string): Promise<AvailableGirl[]> 
   const result = await db.execute({
     sql: `
       SELECT
-        g.id, g.name, g.booking_allowed_durations,
+        g.id, g.name, g.girl_type, g.booking_allowed_durations,
         (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url,
         gs.start_time AS shift_start, gs.end_time AS shift_end,
         l.display_name AS location_name,
@@ -164,14 +165,16 @@ export async function getAvailableGirls(date: string): Promise<AvailableGirl[]> 
       shiftEnd = r.ex_end ? String(r.ex_end).substring(0, 5) : shiftEnd;
     }
 
+    const gt = String(r.girl_type ?? 'apartment');
     return {
       id: Number(r.id),
       name: String(r.name),
       photoUrl: r.photo_url ? String(r.photo_url) : null,
       shiftStart,
       shiftEnd,
-      locationName: r.location_name ? String(r.location_name) : null,
+      locationName: gt === 'escort_only' ? 'Escort' : (r.location_name ? String(r.location_name) : null),
       isWorking: shiftStart !== null && shiftEnd !== null,
+      girlType: gt,
       bookedSlots: bookedByGirl.get(Number(r.id)) ?? [],
       allowedDurations: r.booking_allowed_durations
         ? JSON.parse(String(r.booking_allowed_durations)) as number[]
