@@ -13,10 +13,10 @@ async function getLocale(): Promise<string> {
 
 const SESSION_COOKIE = 'escx23_session';
 const SESSION_MAX_AGE_SECONDS: Record<string, number> = {
-  admin: 20 * 60,           // 20 minutes inactivity
-  manager: 20 * 60,         // 20 minutes inactivity
-  operator: 20 * 60,        // 20 minutes inactivity
-  girl: 72 * 60 * 60,      // 72 hours (3 days)
+  admin: 8 * 60 * 60,       // 8 hours
+  manager: 8 * 60 * 60,     // 8 hours
+  operator: 8 * 60 * 60,    // 8 hours
+  girl: 72 * 60 * 60,       // 72 hours (3 days)
 };
 const REMEMBER_ME_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
 
@@ -125,22 +125,6 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
   const row = result.rows[0] as Record<string, unknown>;
   const role = row.role as 'admin' | 'manager' | 'operator' | 'girl';
-
-  // Sliding window: refresh session on each request (admin/manager/operator only)
-  if (role === 'admin' || role === 'manager' || role === 'operator') {
-    const maxAge = SESSION_MAX_AGE_SECONDS[role] ?? 20 * 60;
-    const newToken = createToken(Number(row.id), role, maxAge);
-    try {
-      cookieStore.set(SESSION_COOKIE, newToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-      });
-    } catch {
-      // Cookie setting may fail in some contexts (e.g. static generation)
-    }
-  }
 
   return {
     id: Number(row.id),
