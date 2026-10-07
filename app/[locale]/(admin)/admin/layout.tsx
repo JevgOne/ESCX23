@@ -63,11 +63,8 @@ export default async function AdminLayout({
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: '.topbar, header.header, footer.footer { display: none !important; }' }} />
-      <input type="checkbox" id="admin-sidebar-toggle" className="admin-sidebar-toggle-input" />
-      <div className="admin-shell">
-        <label htmlFor="admin-sidebar-toggle" className="admin-sidebar-overlay" aria-hidden="true" />
-        <AdminSidebar />
-        <div className="admin-main">{children}</div>
+      <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <div style={{ flex: 1, padding: '24px 32px' }}>{children}</div>
       </div>
     </>
   );
