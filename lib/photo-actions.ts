@@ -3,7 +3,6 @@
 import { put, del } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import sharp from 'sharp';
 import { db } from './db';
 import { requireAdmin } from './auth';
 
@@ -51,6 +50,7 @@ export async function uploadPhotoForm(formData: FormData) {
       console.log('[photo-upload] processing:', file.name, file.size, ext);
 
       const inputBuffer = Buffer.from(await file.arrayBuffer());
+      const sharp = (await import('sharp')).default;
       const webpBuffer = await sharp(inputBuffer).webp({ quality: 82 }).toBuffer();
       console.log('[photo-upload] webp converted:', file.size, '->', webpBuffer.length);
 
