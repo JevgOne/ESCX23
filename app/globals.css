@@ -2126,10 +2126,10 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 }
 
 .admin-sidebar {
-  width: 240px;
+  width: 230px;
   background: var(--color-bg-soft);
   border-right: 1px solid var(--color-line);
-  padding: 24px 12px;
+  padding: 20px 10px;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -2141,14 +2141,14 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 4px 20px;
+  padding: 0 8px 16px;
   border-bottom: 1px solid var(--color-line);
-  margin-bottom: 16px;
+  margin-bottom: 4px;
 }
 
 .admin-sidebar-logo > span:first-child {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   background: linear-gradient(135deg, var(--color-coral) 0%, var(--color-magenta) 100%);
   border-radius: 8px;
   display: flex;
@@ -2156,13 +2156,13 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   justify-content: center;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   color: white;
   flex-shrink: 0;
 }
 
 .admin-sidebar-logo-text {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -2172,15 +2172,32 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 .admin-sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
+}
+
+.admin-sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-bottom: 8px;
+}
+
+.admin-sidebar-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-dim);
+  padding: 12px 12px 6px;
+  user-select: none;
 }
 
 .admin-sidebar a {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 8px;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: 6px;
   color: var(--color-text-muted);
   font-size: 13px;
   font-weight: 500;
@@ -2193,21 +2210,26 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 }
 
 .admin-sidebar a.active {
-  background: linear-gradient(135deg, var(--color-magenta) 0%, #5c1c2e 100%);
-  color: white;
+  background: rgba(228, 88, 78, 0.12);
+  color: var(--color-coral);
+  font-weight: 600;
+}
+
+.admin-sidebar a.active svg {
+  color: var(--color-coral);
 }
 
 .admin-sidebar-badge {
   margin-left: auto;
-  min-width: 20px;
-  padding: 2px 7px;
+  min-width: 18px;
+  padding: 1px 6px;
   background: var(--color-coral);
   color: #fff;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   border-radius: 10px;
   text-align: center;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 /* Admin notifications */
@@ -2279,7 +2301,7 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 
 .admin-topbar h1 {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
   flex: 1;
   min-width: 0;
@@ -2558,14 +2580,14 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
 }
 
 .stat-card .stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 12px;
-  font-size: 18px;
+  font-size: 16px;
   background: rgba(228,88,78,0.1);
   color: var(--color-coral);
 }

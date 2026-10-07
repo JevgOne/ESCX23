@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { getGirlById } from '@/lib/queries';
 import AdminTopbar from '@/components/admin/AdminTopbar';
-import { uploadPhotoForm, setPhotoAsPrimary, setPhotoAsSecondary, deletePhoto } from '@/lib/photo-actions';
+import { uploadPhotoFormAction, setPhotoAsPrimaryForm, setPhotoAsSecondaryForm, deletePhotoForm } from '@/lib/photo-actions';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -46,37 +46,12 @@ export default async function AdminGirlFotkyPage({
 
   const photos = await getPhotos(Number(id));
 
-  async function handleUpload(formData: FormData) {
-    'use server';
-    formData.set('girl_id', id);
-    formData.set('source', 'admin');
-    await uploadPhotoForm(formData);
-  }
-
-  async function handleSetPrimary(formData: FormData) {
-    'use server';
-    const photoId = Number(formData.get('photo_id'));
-    await setPhotoAsPrimary(photoId, Number(id));
-  }
-
-  async function handleSetSecondary(formData: FormData) {
-    'use server';
-    const photoId = Number(formData.get('photo_id'));
-    await setPhotoAsSecondary(photoId, Number(id));
-  }
-
-  async function handleDelete(formData: FormData) {
-    'use server';
-    const photoId = Number(formData.get('photo_id'));
-    await deletePhoto(photoId, Number(id));
-  }
-
   return (
     <>
       <AdminTopbar title={`Fotky — ${String(girl.name)}`} />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href={`/cs/admin/divky/${id}`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/divky/${id}`} style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
           ← Zpět na detail dívky
         </a>
       </div>
@@ -91,7 +66,9 @@ export default async function AdminGirlFotkyPage({
         <div style={{ fontSize: '12px', color: 'var(--color-coral)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>
           Nahrát fotky
         </div>
-        <form action={handleUpload} className="upload-dropzone">
+        <form action={uploadPhotoFormAction} className="upload-dropzone">
+          <input type="hidden" name="girl_id" value={id} />
+          <input type="hidden" name="source" value="admin" />
           <input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp,.avif" multiple required />
           <button type="submit" className="admin-btn-primary" style={{ marginTop: '12px' }}>
             Nahrát
@@ -122,23 +99,26 @@ export default async function AdminGirlFotkyPage({
             )}
             <div className="photo-card-actions">
               {photo.is_primary !== 1 && (
-                <form action={handleSetPrimary}>
+                <form action={setPhotoAsPrimaryForm}>
                   <input type="hidden" name="photo_id" value={photo.id} />
+                  <input type="hidden" name="girl_id" value={id} />
                   <button type="submit" className="admin-btn-secondary" style={{ fontSize: '11px', padding: '4px 8px' }}>
                     Hlavní (zepředu)
                   </button>
                 </form>
               )}
               {photo.is_primary !== 1 && photo.is_secondary !== 1 && (
-                <form action={handleSetSecondary}>
+                <form action={setPhotoAsSecondaryForm}>
                   <input type="hidden" name="photo_id" value={photo.id} />
+                  <input type="hidden" name="girl_id" value={id} />
                   <button type="submit" style={{ fontSize: '11px', padding: '4px 8px', background: 'rgba(139,92,246,0.15)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '6px', cursor: 'pointer' }}>
                     Druhá (zezadu)
                   </button>
                 </form>
               )}
-              <form action={handleDelete}>
+              <form action={deletePhotoForm}>
                 <input type="hidden" name="photo_id" value={photo.id} />
+                <input type="hidden" name="girl_id" value={id} />
                 <button type="submit" className="admin-btn-danger" style={{ fontSize: '11px', padding: '4px 8px' }}>
                   Smazat
                 </button>

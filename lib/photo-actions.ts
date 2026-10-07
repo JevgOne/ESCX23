@@ -92,6 +92,18 @@ export async function uploadPhotoForm(formData: FormData) {
   return { ok: true };
 }
 
+/** FormData wrapper for upload — always redirects for admin source. */
+export async function uploadPhotoFormAction(formData: FormData) {
+  await uploadPhotoForm(formData);
+}
+
+/** FormData wrapper — use directly as form action (no closure needed). */
+export async function setPhotoAsPrimaryForm(formData: FormData) {
+  const photoId = Number(formData.get('photo_id'));
+  const girlId = Number(formData.get('girl_id'));
+  await setPhotoAsPrimary(photoId, girlId);
+}
+
 export async function setPhotoAsPrimary(photoId: number, girlId: number) {
   await requireAdmin();
 
@@ -105,6 +117,13 @@ export async function setPhotoAsPrimary(photoId: number, girlId: number) {
   });
 
   revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
+}
+
+/** FormData wrapper — use directly as form action (no closure needed). */
+export async function setPhotoAsSecondaryForm(formData: FormData) {
+  const photoId = Number(formData.get('photo_id'));
+  const girlId = Number(formData.get('girl_id'));
+  await setPhotoAsSecondary(photoId, girlId);
 }
 
 export async function setPhotoAsSecondary(photoId: number, girlId: number) {
@@ -121,6 +140,13 @@ export async function setPhotoAsSecondary(photoId: number, girlId: number) {
   });
 
   revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
+}
+
+/** FormData wrapper — use directly as form action (no closure needed). */
+export async function deletePhotoForm(formData: FormData) {
+  const photoId = Number(formData.get('photo_id'));
+  const girlId = Number(formData.get('girl_id'));
+  await deletePhoto(photoId, girlId);
 }
 
 export async function deletePhoto(photoId: number, girlId: number) {
