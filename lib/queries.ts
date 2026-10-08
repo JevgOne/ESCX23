@@ -75,7 +75,7 @@ export async function getGirlsForService(serviceSlug: string): Promise<GirlCard[
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
-        (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS primary_photo,
         COALESCE(
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1)
@@ -191,7 +191,7 @@ export async function getGirlsWithToday(): Promise<GirlCard[]> {
         gs2.start_time AS tmrw_from, gs2.end_time AS tmrw_to,
         se2.exception_type AS tmrw_ex_type,
         l2.display_name AS tmrw_location,
-        (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS primary_photo,
         COALESCE(
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1)
@@ -581,7 +581,7 @@ export async function getRecentActivity(limit = 5): Promise<ActivityItem[]> {
     db.execute({
       sql: `SELECT
               g.slug, g.name,
-              (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo,
+              (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS photo,
               DATE(p.created_at) AS day,
               COUNT(*) AS cnt,
               MAX(p.created_at) AS last_at
@@ -596,7 +596,7 @@ export async function getRecentActivity(limit = 5): Promise<ActivityItem[]> {
     db.execute({
       sql: `SELECT
               g.slug, g.name,
-              (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo,
+              (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS photo,
               r.rating, r.created_at
             FROM reviews r
             JOIN girls g ON g.id = r.girl_id
@@ -608,7 +608,7 @@ export async function getRecentActivity(limit = 5): Promise<ActivityItem[]> {
     db.execute({
       sql: `SELECT
               g.slug, g.name,
-              (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo,
+              (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS photo,
               DATE(v.created_at) AS day,
               COUNT(*) AS cnt,
               MAX(v.created_at) AS last_at
@@ -623,7 +623,7 @@ export async function getRecentActivity(limit = 5): Promise<ActivityItem[]> {
     db.execute({
       sql: `SELECT
               g.slug, g.name,
-              (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo,
+              (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS photo,
               g.updated_at
             FROM girls g
             WHERE g.status = 'active'
@@ -725,7 +725,7 @@ export async function getRecentApprovedReviews(limit = 4): Promise<ReviewWithGir
     sql: `SELECT
             r.id, r.rating, r.content AS text, r.author_name AS client_nickname,
             g.slug, g.name,
-            (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo,
+            (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS photo,
             r.created_at, r.vibe, r.tags, r.reply, r.reply_at
           FROM reviews r
           JOIN girls g ON g.id = r.girl_id
@@ -760,7 +760,7 @@ export async function getReviewPageData() {
   const [statsRes, girlsRes] = await Promise.all([
     db.execute(`SELECT COUNT(*) as cnt, ROUND(AVG(rating),1) as avg FROM reviews WHERE status = 'approved'`),
     db.execute(`SELECT g.name, g.slug,
-                  (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo,
+                  (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS photo,
                   COUNT(r.id) as cnt
                 FROM reviews r JOIN girls g ON g.id = r.girl_id
                 WHERE r.status = 'approved'
@@ -895,7 +895,7 @@ export async function getGirlsForDay(
         l.display_name AS schedule_location, l.district AS schedule_district,
         gs_prev.start_time AS prev_shift_from, gs_prev.end_time AS prev_shift_to,
         l_prev.display_name AS prev_schedule_location,
-        (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS primary_photo,
         COALESCE(
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1)
@@ -1133,7 +1133,7 @@ export async function getAllGirlsForAdmin(q?: string, status?: string): Promise<
   let sql = `
     SELECT
       g.id, g.slug, g.name, g.age, g.status, g.created_at, g.updated_at,
-      (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+      (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS primary_photo,
       (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count
     FROM girls g
     WHERE 1=1
@@ -1405,7 +1405,7 @@ export async function getPendingReviews(): Promise<PendingReview[]> {
   const result = await db.execute(`
     SELECT r.id, r.girl_id, r.author_name, r.rating, r.content, r.status, r.created_at,
            g.name AS girl_name, g.slug AS girl_slug,
-           (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS girl_photo
+           (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS girl_photo
     FROM reviews r
     JOIN girls g ON g.id = r.girl_id
     WHERE r.status IS NULL OR r.status = 'pending'
@@ -1631,7 +1631,7 @@ export async function getBookings(statusFilter?: string): Promise<AdminBookingRo
       b.id, b.girl_id, b.date, b.start_time, b.status,
       b.client_phone, b.client_email, b.communication_type, b.created_at,
       g.name AS girl_name,
-      (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS girl_photo
+      (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS girl_photo
     FROM bookings b
     LEFT JOIN girls g ON g.id = b.girl_id
     WHERE 1=1
@@ -2187,7 +2187,7 @@ export async function getGirlsForListing(
       gs2.start_time AS tmrw_from, gs2.end_time AS tmrw_to,
       se2.exception_type AS tmrw_ex_type,
       l2.display_name AS tmrw_schedule_location,
-      (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+      (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS primary_photo,
       (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count,
       (SELECT COUNT(*) FROM girl_videos WHERE girl_id = g.id) AS video_count,
       CASE
@@ -2346,7 +2346,7 @@ export async function getGirlsForHashtag(slug: string): Promise<GirlCard[]> {
         gs.start_time AS shift_from, gs.end_time AS shift_to,
         se.exception_type, se.start_time AS ex_from, se.end_time AS ex_to,
         l.display_name AS schedule_location,
-        (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS primary_photo,
         COALESCE(
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1)
@@ -2530,7 +2530,7 @@ export interface NewGirl {
 export async function getNewGirl(): Promise<NewGirl | null> {
   const res = await db.execute(
     `SELECT g.slug, g.name, g.age, g.height, g.weight, g.bust, g.is_new, g.badge_type, g.ethnicity, g.created_at,
-            (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo
+            (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS primary_photo
      FROM girls g
      WHERE g.status = 'active' AND (g.vip = 0 OR g.vip IS NULL)
      ORDER BY g.is_new DESC, g.badge_type = 'new' DESC, g.created_at DESC
@@ -2579,7 +2579,7 @@ export async function getActiveGirlCards(excludeSlug?: string, limit = 4): Promi
       SELECT
         g.id, g.slug, g.name, g.age, g.height, g.weight, g.bust, g.girl_type,
         g.created_at, g.is_new, g.badge_type, g.ethnicity, g.languages, g.hashtags, (SELECT COALESCE(ROUND(AVG(rv.rating), 1), 0) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS rating, (SELECT COUNT(*) FROM reviews rv WHERE rv.girl_id = g.id AND rv.status = 'approved') AS reviews_count, g.status,
-        (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS primary_photo,
+        (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS primary_photo,
         COALESCE(
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_secondary = 1 LIMIT 1),
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND (is_primary = 0 OR is_primary IS NULL) ORDER BY display_order ASC, id ASC LIMIT 1)
