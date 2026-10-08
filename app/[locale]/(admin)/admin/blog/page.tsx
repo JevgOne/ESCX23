@@ -5,6 +5,7 @@ import AdminTopbar from '@/components/admin/AdminTopbar';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { deleteBlogPost } from '@/lib/admin-actions';
 import { requireFullAdmin } from '@/lib/auth';
+import ConfirmDeleteForm from '@/components/admin/ConfirmDeleteForm';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -27,7 +28,8 @@ const STATUS_LABELS: Record<string, string> = {
   archived: 'Archiv',
 };
 
-const COLUMNS: DataTableColumn<PostRow>[] = [
+function getColumns(locale: string): DataTableColumn<PostRow>[] {
+  return [
   {
     key: 'cover',
     label: '',
@@ -87,15 +89,13 @@ const COLUMNS: DataTableColumn<PostRow>[] = [
     label: 'Akce',
     render: (row): ReactNode => (
       <div style={{ display: 'flex', gap: '6px' }}>
-        <a href={`/cs/admin/blog/${row.id}`} className="admin-action-btn edit">Edit</a>
-        <form action={deleteBlogPost} style={{ display: 'inline' }}>
-          <input type="hidden" name="id" value={row.id} />
-          <button type="submit" className="admin-action-btn danger">Smazat</button>
-        </form>
+        <a href={`/${locale}/admin/blog/${row.id}`} className="admin-action-btn edit">Edit</a>
+        <ConfirmDeleteForm action={deleteBlogPost} id={row.id} />
       </div>
     ),
   },
-];
+  ];
+}
 
 export default async function AdminBlogPage({
   params,
@@ -121,7 +121,7 @@ export default async function AdminBlogPage({
         <a href={`/${locale}/admin/blog/novy`} className="admin-btn-primary">+ Nový článek</a>
       </div>
 
-      <DataTable columns={COLUMNS} rows={rows} emptyText="Žádné blog posty" />
+      <DataTable columns={getColumns(locale)} rows={rows} emptyText="Žádné blog posty" />
     </>
   );
 }

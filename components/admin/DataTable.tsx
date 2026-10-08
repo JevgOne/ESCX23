@@ -38,7 +38,7 @@ export default function DataTable<T extends object>({
             rows.map((row, i) => (
               <tr key={i}>
                 {columns.map((col) => (
-                  <td key={col.key}>
+                  <td key={col.key} data-label={col.label}>
                     {col.render ? col.render(row) : ((row as Record<string, unknown>)[col.key] as ReactNode)}
                   </td>
                 ))}

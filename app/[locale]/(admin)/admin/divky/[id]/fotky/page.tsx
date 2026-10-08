@@ -63,7 +63,7 @@ export default async function AdminGirlFotkyPage({
         </div>
       )}
 
-      <PhotoUpload girlId={id} />
+      <PhotoUpload girlId={id} locale={locale} />
 
       <div style={{ fontSize: '12px', color: 'var(--color-text-dim)', marginBottom: '16px' }}>
         {photos.length} {photos.length === 1 ? 'fotka' : photos.length < 5 ? 'fotky' : 'fotek'}

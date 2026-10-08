@@ -63,7 +63,7 @@ export default async function AdminDashboardPage({
         />
       </div>
 
-      <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: 'var(--color-text-muted)' }}>
+      <h2 className="admin-section-title">
         Rychlé akce
       </h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
@@ -102,7 +102,7 @@ export default async function AdminDashboardPage({
           </div>
           <div>
             <div style={{ fontWeight: 600, marginBottom: '4px' }}>
-              Member applications
+              Žádosti o členství
               {stats.pendingApplications > 0 && (
                 <span className="admin-badge-warn">{stats.pendingApplications}</span>
               )}

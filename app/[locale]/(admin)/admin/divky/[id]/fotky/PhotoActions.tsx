@@ -8,9 +8,10 @@ interface PhotoActionsProps {
   girlId: number;
   isPrimary: boolean;
   isSecondary: boolean;
+  locale: string;
 }
 
-export default function PhotoActions({ photoId, girlId, isPrimary, isSecondary }: PhotoActionsProps) {
+export default function PhotoActions({ photoId, girlId, isPrimary, isSecondary, locale }: PhotoActionsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -21,7 +22,7 @@ export default function PhotoActions({ photoId, girlId, isPrimary, isSecondary }
       const res = await fetch('/api/admin/photos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, photoId, girlId }),
+        body: JSON.stringify({ action, photoId, girlId, locale }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));

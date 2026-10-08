@@ -5,6 +5,7 @@ import AdminTopbar from '@/components/admin/AdminTopbar';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { deletePobocka } from '@/lib/admin-actions';
 import { requireFullAdmin } from '@/lib/auth';
+import ConfirmDeleteForm from '@/components/admin/ConfirmDeleteForm';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -21,7 +22,8 @@ interface LocationRow {
   opening_date: string | null;
 }
 
-const COLUMNS: DataTableColumn<LocationRow>[] = [
+function getColumns(locale: string): DataTableColumn<LocationRow>[] {
+  return [
   { key: 'display_name', label: 'Název' },
   {
     key: 'district',
@@ -59,19 +61,15 @@ const COLUMNS: DataTableColumn<LocationRow>[] = [
     label: 'Akce',
     render: (row): ReactNode => (
       <div style={{ display: 'flex', gap: '6px' }}>
-        <a href={`/cs/admin/pobocky/${row.id}`} className="admin-action-btn edit">
+        <a href={`/${locale}/admin/pobocky/${row.id}`} className="admin-action-btn edit">
           Edit
         </a>
-        <form action={deletePobocka} style={{ display: 'inline' }}>
-          <input type="hidden" name="id" value={row.id} />
-          <button type="submit" className="admin-action-btn danger">
-            Smazat
-          </button>
-        </form>
+        <ConfirmDeleteForm action={deletePobocka} id={row.id} />
       </div>
     ),
   },
-];
+  ];
+}
 
 export default async function AdminPobockyPage({
   params,
@@ -95,7 +93,7 @@ export default async function AdminPobockyPage({
         </a>
       </div>
 
-      <DataTable columns={COLUMNS} rows={rows} emptyText="Žádné pobočky" />
+      <DataTable columns={getColumns(locale)} rows={rows} emptyText="Žádné pobočky" />
     </>
   );
 }

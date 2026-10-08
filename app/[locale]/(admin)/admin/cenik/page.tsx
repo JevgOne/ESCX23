@@ -5,6 +5,7 @@ import AdminTopbar from '@/components/admin/AdminTopbar';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { deletePricingPlan, deletePricingExtra } from '@/lib/admin-actions';
 import { requireFullAdmin } from '@/lib/auth';
+import ConfirmDeleteForm from '@/components/admin/ConfirmDeleteForm';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -30,7 +31,8 @@ interface ExtraRow {
   name_en: string;
 }
 
-const PLAN_COLS: DataTableColumn<PlanRow>[] = [
+function getPlanCols(locale: string): DataTableColumn<PlanRow>[] {
+  return [
   { key: 'duration', label: 'Délka (min)' },
   { key: 'title_cs', label: 'Název (CS)' },
   {
@@ -64,17 +66,16 @@ const PLAN_COLS: DataTableColumn<PlanRow>[] = [
     label: 'Akce',
     render: (row): ReactNode => (
       <div style={{ display: 'flex', gap: '6px' }}>
-        <a href={`/cs/admin/cenik/plany/${row.id}`} className="admin-action-btn edit">Edit</a>
-        <form action={deletePricingPlan} style={{ display: 'inline' }}>
-          <input type="hidden" name="id" value={row.id} />
-          <button type="submit" className="admin-action-btn danger">Smazat</button>
-        </form>
+        <a href={`/${locale}/admin/cenik/plany/${row.id}`} className="admin-action-btn edit">Edit</a>
+        <ConfirmDeleteForm action={deletePricingPlan} id={row.id} />
       </div>
     ),
   },
-];
+  ];
+}
 
-const EXTRA_COLS: DataTableColumn<ExtraRow>[] = [
+function getExtraCols(locale: string): DataTableColumn<ExtraRow>[] {
+  return [
   { key: 'name_cs', label: 'Název (CS)' },
   {
     key: 'price',
@@ -96,15 +97,13 @@ const EXTRA_COLS: DataTableColumn<ExtraRow>[] = [
     label: 'Akce',
     render: (row): ReactNode => (
       <div style={{ display: 'flex', gap: '6px' }}>
-        <a href={`/cs/admin/cenik/extras/${row.id}`} className="admin-action-btn edit">Edit</a>
-        <form action={deletePricingExtra} style={{ display: 'inline' }}>
-          <input type="hidden" name="id" value={row.id} />
-          <button type="submit" className="admin-action-btn danger">Smazat</button>
-        </form>
+        <a href={`/${locale}/admin/cenik/extras/${row.id}`} className="admin-action-btn edit">Edit</a>
+        <ConfirmDeleteForm action={deletePricingExtra} id={row.id} />
       </div>
     ),
   },
-];
+  ];
+}
 
 export default async function AdminCenikPage({
   params,
@@ -130,7 +129,7 @@ export default async function AdminCenikPage({
           <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Programy</h2>
           <a href={`/${locale}/admin/cenik/nova-plan`} className="admin-btn-primary">+ Nový program</a>
         </div>
-        <DataTable columns={PLAN_COLS} rows={plans} emptyText="Žádné programy" />
+        <DataTable columns={getPlanCols(locale)} rows={plans} emptyText="Žádné programy" />
       </section>
 
       <section>
@@ -138,7 +137,7 @@ export default async function AdminCenikPage({
           <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Extras</h2>
           <a href={`/${locale}/admin/cenik/nova-extra`} className="admin-btn-primary">+ Nový extra</a>
         </div>
-        <DataTable columns={EXTRA_COLS} rows={extras} emptyText="Žádné extras" />
+        <DataTable columns={getExtraCols(locale)} rows={extras} emptyText="Žádné extras" />
       </section>
     </>
   );

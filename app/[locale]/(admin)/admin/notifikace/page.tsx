@@ -1,15 +1,43 @@
 import { setRequestLocale } from 'next-intl/server';
+import type { ReactNode } from 'react';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import { getAdminNotifications, markNotificationRead, markAllNotificationsRead } from '@/lib/admin-notifications';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const TYPE_ICON: Record<string, { emoji: string; color: string }> = {
-  review_new: { emoji: '★', color: '#f59e0b' },
-  application_new: { emoji: '📋', color: '#8b5cf6' },
-  booking_created: { emoji: '📅', color: '#10b981' },
+function NotifIcon({ d }: { d: string }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d={d} />
+    </svg>
+  );
+}
+
+const TYPE_ICON: Record<string, { icon: ReactNode; color: string }> = {
+  review_new: {
+    icon: <NotifIcon d="M10 1.5l2.47 5.01L18 7.27l-4 3.9.94 5.49L10 14.27l-4.94 2.39L6 11.17l-4-3.9 5.53-.76L10 1.5z" />,
+    color: '#f59e0b',
+  },
+  application_new: {
+    icon: <NotifIcon d="M6 2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm1 4h6m-6 3h6m-6 3h3" />,
+    color: '#8b5cf6',
+  },
+  booking_created: {
+    icon: <NotifIcon d="M3 5a2 2 0 012-2h10a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm0 3h14M7 1v3m6-3v3" />,
+    color: '#10b981',
+  },
 };
+
+const BELL_ICON = (
+  <svg width="32" height="32" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-text-dim)' }}>
+    <path d="M10 2a5 5 0 00-5 5c0 5-2 6-2 6h14s-2-1-2-6a5 5 0 00-5-5M8.5 17a1.5 1.5 0 003 0" />
+  </svg>
+);
+
+const BELL_ICON_SM = (
+  <NotifIcon d="M10 2a5 5 0 00-5 5c0 5-2 6-2 6h14s-2-1-2-6a5 5 0 00-5-5M8.5 17a1.5 1.5 0 003 0" />
+);
 
 function timeAgo(dateStr: string): string {
   const now = Date.now();
@@ -64,14 +92,14 @@ export default async function AdminNotifikacePage({
 
       {notifications.length === 0 && (
         <div style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--color-text-dim)' }}>
-          <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔔</div>
+          <div style={{ marginBottom: '12px' }}>{BELL_ICON}</div>
           <p>Žádné notifikace</p>
         </div>
       )}
 
       <div className="admin-notifications-list">
         {notifications.map((n) => {
-          const typeInfo = TYPE_ICON[n.type] ?? { emoji: '🔔', color: 'var(--color-text-muted)' };
+          const typeInfo = TYPE_ICON[n.type] ?? { icon: BELL_ICON_SM, color: 'var(--color-text-muted)' };
           return (
             <div
               key={n.id}
@@ -81,7 +109,7 @@ export default async function AdminNotifikacePage({
                 className="admin-notification-icon"
                 style={{ color: typeInfo.color }}
               >
-                {typeInfo.emoji}
+                {typeInfo.icon}
               </div>
               <div className="admin-notification-content">
                 <div className="admin-notification-title">

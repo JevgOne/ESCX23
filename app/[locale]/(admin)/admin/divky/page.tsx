@@ -29,7 +29,8 @@ function StatusBadge({ status }: { status: string }) {
 
 const STATUSES = ['all', 'active', 'inactive', 'pending', 'archived'];
 
-const COLUMNS: DataTableColumn<AdminGirlRow>[] = [ // eslint-disable-line
+function getColumns(locale: string): DataTableColumn<AdminGirlRow>[] { // eslint-disable-line
+  return [
   {
     key: 'primaryPhoto',
     label: 'Foto',
@@ -92,16 +93,16 @@ const COLUMNS: DataTableColumn<AdminGirlRow>[] = [ // eslint-disable-line
           </form>
         ) : (
           <>
-            <a href={`/cs/admin/divky/${row.id}/edit`} className="admin-action-btn edit">
+            <a href={`/${locale}/admin/divky/${row.id}/edit`} className="admin-action-btn edit">
               Edit
             </a>
-            <a href={`/cs/admin/divky/${row.id}/dostupnost`} className="admin-action-btn">
+            <a href={`/${locale}/admin/divky/${row.id}/dostupnost`} className="admin-action-btn">
               Rozvrh
             </a>
-            <a href={`/cs/admin/divky/${row.id}/fotky`} className="admin-action-btn">
+            <a href={`/${locale}/admin/divky/${row.id}/fotky`} className="admin-action-btn">
               Fotky
             </a>
-            <a href={`/cs/admin/divky/${row.id}`} className="admin-action-btn">
+            <a href={`/${locale}/admin/divky/${row.id}`} className="admin-action-btn">
               Detail
             </a>
           </>
@@ -109,7 +110,8 @@ const COLUMNS: DataTableColumn<AdminGirlRow>[] = [ // eslint-disable-line
       </div>
     ),
   },
-];
+  ];
+}
 
 export default async function AdminDivkyPage({
   params,
@@ -146,7 +148,7 @@ export default async function AdminDivkyPage({
           {STATUSES.map((s) => (
             <a
               key={s}
-              href={s === 'all' ? '/cs/admin/divky' : `/cs/admin/divky?status=${s}`}
+              href={s === 'all' ? `/${locale}/admin/divky` : `/${locale}/admin/divky?status=${s}`}
               className={`admin-filter-pill${activeStatus === s ? ' active' : ''}`}
             >
               {s === 'all' ? 'Vše' : s === 'active' ? 'Aktivní' : s === 'inactive' ? 'Dočasně nedostupné' : s === 'pending' ? 'Čekající' : 'Archiv'}
@@ -163,7 +165,7 @@ export default async function AdminDivkyPage({
       </div>
 
       <DataTable
-        columns={COLUMNS}
+        columns={getColumns(locale)}
         rows={girls}
         emptyText="Žádné dívky nenalezeny"
       />

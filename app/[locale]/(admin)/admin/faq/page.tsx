@@ -5,6 +5,7 @@ import AdminTopbar from '@/components/admin/AdminTopbar';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { deleteFaq } from '@/lib/admin-actions';
 import { requireFullAdmin } from '@/lib/auth';
+import ConfirmDeleteForm from '@/components/admin/ConfirmDeleteForm';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -18,7 +19,8 @@ interface FaqRow {
   question_en: string;
 }
 
-const COLUMNS: DataTableColumn<FaqRow>[] = [
+function getColumns(locale: string): DataTableColumn<FaqRow>[] {
+  return [
   {
     key: 'category',
     label: 'Kategorie',
@@ -50,15 +52,13 @@ const COLUMNS: DataTableColumn<FaqRow>[] = [
     label: 'Akce',
     render: (row): ReactNode => (
       <div style={{ display: 'flex', gap: '6px' }}>
-        <a href={`/cs/admin/faq/${row.id}`} className="admin-action-btn edit">Edit</a>
-        <form action={deleteFaq} style={{ display: 'inline' }}>
-          <input type="hidden" name="id" value={row.id} />
-          <button type="submit" className="admin-action-btn danger">Smazat</button>
-        </form>
+        <a href={`/${locale}/admin/faq/${row.id}`} className="admin-action-btn edit">Edit</a>
+        <ConfirmDeleteForm action={deleteFaq} id={row.id} />
       </div>
     ),
   },
-];
+  ];
+}
 
 export default async function AdminFaqPage({
   params,
@@ -82,7 +82,7 @@ export default async function AdminFaqPage({
         <a href={`/${locale}/admin/faq/nova`} className="admin-btn-primary">+ Nová otázka</a>
       </div>
 
-      <DataTable columns={COLUMNS} rows={rows} emptyText="Žádné FAQ položky" />
+      <DataTable columns={getColumns(locale)} rows={rows} emptyText="Žádné FAQ položky" />
     </>
   );
 }

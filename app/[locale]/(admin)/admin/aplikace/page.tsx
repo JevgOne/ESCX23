@@ -171,7 +171,7 @@ export default async function AdminAplikacePage({ params, searchParams }: Props)
         {tabs.map((t) => (
           <a
             key={t.key}
-            href={t.key === 'all' ? '/cs/admin/aplikace' : `/cs/admin/aplikace?status=${t.key}`}
+            href={t.key === 'all' ? `/${locale}/admin/aplikace` : `/${locale}/admin/aplikace?status=${t.key}`}
             className={`apl-tab${t.key === activeKey ? ' active' : ''}`}
           >
             {TAB_LABELS[t.key]}
@@ -200,7 +200,7 @@ export default async function AdminAplikacePage({ params, searchParams }: Props)
           </thead>
           <tbody>
             {apps.map((a) => (
-              <ApplicationListRow key={a.id} app={a} />
+              <ApplicationListRow key={a.id} app={a} locale={locale} />
             ))}
           </tbody>
         </table>
@@ -209,14 +209,14 @@ export default async function AdminAplikacePage({ params, searchParams }: Props)
   );
 }
 
-function ApplicationListRow({ app }: { app: ApplicationRow }) {
+function ApplicationListRow({ app, locale }: { app: ApplicationRow; locale: string }) {
   const measures = [
     app.height ? `${app.height} cm` : null,
     app.weight ? `${app.weight} kg` : null,
     app.bust ? `prsa ${app.bust}` : null,
   ].filter(Boolean).join(' · ');
 
-  const detailHref = `/cs/admin/aplikace/${app.id}`;
+  const detailHref = `/${locale}/admin/aplikace/${app.id}`;
 
   return (
     <>

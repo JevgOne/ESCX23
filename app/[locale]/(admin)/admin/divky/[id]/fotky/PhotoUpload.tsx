@@ -6,6 +6,7 @@ import { useState, useRef } from 'react';
 
 interface PhotoUploadProps {
   girlId: string;
+  locale: string;
 }
 
 async function compressImage(file: File): Promise<{ blob: Blob; filename: string }> {
@@ -44,7 +45,7 @@ async function compressImage(file: File): Promise<{ blob: Blob; filename: string
   });
 }
 
-export default function PhotoUpload({ girlId }: PhotoUploadProps) {
+export default function PhotoUpload({ girlId, locale }: PhotoUploadProps) {
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState('');
@@ -68,7 +69,7 @@ export default function PhotoUpload({ girlId }: PhotoUploadProps) {
       const orderRes = await fetch('/api/admin/photos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getMinOrder', girlId: Number(girlId) }),
+        body: JSON.stringify({ action: 'getMinOrder', girlId: Number(girlId), locale }),
       });
       const orderData = await orderRes.json();
       let nextOrder = (orderData.minOrder ?? 100) - compressed.length;
@@ -95,6 +96,7 @@ export default function PhotoUpload({ girlId }: PhotoUploadProps) {
             filename: blobFilename,
             url: blobResult.url,
             displayOrder: nextOrder,
+            locale,
           }),
         });
         nextOrder++;

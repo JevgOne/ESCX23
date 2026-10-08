@@ -80,13 +80,14 @@ export async function POST(request: NextRequest) {
   // FormData upload
   const formData = await request.formData();
   const girlId = Number(formData.get('girl_id'));
+  const locale = String(formData.get('locale') || 'cs');
   const files = formData.getAll('photo') as File[];
   const ALLOWED = new Set(['jpg', 'jpeg', 'png', 'webp', 'avif', 'heic']);
   const MAX = 10 * 1024 * 1024;
   const valid = files.filter((f) => f && f.size > 0 && f.size <= MAX);
 
   if (valid.length === 0) {
-    return NextResponse.redirect(new URL(`/cs/admin/divky/${girlId}/fotky`, request.url));
+    return NextResponse.redirect(new URL(`/${locale}/admin/divky/${girlId}/fotky`, request.url), 303);
   }
 
   try {
@@ -122,12 +123,12 @@ export async function POST(request: NextRequest) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[photo-upload] FAILED:', msg);
     return NextResponse.redirect(
-      new URL(`/cs/admin/divky/${girlId}/fotky?error=${encodeURIComponent(msg)}`, request.url)
+      new URL(`/${locale}/admin/divky/${girlId}/fotky?error=${encodeURIComponent(msg)}`, request.url), 303
     );
   }
 
-  revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
-  revalidatePath(`/cs/studio/fotky`);
-  revalidatePath(`/cs`);
-  return NextResponse.redirect(new URL(`/cs/admin/divky/${girlId}/fotky`, request.url));
+  revalidatePath(`/${locale}/admin/divky/${girlId}/fotky`);
+  revalidatePath(`/${locale}/studio/fotky`);
+  revalidatePath(`/${locale}`);
+  return NextResponse.redirect(new URL(`/${locale}/admin/divky/${girlId}/fotky`, request.url), 303);
 }
