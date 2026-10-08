@@ -17,19 +17,19 @@ export async function POST(request: NextRequest) {
   // JSON actions (set primary, set secondary, delete)
   if (contentType.includes('application/json')) {
     const body = await request.json();
-    const { action, photoId, girlId } = body;
+    const { action, photoId, girlId, locale = 'cs' } = body;
 
     if (action === 'setPrimary') {
       await db.execute({ sql: `UPDATE girl_photos SET is_primary = 0 WHERE girl_id = ?`, args: [girlId] });
       await db.execute({ sql: `UPDATE girl_photos SET is_primary = 1 WHERE id = ? AND girl_id = ?`, args: [photoId, girlId] });
-      revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
+      revalidatePath(`/${locale}/admin/divky/${girlId}/fotky`);
       return NextResponse.json({ ok: true });
     }
 
     if (action === 'setSecondary') {
       await db.execute({ sql: `UPDATE girl_photos SET is_secondary = 0 WHERE girl_id = ?`, args: [girlId] });
       await db.execute({ sql: `UPDATE girl_photos SET is_secondary = 1 WHERE id = ? AND girl_id = ?`, args: [photoId, girlId] });
-      revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
+      revalidatePath(`/${locale}/admin/divky/${girlId}/fotky`);
       return NextResponse.json({ ok: true });
     }
 
@@ -50,7 +50,27 @@ export async function POST(request: NextRequest) {
         }
         await db.execute({ sql: `DELETE FROM girl_photos WHERE id = ? AND girl_id = ?`, args: [photoId, girlId] });
       }
-      revalidatePath(`/cs/admin/divky/${girlId}/fotky`);
+      revalidatePath(`/${locale}/admin/divky/${girlId}/fotky`);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === 'getMinOrder') {
+      const minRes = await db.execute({
+        sql: `SELECT COALESCE(MIN(display_order), 100) AS min_order FROM girl_photos WHERE girl_id = ?`,
+        args: [girlId],
+      });
+      return NextResponse.json({ minOrder: Number(minRes.rows[0]?.min_order ?? 100) });
+    }
+
+    if (action === 'saveUploaded') {
+      const { filename, url, displayOrder } = body;
+      await db.execute({
+        sql: `INSERT INTO girl_photos (girl_id, filename, url, is_primary, display_order) VALUES (?, ?, ?, 0, ?)`,
+        args: [girlId, filename, url, displayOrder],
+      });
+      revalidatePath(`/${locale}/admin/divky/${girlId}/fotky`);
+      revalidatePath(`/${locale}/studio/fotky`);
+      revalidatePath(`/${locale}`);
       return NextResponse.json({ ok: true });
     }
 

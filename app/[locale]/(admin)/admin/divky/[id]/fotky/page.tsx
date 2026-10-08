@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { getGirlById } from '@/lib/queries';
 import AdminTopbar from '@/components/admin/AdminTopbar';
 import PhotoActions from './PhotoActions';
+import PhotoUpload from './PhotoUpload';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -62,21 +63,7 @@ export default async function AdminGirlFotkyPage({
         </div>
       )}
 
-      <div className="upload-form" style={{ marginBottom: '32px' }}>
-        <div style={{ fontSize: '12px', color: 'var(--color-coral)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>
-          Nahrát fotky
-        </div>
-        <form action="/api/admin/photos" method="POST" encType="multipart/form-data" className="upload-dropzone">
-          <input type="hidden" name="girl_id" value={id} />
-          <input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp,.avif" multiple required />
-          <button type="submit" className="admin-btn-primary" style={{ marginTop: '12px' }}>
-            Nahrát
-          </button>
-        </form>
-        <p style={{ fontSize: '11px', color: 'var(--color-text-dim)', marginTop: '8px' }}>
-          Max 10 MB · JPG, PNG, WebP, AVIF
-        </p>
-      </div>
+      <PhotoUpload girlId={id} />
 
       <div style={{ fontSize: '12px', color: 'var(--color-text-dim)', marginBottom: '16px' }}>
         {photos.length} {photos.length === 1 ? 'fotka' : photos.length < 5 ? 'fotky' : 'fotek'}
@@ -96,7 +83,7 @@ export default async function AdminGirlFotkyPage({
                 DRUHÁ (zezadu)
               </div>
             )}
-            <PhotoActions photoId={photo.id} girlId={Number(id)} isPrimary={photo.is_primary === 1} isSecondary={photo.is_secondary === 1} />
+            <PhotoActions photoId={photo.id} girlId={Number(id)} isPrimary={photo.is_primary === 1} isSecondary={photo.is_secondary === 1} locale={locale} />
           </div>
         ))}
         {photos.length === 0 && (
