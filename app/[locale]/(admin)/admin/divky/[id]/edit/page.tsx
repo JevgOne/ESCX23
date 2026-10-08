@@ -479,7 +479,7 @@ export default async function AdminGirlEditPage({
       <AdminTopbar title={`Editace: ${g.name}`} />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href={`/cs/admin/divky/${g.id}`} style={{ color: 'rgba(255,255,255,0.45)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/divky/${g.id}`} style={{ color: 'rgba(255,255,255,0.45)', fontSize: '13px' }}>
           ← Zpět na profil
         </a>
       </div>
@@ -937,7 +937,7 @@ export default async function AdminGirlEditPage({
             <div className="gf2-section-title">Fotky</div>
           </div>
           <div className="gf2-media-links">
-            <a href={`/cs/admin/divky/${g.id}/fotky`} className="gf2-media-btn" data-nav-away>
+            <a href={`/${locale}/admin/divky/${g.id}/fotky`} className="gf2-media-btn" data-nav-away>
               📸 Spravovat fotky →
             </a>
           </div>
@@ -950,7 +950,7 @@ export default async function AdminGirlEditPage({
             <div className="gf2-section-title">Videa</div>
           </div>
           <div className="gf2-media-links">
-            <a href={`/cs/admin/divky/${g.id}/videa`} className="gf2-media-btn" data-nav-away>
+            <a href={`/${locale}/admin/divky/${g.id}/videa`} className="gf2-media-btn" data-nav-away>
               🎬 Spravovat videa →
             </a>
           </div>
@@ -1009,7 +1009,7 @@ export default async function AdminGirlEditPage({
 
         <div className="gf2-submit-row">
           <button type="submit" className="gf2-btn-submit">Uložit změny</button>
-          <a href={`/cs/admin/divky/${g.id}`} className="gf2-btn-cancel">Zrušit</a>
+          <a href={`/${locale}/admin/divky/${g.id}`} className="gf2-btn-cancel">Zrušit</a>
         </div>
       </form>
 

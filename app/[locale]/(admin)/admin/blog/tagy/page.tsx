@@ -5,6 +5,7 @@ import AdminTopbar from '@/components/admin/AdminTopbar';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { deleteBlogTag } from '@/lib/admin-actions';
 import { requireFullAdmin } from '@/lib/auth';
+import ConfirmDeleteForm from '@/components/admin/ConfirmDeleteForm';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -17,7 +18,8 @@ interface TagRow {
   post_count: number;
 }
 
-const COLUMNS: DataTableColumn<TagRow>[] = [
+function getColumns(locale: string): DataTableColumn<TagRow>[] {
+  return [
   {
     key: 'name_cs',
     label: 'Název (CS)',
@@ -47,15 +49,13 @@ const COLUMNS: DataTableColumn<TagRow>[] = [
     label: 'Akce',
     render: (row): ReactNode => (
       <div style={{ display: 'flex', gap: '6px' }}>
-        <a href={`/cs/admin/blog/tagy/${row.id}`} className="admin-action-btn edit">Edit</a>
-        <form action={deleteBlogTag} style={{ display: 'inline' }}>
-          <input type="hidden" name="id" value={row.id} />
-          <button type="submit" className="admin-action-btn danger">Smazat</button>
-        </form>
+        <a href={`/${locale}/admin/blog/tagy/${row.id}`} className="admin-action-btn edit">Edit</a>
+        <ConfirmDeleteForm action={deleteBlogTag} id={row.id} />
       </div>
     ),
   },
-];
+  ];
+}
 
 export default async function AdminBlogTagsPage({
   params,
@@ -84,7 +84,7 @@ export default async function AdminBlogTagsPage({
         <a href={`/${locale}/admin/blog/tagy/novy`} className="admin-btn-primary">+ Nový tag</a>
       </div>
 
-      <DataTable columns={COLUMNS} rows={rows} emptyText="Žádné tagy" />
+      <DataTable columns={getColumns(locale)} rows={rows} emptyText="Žádné tagy" />
     </>
   );
 }

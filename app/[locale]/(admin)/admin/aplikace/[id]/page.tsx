@@ -261,7 +261,7 @@ export default async function AdminAplikaceDetailPage({ params }: Props) {
 
         {app.status === 'approved' && app.converted_to_girl_id && (
           <div style={{ marginBottom: 20 }}>
-            <a href={`/cs/admin/divky/${app.converted_to_girl_id}/edit`} className="apd-btn apd-btn-view-girl">
+            <a href={`/${locale}/admin/divky/${app.converted_to_girl_id}/edit`} className="apd-btn apd-btn-view-girl">
               ✓ Vytvořený profil dívky #{app.converted_to_girl_id} →
             </a>
           </div>

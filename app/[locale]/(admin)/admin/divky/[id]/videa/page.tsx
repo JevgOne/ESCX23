@@ -136,7 +136,7 @@ export default async function AdminGirlVidea({
       <AdminTopbar title={`Videa: ${name}`} />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href={`/cs/admin/divky/${gId}/edit`} style={{ color: 'rgba(255,255,255,0.45)', fontSize: '13px' }}>
+        <a href={`/${locale}/admin/divky/${gId}/edit`} style={{ color: 'rgba(255,255,255,0.45)', fontSize: '13px' }}>
           ← Zpět na edit
         </a>
       </div>

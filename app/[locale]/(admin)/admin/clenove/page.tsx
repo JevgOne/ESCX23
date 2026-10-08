@@ -71,7 +71,7 @@ export default async function AdminClenove({
         {STATUS_TABS.map((s) => (
           <a
             key={s}
-            href={s === 'all' ? '/cs/admin/clenove' : `/cs/admin/clenove?status=${s}`}
+            href={s === 'all' ? `/${locale}/admin/clenove` : `/${locale}/admin/clenove?status=${s}`}
             className={`admin-filter-pill${activeStatus === s ? ' active' : ''}`}
           >
             {s === 'all' ? 'Vše' : s === 'pending' ? 'Čekající' : s === 'approved' ? 'Schválené' : 'Zamítnuté'}

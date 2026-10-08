@@ -140,7 +140,7 @@ export default async function AdminNovaDivkaPage({
       <AdminTopbar title={app ? `Nová dívka z aplikace #${app.id}` : 'Nová dívka'} />
 
       <div style={{ marginBottom: '16px' }}>
-        <a href={app ? `/cs/admin/aplikace/${app.id}` : '/cs/admin/divky'} style={{ color: 'rgba(255,255,255,0.45)', fontSize: '13px' }}>
+        <a href={app ? `/${locale}/admin/aplikace/${app.id}` : `/${locale}/admin/divky`} style={{ color: 'rgba(255,255,255,0.45)', fontSize: '13px' }}>
           ← {app ? 'Zpět na aplikaci' : 'Zpět na seznam'}
         </a>
       </div>
@@ -323,7 +323,7 @@ export default async function AdminNovaDivkaPage({
           <button type="submit" className="gf2-new-btn-submit">
             {app ? 'Vytvořit profil a schválit →' : 'Vytvořit profil →'}
           </button>
-          <a href={app ? `/cs/admin/aplikace/${app.id}` : '/cs/admin/divky'} className="gf2-new-btn-cancel">Zrušit</a>
+          <a href={app ? `/${locale}/admin/aplikace/${app.id}` : `/${locale}/admin/divky`} className="gf2-new-btn-cancel">Zrušit</a>
         </div>
       </form>
     </>

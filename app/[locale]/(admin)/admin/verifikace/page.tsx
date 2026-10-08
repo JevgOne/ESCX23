@@ -36,7 +36,7 @@ export default async function AdminVerifikacePage({
         <div className="verify-queue">
           {photos.map((photo) => (
             <div key={photo.id} className="verify-card">
-              <a href={`/cs/admin/divky/${photo.girlId}`} style={{ display: 'block' }}>
+              <a href={`/${locale}/admin/divky/${photo.girlId}`} style={{ display: 'block' }}>
                 <img
                   src={photoUrl(photo.thumbnailUrl ?? photo.url, 300)}
                   alt={`Fotka — ${photo.girlName}`}
