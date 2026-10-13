@@ -751,9 +751,14 @@ nav.main-nav a:hover {
 }
 
 .girl-statline {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  column-gap: 16px;
+  row-gap: 4px;
 }
 .girl-stat-cell {
   display: flex;
@@ -772,7 +777,7 @@ nav.main-nav a:hover {
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-coral);
+  color: var(--color-text);
   line-height: 1.2;
 }
 .girl-stat-cell .label {
@@ -791,7 +796,7 @@ nav.main-nav a:hover {
   .girl-loc-row { font-size: 12px; margin-bottom: 8px; color: var(--color-text-muted); padding-left: 0; }
   .girl-stat-cell .num { font-size: 12px; }
   .girl-stat-cell .label { font-size: 11px; }
-  .girl-statline { gap: 10px; }
+  .girl-statline { column-gap: 10px; row-gap: 3px; }
   .girl-tag-pill { padding: 4px 8px; font-size: 8.5px; top: 8px; left: 8px; letter-spacing: 0.04em; max-width: calc(100% - 80px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .girl-photo-time { padding: 5px 11px; font-size: 11px; }
   .girl-media-pill { font-size: 9.5px; padding: 3px 7px; }

@@ -16,10 +16,12 @@ const FLAG_MAP: Record<string, string> = {
 
 const CITY: Record<string, string> = { en: 'Prague', de: 'Prag', uk: 'Прага', cs: 'Praha' };
 const ESCORT_LABEL: Record<string, string> = { cs: 'Escort', en: 'Escort', de: 'Escort', uk: 'Ескорт' };
-const YRS_LABEL: Record<string, string> = { cs: 'let', en: 'yrs', de: 'J.', uk: 'р.' };
-const KG_LABEL: Record<string, string> = { cs: 'kg', en: 'kg', de: 'kg', uk: 'кг' };
-const CM_LABEL: Record<string, string> = { cs: 'cm', en: 'cm', de: 'cm', uk: 'см' };
-const BUST_LABEL: Record<string, string> = { cs: 'prsa', en: 'bust', de: 'Brust', uk: 'груди' };
+const STAT_LABELS: Record<string, { height: string; breasts: string; weight: string; age: string }> = {
+  cs: { height: 'Výška', breasts: 'Prsa', weight: 'Váha', age: 'Věk' },
+  en: { height: 'Height', breasts: 'Breasts', weight: 'Weight', age: 'Age' },
+  de: { height: 'Größe', breasts: 'Brust', weight: 'Gewicht', age: 'Alter' },
+  uk: { height: 'Зріст', breasts: 'Груди', weight: 'Вага', age: 'Вік' },
+};
 const PAUSED_LABEL: Record<string, string> = { cs: 'Dočasně nedostupná', en: 'Temporarily unavailable', de: 'Vorübergehend nicht verfügbar', uk: 'Тимчасово недоступна' };
 const LATER_LABEL: Record<string, string> = { cs: 'Později', en: 'Later', de: 'Später', uk: 'Пізніше' };
 const TMRW_LABEL: Record<string, string> = { cs: 'Zítra', en: 'Tmrw', de: 'Morgen', uk: 'Завтра' };
@@ -77,6 +79,7 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
   const city = CITY[locale] ?? 'Prague';
   const laterLabel = LATER_LABEL[locale] ?? LATER_LABEL.en;
   const todayLabel = TODAY_LABEL[locale] ?? TODAY_LABEL.en;
+  const labels = STAT_LABELS[locale] ?? STAT_LABELS.en;
   const altNoun = ALT_NOUN[locale] ?? ALT_NOUN.en;
   const altText = `${girl.name}, ${girl.age}, ${city} ${altNoun}`;
   const isAway = girl.status === 'later';
@@ -191,27 +194,21 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
 
         <div className="girl-statline">
           <div className="girl-stat-cell">
-            <span className="num">{girl.age}</span>
-            <span className="label">{YRS_LABEL[locale] ?? YRS_LABEL.en}</span>
+            <span className="label">{labels.height}:</span>
+            <span className="num">{girl.height ?? '—'}</span>
           </div>
-          {girl.height != null && (
-            <div className="girl-stat-cell">
-              <span className="num">{girl.height}</span>
-              <span className="label">{CM_LABEL[locale] ?? CM_LABEL.en}</span>
-            </div>
-          )}
-          {girl.weight != null && (
-            <div className="girl-stat-cell">
-              <span className="num">{girl.weight}</span>
-              <span className="label">{KG_LABEL[locale] ?? KG_LABEL.en}</span>
-            </div>
-          )}
-          {girl.bust != null && (
-            <div className="girl-stat-cell">
-              <span className="num">{girl.bust}</span>
-              <span className="label">{BUST_LABEL[locale] ?? BUST_LABEL.en}</span>
-            </div>
-          )}
+          <div className="girl-stat-cell">
+            <span className="label">{labels.breasts}:</span>
+            <span className="num">{girl.bust ?? '—'}</span>
+          </div>
+          <div className="girl-stat-cell">
+            <span className="label">{labels.weight}:</span>
+            <span className="num">{girl.weight ?? '—'}</span>
+          </div>
+          <div className="girl-stat-cell">
+            <span className="label">{labels.age}:</span>
+            <span className="num">{girl.age}</span>
+          </div>
         </div>
 
         {(girl.languages.length > 0 || girl.rating > 0) && (
