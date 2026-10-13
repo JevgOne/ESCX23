@@ -16,6 +16,10 @@ const FLAG_MAP: Record<string, string> = {
 
 const CITY: Record<string, string> = { en: 'Prague', de: 'Prag', uk: 'Прага', cs: 'Praha' };
 const ESCORT_LABEL: Record<string, string> = { cs: 'Escort', en: 'Escort', de: 'Escort', uk: 'Ескорт' };
+const YRS_LABEL: Record<string, string> = { cs: 'let', en: 'yrs', de: 'J.', uk: 'р.' };
+const KG_LABEL: Record<string, string> = { cs: 'kg', en: 'kg', de: 'kg', uk: 'кг' };
+const CM_LABEL: Record<string, string> = { cs: 'cm', en: 'cm', de: 'cm', uk: 'см' };
+const BUST_LABEL: Record<string, string> = { cs: 'prsa', en: 'bust', de: 'Brust', uk: 'груди' };
 const PAUSED_LABEL: Record<string, string> = { cs: 'Dočasně nedostupná', en: 'Temporarily unavailable', de: 'Vorübergehend nicht verfügbar', uk: 'Тимчасово недоступна' };
 const LATER_LABEL: Record<string, string> = { cs: 'Později', en: 'Later', de: 'Später', uk: 'Пізніше' };
 const TMRW_LABEL: Record<string, string> = { cs: 'Zítra', en: 'Tmrw', de: 'Morgen', uk: 'Завтра' };
@@ -185,6 +189,30 @@ export default async function GirlCard({ girl, priority }: GirlCardProps) {
           )}
         </div>
 
+        <div className="girl-statline">
+          <div className="girl-stat-cell">
+            <span className="num">{girl.age}</span>
+            <span className="label">{YRS_LABEL[locale] ?? YRS_LABEL.en}</span>
+          </div>
+          {girl.height != null && (
+            <div className="girl-stat-cell">
+              <span className="num">{girl.height}</span>
+              <span className="label">{CM_LABEL[locale] ?? CM_LABEL.en}</span>
+            </div>
+          )}
+          {girl.weight != null && (
+            <div className="girl-stat-cell">
+              <span className="num">{girl.weight}</span>
+              <span className="label">{KG_LABEL[locale] ?? KG_LABEL.en}</span>
+            </div>
+          )}
+          {girl.bust != null && (
+            <div className="girl-stat-cell">
+              <span className="num">{girl.bust}</span>
+              <span className="label">{BUST_LABEL[locale] ?? BUST_LABEL.en}</span>
+            </div>
+          )}
+        </div>
 
         {(girl.languages.length > 0 || girl.rating > 0) && (
           <div className="girl-bottom-row">

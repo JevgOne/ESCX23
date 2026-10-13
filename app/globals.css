@@ -751,14 +751,9 @@ nav.main-nav a:hover {
 }
 
 .girl-statline {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  overflow: visible;
-  column-gap: 16px;
-  row-gap: 4px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 .girl-stat-cell {
   display: flex;
@@ -777,7 +772,7 @@ nav.main-nav a:hover {
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--color-coral);
   line-height: 1.2;
 }
 .girl-stat-cell .label {
@@ -794,9 +789,9 @@ nav.main-nav a:hover {
   .girl-info { padding: 10px 12px 14px; }
   .girl-name { font-size: 20px; font-weight: 700; }
   .girl-loc-row { font-size: 12px; margin-bottom: 8px; color: var(--color-text-muted); padding-left: 0; }
-  .girl-stat-cell .num { font-size: 13px; }
-  .girl-stat-cell .label { font-size: 12px; }
-  .girl-statline { column-gap: 10px; row-gap: 3px; }
+  .girl-stat-cell .num { font-size: 12px; }
+  .girl-stat-cell .label { font-size: 11px; }
+  .girl-statline { gap: 10px; }
   .girl-tag-pill { padding: 4px 8px; font-size: 8.5px; top: 8px; left: 8px; letter-spacing: 0.04em; max-width: calc(100% - 80px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .girl-photo-time { padding: 5px 11px; font-size: 11px; }
   .girl-media-pill { font-size: 9.5px; padding: 3px 7px; }
@@ -5877,20 +5872,6 @@ html.lightbox-active .profile-sticky-bar-desktop {
   .rozvrh-day { min-width: 56px; padding: 10px 12px; }
   .rozvrh-day-num { font-size: 14px; }
 }
-
-/* ===== ROZVRH SHIFT GROUPS ===== */
-.rozvrh-shift-group { margin-bottom: 32px; }
-.rozvrh-group-heading {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 16px; font-weight: 700; color: var(--color-text);
-  margin-bottom: 16px; padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-line);
-}
-.rozvrh-group-count {
-  font-size: 12px; color: var(--color-text-dim); font-weight: 500;
-  padding: 2px 8px; background: var(--color-bg-elev); border-radius: 999px;
-}
-.rozvrh-moon { font-size: 18px; }
 
 /* ===== EMPTY STATE ===== */
 .empty-state {

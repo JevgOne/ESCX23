@@ -224,7 +224,7 @@ export default async function RozvrhPage({ params, searchParams }: Props) {
           />
 
           {girls.length > 0 ? (
-            <ShiftGroupedGrid girls={girls} locale={locale} />
+            <GirlCardGrid girls={sortByShift(girls)} priorityCount={4} />
           ) : (
             <EmptyState message={NO_ONE[locale] ?? NO_ONE.cs} />
           )}
@@ -234,76 +234,22 @@ export default async function RozvrhPage({ params, searchParams }: Props) {
   );
 }
 
-const GROUP_ORDER: ShiftCategory[] = ['morning', 'afternoon', 'allday', 'allevening', 'night'];
-
-const GROUP_LABELS: Record<ShiftCategory, Record<string, string>> = {
-  morning:    { cs: 'Ranní směna',       en: 'Morning shift',      de: 'Frühschicht',         uk: 'Ранкова зміна' },
-  afternoon:  { cs: 'Odpolední směna',   en: 'Afternoon shift',    de: 'Nachmittagsschicht',  uk: 'Денна зміна' },
-  allday:     { cs: 'Celodenní směna',   en: 'All-day shift',      de: 'Ganztagesschicht',    uk: 'Цілоденна зміна' },
-  allevening: { cs: 'Celovečerní směna', en: 'All-evening shift',  de: 'Ganzabendschicht',    uk: 'Вечірня зміна' },
-  night:      { cs: 'Noční směna',       en: 'Night shift',        de: 'Nachtschicht',        uk: 'Нічна зміна' },
+const SHIFT_ORDER: Record<ShiftCategory, number> = {
+  morning: 0,
+  afternoon: 1,
+  allday: 2,
+  allevening: 3,
+  night: 4,
 };
 
-const ESCORT_GROUP_LABEL: Record<string, string> = {
-  cs: 'Escort', en: 'Escort', de: 'Escort', uk: 'Ескорт',
-};
-
-function ShiftGroupedGrid({ girls, locale }: { girls: GirlCard[]; locale: string }) {
-  const groups = new Map<ShiftCategory, GirlCard[]>();
-  const escortGirls: GirlCard[] = [];
-  const ungrouped: GirlCard[] = [];
-  for (const cat of GROUP_ORDER) groups.set(cat, []);
-
-  for (const girl of girls) {
-    if (girl.girlType === 'escort_only') {
-      escortGirls.push(girl);
-    } else if (girl.shiftCategory) {
-      groups.get(girl.shiftCategory)!.push(girl);
-    } else {
-      ungrouped.push(girl);
-    }
-  }
-
-  // If only one group has girls, render flat (no headings)
-  const nonEmptyGroups = GROUP_ORDER.filter(cat => groups.get(cat)!.length > 0);
-  if (nonEmptyGroups.length <= 1 && ungrouped.length === 0 && escortGirls.length === 0) {
-    return <GirlCardGrid girls={girls} priorityCount={4} />;
-  }
-
-  let priorityRemaining = 4;
-  return (
-    <>
-      {GROUP_ORDER.map(cat => {
-        const catGirls = groups.get(cat)!;
-        if (catGirls.length === 0) return null;
-        const prio = priorityRemaining;
-        priorityRemaining = Math.max(0, priorityRemaining - catGirls.length);
-        return (
-          <section key={cat} className="rozvrh-shift-group">
-            <h2 className="rozvrh-group-heading">
-              {(cat === 'night' || cat === 'allevening') && <span className="rozvrh-moon" aria-hidden="true">&#127769;</span>}
-              {GROUP_LABELS[cat][locale] ?? GROUP_LABELS[cat].en}
-              <span className="rozvrh-group-count">{catGirls.length}</span>
-            </h2>
-            <GirlCardGrid girls={catGirls} priorityCount={prio} />
-          </section>
-        );
-      })}
-      {escortGirls.length > 0 && (
-        <section className="rozvrh-shift-group">
-          <h2 className="rozvrh-group-heading">
-            <span className="rozvrh-escort-icon" aria-hidden="true">&#128663;</span>
-            {ESCORT_GROUP_LABEL[locale] ?? ESCORT_GROUP_LABEL.en}
-            <span className="rozvrh-group-count">{escortGirls.length}</span>
-          </h2>
-          <GirlCardGrid girls={escortGirls} priorityCount={Math.max(0, priorityRemaining)} />
-        </section>
-      )}
-      {ungrouped.length > 0 && (
-        <GirlCardGrid girls={ungrouped} priorityCount={0} />
-      )}
-    </>
-  );
+function sortByShift(girls: GirlCard[]): GirlCard[] {
+  return [...girls].sort((a, b) => {
+    if (a.girlType === 'escort_only' && b.girlType !== 'escort_only') return 1;
+    if (b.girlType === 'escort_only' && a.girlType !== 'escort_only') return -1;
+    const aOrder = a.shiftCategory ? SHIFT_ORDER[a.shiftCategory] ?? 99 : 99;
+    const bOrder = b.shiftCategory ? SHIFT_ORDER[b.shiftCategory] ?? 99 : 99;
+    return aOrder - bOrder;
+  });
 }
 
 function buildGeoLead(locale: string, date: string, working: number, total: number): string {

@@ -95,9 +95,9 @@ const config: NextConfig = {
       { source: '/blog/erotic-stories-elevator-at-dusk', destination: '/blog/eroticka-povidka-vytah-za-soumraku', permanent: true },
       { source: '/blog/discreet-incall-prague-how-it-works', destination: '/blog/soukrome-apartmany-escort-praha', permanent: true },
       { source: '/en/blog/proc-volit-overenou-escort-agenturu-v-praze-pred-soukromymi-inzeraty', destination: '/blog/jak-vybrat-spolecnici-praha', permanent: true },
-      // Old interview section — slugs are unchanged, only the path moved into /blog
-      { source: '/interview-cs/:slug', destination: '/cs/blog/:slug', permanent: true },
-      { source: '/interview/:slug', destination: '/blog/:slug', permanent: true },
+      // Old interview section — all slugs → blog index (interviews don't exist as blog posts)
+      { source: '/interview-cs/:slug', destination: '/cs/blog', permanent: true },
+      { source: '/interview/:slug', destination: '/blog', permanent: true },
 
       // === D) Old locale/structural URLs ===
       { source: '/cz/main', destination: '/cs/', permanent: true },
@@ -111,9 +111,33 @@ const config: NextConfig = {
       { source: '/cz/blog', destination: '/cs/blog', permanent: true },
       { source: '/cz/faq', destination: '/cs/caste-dotazy', permanent: true },
 
+      // === D2) Location neighborhood aliases → canonical district slugs ===
+      { source: '/cs/pobocka/vinohrady', destination: '/cs/pobocka/praha-2', permanent: true },
+      { source: '/cs/pobocka/nove-mesto', destination: '/cs/pobocka/praha-2', permanent: true },
+      { source: '/cs/pobocka/zizkov', destination: '/cs/pobocka/praha-3', permanent: true },
+      { source: '/cs/pobocka/smichov', destination: '/cs/pobocka/praha-5', permanent: true },
+      { source: '/cs/pobocka/stare-mesto', destination: '/cs/pobocka/praha-2', permanent: true },
+      { source: '/cs/pobocka/praha-1', destination: '/cs/pobocka/praha-2', permanent: true },
+      { source: '/apartment/vinohrady', destination: '/apartment/praha-2', permanent: true },
+      { source: '/apartment/nove-mesto', destination: '/apartment/praha-2', permanent: true },
+      { source: '/apartment/zizkov', destination: '/apartment/praha-3', permanent: true },
+      { source: '/apartment/smichov', destination: '/apartment/praha-5', permanent: true },
+      { source: '/apartment/stare-mesto', destination: '/apartment/praha-2', permanent: true },
+      { source: '/apartment/praha-1', destination: '/apartment/praha-2', permanent: true },
+      { source: '/de/standort/vinohrady', destination: '/de/standort/praha-2', permanent: true },
+      { source: '/de/standort/zizkov', destination: '/de/standort/praha-3', permanent: true },
+      { source: '/de/standort/smichov', destination: '/de/standort/praha-5', permanent: true },
+      { source: '/de/standort/stare-mesto', destination: '/de/standort/praha-2', permanent: true },
+      { source: '/uk/lokatsiya/vinohrady', destination: '/uk/lokatsiya/praha-2', permanent: true },
+      { source: '/uk/lokatsiya/zizkov', destination: '/uk/lokatsiya/praha-3', permanent: true },
+      { source: '/uk/lokatsiya/smichov', destination: '/uk/lokatsiya/praha-5', permanent: true },
+      { source: '/uk/lokatsiya/stare-mesto', destination: '/uk/lokatsiya/praha-2', permanent: true },
+
       // === E) WordPress-era / bare URLs ===
+      { source: '/profily/:slug/opengraph-image', destination: '/girl/:slug', permanent: true },
+      { source: '/:locale/soukromi/opengraph-image', destination: '/:locale/', permanent: true },
       { source: '/escort-praha', destination: '/cs/hashtag/escort-praha', permanent: true },
-      { source: '/escort-prague', destination: '/en/hashtag/escort-prague', permanent: true },
+      { source: '/escort-prague', destination: '/hashtag/escort-prague', permanent: true },
       { source: '/bdsm', destination: '/blog', permanent: true },
       { source: '/author/:slug', destination: '/cs/', permanent: true },
       { source: '/home', destination: '/', permanent: true },
