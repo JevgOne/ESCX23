@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendMessage } from '@/lib/telegram';
+import { type Lang, t } from '@/lib/telegram-i18n';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? '';
 
@@ -20,11 +21,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'TELEGRAM_BOT_TOKEN not configured' }, { status: 503 });
   }
 
-  // Fetch all pending reminders with girl info
+  // Fetch all pending reminders with girl info + client language
   const reminders = await db.execute(`
-    SELECT sr.id, sr.client_telegram_id, sr.girl_id, g.name as girl_name
+    SELECT sr.id, sr.client_telegram_id, sr.girl_id, g.name as girl_name,
+           bc.language
     FROM schedule_reminders sr
     LEFT JOIN girls g ON g.id = sr.girl_id
+    LEFT JOIN booking_clients bc ON bc.telegram_id = sr.client_telegram_id
     ORDER BY sr.girl_id
   `);
 
@@ -36,13 +39,14 @@ export async function GET(request: Request) {
     const chatId = row.client_telegram_id as string;
     const girlName = (row.girl_name as string) ?? 'Dívka';
     const reminderId = row.id as number;
+    const lang = (row.language === 'en' || row.language === 'uk' ? row.language : 'cs') as Lang;
 
     const ok = await sendMessage(chatId, [
-      `\u{1F4C5} <b>Nový týden — nové termíny!</b>`,
+      t(lang, 'cron.new_week'),
       '',
-      `${girlName} má tento týden volné termíny.`,
+      t(lang, 'cron.girl_has_slots', { name: girlName }),
       '',
-      'Napiš /booking pro rezervaci.',
+      t(lang, 'cron.book_hint'),
     ].join('\n'));
 
     if (ok) {

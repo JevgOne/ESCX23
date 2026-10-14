@@ -217,7 +217,7 @@ export async function handleAIMessage(
     let totalTokensOut = 0;
     // Tools that send messages directly to the user — Claude correctly returns
     // empty text after these, so we must NOT treat empty response as an error.
-    const SILENT_TOOLS = new Set(['startBookingFlow', 'sendGirlPhoto']);
+    const SILENT_TOOLS = new Set(['startBookingFlow', 'sendGirlPhoto', 'getAvailableGirls']);
     let silentToolCalled = false;
 
     for (let round = 0; round < MAX_TOOL_ROUNDS + 1; round++) {

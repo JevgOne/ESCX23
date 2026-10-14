@@ -1,8 +1,8 @@
 import { db } from '../db';
-import { sendPhoto } from '../telegram';
+import { sendPhoto, sendMessage } from '../telegram';
 import { logAudit } from '../audit';
 import { safeEncrypt, hashForSearch } from '../crypto';
-import { startBookingFlow, getAvailableSlots } from './booking-flow';
+import { startBookingFlow, getAvailableSlots, buildGirlCaption } from './booking-flow';
 import { getCalendarGirls } from '../booking-queries';
 import { fuzzyMatchGirls, resolveGirlId } from './fuzzy-match';
 import type { ClientContext } from './types';
@@ -155,23 +155,52 @@ async function getAvailableGirls(input: Record<string, unknown>, ctx: ClientCont
     });
   }
 
-  // Send photos of all available girls directly into the chat
+  // Send photos with standard caption
   for (const g of girls) {
     if (g.photoUrl) {
       const isEscort = g.girlType === 'escort_only' || g.girlType === 'both';
-      const caption = `<b>${g.name}</b>, ${g.age} let` +
-        (g.rating ? `\n⭐ ${g.rating}/5` + (g.reviewsCount ? ` (${g.reviewsCount} recenzi)` : '') : '') +
-        `\n🟢 ${g.shiftStart} – ${g.shiftEnd}` +
-        (isEscort
-          ? `\n🚗 Escort — jezdí k vám`
-          : (g.location ? `\n📍 ${g.location}${g.locationAddress ? ' — ' + g.locationAddress : ''}` : ''));
+      const caption = buildGirlCaption({
+        name: g.name,
+        age: g.age,
+        rating: g.rating,
+        reviewsCount: g.reviewsCount,
+        shiftStart: g.shiftStart,
+        shiftEnd: g.shiftEnd,
+        location: isEscort ? null : (g.location ?? null),
+        isEscort,
+      });
       await sendPhoto(ctx.chatId, g.photoUrl, { caption }).catch((err) => {
         console.error(`[telegram-ai] Failed to send photo for ${g.name}:`, err);
       });
     }
   }
 
-  return JSON.stringify({ date, girls, count: girls.length, photosSent: true });
+  // Send booking buttons (button-driven flow)
+  if (girls.length === 1) {
+    const g = girls[0];
+    await sendMessage(ctx.chatId, `Dnes pracuje <b>${g.name}</b>`, {
+      replyMarkup: {
+        inline_keyboard: [[{
+          text: `📅 Objednat ${g.name}`,
+          callback_data: `bk_girl:${g.id}`,
+        }]],
+      },
+    });
+  } else if (girls.length > 1) {
+    const keyboard = girls.map((g) => [{
+      text: `📅 ${g.name}`,
+      callback_data: `bk_girl:${g.id}`,
+    }]);
+    await sendMessage(ctx.chatId, 'Koho si vybereš?', {
+      replyMarkup: { inline_keyboard: keyboard },
+    });
+  }
+
+  return JSON.stringify({
+    date, count: girls.length, names: girls.map((g) => g.name),
+    photosSent: true, buttonsSent: true,
+    _note: 'Fotky a booking tlacitka odeslany. NEODPOVIDEJ textem — klient klikne na tlacitko.',
+  });
 }
 
 async function getGirlProfile(input: Record<string, unknown>): Promise<string> {

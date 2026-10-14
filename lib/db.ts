@@ -586,6 +586,11 @@ async function runMigrations(client: Client) {
     await client.execute('CREATE INDEX IF NOT EXISTS idx_bc_trust ON booking_clients(trust_level)');
   } catch { /* OK */ }
 
+  // i18n: language preference for Telegram bot (cs/en/uk)
+  try {
+    await client.execute("ALTER TABLE booking_clients ADD COLUMN language TEXT DEFAULT 'cs'");
+  } catch { /* column already exists */ }
+
   // Deep-link token for Telegram bot activation
   try {
     await client.execute('ALTER TABLE booking_clients ADD COLUMN deep_link_token TEXT');

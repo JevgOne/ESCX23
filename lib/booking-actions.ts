@@ -387,9 +387,9 @@ export async function createBooking(input: CreateBookingInput): Promise<{ id: nu
 
   const bookingId = Number(result.lastInsertRowid);
 
-  // Update client total_visits
+  // Update client total_points (total_visits incremented when booking is completed)
   await db.execute({
-    sql: 'UPDATE booking_clients SET total_visits = total_visits + 1, total_points = total_points + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    sql: 'UPDATE booking_clients SET total_points = total_points + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
     args: [points, input.clientId],
   });
 
@@ -608,11 +608,17 @@ export async function updateBookingStatus(
     });
   }
 
-  if (newStatus === 'completed' && booking.price) {
+  if (newStatus === 'completed') {
     await db.execute({
-      sql: 'UPDATE booking_clients SET total_spent = total_spent + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      args: [Number(booking.price), Number(booking.client_id)],
+      sql: 'UPDATE booking_clients SET total_visits = total_visits + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      args: [Number(booking.client_id)],
     });
+    if (booking.price) {
+      await db.execute({
+        sql: 'UPDATE booking_clients SET total_spent = total_spent + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        args: [Number(booking.price), Number(booking.client_id)],
+      });
+    }
   }
 
   await db.execute({

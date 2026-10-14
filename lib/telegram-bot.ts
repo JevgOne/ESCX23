@@ -5,9 +5,10 @@
 
 import { answerCallbackQuery, editMessageReplyMarkup, sendMessage, verifyLinkToken, verifyUserLinkToken } from './telegram';
 import { handleAIMessage, handleAICallback } from './telegram-ai/handler';
-import { handleBookingCallback, handlePromoCodeInput } from './telegram-ai/booking-flow';
+import { handleBookingCallback, handlePromoCodeInput, showAvailableGirlsMenu, handlePendingRegistration } from './telegram-ai/booking-flow';
 import { db } from './db';
 import { safeEncrypt, hashForSearch } from './crypto';
+import { type Lang, t, detectLanguage, getClientLang, updateClientLang } from './telegram-i18n';
 
 // ---------------------------------------------------------------------------
 // Telegram Update type
@@ -17,13 +18,13 @@ export interface TelegramUpdate {
   update_id: number;
   message?: {
     message_id: number;
-    from?: { id: number; first_name?: string; username?: string };
+    from?: { id: number; first_name?: string; username?: string; language_code?: string };
     chat: { id: number };
     text?: string;
   };
   callback_query?: {
     id: string;
-    from: { id: number; first_name?: string; username?: string };
+    from: { id: number; first_name?: string; username?: string; language_code?: string };
     message?: { message_id: number; chat: { id: number } };
     data?: string;
   };
@@ -46,12 +47,22 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
     const displayName = from?.username ? `@${from.username}` : from?.first_name ?? 'unknown';
     const chatId = String(update.message.chat.id);
     const text = update.message.text;
+    const langCode = from?.language_code;
+
+    // Resolve client language: DB > Telegram language_code > text heuristics
+    let lang: Lang = await getClientLang(chatId);
+    const detected = detectLanguage(langCode, text);
+    if (detected !== lang) {
+      // Language changed — update to detected language
+      lang = detected;
+      updateClientLang(chatId, lang).catch(() => {});
+    }
 
     // Deep-link activation: /start LG_{token}
     if (text.startsWith('/start LG_')) {
       const token = text.replace('/start LG_', '');
       try {
-        await handleDeepLinkActivation(chatId, token);
+        await handleDeepLinkActivation(chatId, token, lang);
       } catch (err) {
         console.error('[telegram-bot] Deep link error:', err);
       }
@@ -62,7 +73,7 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
     if (text.startsWith('/start GIRL_')) {
       const token = text.replace('/start GIRL_', '');
       try {
-        await handleGirlDeepLinkActivation(chatId, token, username);
+        await handleGirlDeepLinkActivation(chatId, token, username, lang);
       } catch (err) {
         console.error('[telegram-bot] Girl deep link error:', err);
       }
@@ -73,7 +84,7 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
     if (text.startsWith('/start USER_')) {
       const token = text.replace('/start USER_', '');
       try {
-        await handleUserDeepLinkActivation(chatId, token);
+        await handleUserDeepLinkActivation(chatId, token, lang);
       } catch (err) {
         console.error('[telegram-bot] User deep link error:', err);
       }
@@ -82,7 +93,7 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
 
     // Check if user is entering a promo code (active draft in enter_promo step)
     try {
-      const promoHandled = await handlePromoCodeInput(chatId, text);
+      const promoHandled = await handlePromoCodeInput(chatId, text, lang);
       if (promoHandled) {
         return { type: 'promo_code', from: displayName, text, response: 'done' };
       }
@@ -90,11 +101,21 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
       console.error('[telegram-bot] Promo code error:', err);
     }
 
-    // Await AI handler — Vercel serverless kills background tasks after response
+    // Check if user is completing registration (awaiting_name step)
     try {
-      await handleAIMessage(chatId, username, text);
+      const regHandled = await handlePendingRegistration(chatId, text, lang);
+      if (regHandled) {
+        return { type: 'registration', from: displayName, text, response: 'done' };
+      }
     } catch (err) {
-      console.error('[telegram-bot] AI handler error:', err);
+      console.error('[telegram-bot] Registration error:', err);
+    }
+
+    // Default: show available girls menu (button-driven, no AI)
+    try {
+      await showAvailableGirlsMenu(chatId, lang);
+    } catch (err) {
+      console.error('[telegram-bot] Menu error:', err);
     }
 
     return {
@@ -118,6 +139,9 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
     answerCallbackQuery(cq.id).catch(() => {});
 
     if (chatId && data) {
+      // Resolve language for callback
+      const cbLang: Lang = await getClientLang(chatId);
+
       // Booking flow callbacks (bk_*) — handle directly, no Claude API
       if (data.startsWith('bk_')) {
         // Remove inline keyboard from clicked message (prevents re-clicks)
@@ -127,7 +151,7 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
         }
 
         try {
-          const handled = await handleBookingCallback(chatId, data);
+          const handled = await handleBookingCallback(chatId, data, cbLang);
           if (handled) {
             return {
               type: 'booking_callback',
@@ -138,7 +162,7 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
           }
         } catch (err) {
           console.error('[telegram-bot] Booking callback error:', err);
-          await sendMessage(chatId, 'Omlouvam se, nastala chyba pri zpracovani rezervace. Zkus to prosim znovu.').catch(() => {});
+          await sendMessage(chatId, t(cbLang, 'flow.booking_error')).catch(() => {});
           return {
             type: 'booking_callback_error',
             from: displayName,
@@ -171,14 +195,14 @@ export async function handleUpdate(update: TelegramUpdate): Promise<{
 // Deep-link activation — /start LG_{token}
 // ---------------------------------------------------------------------------
 
-async function handleDeepLinkActivation(chatId: string, token: string): Promise<void> {
+async function handleDeepLinkActivation(chatId: string, token: string, lang: Lang): Promise<void> {
   const result = await db.execute({
     sql: 'SELECT id, nickname, telegram_id FROM booking_clients WHERE deep_link_token = ? LIMIT 1',
     args: [token],
   });
 
   if (result.rows.length === 0) {
-    await sendMessage(chatId, 'Odkaz neni platny. Napiste nam a pomuzeme vam.', { parseMode: 'HTML' });
+    await sendMessage(chatId, t(lang, 'deeplink.invalid'), { parseMode: 'HTML' });
     return;
   }
 
@@ -187,7 +211,7 @@ async function handleDeepLinkActivation(chatId: string, token: string): Promise<
   const existingTgId = client.telegram_id ? String(client.telegram_id) : null;
 
   if (existingTgId && existingTgId !== chatId) {
-    await sendMessage(chatId, 'Tento ucet je jiz propojen s jinym Telegram chatem.', { parseMode: 'HTML' });
+    await sendMessage(chatId, t(lang, 'deeplink.already_linked'), { parseMode: 'HTML' });
     return;
   }
 
@@ -216,14 +240,12 @@ async function handleDeepLinkActivation(chatId: string, token: string): Promise<
 
   const nickname = client.nickname ? String(client.nickname) : 'klient';
   await sendMessage(chatId, [
-    '<b>Vas ucet byl uspesne propojen!</b>',
+    `<b>${t(lang, 'deeplink.success_title')}</b>`,
     '',
-    `Vitejte, ${nickname}. Nyni muzete pres tento chat:`,
-    '  Vytvaret rezervace',
-    '  Sledovat oblibene divky',
-    '  Dostavat upozorneni na novy rozvrh',
+    t(lang, 'deeplink.welcome', { name: nickname }),
+    t(lang, 'deeplink.features'),
     '',
-    'Napiste <b>cokoliv</b> a nase operatorka vam pomuze.',
+    t(lang, 'deeplink.hint'),
   ].join('\n'), { parseMode: 'HTML' });
 }
 
@@ -231,7 +253,7 @@ async function handleDeepLinkActivation(chatId: string, token: string): Promise<
 // Girl deep-link activation: /start GIRL_{token}
 // ---------------------------------------------------------------------------
 
-async function handleGirlDeepLinkActivation(chatId: string, token: string, username: string | null): Promise<void> {
+async function handleGirlDeepLinkActivation(chatId: string, token: string, username: string | null, lang: Lang): Promise<void> {
   // Verify token by iterating active girls (HMAC is deterministic)
   const girls = await db.execute({
     sql: "SELECT id, name FROM girls WHERE status = 'active'",
@@ -248,7 +270,7 @@ async function handleGirlDeepLinkActivation(chatId: string, token: string, usern
   }
 
   if (!matchedGirl) {
-    await sendMessage(chatId, 'Odkaz neni platny. Kontaktujte spravce.');
+    await sendMessage(chatId, t(lang, 'deeplink.admin_invalid'));
     return;
   }
 
@@ -259,7 +281,7 @@ async function handleGirlDeepLinkActivation(chatId: string, token: string, usern
   });
 
   if (existing.rows.length > 0 && String(existing.rows[0].chat_id) !== chatId) {
-    await sendMessage(chatId, 'Tento ucet je jiz propojen s jinym Telegram chatem.');
+    await sendMessage(chatId, t(lang, 'deeplink.already_linked'));
     return;
   }
 
@@ -279,10 +301,9 @@ async function handleGirlDeepLinkActivation(chatId: string, token: string, usern
   }).catch(() => {});
 
   await sendMessage(chatId, [
-    `<b>Propojeno!</b>`,
+    `<b>${t(lang, 'deeplink.girl_success')}</b>`,
     '',
-    `Vitej, ${matchedGirl.name}. Tvuj Telegram je propojen s tvym profilem.`,
-    'Od ted budes dostavat notifikace o novych rezervacich.',
+    t(lang, 'deeplink.girl_welcome', { name: matchedGirl.name }),
   ].join('\n'));
 }
 
@@ -290,7 +311,7 @@ async function handleGirlDeepLinkActivation(chatId: string, token: string, usern
 // User (admin/operator) deep-link activation: /start USER_{token}
 // ---------------------------------------------------------------------------
 
-async function handleUserDeepLinkActivation(chatId: string, token: string): Promise<void> {
+async function handleUserDeepLinkActivation(chatId: string, token: string, lang: Lang): Promise<void> {
   // Iterate active users and find match via HMAC verification
   const users = await db.execute({
     sql: `SELECT id, display_name, email, telegram_chat_id FROM users WHERE is_active = 1`,
@@ -307,7 +328,7 @@ async function handleUserDeepLinkActivation(chatId: string, token: string): Prom
   }
 
   if (!matchedUser) {
-    await sendMessage(chatId, 'Odkaz neni platny. Kontaktujte spravce.');
+    await sendMessage(chatId, t(lang, 'deeplink.admin_invalid'));
     return;
   }
 
@@ -318,7 +339,7 @@ async function handleUserDeepLinkActivation(chatId: string, token: string): Prom
   });
   const existingChatId = existing.rows[0]?.telegram_chat_id ? String(existing.rows[0].telegram_chat_id) : '';
   if (existingChatId && existingChatId !== chatId) {
-    await sendMessage(chatId, 'Tento ucet je jiz propojen s jinym Telegram chatem.');
+    await sendMessage(chatId, t(lang, 'deeplink.already_linked'));
     return;
   }
 
@@ -329,9 +350,8 @@ async function handleUserDeepLinkActivation(chatId: string, token: string): Prom
   });
 
   await sendMessage(chatId, [
-    `<b>Propojeno!</b>`,
+    `<b>${t(lang, 'deeplink.girl_success')}</b>`,
     '',
-    `Vitejte, ${matchedUser.name}. Vas Telegram je propojen s vasim uctem.`,
-    'Od ted budete dostavat notifikace o novych rezervacich a eskalacich.',
+    t(lang, 'deeplink.user_welcome', { name: matchedUser.name }),
   ].join('\n'));
 }

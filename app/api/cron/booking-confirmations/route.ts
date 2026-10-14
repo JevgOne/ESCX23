@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendMessage } from '@/lib/telegram';
 import { safeEncrypt } from '@/lib/crypto';
+import { type Lang, t } from '@/lib/telegram-i18n';
 
 /**
  * Cron: every 15 minutes.
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
   const pendingReminders = await db.execute({
     sql: `SELECT b.id, b.client_id, b.girl_id, b.date, b.start_time, b.end_time,
                  b.duration_minutes, b.price, g.name AS girl_name,
-                 bc.telegram_id AS chat_id
+                 bc.telegram_id AS chat_id, bc.language
           FROM bookings_v2 b
           JOIN girls g ON g.id = b.girl_id
           JOIN booking_clients bc ON bc.id = b.client_id
@@ -54,24 +55,25 @@ export async function GET(request: Request) {
     const startTime = String(row.start_time).substring(0, 5);
     const endTime = String(row.end_time).substring(0, 5);
     const price = Number(row.price);
+    const lang = (row.language === 'en' || row.language === 'uk' ? row.language : 'cs') as Lang;
 
     const msg = [
-      `\u{1F514} <b>Potvrzeni rezervace</b>`,
+      t(lang, 'cron.confirm_title'),
       '',
       `\u{1F469} ${girlName}`,
       `\u{1F4C5} ${formatDisplayDate(date)}`,
       `\u23F0 ${startTime} — ${endTime}`,
       `\u{1F4B0} ${price} CZK`,
       '',
-      `Potvrd prosim svou rezervaci. Pokud nepotvrdis do 1h pred terminem, misto bude nabidnuto nekomu jinemu.`,
+      t(lang, 'cron.confirm_body'),
     ].join('\n');
 
     const sent = await sendMessage(chatId, msg, {
       replyMarkup: {
         inline_keyboard: [
           [
-            { text: '\u2705 Potvrzuji', callback_data: `bk_remind_ok:${bookingId}` },
-            { text: '\u274C Rusim', callback_data: `bk_remind_cancel:${bookingId}` },
+            { text: t(lang, 'btn.confirm_arrival'), callback_data: `bk_remind_ok:${bookingId}` },
+            { text: t(lang, 'btn.cancel_booking'), callback_data: `bk_remind_cancel:${bookingId}` },
           ],
         ],
       },
@@ -95,7 +97,7 @@ export async function GET(request: Request) {
   const pendingBotBookings = await db.execute({
     sql: `SELECT b.id, b.client_id, b.girl_id, b.date, b.start_time, b.end_time,
                  b.price, g.name AS girl_name,
-                 bc.telegram_id AS chat_id
+                 bc.telegram_id AS chat_id, bc.language
           FROM bookings_v2 b
           JOIN girls g ON g.id = b.girl_id
           JOIN booking_clients bc ON bc.id = b.client_id
@@ -114,6 +116,7 @@ export async function GET(request: Request) {
     const date = String(row.date);
     const startTime = String(row.start_time).substring(0, 5);
     const endTime = String(row.end_time).substring(0, 5);
+    const pbLang = (row.language === 'en' || row.language === 'uk' ? row.language : 'cs') as Lang;
 
     await db.execute({
       sql: `UPDATE bookings_v2
@@ -130,7 +133,7 @@ export async function GET(request: Request) {
     }).catch(() => {});
 
     await sendMessage(chatId,
-      `\u274C <b>${girlName}</b>, ${formatDisplayDate(date)} v ${startTime} — rezervace zrusena. Nepotvrdil/a jsi vcas. Napis kdykoliv pro novy termin \u{1F60A}`
+      t(pbLang, 'cron.expired', { name: girlName, date: formatDisplayDate(date), time: startTime })
     );
 
     bookingsCancelled++;
@@ -140,7 +143,7 @@ export async function GET(request: Request) {
   const unconfirmed = await db.execute({
     sql: `SELECT b.id, b.client_id, b.girl_id, b.date, b.start_time, b.end_time,
                  b.price, g.name AS girl_name,
-                 bc.telegram_id AS chat_id
+                 bc.telegram_id AS chat_id, bc.language
           FROM bookings_v2 b
           JOIN girls g ON g.id = b.girl_id
           JOIN booking_clients bc ON bc.id = b.client_id
@@ -162,6 +165,7 @@ export async function GET(request: Request) {
     const date = String(row.date);
     const startTime = String(row.start_time).substring(0, 5);
     const endTime = String(row.end_time).substring(0, 5);
+    const ucLang = (row.language === 'en' || row.language === 'uk' ? row.language : 'cs') as Lang;
 
     await db.execute({
       sql: `UPDATE bookings_v2
@@ -178,15 +182,16 @@ export async function GET(request: Request) {
     }).catch(() => {});
 
     await sendMessage(chatId,
-      `\u274C <b>${girlName}</b>, ${formatDisplayDate(date)} v ${startTime} — rezervace zrusena. Nepotvrdil/a jsi vcas. Napis kdykoliv pro novy termin \u{1F60A}`
+      t(ucLang, 'cron.expired', { name: girlName, date: formatDisplayDate(date), time: startTime })
     );
 
     bookingsCancelled++;
 
     // ── Step 4: Notify interested clients about freed slot ─────────
     const interested = await db.execute({
-      sql: `SELECT DISTINCT bi.telegram_chat_id
+      sql: `SELECT DISTINCT bi.telegram_chat_id, bc.language
             FROM booking_interest bi
+            LEFT JOIN booking_clients bc ON bc.telegram_id = bi.telegram_chat_id
             WHERE bi.girl_id = ? AND bi.date = ?
               AND bi.telegram_chat_id != ?
               AND bi.created_at > datetime('now', '-24 hours')`,
@@ -195,13 +200,14 @@ export async function GET(request: Request) {
 
     for (const intRow of interested.rows) {
       const intChatId = String(intRow.telegram_chat_id);
+      const intLang = (intRow.language === 'en' || intRow.language === 'uk' ? intRow.language : 'cs') as Lang;
       const sent = await sendMessage(intChatId, [
-        `\u{1F525} <b>Uvolnil se termin!</b>`,
+        t(intLang, 'cron.freed_slot'),
         '',
         `\u{1F469} ${girlName}`,
         `\u23F0 ${startTime} — ${endTime} (${formatDisplayDate(date)})`,
         '',
-        `Chces rezervovat? Napis mi \u{1F60A}`,
+        t(intLang, 'cron.freed_slot_cta'),
       ].join('\n'));
 
       if (sent) interestNotified++;
@@ -218,10 +224,12 @@ export async function GET(request: Request) {
   try {
     const dueReminders = await db.execute({
       sql: `SELECT br.id, br.booking_id, br.chat_id, br.booking_code,
-                   b.status, b.date, b.start_time, b.end_time, g.name AS girl_name
+                   b.status, b.date, b.start_time, b.end_time, g.name AS girl_name,
+                   bc.language
             FROM booking_reminders br
             JOIN bookings_v2 b ON b.id = br.booking_id
             JOIN girls g ON g.id = b.girl_id
+            JOIN booking_clients bc ON bc.id = b.client_id
             WHERE br.sent = 0 AND br.send_at <= ?
             LIMIT 20`,
       args: [new Date().toISOString()],
@@ -237,15 +245,17 @@ export async function GET(request: Request) {
       const date = String(row.date);
       const startTime = String(row.start_time).substring(0, 5);
 
+      const arLang = (row.language === 'en' || row.language === 'uk' ? row.language : 'cs') as Lang;
+
       // Only send if booking is still active
       if (['confirmed', 'pending'].includes(status)) {
         await sendMessage(chatId,
-          `\u{1F4AC} Stale plati tvoje rezervace ${code}? <b>${girlName}</b>, ${formatDisplayDate(date)} v ${startTime}`,
+          t(arLang, 'cron.antispam_check', { code, name: girlName, date: formatDisplayDate(date), time: startTime }),
           {
             replyMarkup: {
               inline_keyboard: [[
-                { text: '\u2705 Ano, prijdu', callback_data: `bk_remind_ok:${bookingId}` },
-                { text: '\u274C Rusim', callback_data: `bk_remind_cancel:${bookingId}` },
+                { text: t(arLang, 'btn.yes_coming'), callback_data: `bk_remind_ok:${bookingId}` },
+                { text: t(arLang, 'btn.cancel_booking'), callback_data: `bk_remind_cancel:${bookingId}` },
               ]],
             },
           },

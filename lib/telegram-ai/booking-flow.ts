@@ -15,11 +15,13 @@
  */
 
 import { db } from '../db';
-import { sendMessage } from '../telegram';
+import { sendMessage, sendPhoto } from '../telegram';
+import { buildClientContext } from './context';
 import { logAudit } from '../audit';
 import { createBookingNotification } from '../booking-notifications';
 import { getCalendarGirls } from '../booking-queries';
 import { safeEncrypt } from '../crypto';
+import { type Lang, t } from '../telegram-i18n';
 import type { ClientContext } from './types';
 
 const BREAK_MINUTES = 10; // 10-min break between bookings (global default)
@@ -103,16 +105,17 @@ export async function startBookingFlow(
   ctx: ClientContext,
   girlId: number,
   date: string,
+  lang: Lang = 'cs',
 ): Promise<StartBookingResult> {
   // Validate client can book
   if (!ctx.isRegistered || !ctx.clientId) {
-    throw new Error('Pro rezervaci musis byt registrovany klient. Rekni mi sve jmeno a zaregistruji te.');
+    throw new Error(t(lang, 'error.must_register'));
   }
 
   // Reject past dates
   const today = getPragueToday();
   if (date < today) {
-    throw new Error(`Nelze bookovat v minulosti. Dnes je ${today}.`);
+    throw new Error(t(lang, 'error.past_date', { today }));
   }
 
   // Cancel any existing active draft for this chat
@@ -128,14 +131,14 @@ export async function startBookingFlow(
     args: [girlId],
   });
   if (girlResult.rows.length === 0) {
-    throw new Error('Divka nenalezena.');
+    throw new Error(t(lang, 'error.girl_not_found'));
   }
   const girlName = String(girlResult.rows[0].name);
 
   // Get available time slots
   const slots = await getAvailableSlots(girlId, date);
   if (slots.length === 0) {
-    throw new Error(`${girlName} nema v ${date} zadne volne casy.`);
+    throw new Error(t(lang, 'error.no_slots', { name: girlName, date }));
   }
 
   // Create session
@@ -153,12 +156,12 @@ export async function startBookingFlow(
   const keyboard = buildTimeSlotKeyboard(sessionId, slots);
 
   // Send message with buttons
-  const msg = `\u23F0 <b>${girlName}</b> — ${formatDate(date)}\n\nVyber cas:`;
+  const msg = `\u23F0 <b>${girlName}</b> — ${formatDate(date, lang)}\n\n${t(lang, 'flow.select_time')}`;
   await sendMessage(chatId, msg, {
     replyMarkup: {
       inline_keyboard: [
         ...keyboard,
-        [{ text: '\u274C Zrusit', callback_data: `bk_cancel:${sessionId}` }],
+        [{ text: t(lang, 'btn.cancel'), callback_data: `bk_cancel:${sessionId}` }],
       ],
     },
   });
@@ -179,10 +182,11 @@ export async function handleTimeSelected(
   chatId: string,
   sessionId: string,
   time: string,
+  lang: Lang = 'cs',
 ): Promise<void> {
   const draft = await getDraft(sessionId, chatId);
   if (!draft) {
-    await sendMessage(chatId, 'Tato rezervace vyprsela. Zacni prosim znovu.');
+    await sendMessage(chatId, t(lang, 'flow.draft_expired'));
     return;
   }
 
@@ -198,7 +202,7 @@ export async function handleTimeSelected(
   });
 
   // Get available durations based on remaining shift time
-  const durations = await getAvailableDurations(draft.girlId, draft.date, time);
+  const durations = await getAvailableDurations(draft.girlId, draft.date, time, lang);
 
   if (durations.length === 0) {
     // Not enough time for any program — go back to time selection
@@ -208,11 +212,11 @@ export async function handleTimeSelected(
     });
     const slots = await getAvailableSlots(draft.girlId, draft.date);
     const keyboard = buildTimeSlotKeyboard(sessionId, slots);
-    await sendMessage(chatId, `V ${time} uz neni dost casu na zadny program. Vyber jiny cas:`, {
+    await sendMessage(chatId, t(lang, 'flow.no_time_for_program', { time }), {
       replyMarkup: {
         inline_keyboard: [
           ...keyboard,
-          [{ text: '\u274C Zrusit', callback_data: `bk_cancel:${sessionId}` }],
+          [{ text: t(lang, 'btn.cancel'), callback_data: `bk_cancel:${sessionId}` }],
         ],
       },
     });
@@ -244,14 +248,14 @@ export async function handleTimeSelected(
     callback_data: `bk_dur:${sessionId}:${d.minutes}`,
   }]);
 
-  const msg = `\u23F0 <b>${draft.girlName}</b> — ${formatDate(draft.date)} v <b>${time}</b>\n\nVyber delku programu:`;
+  const msg = `\u23F0 <b>${draft.girlName}</b> — ${formatDate(draft.date, lang)} v <b>${time}</b>\n\n${t(lang, 'flow.select_duration')}`;
   await sendMessage(chatId, msg, {
     replyMarkup: {
       inline_keyboard: [
         ...keyboard,
         [
-          { text: '\u2B05 Zpet', callback_data: `bk_back:${sessionId}` },
-          { text: '\u274C Zrusit', callback_data: `bk_cancel:${sessionId}` },
+          { text: t(lang, 'btn.back'), callback_data: `bk_back:${sessionId}` },
+          { text: t(lang, 'btn.cancel'), callback_data: `bk_cancel:${sessionId}` },
         ],
       ],
     },
@@ -266,10 +270,11 @@ export async function handleDurationSelected(
   chatId: string,
   sessionId: string,
   durationMinutes: number,
+  lang: Lang = 'cs',
 ): Promise<void> {
   const draft = await getDraft(sessionId, chatId);
   if (!draft || !draft.startTime) {
-    await sendMessage(chatId, 'Tato rezervace vyprsela. Zacni prosim znovu.');
+    await sendMessage(chatId, t(lang, 'flow.draft_expired'));
     return;
   }
 
@@ -308,7 +313,7 @@ export async function handleDurationSelected(
     : null;
 
   // Show confirmation — flowing text summary
-  await showConfirmation(chatId, sessionId, draft.girlName, draft.date, draft.startTime, endTime, durationMinutes, price, location, null);
+  await showConfirmation(chatId, sessionId, draft.girlName, draft.date, draft.startTime, endTime, durationMinutes, price, location, null, lang);
 }
 
 async function showConfirmation(
@@ -322,6 +327,7 @@ async function showConfirmation(
   originalPrice: number,
   location: string | null,
   discount: { code: string; type: string; value: number } | null,
+  lang: Lang = 'cs',
 ): Promise<void> {
   let priceText: string;
   if (discount) {
@@ -334,19 +340,19 @@ async function showConfirmation(
     priceText = `<b>${originalPrice} CZK</b>`;
   }
 
-  const msg = `<b>${girlName}</b>, ${formatDate(date)}, ${startTime}–${endTime} (${durationMinutes} min)` +
+  const msg = `<b>${girlName}</b>, ${formatDate(date, lang)}, ${startTime}–${endTime} (${durationMinutes} min)` +
     (location ? `, ${location}` : '') +
-    ` — ${priceText}. Potvrdis?`;
+    ` — ${priceText}. ${t(lang, 'flow.confirm_question')}`;
 
   await sendMessage(chatId, msg, {
     replyMarkup: {
       inline_keyboard: [
         [
-          { text: '\u2705 Potvrdit', callback_data: `bk_ok:${sessionId}` },
-          { text: '\u{1F3F7}\uFE0F Promokod', callback_data: `bk_promo:${sessionId}` },
+          { text: t(lang, 'btn.confirm'), callback_data: `bk_ok:${sessionId}` },
+          { text: t(lang, 'btn.promo'), callback_data: `bk_promo:${sessionId}` },
         ],
         [
-          { text: '\u274C Zrusit', callback_data: `bk_cancel:${sessionId}` },
+          { text: t(lang, 'btn.cancel'), callback_data: `bk_cancel:${sessionId}` },
         ],
       ],
     },
@@ -360,10 +366,11 @@ async function showConfirmation(
 export async function handleConfirm(
   chatId: string,
   sessionId: string,
+  lang: Lang = 'cs',
 ): Promise<void> {
   const draft = await getDraft(sessionId, chatId);
   if (!draft || !draft.startTime || !draft.endTime || !draft.durationMinutes || !draft.clientId) {
-    await sendMessage(chatId, 'Tato rezervace vyprsela. Zacni prosim znovu.');
+    await sendMessage(chatId, t(lang, 'flow.draft_expired'));
     return;
   }
 
@@ -380,7 +387,7 @@ export async function handleConfirm(
   });
 
   if (conflictCheck.rows.length > 0) {
-    await sendMessage(chatId, '\u274C Tento cas je bohužel uz obsazeny. Zacni prosim znovu.');
+    await sendMessage(chatId, t(lang, 'flow.slot_taken'));
     await expireDraft(sessionId);
     return;
   }
@@ -405,7 +412,7 @@ export async function handleConfirm(
       args: [draft.girlId, draft.date, draft.startTime, draft.endTime],
     });
   } catch {
-    await sendMessage(chatId, '\u274C Slot je prave obsazovany nekym jinym. Zkus jiny cas.');
+    await sendMessage(chatId, t(lang, 'flow.slot_locked'));
     await expireDraft(sessionId);
     return;
   }
@@ -537,21 +544,21 @@ export async function handleConfirm(
   }
 
   // Send confirmation — flowing text, different for pending vs confirmed
-  const summary = `<b>${draft.girlName}</b>, ${formatDate(draft.date)}, ${draft.startTime}–${draft.endTime} (${draft.durationMinutes} min)` +
+  const summary = `<b>${draft.girlName}</b>, ${formatDate(draft.date, lang)}, ${draft.startTime}–${draft.endTime} (${draft.durationMinutes} min)` +
     (location ? `, ${location}` : '') +
     ` — ${priceText}`;
 
   const msg = bookingStatus === 'pending'
-    ? `\u{1F4CB} Rezervace ${bookingCode} prijata!\n\n${summary}\n\nProtoze jsi u nas poprve, prosim <b>potvrd svuj prichod</b> kliknutim nize. Pokud nepotvrdis do 1h pred terminem, misto uvolnime.`
-    : `\u2705 Rezervace ${bookingCode} potvrzena!\n\n${summary}\n\nTesime se na tebe!`;
+    ? t(lang, 'flow.booking_pending', { code: bookingCode, summary })
+    : t(lang, 'flow.booking_confirmed', { code: bookingCode, summary });
 
   if (bookingStatus === 'pending') {
     await sendMessage(chatId, msg, {
       replyMarkup: {
         inline_keyboard: [
           [
-            { text: '\u2705 Potvrzuji prichod', callback_data: `bk_remind_ok:${bookingId}` },
-            { text: '\u274C Rusim', callback_data: `bk_remind_cancel:${bookingId}` },
+            { text: t(lang, 'btn.confirm_arrival'), callback_data: `bk_remind_ok:${bookingId}` },
+            { text: t(lang, 'btn.cancel_booking'), callback_data: `bk_remind_cancel:${bookingId}` },
           ],
         ],
       },
@@ -679,19 +686,20 @@ async function sendBookingCreatedNotifications(params: {
 export async function handleCancel(
   chatId: string,
   sessionId: string,
+  lang: Lang = 'cs',
 ): Promise<void> {
   await expireDraft(sessionId);
-  await sendMessage(chatId, 'Rezervace zrusena. Napiste kdykoliv, pokud si budete chtit znovu zarezervovat \u{1F60A}');
+  await sendMessage(chatId, t(lang, 'flow.cancelled'));
 }
 
 // ---------------------------------------------------------------------------
 // Promo code flow
 // ---------------------------------------------------------------------------
 
-async function handlePromoPrompt(chatId: string, sessionId: string): Promise<void> {
+async function handlePromoPrompt(chatId: string, sessionId: string, lang: Lang = 'cs'): Promise<void> {
   const draft = await getDraft(sessionId, chatId);
   if (!draft) {
-    await sendMessage(chatId, 'Tato rezervace vyprsela. Zacni prosim znovu.');
+    await sendMessage(chatId, t(lang, 'flow.draft_expired'));
     return;
   }
 
@@ -700,14 +708,14 @@ async function handlePromoPrompt(chatId: string, sessionId: string): Promise<voi
     args: [sessionId],
   });
 
-  await sendMessage(chatId, 'Napis promokod:');
+  await sendMessage(chatId, t(lang, 'flow.enter_promo'));
 }
 
 /**
  * Called from telegram-bot.ts when user sends text and has active draft in "enter_promo" step.
  * Returns true if handled.
  */
-export async function handlePromoCodeInput(chatId: string, text: string): Promise<boolean> {
+export async function handlePromoCodeInput(chatId: string, text: string, lang: Lang = 'cs'): Promise<boolean> {
   // Find active draft in enter_promo step
   const draftResult = await db.execute({
     sql: `SELECT bd.session_id, bd.client_id, bd.girl_id, g.name AS girl_name,
@@ -738,13 +746,13 @@ export async function handlePromoCodeInput(chatId: string, text: string): Promis
   });
 
   if (codeResult.rows.length === 0) {
-    await sendMessage(chatId, `\u274C Kod <b>${code}</b> neni platny. Zkus jiny, nebo pokracuj bez slevy.`);
+    await sendMessage(chatId, t(lang, 'flow.promo_invalid', { code }));
     // Go back to confirm step
     await db.execute({
       sql: `UPDATE booking_drafts SET step = 'confirm', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
       args: [sessionId],
     });
-    await reshowConfirmation(chatId, sessionId, r);
+    await reshowConfirmation(chatId, sessionId, r, undefined, lang);
     return true;
   }
 
@@ -752,24 +760,24 @@ export async function handlePromoCodeInput(chatId: string, text: string): Promis
   const maxUses = dc.max_uses ? Number(dc.max_uses) : null;
   const currentUses = Number(dc.current_uses);
   if (maxUses && currentUses >= maxUses) {
-    await sendMessage(chatId, `\u274C Kod <b>${code}</b> uz byl vyuzit. Zkus jiny.`);
+    await sendMessage(chatId, t(lang, 'flow.promo_used', { code }));
     await db.execute({
       sql: `UPDATE booking_drafts SET step = 'confirm', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
       args: [sessionId],
     });
-    await reshowConfirmation(chatId, sessionId, r);
+    await reshowConfirmation(chatId, sessionId, r, undefined, lang);
     return true;
   }
 
   const minDuration = dc.min_duration ? Number(dc.min_duration) : null;
   const draftDuration = r.duration_minutes ? Number(r.duration_minutes) : 0;
   if (minDuration && draftDuration < minDuration) {
-    await sendMessage(chatId, `\u274C Kod <b>${code}</b> plati od ${minDuration} min. Tvuj program je ${draftDuration} min.`);
+    await sendMessage(chatId, t(lang, 'flow.promo_min_duration', { code, min: minDuration, current: draftDuration }));
     await db.execute({
       sql: `UPDATE booking_drafts SET step = 'confirm', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
       args: [sessionId],
     });
-    await reshowConfirmation(chatId, sessionId, r);
+    await reshowConfirmation(chatId, sessionId, r, undefined, lang);
     return true;
   }
 
@@ -784,7 +792,7 @@ export async function handlePromoCodeInput(chatId: string, text: string): Promis
     code: String(dc.code),
     type: String(dc.type),
     value: Number(dc.value),
-  });
+  }, lang);
 
   return true;
 }
@@ -795,6 +803,7 @@ async function reshowConfirmation(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   r: any,
   discount?: { code: string; type: string; value: number } | null,
+  lang: Lang = 'cs',
 ): Promise<void> {
   const girlName = String(r.girl_name);
   const date = String(r.date);
@@ -836,7 +845,7 @@ async function reshowConfirmation(
     }
   }
 
-  await showConfirmation(chatId, sessionId, girlName, date, startTime, endTime, durationMinutes, price, location, discount ?? null);
+  await showConfirmation(chatId, sessionId, girlName, date, startTime, endTime, durationMinutes, price, location, discount ?? null, lang);
 }
 
 // ---------------------------------------------------------------------------
@@ -846,14 +855,30 @@ async function reshowConfirmation(
 async function handleBack(
   chatId: string,
   sessionId: string,
+  lang: Lang = 'cs',
 ): Promise<void> {
   const draft = await getDraft(sessionId, chatId);
   if (!draft) {
-    await sendMessage(chatId, 'Tato rezervace vyprsela. Zacni prosim znovu.');
+    await sendMessage(chatId, t(lang, 'flow.draft_expired'));
     return;
   }
 
-  if (draft.step === 'select_duration' || draft.step === 'confirm') {
+  if (draft.step === 'confirm') {
+    // Go back to duration selection (keep selected time, reset duration)
+    await db.execute({
+      sql: `UPDATE booking_drafts
+            SET step = 'select_time', duration_minutes = NULL, end_time = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE session_id = ?`,
+      args: [sessionId],
+    });
+
+    // handleTimeSelected expects step='select_time', sets it to 'select_duration'
+    await handleTimeSelected(chatId, sessionId, draft.startTime!, lang);
+    return;
+  }
+
+  if (draft.step === 'select_duration') {
     // Go back to time selection
     await db.execute({
       sql: `UPDATE booking_drafts
@@ -865,22 +890,292 @@ async function handleBack(
 
     const slots = await getAvailableSlots(draft.girlId, draft.date);
     if (slots.length === 0) {
-      await sendMessage(chatId, `${draft.girlName} uz nema zadne volne casy. Zkus jiny den.`);
+      await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: draft.girlName }));
       await expireDraft(sessionId);
       return;
     }
 
     const keyboard = buildTimeSlotKeyboard(sessionId, slots);
-    const msg = `\u23F0 <b>${draft.girlName}</b> — ${formatDate(draft.date)}\n\nVyber cas:`;
+    const msg = `\u23F0 <b>${draft.girlName}</b> — ${formatDate(draft.date, lang)}\n\n${t(lang, 'flow.select_time')}`;
     await sendMessage(chatId, msg, {
       replyMarkup: {
         inline_keyboard: [
           ...keyboard,
-          [{ text: '\u274C Zrusit', callback_data: `bk_cancel:${sessionId}` }],
+          [{ text: t(lang, 'btn.cancel'), callback_data: `bk_cancel:${sessionId}` }],
         ],
       },
     });
   }
+}
+
+// ---------------------------------------------------------------------------
+// Button-driven booking menu — no AI chat, just clicks
+// ---------------------------------------------------------------------------
+
+/**
+ * Standard girl photo caption — used everywhere for consistency.
+ */
+export function buildGirlCaption(opts: {
+  name: string;
+  age: number;
+  rating: number | null;
+  reviewsCount: number;
+  shiftStart: string;
+  shiftEnd: string;
+  location: string | null;
+  isEscort: boolean;
+  lang?: Lang;
+}): string {
+  const { name, age, rating, reviewsCount, shiftStart, shiftEnd, location, isEscort, lang = 'cs' } = opts;
+  let caption = `<b>${name}</b>, ${t(lang, 'caption.age', { age })}`;
+  if (rating) {
+    caption += ` | \u2B50 ${rating}/5`;
+    if (reviewsCount > 0) caption += ` (${t(lang, 'caption.reviews', { count: reviewsCount })})`;
+  }
+  caption += `\n\u{1F7E2} ${shiftStart}–${shiftEnd}`;
+  if (isEscort) {
+    caption += ` | ${t(lang, 'caption.escort')}`;
+  } else if (location) {
+    caption += ` | \u{1F4CD} ${location}`;
+  }
+  return caption;
+}
+
+/**
+ * Show today's available girls with booking buttons.
+ * This is the MAIN entry point — called for /start and all text messages.
+ * No AI involved, pure button flow.
+ */
+export async function showAvailableGirlsMenu(chatId: string, lang: Lang = 'cs'): Promise<void> {
+  const today = getPragueToday();
+  const calendarGirls = await getCalendarGirls(today);
+
+  const now = getPragueNow();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  let working = calendarGirls.filter((g) => {
+    if (!g.isWorking || !g.shiftStart || !g.shiftEnd) return false;
+    const [eh, em] = g.shiftEnd!.split(':').map(Number);
+    return eh * 60 + em > nowMin;
+  });
+
+  // Filter out fully booked girls
+  const available: typeof working = [];
+  for (const g of working) {
+    const slots = await getAvailableSlots(g.id, today);
+    if (slots.length > 0) available.push(g);
+  }
+  working = available;
+
+  if (working.length === 0) {
+    await sendMessage(chatId, t(lang, 'flow.no_girls_today'));
+    return;
+  }
+
+  // Send photo for each girl with standard caption
+  for (const g of working) {
+    const detail = await db.execute({
+      sql: `SELECT g.age, g.rating, g.reviews_count,
+                   (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
+            FROM girls g WHERE g.id = ? AND g.status = 'active' LIMIT 1`,
+      args: [g.id],
+    });
+    if (detail.rows.length === 0) continue;
+    const r = detail.rows[0];
+    const photoUrl = r.photo_url ? String(r.photo_url) : null;
+    if (!photoUrl) continue;
+
+    const isEscort = g.girlType === 'escort_only' || g.girlType === 'both';
+    const caption = buildGirlCaption({
+      name: g.name,
+      age: Number(r.age),
+      rating: r.rating ? Number(r.rating) : null,
+      reviewsCount: r.reviews_count ? Number(r.reviews_count) : 0,
+      shiftStart: g.shiftStart!,
+      shiftEnd: g.shiftEnd!,
+      location: isEscort ? null : (g.locationName ?? null),
+      isEscort,
+      lang,
+    });
+
+    await sendPhoto(chatId, photoUrl, { caption }).catch(() => {});
+  }
+
+  // Single girl → skip selection, go straight to date/time
+  if (working.length === 1) {
+    await handleGirlSelectedCallback(chatId, working[0].id, lang);
+    return;
+  }
+
+  // Multiple girls → show selection buttons
+  const keyboard = working.map((g) => [{
+    text: `\u{1F4C5} ${g.name}`,
+    callback_data: `bk_girl:${g.id}`,
+  }]);
+  await sendMessage(chatId, t(lang, 'flow.who_choose'), {
+    replyMarkup: { inline_keyboard: keyboard },
+  });
+}
+
+/**
+ * Girl selected via button → show available dates this week.
+ */
+export async function handleGirlSelectedCallback(
+  chatId: string,
+  girlId: number,
+  lang: Lang = 'cs',
+): Promise<void> {
+  const girlResult = await db.execute({
+    sql: "SELECT id, name FROM girls WHERE id = ? AND status = 'active' LIMIT 1",
+    args: [girlId],
+  });
+  if (girlResult.rows.length === 0) {
+    await sendMessage(chatId, t(lang, 'flow.girl_not_found_short'));
+    return;
+  }
+  const girlName = String(girlResult.rows[0].name);
+
+  const today = getPragueToday();
+  const todayDate = new Date(today + 'T12:00:00');
+  const dates: { date: string; label: string; shift: string }[] = [];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(todayDate.getTime() + i * 86400000);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    const calGirls = await getCalendarGirls(dateStr);
+    const girl = calGirls.find((g) => g.id === girlId);
+    if (girl?.isWorking && girl.shiftStart && girl.shiftEnd) {
+      const slots = await getAvailableSlots(girlId, dateStr);
+      if (slots.length > 0) {
+        dates.push({
+          date: dateStr,
+          label: formatDate(dateStr, lang),
+          shift: `${girl.shiftStart}–${girl.shiftEnd}`,
+        });
+      }
+    }
+  }
+
+  if (dates.length === 0) {
+    await sendMessage(chatId, t(lang, 'flow.no_dates_this_week', { name: girlName }));
+    return;
+  }
+
+  // Only 1 available date → skip date selection, go to time slots
+  if (dates.length === 1) {
+    await handleDateSelectedCallback(chatId, girlId, dates[0].date, lang);
+    return;
+  }
+
+  const keyboard = dates.map((d) => [{
+    text: `${d.label} (${d.shift})`,
+    callback_data: `bk_date:${girlId}:${d.date}`,
+  }]);
+  keyboard.push([{ text: t(lang, 'btn.cancel_short'), callback_data: 'bk_cancel_pre' }]);
+
+  await sendMessage(chatId, `\u{1F4C5} <b>${girlName}</b> — ${t(lang, 'flow.select_day')}`, {
+    replyMarkup: { inline_keyboard: keyboard },
+  });
+}
+
+/**
+ * Date selected via button → start time slot selection.
+ */
+export async function handleDateSelectedCallback(
+  chatId: string,
+  girlId: number,
+  date: string,
+  lang: Lang = 'cs',
+): Promise<void> {
+  const ctx = await buildClientContext(chatId, null);
+
+  if (!ctx.isRegistered || !ctx.clientId) {
+    // Store intent so after registration we can continue
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    await db.execute({
+      sql: `INSERT INTO booking_drafts
+              (telegram_chat_id, girl_id, date, channel, step, expires_at)
+            VALUES (?, ?, ?, 'telegram', 'awaiting_name', ?)`,
+      args: [chatId, girlId, date, expiresAt],
+    });
+    await sendMessage(chatId, t(lang, 'flow.first_visit_name'));
+    return;
+  }
+
+  try {
+    await startBookingFlow(chatId, ctx, girlId, date, lang);
+  } catch (error) {
+    await sendMessage(chatId,
+      error instanceof Error ? error.message : t(lang, 'flow.error_generic'),
+    );
+  }
+}
+
+/**
+ * Handle text message when user is in "awaiting_name" registration step.
+ * Returns true if handled (user was in registration flow).
+ */
+export async function handlePendingRegistration(
+  chatId: string,
+  text: string,
+  lang: Lang = 'cs',
+): Promise<boolean> {
+  const pending = await db.execute({
+    sql: `SELECT id, girl_id, date FROM booking_drafts
+          WHERE telegram_chat_id = ? AND step = 'awaiting_name'
+            AND is_converted = 0 AND expires_at > datetime('now')
+          ORDER BY created_at DESC LIMIT 1`,
+    args: [chatId],
+  });
+
+  if (pending.rows.length === 0) return false;
+
+  const row = pending.rows[0];
+  const draftId = Number(row.id);
+  const girlId = Number(row.girl_id);
+  const date = String(row.date);
+  const nickname = text.trim();
+
+  if (nickname.length < 2 || nickname.startsWith('/')) {
+    await sendMessage(chatId, t(lang, 'flow.name_too_short'));
+    return true;
+  }
+
+  // Register client
+  const maxRes = await db.execute(
+    "SELECT MAX(CAST(REPLACE(client_number, 'LG-', '') AS INTEGER)) AS mx FROM booking_clients WHERE client_number LIKE 'LG-%'",
+  );
+  const maxNum = Number(maxRes.rows[0]?.mx ?? 0);
+  const clientNumber = `LG-${maxNum + 1}`;
+
+  const { randomBytes } = await import('crypto');
+  const deepLinkToken = randomBytes(8).toString('hex');
+
+  await db.execute({
+    sql: `INSERT INTO booking_clients
+            (client_number, nickname, telegram_id, source, trust_level, total_visits, language, deep_link_token, created_at, updated_at)
+          VALUES (?, ?, ?, 'telegram', 'new', 0, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    args: [clientNumber, nickname, chatId, lang, deepLinkToken],
+  });
+
+  // Expire the awaiting_name draft
+  await db.execute({
+    sql: `UPDATE booking_drafts SET expires_at = datetime('now') WHERE id = ?`,
+    args: [draftId],
+  });
+
+  await sendMessage(chatId, t(lang, 'flow.welcome', { name: nickname }));
+
+  // Continue with booking
+  const ctx = await buildClientContext(chatId, null);
+  try {
+    await startBookingFlow(chatId, ctx, girlId, date, lang);
+  } catch (error) {
+    await sendMessage(chatId, error instanceof Error ? error.message : t(lang, 'flow.error_generic'));
+  }
+
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -893,7 +1188,32 @@ async function handleBack(
 export async function handleBookingCallback(
   chatId: string,
   callbackData: string,
+  lang: Lang = 'cs',
 ): Promise<boolean> {
+  // bk_girl:{girlId} — girl selected from menu
+  if (callbackData.startsWith('bk_girl:')) {
+    const girlId = parseInt(callbackData.slice(8), 10);
+    await handleGirlSelectedCallback(chatId, girlId, lang);
+    return true;
+  }
+
+  // bk_date:{girlId}:{YYYY-MM-DD} — date selected
+  if (callbackData.startsWith('bk_date:')) {
+    const parts = callbackData.split(':');
+    if (parts.length >= 3) {
+      const girlId = parseInt(parts[1], 10);
+      const date = parts[2];
+      await handleDateSelectedCallback(chatId, girlId, date, lang);
+      return true;
+    }
+  }
+
+  // bk_cancel_pre — cancel before draft
+  if (callbackData === 'bk_cancel_pre') {
+    await sendMessage(chatId, t(lang, 'flow.cancelled_pre'));
+    return true;
+  }
+
   // bk_time:{sessionId}:{HH:MM}
   if (callbackData.startsWith('bk_time:')) {
     const parts = callbackData.split(':');
@@ -901,7 +1221,7 @@ export async function handleBookingCallback(
     if (parts.length >= 4) {
       const sessionId = parts[1];
       const time = `${parts[2]}:${parts[3]}`;
-      await handleTimeSelected(chatId, sessionId, time);
+      await handleTimeSelected(chatId, sessionId, time, lang);
       return true;
     }
   }
@@ -912,7 +1232,7 @@ export async function handleBookingCallback(
     if (parts.length >= 3) {
       const sessionId = parts[1];
       const minutes = parseInt(parts[2], 10);
-      await handleDurationSelected(chatId, sessionId, minutes);
+      await handleDurationSelected(chatId, sessionId, minutes, lang);
       return true;
     }
   }
@@ -920,42 +1240,42 @@ export async function handleBookingCallback(
   // bk_promo:{sessionId} — enter promo code
   if (callbackData.startsWith('bk_promo:')) {
     const sessionId = callbackData.slice(9);
-    await handlePromoPrompt(chatId, sessionId);
+    await handlePromoPrompt(chatId, sessionId, lang);
     return true;
   }
 
   // bk_ok:{sessionId}
   if (callbackData.startsWith('bk_ok:')) {
     const sessionId = callbackData.slice(6);
-    await handleConfirm(chatId, sessionId);
+    await handleConfirm(chatId, sessionId, lang);
     return true;
   }
 
   // bk_cancel:{sessionId}
   if (callbackData.startsWith('bk_cancel:')) {
     const sessionId = callbackData.slice(10);
-    await handleCancel(chatId, sessionId);
+    await handleCancel(chatId, sessionId, lang);
     return true;
   }
 
   // bk_back:{sessionId}
   if (callbackData.startsWith('bk_back:')) {
     const sessionId = callbackData.slice(8);
-    await handleBack(chatId, sessionId);
+    await handleBack(chatId, sessionId, lang);
     return true;
   }
 
   // bk_remind_ok:{bookingId} — client confirms attendance
   if (callbackData.startsWith('bk_remind_ok:')) {
     const bookingId = parseInt(callbackData.slice(13), 10);
-    await handleClientConfirm(chatId, bookingId);
+    await handleClientConfirm(chatId, bookingId, lang);
     return true;
   }
 
   // bk_remind_cancel:{bookingId} — client cancels
   if (callbackData.startsWith('bk_remind_cancel:')) {
     const bookingId = parseInt(callbackData.slice(17), 10);
-    await handleClientCancel(chatId, bookingId);
+    await handleClientCancel(chatId, bookingId, lang);
     return true;
   }
 
@@ -966,7 +1286,7 @@ export async function handleBookingCallback(
 // Client self-confirm / cancel (for pending bookings)
 // ---------------------------------------------------------------------------
 
-async function handleClientConfirm(chatId: string, bookingId: number): Promise<void> {
+async function handleClientConfirm(chatId: string, bookingId: number, lang: Lang = 'cs'): Promise<void> {
   const result = await db.execute({
     sql: `SELECT b.id, b.status, b.date, b.start_time, b.end_time,
                  g.name AS girl_name, bc.telegram_id
@@ -978,14 +1298,14 @@ async function handleClientConfirm(chatId: string, bookingId: number): Promise<v
   });
 
   if (result.rows.length === 0) {
-    await sendMessage(chatId, 'Rezervace nenalezena.');
+    await sendMessage(chatId, t(lang, 'confirm.not_found'));
     return;
   }
 
   const booking = result.rows[0];
   if (String(booking.status) !== 'pending') {
-    const label = String(booking.status) === 'confirmed' ? 'uz je potvrzena' : 'uz neni aktivni';
-    await sendMessage(chatId, `Tato rezervace ${label}.`);
+    const label = String(booking.status) === 'confirmed' ? t(lang, 'status.already_confirmed') : t(lang, 'status.not_active');
+    await sendMessage(chatId, t(lang, 'status.booking_is', { label }));
     return;
   }
 
@@ -999,7 +1319,7 @@ async function handleClientConfirm(chatId: string, bookingId: number): Promise<v
   const startTime = String(booking.start_time).substring(0, 5);
   const endTime = String(booking.end_time).substring(0, 5);
   await sendMessage(chatId,
-    `\u2705 <b>${String(booking.girl_name)}</b>, ${formatDate(String(booking.date))}, ${startTime}–${endTime} — potvrzeno! Tesime se na tebe!`
+    `\u2705 <b>${String(booking.girl_name)}</b>, ${formatDate(String(booking.date), lang)}, ${startTime}–${endTime} — ${t(lang, 'confirm.success')}`
   );
 
   logAudit({
@@ -1012,7 +1332,7 @@ async function handleClientConfirm(chatId: string, bookingId: number): Promise<v
   }).catch(() => {});
 }
 
-async function handleClientCancel(chatId: string, bookingId: number): Promise<void> {
+async function handleClientCancel(chatId: string, bookingId: number, lang: Lang = 'cs'): Promise<void> {
   const result = await db.execute({
     sql: `SELECT b.id, b.status, bc.telegram_id
           FROM bookings_v2 b
@@ -1022,12 +1342,12 @@ async function handleClientCancel(chatId: string, bookingId: number): Promise<vo
   });
 
   if (result.rows.length === 0) {
-    await sendMessage(chatId, 'Rezervace nenalezena.');
+    await sendMessage(chatId, t(lang, 'confirm.not_found'));
     return;
   }
 
   if (String(result.rows[0].status) !== 'pending') {
-    await sendMessage(chatId, 'Tato rezervace uz neni aktivni.');
+    await sendMessage(chatId, t(lang, 'status.booking_is', { label: t(lang, 'status.not_active') }));
     return;
   }
 
@@ -1046,7 +1366,7 @@ async function handleClientCancel(chatId: string, bookingId: number): Promise<vo
     args: [`booking:${bookingId}`],
   }).catch(() => {});
 
-  await sendMessage(chatId, 'Rezervace zrusena. Napis kdykoliv pro novou rezervaci \u{1F60A}');
+  await sendMessage(chatId, t(lang, 'cancel.client_done'));
 
   logAudit({
     bookingId,
@@ -1202,6 +1522,7 @@ async function getAvailableDurations(
   girlId: number,
   date: string,
   startTime: string,
+  lang: Lang = 'cs',
 ): Promise<Array<{ minutes: number; price: number; title: string }>> {
   // Get shift end time using the same query as the calendar
   const calendarGirls = await getCalendarGirls(date);
@@ -1244,13 +1565,14 @@ async function getAvailableDurations(
   const result: Array<{ minutes: number; price: number; title: string }> = [];
   for (const dur of durations) {
     const priceResult = await db.execute({
-      sql: 'SELECT price, night_price, title_cs FROM pricing_plans WHERE duration = ? AND is_active = 1 LIMIT 1',
+      sql: 'SELECT price, night_price, title_cs, title_en, title_uk FROM pricing_plans WHERE duration = ? AND is_active = 1 LIMIT 1',
       args: [dur],
     });
     if (priceResult.rows.length > 0) {
       const pr = priceResult.rows[0];
       const price = isNight && pr.night_price ? Number(pr.night_price) : Number(pr.price);
-      const title = pr.title_cs ? String(pr.title_cs) : `${dur} min`;
+      const titleCol = lang === 'en' ? 'title_en' : lang === 'uk' ? 'title_uk' : 'title_cs';
+      const title = (pr[titleCol] ? String(pr[titleCol]) : null) ?? (pr.title_cs ? String(pr.title_cs) : `${dur} min`);
       result.push({ minutes: dur, price, title });
     }
   }
@@ -1277,9 +1599,15 @@ function buildTimeSlotKeyboard(
   return rows;
 }
 
-function formatDate(date: string): string {
+const DAY_NAMES: Record<Lang, string[]> = {
+  cs: ['Ne', 'Po', 'Ut', 'St', 'Ct', 'Pa', 'So'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  uk: ['\u041D\u0434', '\u041F\u043D', '\u0412\u0442', '\u0421\u0440', '\u0427\u0442', '\u041F\u0442', '\u0421\u0431'],
+};
+
+function formatDate(date: string, lang: Lang = 'cs'): string {
   const d = new Date(date + 'T12:00:00');
-  const days = ['Ne', 'Po', 'Ut', 'St', 'Ct', 'Pa', 'So'];
+  const days = DAY_NAMES[lang] ?? DAY_NAMES.cs;
   const day = d.getDate();
   const month = d.getMonth() + 1;
   return `${days[d.getDay()]} ${day}.${month}.`;
