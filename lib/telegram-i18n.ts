@@ -103,6 +103,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'flow.promo_invalid': '\u274C Kod <b>{code}</b> neni platny. Zkus jiny, nebo pokracuj bez slevy.',
     'flow.promo_used': '\u274C Kod <b>{code}</b> uz byl vyuzit. Zkus jiny.',
     'flow.promo_min_duration': '\u274C Kod <b>{code}</b> plati od {min} min. Tvuj program je {current} min.',
+    'flow.slot_offer_at': 've',
+    'flow.slot_offer_want': 'Chces?',
     'flow.no_girls_today': 'Dnes bohužel nikdo nemá volný termín \u{1F614} Nový rozvrh v pondělí.',
     'flow.who_choose': 'Koho si vybereš?',
     'flow.girl_not_found_short': 'Dívka nenalezena.',
@@ -124,6 +126,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'btn.promo': '\u{1F3F7}\uFE0F Promokod',
     'btn.confirm_arrival': '\u2705 Potvrzuji prichod',
     'btn.cancel_booking': '\u274C Rusim',
+    'btn.yes': '\u2705 Ano',
+    'btn.no_next': '\u274C Ne, dalsi',
     'btn.yes_coming': '\u2705 Ano, prijdu',
 
     // caption
@@ -201,6 +205,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'flow.promo_invalid': '\u274C Code <b>{code}</b> is not valid. Try another or continue without discount.',
     'flow.promo_used': '\u274C Code <b>{code}</b> has been used. Try another.',
     'flow.promo_min_duration': '\u274C Code <b>{code}</b> requires minimum {min} min. Your program is {current} min.',
+    'flow.slot_offer_at': 'at',
+    'flow.slot_offer_want': 'Want it?',
     'flow.no_girls_today': 'Unfortunately no one is available today \u{1F614} New schedule on Monday.',
     'flow.who_choose': 'Who do you choose?',
     'flow.girl_not_found_short': 'Girl not found.',
@@ -222,6 +228,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'btn.promo': '\u{1F3F7}\uFE0F Promo code',
     'btn.confirm_arrival': '\u2705 Confirming arrival',
     'btn.cancel_booking': '\u274C Cancel',
+    'btn.yes': '\u2705 Yes',
+    'btn.no_next': '\u274C No, next',
     'btn.yes_coming': '\u2705 Yes, I\'m coming',
 
     // caption
@@ -299,6 +307,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'flow.promo_invalid': '\u274C Код <b>{code}</b> недійсний. Спробуйте інший або продовжуйте без знижки.',
     'flow.promo_used': '\u274C Код <b>{code}</b> вже використаний. Спробуйте інший.',
     'flow.promo_min_duration': '\u274C Код <b>{code}</b> діє від {min} хв. Ваша програма {current} хв.',
+    'flow.slot_offer_at': 'о',
+    'flow.slot_offer_want': 'Хочеш?',
     'flow.no_girls_today': 'На жаль, сьогодні ніхто не доступний \u{1F614} Новий розклад у понеділок.',
     'flow.who_choose': 'Кого оберете?',
     'flow.girl_not_found_short': 'Дівчину не знайдено.',
@@ -320,6 +330,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'btn.promo': '\u{1F3F7}\uFE0F Промокод',
     'btn.confirm_arrival': '\u2705 Підтверджую прихід',
     'btn.cancel_booking': '\u274C Скасувати',
+    'btn.yes': '\u2705 Так',
+    'btn.no_next': '\u274C Ні, наступний',
     'btn.yes_coming': '\u2705 Так, прийду',
 
     // caption

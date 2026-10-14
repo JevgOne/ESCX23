@@ -1,15 +1,16 @@
 /**
  * Structured booking flow — inline keyboard buttons, NO Claude API calls.
  *
- * Flow: AI identifies girl → startBookingFlow() creates draft →
- *   Step 1: Show available time slots as buttons
- *   Step 2: Show duration options as buttons
+ * Flow: girl → date → duration → single time offer (yes/no) → confirmation
+ *   Step 1: Show duration options as buttons
+ *   Step 2: Offer one time slot at a time (accept/reject)
  *   Step 3: Show summary + Confirm/Cancel
  *   Step 4: Create booking from draft
  *
  * Callback prefixes:
- *   bk_time:{sessionId}:{HH:MM}   — time slot selected
  *   bk_dur:{sessionId}:{minutes}   — duration selected
+ *   bk_slot_yes:{sessionId}:{HH}:{MM} — accept offered time
+ *   bk_slot_no:{sessionId}:{HH}:{MM}  — reject, offer next time
  *   bk_ok:{sessionId}              — confirm booking
  *   bk_cancel:{sessionId}          — cancel booking flow
  */
@@ -24,7 +25,7 @@ import { safeEncrypt } from '../crypto';
 import { type Lang, t } from '../telegram-i18n';
 import type { ClientContext } from './types';
 
-const BREAK_MINUTES = 10; // 10-min break between bookings (global default)
+const BREAK_MINUTES = 15; // 15-min break between bookings (global default)
 
 // ---------------------------------------------------------------------------
 // Per-girl booking config (Emily etc.)
@@ -135,36 +136,25 @@ export async function startBookingFlow(
   }
   const girlName = String(girlResult.rows[0].name);
 
-  // Get available time slots
-  const slots = await getAvailableSlots(girlId, date);
-  if (slots.length === 0) {
+  // Check any slots exist at all (minimum duration check)
+  const slotsCheck = await getAvailableSlots(girlId, date);
+  if (slotsCheck.length === 0) {
     throw new Error(t(lang, 'error.no_slots', { name: girlName, date }));
   }
 
-  // Create session
+  // Create session — start with duration selection
   const sessionId = generateSessionId();
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30min expiry per flow diagram
 
   await db.execute({
     sql: `INSERT INTO booking_drafts
             (client_id, telegram_chat_id, girl_id, date, channel, session_id, step, expires_at)
-          VALUES (?, ?, ?, ?, 'telegram', ?, 'select_time', ?)`,
+          VALUES (?, ?, ?, ?, 'telegram', ?, 'select_duration', ?)`,
     args: [ctx.clientId, chatId, girlId, date, sessionId, expiresAt],
   });
 
-  // Build time slot keyboard (max 3 buttons per row)
-  const keyboard = buildTimeSlotKeyboard(sessionId, slots);
-
-  // Send message with buttons
-  const msg = `\u23F0 <b>${girlName}</b> — ${formatDate(date, lang)}\n\n${t(lang, 'flow.select_time')}`;
-  await sendMessage(chatId, msg, {
-    replyMarkup: {
-      inline_keyboard: [
-        ...keyboard,
-        [{ text: t(lang, 'btn.cancel'), callback_data: `bk_cancel:${sessionId}` }],
-      ],
-    },
-  });
+  // Show duration selection first
+  await showDurationSelection(chatId, sessionId, girlId, girlName, date, ctx.clientId, lang);
 
   return {
     sessionId,
@@ -175,7 +165,145 @@ export async function startBookingFlow(
 }
 
 // ---------------------------------------------------------------------------
-// Step 2: Time selected → show duration options
+// Step 1b: Duration selection (BEFORE time) — auto-triggered from startBookingFlow
+// ---------------------------------------------------------------------------
+
+async function showDurationSelection(
+  chatId: string,
+  sessionId: string,
+  girlId: number,
+  girlName: string,
+  date: string,
+  clientId: number,
+  lang: Lang = 'cs',
+): Promise<void> {
+  // Get all possible durations for this girl
+  const config = await getGirlBookingConfig(girlId);
+  const allDurations = config.allowedDurations ?? [30, 45, 60, 90, 120];
+
+  // New clients: auto-select 60 min (skip duration selection entirely)
+  const clientRes = await db.execute({
+    sql: 'SELECT trust_level, total_visits FROM booking_clients WHERE id = ? LIMIT 1',
+    args: [clientId],
+  });
+  const trustLevel = clientRes.rows[0] ? String(clientRes.rows[0].trust_level) : 'new';
+  const visits = clientRes.rows[0] ? Number(clientRes.rows[0].total_visits) : 0;
+  const isNewClient = visits === 0 || trustLevel === 'new';
+  if (isNewClient) {
+    const autoDir = allDurations.includes(60) ? 60 : allDurations[0];
+    await db.execute({
+      sql: `UPDATE booking_drafts SET duration_minutes = ?, step = 'select_time', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
+      args: [autoDir, sessionId],
+    });
+    const slots = await getAvailableSlots(girlId, date, autoDir);
+    if (slots.length === 0) {
+      await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }));
+      await expireDraft(sessionId);
+      return;
+    }
+    await offerSlot(chatId, sessionId, girlName, date, slots, 0, lang);
+    return;
+  }
+
+  // Filter durations that actually have available slots
+  const filteredDurations: number[] = [];
+  for (const dur of allDurations) {
+    const slots = await getAvailableSlots(girlId, date, dur);
+    if (slots.length > 0) filteredDurations.push(dur);
+  }
+
+  if (filteredDurations.length === 0) {
+    await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }));
+    await expireDraft(sessionId);
+    return;
+  }
+
+  // If only one duration available, skip selection
+  if (filteredDurations.length === 1) {
+    const dur = filteredDurations[0];
+    await db.execute({
+      sql: `UPDATE booking_drafts SET duration_minutes = ?, step = 'select_time', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
+      args: [dur, sessionId],
+    });
+    const slots = await getAvailableSlots(girlId, date, dur);
+    if (slots.length === 0) {
+      await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }));
+      await expireDraft(sessionId);
+      return;
+    }
+    await offerSlot(chatId, sessionId, girlName, date, slots, 0, lang);
+    return;
+  }
+
+  // Get pricing for each duration
+  const keyboard: Array<Array<{ text: string; callback_data: string }>> = [];
+  for (const dur of filteredDurations) {
+    const priceResult = await db.execute({
+      sql: 'SELECT price, night_price, title_cs, title_en, title_uk FROM pricing_plans WHERE duration = ? AND is_active = 1 LIMIT 1',
+      args: [dur],
+    });
+    if (priceResult.rows.length > 0) {
+      const pr = priceResult.rows[0];
+      const titleCol = lang === 'en' ? 'title_en' : lang === 'uk' ? 'title_uk' : 'title_cs';
+      const title = (pr[titleCol] ? String(pr[titleCol]) : null) ?? (pr.title_cs ? String(pr.title_cs) : `${dur} min`);
+      const price = Number(pr.price);
+      keyboard.push([{
+        text: `${title} (${dur} min) — ${price} CZK`,
+        callback_data: `bk_dur:${sessionId}:${dur}`,
+      }]);
+    }
+  }
+
+  const msg = `\u23F0 <b>${girlName}</b> — ${formatDate(date, lang)}\n\n${t(lang, 'flow.select_duration')}`;
+  await sendMessage(chatId, msg, {
+    replyMarkup: {
+      inline_keyboard: [
+        ...keyboard,
+        [{ text: t(lang, 'btn.cancel'), callback_data: `bk_cancel:${sessionId}` }],
+      ],
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Single-slot offer: show one time, Yes/No buttons
+// ---------------------------------------------------------------------------
+
+async function offerSlot(
+  chatId: string,
+  sessionId: string,
+  girlName: string,
+  date: string,
+  slots: string[],
+  index: number,
+  lang: Lang = 'cs',
+): Promise<void> {
+  if (index >= slots.length) {
+    await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }));
+    await expireDraft(sessionId);
+    return;
+  }
+
+  const time = slots[index];
+  const msg = `\u23F0 <b>${girlName}</b> — ${formatDate(date, lang)} ${t(lang, 'flow.slot_offer_at')} <b>${time}</b>. ${t(lang, 'flow.slot_offer_want')}`;
+  await sendMessage(chatId, msg, {
+    replyMarkup: {
+      inline_keyboard: [
+        [
+          { text: t(lang, 'btn.yes'), callback_data: `bk_slot_yes:${sessionId}:${time}` },
+          { text: t(lang, 'btn.no_next'), callback_data: `bk_slot_no:${sessionId}:${time}` },
+        ],
+        [
+          { text: t(lang, 'btn.back'), callback_data: `bk_back:${sessionId}` },
+          { text: t(lang, 'btn.cancel'), callback_data: `bk_cancel:${sessionId}` },
+        ],
+      ],
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Legacy: Time selected → show duration options (old flow, kept for bk_time callback compat)
 // ---------------------------------------------------------------------------
 
 export async function handleTimeSelected(
@@ -205,21 +333,15 @@ export async function handleTimeSelected(
   const durations = await getAvailableDurations(draft.girlId, draft.date, time, lang);
 
   if (durations.length === 0) {
-    // Not enough time for any program — go back to time selection
+    // Not enough time for any program — offer next slot
     await db.execute({
       sql: `UPDATE booking_drafts SET start_time = NULL, step = 'select_time', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
       args: [sessionId],
     });
     const slots = await getAvailableSlots(draft.girlId, draft.date);
-    const keyboard = buildTimeSlotKeyboard(sessionId, slots);
-    await sendMessage(chatId, t(lang, 'flow.no_time_for_program', { time }), {
-      replyMarkup: {
-        inline_keyboard: [
-          ...keyboard,
-          [{ text: t(lang, 'btn.cancel'), callback_data: `bk_cancel:${sessionId}` }],
-        ],
-      },
-    });
+    const rejectedIndex = slots.indexOf(time);
+    await sendMessage(chatId, t(lang, 'flow.no_time_for_program', { time }));
+    await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, rejectedIndex >= 0 ? rejectedIndex + 1 : 0, lang);
     return;
   }
 
@@ -263,7 +385,7 @@ export async function handleTimeSelected(
 }
 
 // ---------------------------------------------------------------------------
-// Step 3: Duration selected → show confirmation
+// Legacy: Duration selected after time (old flow, kept for backward compat)
 // ---------------------------------------------------------------------------
 
 export async function handleDurationSelected(
@@ -864,47 +986,31 @@ async function handleBack(
   }
 
   if (draft.step === 'confirm') {
-    // Go back to duration selection (keep selected time, reset duration)
+    // Back to time selection (keep duration, reset time)
     await db.execute({
       sql: `UPDATE booking_drafts
-            SET step = 'select_time', duration_minutes = NULL, end_time = NULL,
+            SET step = 'select_time', start_time = NULL, end_time = NULL,
                 updated_at = CURRENT_TIMESTAMP
             WHERE session_id = ?`,
       args: [sessionId],
     });
 
-    // handleTimeSelected expects step='select_time', sets it to 'select_duration'
-    await handleTimeSelected(chatId, sessionId, draft.startTime!, lang);
+    const slots = await getAvailableSlots(draft.girlId, draft.date, draft.durationMinutes ?? undefined);
+    await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, 0, lang);
     return;
   }
 
-  if (draft.step === 'select_duration') {
-    // Go back to time selection
+  if (draft.step === 'select_time') {
+    // Back to duration selection (reset time + duration)
     await db.execute({
       sql: `UPDATE booking_drafts
-            SET step = 'select_time', start_time = NULL, end_time = NULL, duration_minutes = NULL,
+            SET step = 'select_duration', start_time = NULL, end_time = NULL, duration_minutes = NULL,
                 updated_at = CURRENT_TIMESTAMP
             WHERE session_id = ?`,
       args: [sessionId],
     });
 
-    const slots = await getAvailableSlots(draft.girlId, draft.date);
-    if (slots.length === 0) {
-      await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: draft.girlName }));
-      await expireDraft(sessionId);
-      return;
-    }
-
-    const keyboard = buildTimeSlotKeyboard(sessionId, slots);
-    const msg = `\u23F0 <b>${draft.girlName}</b> — ${formatDate(draft.date, lang)}\n\n${t(lang, 'flow.select_time')}`;
-    await sendMessage(chatId, msg, {
-      replyMarkup: {
-        inline_keyboard: [
-          ...keyboard,
-          [{ text: t(lang, 'btn.cancel'), callback_data: `bk_cancel:${sessionId}` }],
-        ],
-      },
-    });
+    await showDurationSelection(chatId, sessionId, draft.girlId, draft.girlName, draft.date, draft.clientId, lang);
   }
 }
 
@@ -947,68 +1053,56 @@ export function buildGirlCaption(opts: {
  * No AI involved, pure button flow.
  */
 export async function showAvailableGirlsMenu(chatId: string, lang: Lang = 'cs'): Promise<void> {
-  const today = getPragueToday();
-  const calendarGirls = await getCalendarGirls(today);
-
-  const now = getPragueNow();
-  const nowMin = now.getHours() * 60 + now.getMinutes();
-
-  let working = calendarGirls.filter((g) => {
-    if (!g.isWorking || !g.shiftStart || !g.shiftEnd) return false;
-    const [eh, em] = g.shiftEnd!.split(':').map(Number);
-    return eh * 60 + em > nowMin;
+  // Show ALL active girls (not just today's shift) so clients can book for any day
+  const girlsResult = await db.execute({
+    sql: `SELECT g.id, g.name, g.age, g.rating, g.reviews_count, g.girl_type,
+                 (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
+          FROM girls g WHERE g.status = 'active' ORDER BY g.display_order ASC, g.name ASC`,
+    args: [],
   });
 
-  // Filter out fully booked girls
-  const available: typeof working = [];
-  for (const g of working) {
-    const slots = await getAvailableSlots(g.id, today);
-    if (slots.length > 0) available.push(g);
-  }
-  working = available;
-
-  if (working.length === 0) {
+  if (girlsResult.rows.length === 0) {
     await sendMessage(chatId, t(lang, 'flow.no_girls_today'));
     return;
   }
 
-  // Send photo for each girl with standard caption
-  for (const g of working) {
-    const detail = await db.execute({
-      sql: `SELECT g.age, g.rating, g.reviews_count,
-                   (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
-            FROM girls g WHERE g.id = ? AND g.status = 'active' LIMIT 1`,
-      args: [g.id],
-    });
-    if (detail.rows.length === 0) continue;
-    const r = detail.rows[0];
-    const photoUrl = r.photo_url ? String(r.photo_url) : null;
+  const girls: Array<{ id: number; name: string }> = [];
+
+  for (const row of girlsResult.rows) {
+    const girlId = Number(row.id);
+    const name = String(row.name);
+    const photoUrl = row.photo_url ? String(row.photo_url) : null;
     if (!photoUrl) continue;
 
-    const isEscort = g.girlType === 'escort_only' || g.girlType === 'both';
-    const caption = buildGirlCaption({
-      name: g.name,
-      age: Number(r.age),
-      rating: r.rating ? Number(r.rating) : null,
-      reviewsCount: r.reviews_count ? Number(r.reviews_count) : 0,
-      shiftStart: g.shiftStart!,
-      shiftEnd: g.shiftEnd!,
-      location: isEscort ? null : (g.locationName ?? null),
-      isEscort,
-      lang,
-    });
+    const girlType = row.girl_type ? String(row.girl_type) : 'apartment';
+    const isEscort = girlType === 'escort_only' || girlType === 'both';
+
+    let caption = `<b>${name}</b>, ${t(lang, 'caption.age', { age: Number(row.age) })}`;
+    if (row.rating) {
+      caption += ` | \u2B50 ${Number(row.rating)}/5`;
+      if (Number(row.reviews_count) > 0) caption += ` (${t(lang, 'caption.reviews', { count: Number(row.reviews_count) })})`;
+    }
+    if (isEscort) {
+      caption += ` | ${t(lang, 'caption.escort')}`;
+    }
 
     await sendPhoto(chatId, photoUrl, { caption }).catch(() => {});
+    girls.push({ id: girlId, name });
+  }
+
+  if (girls.length === 0) {
+    await sendMessage(chatId, t(lang, 'flow.no_girls_today'));
+    return;
   }
 
   // Single girl → skip selection, go straight to date/time
-  if (working.length === 1) {
-    await handleGirlSelectedCallback(chatId, working[0].id, lang);
+  if (girls.length === 1) {
+    await handleGirlSelectedCallback(chatId, girls[0].id, lang);
     return;
   }
 
   // Multiple girls → show selection buttons
-  const keyboard = working.map((g) => [{
+  const keyboard = girls.map((g) => [{
     text: `\u{1F4C5} ${g.name}`,
     callback_data: `bk_girl:${g.id}`,
   }]);
@@ -1226,13 +1320,98 @@ export async function handleBookingCallback(
     }
   }
 
-  // bk_dur:{sessionId}:{minutes}
+  // bk_slot_yes:{sessionId}:{HH}:{MM} — accept offered slot → go to confirmation
+  if (callbackData.startsWith('bk_slot_yes:')) {
+    const parts = callbackData.split(':');
+    if (parts.length >= 4) {
+      const sessionId = parts[1];
+      const time = `${parts[2]}:${parts[3]}`;
+      const draft = await getDraft(sessionId, chatId);
+      if (!draft) {
+        await sendMessage(chatId, t(lang, 'flow.draft_expired'));
+        return true;
+      }
+      // Deduplicate: ignore if step already advanced
+      if (draft.step !== 'select_time') return true;
+      // Duration was already chosen — compute end_time and go to confirmation
+      const durationMinutes = draft.durationMinutes ?? 30;
+      const endTime = addMinutes(time, durationMinutes);
+      // Get price
+      const priceResult = await db.execute({
+        sql: 'SELECT price, night_price FROM pricing_plans WHERE duration = ? AND is_active = 1 LIMIT 1',
+        args: [durationMinutes],
+      });
+      const priceRow = priceResult.rows[0];
+      const [sh] = time.split(':').map(Number);
+      const isNight = sh >= 22 || sh < 6;
+      const price = priceRow
+        ? (isNight && priceRow.night_price ? Number(priceRow.night_price) : Number(priceRow.price))
+        : 0;
+      // Update draft with time and advance to confirm
+      await db.execute({
+        sql: `UPDATE booking_drafts
+              SET start_time = ?, end_time = ?, step = 'confirm', updated_at = CURRENT_TIMESTAMP
+              WHERE session_id = ?`,
+        args: [time, endTime, sessionId],
+      });
+      // Get location
+      const calGirls = await getCalendarGirls(draft.date);
+      const calGirl = calGirls.find((g) => g.id === draft.girlId);
+      const locationName = calGirl?.locationName ?? null;
+      const locationAddress = calGirl?.locationAddress ?? null;
+      const location = locationName
+        ? (locationAddress ? `${locationName} — ${locationAddress}` : locationName)
+        : null;
+      await showConfirmation(chatId, sessionId, draft.girlName, draft.date, time, endTime, durationMinutes, price, location, null, lang);
+      return true;
+    }
+  }
+
+  // bk_slot_no:{sessionId}:{HH}:{MM} — reject slot, offer next
+  if (callbackData.startsWith('bk_slot_no:')) {
+    const parts = callbackData.split(':');
+    if (parts.length >= 4) {
+      const sessionId = parts[1];
+      const rejectedTime = `${parts[2]}:${parts[3]}`;
+      const draft = await getDraft(sessionId, chatId);
+      if (!draft) {
+        await sendMessage(chatId, t(lang, 'flow.draft_expired'));
+        return true;
+      }
+      // Re-fetch fresh slots filtered by stored duration and find next one after the rejected time
+      const slots = await getAvailableSlots(draft.girlId, draft.date, draft.durationMinutes ?? undefined);
+      const nextIndex = slots.findIndex((s) => s > rejectedTime);
+      await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, nextIndex >= 0 ? nextIndex : slots.length, lang);
+      return true;
+    }
+  }
+
+  // bk_dur:{sessionId}:{minutes} — duration selected, now offer time slots
   if (callbackData.startsWith('bk_dur:')) {
     const parts = callbackData.split(':');
     if (parts.length >= 3) {
       const sessionId = parts[1];
       const minutes = parseInt(parts[2], 10);
-      await handleDurationSelected(chatId, sessionId, minutes, lang);
+      const draft = await getDraft(sessionId, chatId);
+      if (!draft) {
+        await sendMessage(chatId, t(lang, 'flow.draft_expired'));
+        return true;
+      }
+      // Deduplicate: ignore if step already advanced
+      if (draft.step !== 'select_duration') return true;
+      // Save duration and advance to select_time
+      await db.execute({
+        sql: `UPDATE booking_drafts SET duration_minutes = ?, step = 'select_time', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
+        args: [minutes, sessionId],
+      });
+      // Get slots filtered by chosen duration
+      const slots = await getAvailableSlots(draft.girlId, draft.date, minutes);
+      if (slots.length === 0) {
+        await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: draft.girlName }));
+        await expireDraft(sessionId);
+        return true;
+      }
+      await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, 0, lang);
       return true;
     }
   }
@@ -1435,7 +1614,7 @@ async function expireDraft(sessionId: string): Promise<void> {
 // Slot availability (reused logic from tool-handlers.checkAvailability)
 // ---------------------------------------------------------------------------
 
-export async function getAvailableSlots(girlId: number, date: string): Promise<string[]> {
+export async function getAvailableSlots(girlId: number, date: string, durationMinutes?: number): Promise<string[]> {
   // Use the same query as the calendar for consistency
   const calendarGirls = await getCalendarGirls(date);
   const girl = calendarGirls.find((g) => g.id === girlId);
@@ -1482,7 +1661,7 @@ export async function getAvailableSlots(girlId: number, date: string): Promise<s
     return { start: sh * 60 + sm, end: eh * 60 + em };
   });
 
-  // Generate free slots
+  // Generate free slots — dynamic gaps based on bookings + break, rounded to 15min
   const [startH, startM] = shiftStart.split(':').map(Number);
   const [endH, endM] = shiftEnd.split(':').map(Number);
   const shiftStartMin = startH * 60 + startM + config.startOffset; // Apply booking_start_offset
@@ -1493,23 +1672,39 @@ export async function getAvailableSlots(girlId: number, date: string): Promise<s
   const now = getPragueNow();
   const currentMin = date === today ? now.getHours() * 60 + now.getMinutes() + 30 : 0; // +30min buffer
 
-  // Minimum bookable duration for this girl (Emily: 60, default: 30)
-  const minDuration = config.allowedDurations
-    ? Math.min(...config.allowedDurations)
-    : 30;
+  // Use explicit duration if provided (new flow: duration chosen before time),
+  // otherwise fall back to minimum bookable duration for slot existence check
+  const minDuration = durationMinutes
+    ?? (config.allowedDurations ? Math.min(...config.allowedDurations) : 30);
+
+  // Sort blocked ranges by start time
+  const sortedBlocked = [...blockedRanges].sort((a, b) => a.start - b.start);
+
+  // Build candidate start times: shift start, then after each booking ends + break (rounded to 15min)
+  const candidates = new Set<number>();
+  // Shift start (rounded up to 15min)
+  const roundedShiftStart = Math.ceil(shiftStartMin / 15) * 15;
+  candidates.add(roundedShiftStart);
+  // After each blocked range: end + break, rounded up to 15min
+  for (const b of sortedBlocked) {
+    const afterBlock = Math.ceil((b.end + config.breakMinutes) / 15) * 15;
+    candidates.add(afterBlock);
+  }
 
   const freeSlots: string[] = [];
-  for (let m = shiftStartMin; m < shiftEndMin; m += 30) {
-    const isBlocked = blockedRanges.some(b => m < b.end + config.breakMinutes && m + 30 > b.start - config.breakMinutes);
-    if (isBlocked || m < currentMin) continue;
+  for (const m of [...candidates].sort((a, b) => a - b)) {
+    if (m < currentMin) continue;
+    if (m >= shiftEndMin) continue;
+
+    // Check not inside a blocked range (including break)
+    const isBlocked = sortedBlocked.some(b => m < b.end + config.breakMinutes && m + minDuration > b.start);
+    if (isBlocked) continue;
 
     // Check if minimum duration fits before shift end (+30min overflow tolerance)
     if (m + minDuration > shiftEndMin + 30) continue;
 
-    // Check if minimum duration + break fits before next blocked range
-    const nextBlock = blockedRanges
-      .filter(b => b.start > m)
-      .sort((a, b) => a.start - b.start)[0];
+    // Check if minimum duration fits before next blocked range
+    const nextBlock = sortedBlocked.find(b => b.start > m);
     if (nextBlock && m + minDuration + config.breakMinutes > nextBlock.start) continue;
 
     freeSlots.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
