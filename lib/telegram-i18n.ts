@@ -129,6 +129,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'btn.yes': '\u2705 Ano',
     'btn.no_next': '\u274C Ne, dalsi',
     'btn.yes_coming': '\u2705 Ano, prijdu',
+    'btn.book': 'Rezervovat',
+    'btn.notify_me': '\u{1F514} Upozornit me',
 
     // caption
     'caption.age': '{age} let',
@@ -144,6 +146,11 @@ const translations: Record<Lang, Record<string, string>> = {
     'confirm.success': 'potvrzeno! Tesime se na tebe!',
     'confirm.not_found': 'Rezervace nenalezena.',
     'cancel.client_done': 'Rezervace zrusena. Napis kdykoliv pro novou rezervaci \u{1F60A}',
+
+    // waitlist
+    'flow.interest_registered': '\u{1F514} Upozornime te, az se uvolni termin u {name} na {date}.',
+    'flow.interest_already': 'Uz te mame v seznamu. Ozvu se, az se neco uvolni.',
+    'flow.slot_freed_cancel': '\u{1F525} Uvolnil se termin!',
 
     // deep-link
     'deeplink.invalid': 'Odkaz neni platny. Napiste nam a pomuzeme vam.',
@@ -231,6 +238,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'btn.yes': '\u2705 Yes',
     'btn.no_next': '\u274C No, next',
     'btn.yes_coming': '\u2705 Yes, I\'m coming',
+    'btn.book': 'Book',
+    'btn.notify_me': '\u{1F514} Notify me',
 
     // caption
     'caption.age': '{age} y.o.',
@@ -246,6 +255,11 @@ const translations: Record<Lang, Record<string, string>> = {
     'confirm.success': 'confirmed! We look forward to seeing you!',
     'confirm.not_found': 'Reservation not found.',
     'cancel.client_done': 'Reservation cancelled. Write anytime for a new booking \u{1F60A}',
+
+    // waitlist
+    'flow.interest_registered': '\u{1F514} We\'ll notify you when a slot opens for {name} on {date}.',
+    'flow.interest_already': 'You\'re already on the list. I\'ll let you know when something opens up.',
+    'flow.slot_freed_cancel': '\u{1F525} A slot has opened up!',
 
     // deep-link
     'deeplink.invalid': 'Invalid link. Contact us and we\'ll help you.',
@@ -333,6 +347,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'btn.yes': '\u2705 Так',
     'btn.no_next': '\u274C Ні, наступний',
     'btn.yes_coming': '\u2705 Так, прийду',
+    'btn.book': '\u0417\u0430\u0431\u0440\u043E\u043D\u044E\u0432\u0430\u0442\u0438',
+    'btn.notify_me': '\u{1F514} \u0421\u043F\u043E\u0432\u0456\u0441\u0442\u0438\u0442\u0438 \u043C\u0435\u043D\u0435',
 
     // caption
     'caption.age': '{age} років',
@@ -348,6 +364,11 @@ const translations: Record<Lang, Record<string, string>> = {
     'confirm.success': 'підтверджено! Чекаємо на вас!',
     'confirm.not_found': 'Бронювання не знайдено.',
     'cancel.client_done': 'Бронювання скасовано. Напишіть будь-коли для нового бронювання \u{1F60A}',
+
+    // waitlist
+    'flow.interest_registered': '\u{1F514} Ми повідомимо вас, коли звільниться слот у {name} на {date}.',
+    'flow.interest_already': 'Ви вже в списку. Повідомимо вас.',
+    'flow.slot_freed_cancel': '\u{1F525} Звільнився час!',
 
     // deep-link
     'deeplink.invalid': 'Посилання недійсне. Напишіть нам і ми допоможемо.',

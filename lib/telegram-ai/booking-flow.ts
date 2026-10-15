@@ -139,7 +139,14 @@ export async function startBookingFlow(
   // Check any slots exist at all (minimum duration check)
   const slotsCheck = await getAvailableSlots(girlId, date);
   if (slotsCheck.length === 0) {
-    throw new Error(t(lang, 'error.no_slots', { name: girlName, date }));
+    await sendMessage(chatId, t(lang, 'error.no_slots', { name: girlName, date }), {
+      replyMarkup: {
+        inline_keyboard: [[
+          { text: t(lang, 'btn.notify_me'), callback_data: `bk_interest:${girlId}:${date}` },
+        ]],
+      },
+    });
+    return { sessionId: '', girlName, date, message: `No slots available for ${girlName} on ${date}` };
   }
 
   // Create session — start with duration selection
@@ -197,11 +204,17 @@ async function showDurationSelection(
     });
     const slots = await getAvailableSlots(girlId, date, autoDir);
     if (slots.length === 0) {
-      await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }));
+      await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }), {
+        replyMarkup: {
+          inline_keyboard: [[
+            { text: t(lang, 'btn.notify_me'), callback_data: `bk_interest:${girlId}:${date}` },
+          ]],
+        },
+      });
       await expireDraft(sessionId);
       return;
     }
-    await offerSlot(chatId, sessionId, girlName, date, slots, 0, lang);
+    await offerSlot(chatId, sessionId, girlName, date, slots, 0, lang, girlId);
     return;
   }
 
@@ -213,7 +226,13 @@ async function showDurationSelection(
   }
 
   if (filteredDurations.length === 0) {
-    await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }));
+    await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }), {
+      replyMarkup: {
+        inline_keyboard: [[
+          { text: t(lang, 'btn.notify_me'), callback_data: `bk_interest:${girlId}:${date}` },
+        ]],
+      },
+    });
     await expireDraft(sessionId);
     return;
   }
@@ -227,11 +246,17 @@ async function showDurationSelection(
     });
     const slots = await getAvailableSlots(girlId, date, dur);
     if (slots.length === 0) {
-      await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }));
+      await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }), {
+        replyMarkup: {
+          inline_keyboard: [[
+            { text: t(lang, 'btn.notify_me'), callback_data: `bk_interest:${girlId}:${date}` },
+          ]],
+        },
+      });
       await expireDraft(sessionId);
       return;
     }
-    await offerSlot(chatId, sessionId, girlName, date, slots, 0, lang);
+    await offerSlot(chatId, sessionId, girlName, date, slots, 0, lang, girlId);
     return;
   }
 
@@ -277,9 +302,17 @@ async function offerSlot(
   slots: string[],
   index: number,
   lang: Lang = 'cs',
+  girlId?: number,
 ): Promise<void> {
   if (index >= slots.length) {
-    await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }));
+    const msgOpts = girlId ? {
+      replyMarkup: {
+        inline_keyboard: [[
+          { text: t(lang, 'btn.notify_me'), callback_data: `bk_interest:${girlId}:${date}` },
+        ]],
+      },
+    } : undefined;
+    await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: girlName }), msgOpts);
     await expireDraft(sessionId);
     return;
   }
@@ -341,7 +374,7 @@ export async function handleTimeSelected(
     const slots = await getAvailableSlots(draft.girlId, draft.date);
     const rejectedIndex = slots.indexOf(time);
     await sendMessage(chatId, t(lang, 'flow.no_time_for_program', { time }));
-    await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, rejectedIndex >= 0 ? rejectedIndex + 1 : 0, lang);
+    await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, rejectedIndex >= 0 ? rejectedIndex + 1 : 0, lang, draft.girlId);
     return;
   }
 
@@ -1025,7 +1058,7 @@ async function handleBack(
     });
 
     const slots = await getAvailableSlots(draft.girlId, draft.date, draft.durationMinutes ?? undefined);
-    await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, 0, lang);
+    await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, 0, lang, draft.girlId);
     return;
   }
 
@@ -1082,62 +1115,112 @@ export function buildGirlCaption(opts: {
  * No AI involved, pure button flow.
  */
 export async function showAvailableGirlsMenu(chatId: string, lang: Lang = 'cs'): Promise<void> {
-  // Show ALL active girls (not just today's shift) so clients can book for any day
-  const girlsResult = await db.execute({
-    sql: `SELECT g.id, g.name, g.age, g.rating, g.reviews_count, g.girl_type,
-                 (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
-          FROM girls g WHERE g.status = 'active' ORDER BY g.name ASC`,
-    args: [],
-  });
+  const today = getPragueToday();
+  const todayDate = new Date(today + 'T12:00:00');
 
-  if (girlsResult.rows.length === 0) {
+  // Scan next 7 days — collect which girls actually work this week
+  const girlShifts = new Map<number, {
+    name: string;
+    photoUrl: string | null;
+    girlType: string;
+    locationName: string | null;
+    shifts: { date: string; label: string; start: string; end: string }[];
+  }>();
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(todayDate.getTime() + i * 86400000);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    const calGirls = await getCalendarGirls(dateStr);
+    for (const girl of calGirls) {
+      if (!girl.isWorking || !girl.shiftStart || !girl.shiftEnd) continue;
+
+      if (!girlShifts.has(girl.id)) {
+        girlShifts.set(girl.id, {
+          name: girl.name,
+          photoUrl: girl.photoUrl,
+          girlType: girl.girlType,
+          locationName: girl.locationName,
+          shifts: [],
+        });
+      }
+
+      girlShifts.get(girl.id)!.shifts.push({
+        date: dateStr,
+        label: formatDate(dateStr, lang),
+        start: girl.shiftStart,
+        end: girl.shiftEnd,
+      });
+    }
+  }
+
+  if (girlShifts.size === 0) {
     await sendMessage(chatId, t(lang, 'flow.no_girls_today'));
     return;
   }
 
-  const girls: Array<{ id: number; name: string }> = [];
+  // Get age + rating for each girl
+  const extraInfo = new Map<number, { age: number; rating: number | null; reviewsCount: number }>();
+  for (const gid of girlShifts.keys()) {
+    const res = await db.execute({
+      sql: 'SELECT age, rating, reviews_count FROM girls WHERE id = ? LIMIT 1',
+      args: [gid],
+    });
+    if (res.rows.length > 0) {
+      extraInfo.set(gid, {
+        age: Number(res.rows[0].age),
+        rating: res.rows[0].rating ? Number(res.rows[0].rating) : null,
+        reviewsCount: Number(res.rows[0].reviews_count ?? 0),
+      });
+    }
+  }
 
-  for (const row of girlsResult.rows) {
-    const girlId = Number(row.id);
-    const name = String(row.name);
-    const photoUrl = row.photo_url ? String(row.photo_url) : null;
-    if (!photoUrl) continue;
+  // Send each girl as a card: photo + schedule + booking button
+  let sentCount = 0;
+  for (const [girlId, info] of girlShifts) {
+    if (!info.photoUrl) continue;
 
-    const girlType = row.girl_type ? String(row.girl_type) : 'apartment';
-    const isEscort = girlType === 'escort_only' || girlType === 'both';
+    const extra = extraInfo.get(girlId);
+    const isEscort = info.girlType === 'escort_only' || info.girlType === 'both';
 
-    let caption = `<b>${name}</b>, ${t(lang, 'caption.age', { age: Number(row.age) })}`;
-    if (row.rating) {
-      caption += ` | \u2B50 ${Number(row.rating)}/5`;
-      if (Number(row.reviews_count) > 0) caption += ` (${t(lang, 'caption.reviews', { count: Number(row.reviews_count) })})`;
+    // Caption: name, age, rating
+    let caption = `<b>${info.name}</b>`;
+    if (extra) {
+      caption += `, ${t(lang, 'caption.age', { age: extra.age })}`;
+      if (extra.rating) {
+        caption += ` | \u2B50 ${extra.rating}/5`;
+        if (extra.reviewsCount > 0) caption += ` (${t(lang, 'caption.reviews', { count: extra.reviewsCount })})`;
+      }
     }
     if (isEscort) {
       caption += ` | ${t(lang, 'caption.escort')}`;
     }
 
-    await sendPhoto(chatId, photoUrl, { caption }).catch(() => {});
-    girls.push({ id: girlId, name });
+    // Schedule this week
+    caption += '\n';
+    for (const shift of info.shifts) {
+      caption += `\n\u{1F4C5} ${shift.label} ${shift.start}\u2013${shift.end}`;
+    }
+    if (info.locationName && !isEscort) {
+      caption += `\n\u{1F4CD} ${info.locationName}`;
+    }
+
+    // Send photo with inline booking button
+    await sendPhoto(chatId, info.photoUrl, {
+      caption,
+      replyMarkup: {
+        inline_keyboard: [[
+          { text: `\u{1F4C5} ${t(lang, 'btn.book')}`, callback_data: `bk_girl:${girlId}` },
+        ]],
+      },
+    }).catch(() => {});
+
+    sentCount++;
   }
 
-  if (girls.length === 0) {
+  if (sentCount === 0) {
     await sendMessage(chatId, t(lang, 'flow.no_girls_today'));
-    return;
   }
-
-  // Single girl → skip selection, go straight to date/time
-  if (girls.length === 1) {
-    await handleGirlSelectedCallback(chatId, girls[0].id, lang);
-    return;
-  }
-
-  // Multiple girls → show selection buttons
-  const keyboard = girls.map((g) => [{
-    text: `\u{1F4C5} ${g.name}`,
-    callback_data: `bk_girl:${g.id}`,
-  }]);
-  await sendMessage(chatId, t(lang, 'flow.who_choose'), {
-    replyMarkup: { inline_keyboard: keyboard },
-  });
 }
 
 /**
@@ -1216,11 +1299,12 @@ export async function handleDateSelectedCallback(
   if (!ctx.isRegistered || !ctx.clientId) {
     // Store intent so after registration we can continue
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    const sessionId = `reg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     await db.execute({
       sql: `INSERT INTO booking_drafts
-              (telegram_chat_id, girl_id, date, channel, step, expires_at)
-            VALUES (?, ?, ?, 'telegram', 'awaiting_name', ?)`,
-      args: [chatId, girlId, date, expiresAt],
+              (telegram_chat_id, girl_id, date, channel, session_id, step, expires_at)
+            VALUES (?, ?, ?, 'telegram', ?, 'awaiting_name', ?)`,
+      args: [chatId, girlId, date, sessionId, expiresAt],
     });
     await sendMessage(chatId, t(lang, 'flow.first_visit_name'));
     return;
@@ -1331,6 +1415,17 @@ export async function handleBookingCallback(
     }
   }
 
+  // bk_interest:{girlId}:{date} — register interest in a girl/date combo
+  if (callbackData.startsWith('bk_interest:')) {
+    const parts = callbackData.split(':');
+    if (parts.length >= 3) {
+      const girlId = parseInt(parts[1], 10);
+      const date = parts[2];
+      await handleInterestRegistration(chatId, girlId, date, lang);
+      return true;
+    }
+  }
+
   // bk_cancel_pre — cancel before draft
   if (callbackData === 'bk_cancel_pre') {
     await sendMessage(chatId, t(lang, 'flow.cancelled_pre'));
@@ -1410,7 +1505,7 @@ export async function handleBookingCallback(
       // Re-fetch fresh slots filtered by stored duration and find next one after the rejected time
       const slots = await getAvailableSlots(draft.girlId, draft.date, draft.durationMinutes ?? undefined);
       const nextIndex = slots.findIndex((s) => s > rejectedTime);
-      await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, nextIndex >= 0 ? nextIndex : slots.length, lang);
+      await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, nextIndex >= 0 ? nextIndex : slots.length, lang, draft.girlId);
       return true;
     }
   }
@@ -1436,11 +1531,17 @@ export async function handleBookingCallback(
       // Get slots filtered by chosen duration
       const slots = await getAvailableSlots(draft.girlId, draft.date, minutes);
       if (slots.length === 0) {
-        await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: draft.girlName }));
+        await sendMessage(chatId, t(lang, 'flow.no_more_slots', { name: draft.girlName }), {
+          replyMarkup: {
+            inline_keyboard: [[
+              { text: t(lang, 'btn.notify_me'), callback_data: `bk_interest:${draft.girlId}:${draft.date}` },
+            ]],
+          },
+        });
         await expireDraft(sessionId);
         return true;
       }
-      await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, 0, lang);
+      await offerSlot(chatId, sessionId, draft.girlName, draft.date, slots, 0, lang, draft.girlId);
       return true;
     }
   }
@@ -1542,9 +1643,11 @@ async function handleClientConfirm(chatId: string, bookingId: number, lang: Lang
 
 async function handleClientCancel(chatId: string, bookingId: number, lang: Lang = 'cs'): Promise<void> {
   const result = await db.execute({
-    sql: `SELECT b.id, b.status, bc.telegram_id
+    sql: `SELECT b.id, b.status, b.girl_id, b.date, b.start_time, b.end_time,
+                 g.name AS girl_name, bc.telegram_id
           FROM bookings_v2 b
           JOIN booking_clients bc ON bc.id = b.client_id
+          JOIN girls g ON g.id = b.girl_id
           WHERE b.id = ? AND bc.telegram_id = ?`,
     args: [bookingId, chatId],
   });
@@ -1554,7 +1657,8 @@ async function handleClientCancel(chatId: string, bookingId: number, lang: Lang 
     return;
   }
 
-  const status = String(result.rows[0].status);
+  const booking = result.rows[0];
+  const status = String(booking.status);
   if (status !== 'pending' && status !== 'confirmed') {
     await sendMessage(chatId, t(lang, 'status.booking_is', { label: t(lang, 'status.not_active') }));
     return;
@@ -1585,6 +1689,84 @@ async function handleClientCancel(chatId: string, bookingId: number, lang: Lang 
     entityId: bookingId,
     details: { chatId, source: 'client_self_cancel' },
   }).catch(() => {});
+
+  // ── Notify interested clients about freed slot ──────────────
+  try {
+    const girlId = Number(booking.girl_id);
+    const date = String(booking.date);
+    const startTime = String(booking.start_time).substring(0, 5);
+    const endTime = String(booking.end_time).substring(0, 5);
+    const girlName = String(booking.girl_name);
+
+    const interested = await db.execute({
+      sql: `SELECT DISTINCT bi.telegram_chat_id, bc.language
+            FROM booking_interest bi
+            LEFT JOIN booking_clients bc ON bc.telegram_id = bi.telegram_chat_id
+            WHERE bi.girl_id = ? AND bi.date = ?
+              AND bi.telegram_chat_id != ?
+              AND bi.created_at > datetime('now', '-7 days')`,
+      args: [girlId, date, chatId],
+    });
+
+    for (const intRow of interested.rows) {
+      const intChatId = String(intRow.telegram_chat_id);
+      const intLang = (intRow.language === 'en' || intRow.language === 'uk'
+        ? intRow.language : 'cs') as Lang;
+      sendMessage(intChatId, [
+        t(intLang, 'cron.freed_slot'),
+        '',
+        `\u{1F469} ${girlName}`,
+        `\u23F0 ${startTime}\u2013${endTime} (${formatDate(date, intLang)})`,
+        '',
+        t(intLang, 'cron.freed_slot_cta'),
+      ].join('\n')).catch(() => {});
+    }
+
+    // Cleanup interest records for this girl/date
+    await db.execute({
+      sql: `DELETE FROM booking_interest WHERE girl_id = ? AND date = ?`,
+      args: [girlId, date],
+    }).catch(() => {});
+  } catch { /* silent — cancel itself succeeded */ }
+}
+
+// ---------------------------------------------------------------------------
+// Waitlist — "Notify me" when no slots available
+// ---------------------------------------------------------------------------
+
+async function handleInterestRegistration(
+  chatId: string,
+  girlId: number,
+  date: string,
+  lang: Lang = 'cs',
+): Promise<void> {
+  // Deduplicate — check if already registered
+  const existing = await db.execute({
+    sql: `SELECT id FROM booking_interest
+          WHERE telegram_chat_id = ? AND girl_id = ? AND date = ?
+          LIMIT 1`,
+    args: [chatId, girlId, date],
+  });
+  if (existing.rows.length > 0) {
+    await sendMessage(chatId, t(lang, 'flow.interest_already'));
+    return;
+  }
+
+  // Get girl name for confirmation message
+  const girlRes = await db.execute({
+    sql: 'SELECT name FROM girls WHERE id = ? LIMIT 1',
+    args: [girlId],
+  });
+  const girlName = girlRes.rows[0]?.name ? String(girlRes.rows[0].name) : '???';
+
+  // Insert interest
+  await db.execute({
+    sql: `INSERT INTO booking_interest (telegram_chat_id, girl_id, date)
+          VALUES (?, ?, ?)`,
+    args: [chatId, girlId, date],
+  });
+
+  await sendMessage(chatId, t(lang, 'flow.interest_registered', { name: girlName, date: formatDate(date, lang) }));
 }
 
 // ---------------------------------------------------------------------------

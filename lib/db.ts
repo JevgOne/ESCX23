@@ -718,7 +718,7 @@ async function runMigrations(client: Client) {
           channel TEXT NOT NULL DEFAULT 'telegram' CHECK (channel IN ('telegram', 'whatsapp')),
           session_id TEXT NOT NULL UNIQUE,
           step TEXT NOT NULL DEFAULT 'select_girl'
-            CHECK (step IN ('select_girl', 'select_day', 'select_time', 'select_duration', 'confirm', 'enter_promo')),
+            CHECK (step IN ('select_girl', 'select_day', 'select_time', 'select_duration', 'confirm', 'enter_promo', 'awaiting_name')),
           discount_code_id INTEGER,
           expires_at DATETIME NOT NULL,
           is_converted INTEGER NOT NULL DEFAULT 0,
@@ -745,6 +745,46 @@ async function runMigrations(client: Client) {
     }
   } catch (e) {
     console.error('[db] booking_drafts migration error:', e);
+  }
+
+  // Expand booking_drafts CHECK to include 'awaiting_name' (for unregistered client registration flow)
+  try {
+    const awDone = await client.execute({ sql: `SELECT 1 FROM _migrations WHERE name = 'booking_drafts_awaiting_name' LIMIT 1`, args: [] });
+    if (awDone.rows.length === 0) {
+      const checkSql2 = await client.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='booking_drafts'");
+      const tableDef2 = String(checkSql2.rows[0]?.sql ?? '');
+      if (!tableDef2.includes("'awaiting_name'")) {
+        await client.execute(`ALTER TABLE booking_drafts RENAME TO booking_drafts_old3`);
+        await client.execute(`
+          CREATE TABLE booking_drafts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id INTEGER,
+            telegram_chat_id TEXT,
+            girl_id INTEGER,
+            date TEXT,
+            start_time TEXT,
+            end_time TEXT,
+            duration_minutes INTEGER,
+            channel TEXT NOT NULL DEFAULT 'telegram' CHECK (channel IN ('telegram', 'whatsapp')),
+            session_id TEXT NOT NULL UNIQUE,
+            step TEXT NOT NULL DEFAULT 'select_girl'
+              CHECK (step IN ('select_girl', 'select_day', 'select_time', 'select_duration', 'confirm', 'enter_promo', 'awaiting_name')),
+            discount_code_id INTEGER,
+            expires_at DATETIME NOT NULL,
+            is_converted INTEGER NOT NULL DEFAULT 0,
+            converted_to_id INTEGER,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (client_id) REFERENCES booking_clients(id)
+          )
+        `);
+        await client.execute(`INSERT INTO booking_drafts (id, client_id, telegram_chat_id, girl_id, date, start_time, end_time, duration_minutes, channel, session_id, step, discount_code_id, expires_at, is_converted, converted_to_id, created_at, updated_at) SELECT id, client_id, telegram_chat_id, girl_id, date, start_time, end_time, duration_minutes, channel, session_id, step, discount_code_id, expires_at, is_converted, converted_to_id, created_at, updated_at FROM booking_drafts_old3`);
+        await client.execute(`DROP TABLE booking_drafts_old3`);
+      }
+      await client.execute({ sql: `INSERT INTO _migrations (name) VALUES (?)`, args: ['booking_drafts_awaiting_name'] });
+    }
+  } catch (e) {
+    console.error('[db] booking_drafts_awaiting_name migration error:', e);
   }
 
   // Add discount columns to bookings_v2
