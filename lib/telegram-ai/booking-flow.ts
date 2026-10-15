@@ -596,14 +596,36 @@ export async function handleConfirm(
 
   // Create booking
   const bookingCode = generateBookingCode(draft.date);
+
+  // Compute confirmation_due_at = booking start - 2h (for pending bookings / cron reminders)
+  // Cron compares against new Date().toISOString() (UTC), so we store UTC ISO string.
+  // Use Intl to resolve Prague offset correctly (handles CET +01:00 / CEST +02:00).
+  const needsConfirmation = isNewClient ? 1 : 0;
+  const confirmationDueAt = (() => {
+    const [bh, bm] = draft.startTime!.split(':').map(Number);
+    // Get current Prague offset by comparing UTC and Prague representations of the booking date
+    const refDate = new Date(`${draft.date}T12:00:00Z`);
+    const pragueStr = refDate.toLocaleString('en-US', { timeZone: 'Europe/Prague' });
+    const pragueDate = new Date(pragueStr);
+    const offsetMs = pragueDate.getTime() - refDate.getTime();
+    // Booking start in UTC = Prague local time - offset
+    const bookingStartUtc = new Date(`${draft.date}T${String(bh).padStart(2, '0')}:${String(bm).padStart(2, '0')}:00Z`);
+    bookingStartUtc.setTime(bookingStartUtc.getTime() - offsetMs);
+    // Subtract 2 hours for confirmation deadline
+    bookingStartUtc.setTime(bookingStartUtc.getTime() - 2 * 60 * 60 * 1000);
+    return bookingStartUtc.toISOString();
+  })();
+
   const bookingResult = await db.execute({
     sql: `INSERT INTO bookings_v2 (
             client_id, girl_id, location_id, date, start_time, end_time, duration_minutes,
             booking_code, price, discount_code_id, discount_amount, points_earned,
-            status, source, channel, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            status, needs_confirmation, confirmation_due_at,
+            source, channel, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
     args: [draft.clientId, draft.girlId, locationId, draft.date, draft.startTime, draft.endTime, draft.durationMinutes,
-           bookingCode, finalPrice, draft.discountCodeId ?? null, discountAmount, finalPrice, bookingStatus],
+           bookingCode, finalPrice, draft.discountCodeId ?? null, discountAmount, finalPrice, bookingStatus,
+           needsConfirmation, confirmationDueAt],
   });
 
   const bookingId = Number(bookingResult.lastInsertRowid);
@@ -686,7 +708,14 @@ export async function handleConfirm(
       },
     });
   } else {
-    await sendMessage(chatId, msg);
+    // Confirmed bookings also get a cancel button
+    await sendMessage(chatId, msg, {
+      replyMarkup: {
+        inline_keyboard: [
+          [{ text: t(lang, 'btn.cancel_booking'), callback_data: `bk_remind_cancel:${bookingId}` }],
+        ],
+      },
+    });
   }
 
   // ── Notify operator(s) and girl about new booking ──────────────────
@@ -1156,7 +1185,7 @@ export async function handleGirlSelectedCallback(
     return;
   }
 
-  // Only 1 available date → skip date selection, go to time slots
+  // Only 1 available date → skip date selection, go to duration selection
   if (dates.length === 1) {
     await handleDateSelectedCallback(chatId, girlId, dates[0].date, lang);
     return;
@@ -1174,7 +1203,7 @@ export async function handleGirlSelectedCallback(
 }
 
 /**
- * Date selected via button → start time slot selection.
+ * Date selected via button → start booking flow (duration selection first, then time).
  */
 export async function handleDateSelectedCallback(
   chatId: string,
@@ -1525,18 +1554,19 @@ async function handleClientCancel(chatId: string, bookingId: number, lang: Lang 
     return;
   }
 
-  if (String(result.rows[0].status) !== 'pending') {
+  const status = String(result.rows[0].status);
+  if (status !== 'pending' && status !== 'confirmed') {
     await sendMessage(chatId, t(lang, 'status.booking_is', { label: t(lang, 'status.not_active') }));
     return;
   }
 
   await db.execute({
     sql: `UPDATE bookings_v2 SET status = 'cancelled_client',
-          cancel_reason = 'Klient zrusil pred potvrzenim',
+          cancel_reason = 'Klient zrusil pres Telegram',
           cancel_reason_encrypted = ?,
           cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-          WHERE id = ? AND status = 'pending'`,
-    args: [safeEncrypt('Klient zrusil pred potvrzenim'), bookingId],
+          WHERE id = ? AND status IN ('pending', 'confirmed')`,
+    args: [safeEncrypt('Klient zrusil pres Telegram'), bookingId],
   });
 
   // Release slot lock
