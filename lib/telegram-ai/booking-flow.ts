@@ -1086,7 +1086,7 @@ export async function showAvailableGirlsMenu(chatId: string, lang: Lang = 'cs'):
   const girlsResult = await db.execute({
     sql: `SELECT g.id, g.name, g.age, g.rating, g.reviews_count, g.girl_type,
                  (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1) AS photo_url
-          FROM girls g WHERE g.status = 'active' ORDER BY g.display_order ASC, g.name ASC`,
+          FROM girls g WHERE g.status = 'active' ORDER BY g.name ASC`,
     args: [],
   });
 
