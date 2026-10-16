@@ -216,6 +216,8 @@ const WEEK_VIEW_STYLES = `
   padding: 6px 10px;
   border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
   background: var(--bg-soft);
+  overflow: hidden;
+  min-width: 0;
 }
 .cal-wg-girl-av {
   width: 24px; height: 24px; border-radius: 50%;
@@ -227,11 +229,13 @@ const WEEK_VIEW_STYLES = `
   width: 24px; height: 24px; border-radius: 50%;
   object-fit: cover; display: block;
 }
-.cal-wg-girl-nm { font-size: 12px; font-weight: 600; }
+.cal-wg-girl-nm { font-size: 12px; font-weight: 600; white-space: nowrap; }
 .cal-wg-girl-loc {
-  display: inline-block; font-size: 11px; font-weight: 600;
+  display: inline-block; font-size: 9px; font-weight: 600;
   color: var(--blue); background: rgba(96,165,250,0.12);
-  padding: 1px 6px; border-radius: 4px; margin-top: 2px;
+  padding: 1px 5px; border-radius: 3px; margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .cal-wg-cell {
