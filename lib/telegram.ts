@@ -67,6 +67,33 @@ export async function sendPhoto(
   return true;
 }
 
+export async function sendPhotoBuffer(
+  chatId: string | number,
+  photoBuffer: Buffer,
+  opts?: { caption?: string; parseMode?: 'HTML' | 'Markdown'; replyMarkup?: unknown },
+): Promise<boolean> {
+  const formData = new FormData();
+  formData.append('chat_id', String(chatId));
+  formData.append('photo', new Blob([new Uint8Array(photoBuffer)], { type: 'image/png' }), 'girls.png');
+  if (opts?.caption) {
+    formData.append('caption', opts.caption);
+    formData.append('parse_mode', opts.parseMode ?? 'HTML');
+  }
+  if (opts?.replyMarkup) {
+    formData.append('reply_markup', JSON.stringify(opts.replyMarkup));
+  }
+
+  const res = await fetch(`${API}/sendPhoto`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    console.error('[telegram] sendPhotoBuffer failed:', await res.text());
+    return false;
+  }
+  return true;
+}
+
 export async function editMessageText(
   chatId: string | number,
   messageId: number,

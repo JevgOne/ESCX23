@@ -16,7 +16,8 @@
  */
 
 import { db } from '../db';
-import { sendMessage, sendPhoto } from '../telegram';
+import { sendMessage, sendPhoto, sendPhotoBuffer } from '../telegram';
+import { generateGirlsComposite } from './girls-composite';
 import { buildClientContext } from './context';
 import { logAudit } from '../audit';
 import { createBookingNotification } from '../booking-notifications';
@@ -1159,68 +1160,74 @@ export async function showAvailableGirlsMenu(chatId: string, lang: Lang = 'cs'):
     return;
   }
 
-  // Get age + rating for each girl
-  const extraInfo = new Map<number, { age: number; rating: number | null; reviewsCount: number }>();
+  // Get age + height + weight + rating for each girl
+  const extraInfo = new Map<number, { age: number; height: number | null; weight: number | null; rating: number | null; reviewsCount: number }>();
   for (const gid of girlShifts.keys()) {
     const res = await db.execute({
-      sql: 'SELECT age, rating, reviews_count FROM girls WHERE id = ? LIMIT 1',
+      sql: 'SELECT age, height, weight, rating, reviews_count FROM girls WHERE id = ? LIMIT 1',
       args: [gid],
     });
     if (res.rows.length > 0) {
       extraInfo.set(gid, {
         age: Number(res.rows[0].age),
+        height: res.rows[0].height ? Number(res.rows[0].height) : null,
+        weight: res.rows[0].weight ? Number(res.rows[0].weight) : null,
         rating: res.rows[0].rating ? Number(res.rows[0].rating) : null,
         reviewsCount: Number(res.rows[0].reviews_count ?? 0),
       });
     }
   }
 
-  // Send each girl as a card: photo + schedule + booking button
-  let sentCount = 0;
+  // Build girl cards for composite image
+  const girlCards: Array<{
+    girlId: number;
+    name: string;
+    photoUrl: string;
+    age: number;
+    height: number | null;
+    weight: number | null;
+    rating: number | null;
+    reviewsCount: number;
+  }> = [];
+
   for (const [girlId, info] of girlShifts) {
     if (!info.photoUrl) continue;
-
     const extra = extraInfo.get(girlId);
-    const isEscort = info.girlType === 'escort_only' || info.girlType === 'both';
-
-    // Caption: name, age, rating
-    let caption = `<b>${info.name}</b>`;
-    if (extra) {
-      caption += `, ${t(lang, 'caption.age', { age: extra.age })}`;
-      if (extra.rating) {
-        caption += ` | \u2B50 ${extra.rating}/5`;
-        if (extra.reviewsCount > 0) caption += ` (${t(lang, 'caption.reviews', { count: extra.reviewsCount })})`;
-      }
-    }
-    if (isEscort) {
-      caption += ` | ${t(lang, 'caption.escort')}`;
-    }
-
-    // Schedule this week
-    caption += '\n';
-    for (const shift of info.shifts) {
-      caption += `\n\u{1F4C5} ${shift.label} ${shift.start}\u2013${shift.end}`;
-    }
-    if (info.locationName && !isEscort) {
-      caption += `\n\u{1F4CD} ${info.locationName}`;
-    }
-
-    // Send photo with inline booking button
-    await sendPhoto(chatId, info.photoUrl, {
-      caption,
-      replyMarkup: {
-        inline_keyboard: [[
-          { text: `\u{1F4C5} ${t(lang, 'btn.book')}`, callback_data: `bk_girl:${girlId}` },
-        ]],
-      },
-    }).catch(() => {});
-
-    sentCount++;
+    girlCards.push({
+      girlId,
+      name: info.name,
+      photoUrl: info.photoUrl,
+      age: extra?.age ?? 0,
+      height: extra?.height ?? null,
+      weight: extra?.weight ?? null,
+      rating: extra?.rating ?? null,
+      reviewsCount: extra?.reviewsCount ?? 0,
+    });
   }
 
-  if (sentCount === 0) {
+  if (girlCards.length === 0) {
     await sendMessage(chatId, t(lang, 'flow.no_girls_today'));
+    return;
   }
+
+  // Generate composite image
+  const composite = await generateGirlsComposite(girlCards);
+
+  // Build inline keyboard — 2 girls per row
+  const buttons: Array<Array<{ text: string; callback_data: string }>> = [];
+  for (let i = 0; i < girlCards.length; i += 2) {
+    const row: Array<{ text: string; callback_data: string }> = [];
+    row.push({ text: `💋 ${girlCards[i].name}`, callback_data: `bk_girl:${girlCards[i].girlId}` });
+    if (i + 1 < girlCards.length) {
+      row.push({ text: `💋 ${girlCards[i + 1].name}`, callback_data: `bk_girl:${girlCards[i + 1].girlId}` });
+    }
+    buttons.push(row);
+  }
+
+  await sendPhotoBuffer(chatId, composite, {
+    caption: `<b>\u2728 ${t(lang, 'flow.choose_girl')}</b>`,
+    replyMarkup: { inline_keyboard: buttons },
+  });
 }
 
 /**
