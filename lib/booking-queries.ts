@@ -66,7 +66,7 @@ export async function getCalendarGirls(date: string): Promise<CalendarGirl[]> {
         g.girl_type,
         COALESCE(
           (SELECT url FROM girl_photos WHERE girl_id = g.id AND is_primary = 1 LIMIT 1),
-          (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY sort_order, id LIMIT 1)
+          (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY id LIMIT 1)
         ) AS photo_url,
         gs.start_time AS shift_start,
         gs.end_time AS shift_end,
