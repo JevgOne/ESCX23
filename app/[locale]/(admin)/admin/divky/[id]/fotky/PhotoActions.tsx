@@ -48,7 +48,7 @@ export default function PhotoActions({ photoId, girlId, isPrimary, isSecondary, 
           {loading === 'setPrimary' ? '…' : '① Hlavní'}
         </button>
       )}
-      {!isSecondary && (
+      {!isSecondary && !isPrimary && (
         <button
           onClick={() => handleAction('setSecondary')}
           disabled={loading !== null}
