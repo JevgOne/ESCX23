@@ -2,27 +2,49 @@
  * Generate a composite image with Instagram-style circular profile photos + names.
  * Uses sharp for image processing. Output: PNG Buffer.
  *
- * Names are rendered via sharp's text API (Pango) — works on serverless
- * unlike SVG text which lacks fonts on Vercel.
+ * Font is bundled (Inter Bold TTF) and written to /tmp/ at runtime
+ * because Vercel serverless has no system fonts for text rendering.
  */
 
 import sharp from 'sharp';
+import { readFileSync, existsSync, writeFileSync, copyFileSync } from 'fs';
+import path from 'path';
 
 // Layout constants
 const COLUMNS = 4;
 const PHOTO_DIAMETER = 130;
 const RING_WIDTH = 4;
 const RING_DIAMETER = PHOTO_DIAMETER + RING_WIDTH * 2;
-const NAME_HEIGHT = 28;
+const NAME_HEIGHT = 30;
 const CELL_WIDTH = RING_DIAMETER + 20;
 const CELL_HEIGHT = RING_DIAMETER + NAME_HEIGHT + 8;
 const PADDING = 16;
 const RING_COLOR = '#c850c0';
 const BG_R = 26, BG_G = 26, BG_B = 46; // #1a1a2e
 
+// Font paths
+const FONT_SRC = path.join(process.cwd(), 'lib', 'fonts', 'Inter-Bold.ttf');
+const FONT_TMP = '/tmp/Inter-Bold.ttf';
+
 interface GirlPhoto {
   name: string;
   photoUrl: string;
+}
+
+/**
+ * Ensure the bundled font is available at a writable path.
+ * On Vercel, process.cwd() files may not be readable by libvips,
+ * so we copy to /tmp/ which is always writable.
+ */
+function ensureFont(): string {
+  if (existsSync(FONT_TMP)) return FONT_TMP;
+  try {
+    copyFileSync(FONT_SRC, FONT_TMP);
+    return FONT_TMP;
+  } catch {
+    // Fallback: try source directly (works locally)
+    return FONT_SRC;
+  }
 }
 
 function createCircleMask(size: number): Buffer {
@@ -38,19 +60,14 @@ function createRingSvg(): Buffer {
   );
 }
 
-function escapeMarkup(text: string): string {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-/**
- * Render a name as a small PNG image using sharp's Pango text API.
- */
-async function renderName(name: string, maxWidth: number): Promise<Buffer> {
+async function renderName(name: string, fontPath: string, maxWidth: number): Promise<Buffer> {
   return sharp({
     text: {
-      text: `<span foreground="white" font_desc="Sans Bold 13">${escapeMarkup(name)}</span>`,
+      text: name,
+      fontfile: fontPath,
+      font: 'Inter',
+      dpi: 150,
       rgba: true,
-      dpi: 72,
       width: maxWidth,
       align: 'centre',
     },
@@ -84,6 +101,8 @@ async function fetchAndCropCircle(url: string): Promise<Buffer | null> {
 export async function generateGirlsComposite(
   girls: GirlPhoto[],
 ): Promise<Buffer> {
+  const fontPath = ensureFont();
+
   // Fetch all photos in parallel
   const results = await Promise.all(
     girls.map(async (g) => {
@@ -132,7 +151,7 @@ export async function generateGirlsComposite(
 
     // Name text below photo
     try {
-      const nameBuf = await renderName(valid[i].name, CELL_WIDTH);
+      const nameBuf = await renderName(valid[i].name, fontPath, CELL_WIDTH);
       const nameMeta = await sharp(nameBuf).metadata();
       const nameWidth = nameMeta.width ?? CELL_WIDTH;
       composites.push({
@@ -140,8 +159,8 @@ export async function generateGirlsComposite(
         left: Math.round(centerX - nameWidth / 2),
         top: cellY + RING_DIAMETER + 6,
       });
-    } catch {
-      // If Pango text fails, skip name — photo is still shown
+    } catch (err) {
+      console.error('[girls-composite] Name render failed:', valid[i].name, err);
     }
   }
 

@@ -11,6 +11,10 @@ const config: NextConfig = {
       bodySizeLimit: '12mb',
     },
   },
+  outputFileTracingIncludes: {
+    '/api/telegram': ['./lib/fonts/**/*'],
+    '/api/telegram/route': ['./lib/fonts/**/*'],
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
