@@ -17,6 +17,7 @@ import ClientNotes from '@/components/booking/ClientNotes';
 import ClientTrustActions from '@/components/booking/ClientTrustActions';
 import ContactSection from '@/components/booking/ContactSection';
 import ClientDuplicates from '@/components/booking/ClientDuplicates';
+import { visitsUntilNextDiscount } from '@/lib/booking-loyalty';
 
 export const dynamic = 'force-dynamic';
 
@@ -170,6 +171,10 @@ export default async function ClientDetailPage({ params }: Props) {
   const totalAttempts = client.totalVisits + client.noShowCount;
   const reliabilityPct = totalAttempts > 0 ? Math.round((client.totalVisits / totalAttempts) * 100) : 100;
 
+  // Loyalty discount info
+  const untilDiscount = visitsUntilNextDiscount(client.totalVisits);
+  const discountAmount = client.trustLevel === 'vip' ? 500 : client.trustLevel === 'regular' ? 250 : 0;
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
@@ -283,6 +288,29 @@ export default async function ClientDetailPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {/* ─── LOYALTY DISCOUNT INFO ─── */}
+      {discountAmount > 0 && (
+        <div className="mc-loyalty-bar">
+          <div className="mc-loyalty-icon">🎁</div>
+          <div className="mc-loyalty-info">
+            <span className="mc-loyalty-text">
+              Loyalty sleva {discountAmount} Kc kazdou 5. navstevu
+            </span>
+            <span className="mc-loyalty-next">
+              {untilDiscount === 0
+                ? 'Sleva prave aktivni!'
+                : `Dalsi sleva za ${untilDiscount} ${untilDiscount === 1 ? 'navstevu' : untilDiscount < 5 ? 'navstevy' : 'navstev'}`
+              }
+            </span>
+          </div>
+          <div className="mc-loyalty-progress">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className={`mc-loyalty-dot${(5 - untilDiscount) >= i ? ' filled' : ''}`} />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mc-layout">
         {/* ─── LEFT COLUMN ─── */}
@@ -925,6 +953,31 @@ const STYLES = `
 .mc-timeline-girl { font-weight: 600; color: var(--coral); }
 .mc-timeline-dur { color: var(--dim); }
 .mc-timeline-points { margin-left: auto; font-weight: 700; color: #a78bfa; font-size: 11px; }
+
+/* ─── Loyalty bar ─── */
+.mc-loyalty-bar {
+  display: flex; align-items: center; gap: 14px;
+  max-width: 1100px; margin: 0 auto 20px;
+  background: linear-gradient(135deg, rgba(74,222,128,0.06), rgba(251,191,36,0.04));
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: 14px; padding: 14px 18px;
+}
+.mc-loyalty-icon { font-size: 24px; flex-shrink: 0; }
+.mc-loyalty-info { flex: 1; min-width: 0; }
+.mc-loyalty-text { font-size: 13px; font-weight: 600; color: var(--text); display: block; }
+.mc-loyalty-next { font-size: 11px; color: var(--dim); margin-top: 2px; display: block; }
+.mc-loyalty-progress { display: flex; gap: 4px; flex-shrink: 0; }
+.mc-loyalty-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(168,156,176,0.15);
+  border: 1.5px solid rgba(168,156,176,0.2);
+  transition: all 0.2s;
+}
+.mc-loyalty-dot.filled {
+  background: #4ade80;
+  border-color: #22c55e;
+  box-shadow: 0 0 6px rgba(74,222,128,0.3);
+}
 
 /* ─── Responsive ─── */
 @media (max-width: 900px) {

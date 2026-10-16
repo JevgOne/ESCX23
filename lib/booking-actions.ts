@@ -351,8 +351,9 @@ export async function createBooking(input: CreateBookingInput): Promise<{ id: nu
   });
   const price = priceRes.rows[0] ? Number(priceRes.rows[0].price) : null;
 
-  // Points = price (1 CZK = 1 point)
-  const points = price ?? 0;
+  // Points based on duration
+  const { getPointsForDuration } = await import('./booking-loyalty');
+  const points = getPointsForDuration(input.durationMinutes);
 
   // Get location from girl's schedule for this date
   const d = new Date(input.date + 'T12:00:00');

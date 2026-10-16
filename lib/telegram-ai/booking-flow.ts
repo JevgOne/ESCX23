@@ -617,6 +617,10 @@ export async function handleConfirm(
   }
   const finalPrice = Math.max(0, price - discountAmount);
 
+  // Points based on duration (not price)
+  const { getPointsForDuration } = await import('../booking-loyalty');
+  const bookingPoints = getPointsForDuration(draft.durationMinutes!);
+
   // Get location_id from girl's schedule for this date
   const bookingDow = (() => { const js = new Date(draft.date + 'T12:00:00').getDay(); return js === 0 ? 6 : js - 1; })();
   const locRes = await db.execute({
@@ -658,7 +662,7 @@ export async function handleConfirm(
             source, channel, created_at, updated_at
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'booking_flow', 'telegram', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
     args: [draft.clientId, draft.girlId, locationId, draft.date, draft.startTime, draft.endTime, draft.durationMinutes,
-           bookingCode, finalPrice, draft.discountCodeId ?? null, discountAmount, finalPrice, bookingStatus,
+           bookingCode, finalPrice, draft.discountCodeId ?? null, discountAmount, bookingPoints, bookingStatus,
            needsConfirmation, confirmationDueAt],
   });
 
