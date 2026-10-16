@@ -30,6 +30,32 @@ export async function GET(request: Request) {
   let bookingsCancelled = 0;
   let interestNotified = 0;
 
+  // ── Step 0: Expire all past-date pending/unconfirmed bookings ────
+  // Catch any bookings from previous days that were never expired
+  const pastExpired = await db.execute({
+    sql: `UPDATE bookings_v2
+          SET status = 'expired',
+              cancel_reason = 'Automaticky expirovano - datum v minulosti',
+              cancel_reason_encrypted = ?,
+              cancelled_at = CURRENT_TIMESTAMP,
+              updated_at = CURRENT_TIMESTAMP
+          WHERE status IN ('pending', 'confirmed')
+            AND date < ?`,
+    args: [safeEncrypt('Automaticky expirovano - datum v minulosti'), todayStr],
+  });
+  if (pastExpired.rowsAffected > 0) {
+    bookingsCancelled += pastExpired.rowsAffected;
+    // Clean up slot locks for expired bookings
+    await db.execute({
+      sql: `DELETE FROM slot_locks
+            WHERE locked_by LIKE 'booking:%'
+              AND locked_by IN (
+                SELECT 'booking:' || id FROM bookings_v2 WHERE status = 'expired' AND date < ?
+              )`,
+      args: [todayStr],
+    }).catch(() => {});
+  }
+
   // ── Step 1: Send confirmation reminders ──────────────────────────
   // Find bookings where confirmation_due_at has passed but reminder not yet sent
   const pendingReminders = await db.execute({
