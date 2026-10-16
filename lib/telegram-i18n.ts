@@ -132,9 +132,13 @@ const translations: Record<Lang, Record<string, string>> = {
     'btn.yes_coming': '\u2705 Ano, prijdu',
     'btn.book': 'Rezervovat',
     'btn.notify_me': '\u{1F514} Upozornit me',
+    'btn.my_bookings': 'Moje rezervace',
+    'bookings.none': 'Nemáš žádné aktivní rezervace.',
+    'bookings.status': 'Stav',
 
     // caption
     'caption.age': '{age} let',
+    'caption.years_short': 'let',
     'caption.reviews': '{count} recenzí',
     'caption.escort': '\u{1F697} Escort',
 
@@ -242,9 +246,13 @@ const translations: Record<Lang, Record<string, string>> = {
     'btn.yes_coming': '\u2705 Yes, I\'m coming',
     'btn.book': 'Book',
     'btn.notify_me': '\u{1F514} Notify me',
+    'btn.my_bookings': 'My bookings',
+    'bookings.none': 'You have no active bookings.',
+    'bookings.status': 'Status',
 
     // caption
     'caption.age': '{age} y.o.',
+    'caption.years_short': 'y.o.',
     'caption.reviews': '{count} reviews',
     'caption.escort': '\u{1F697} Escort',
 
@@ -352,9 +360,13 @@ const translations: Record<Lang, Record<string, string>> = {
     'btn.yes_coming': '\u2705 Так, прийду',
     'btn.book': '\u0417\u0430\u0431\u0440\u043E\u043D\u044E\u0432\u0430\u0442\u0438',
     'btn.notify_me': '\u{1F514} \u0421\u043F\u043E\u0432\u0456\u0441\u0442\u0438\u0442\u0438 \u043C\u0435\u043D\u0435',
+    'btn.my_bookings': 'Мої бронювання',
+    'bookings.none': 'У вас немає активних бронювань.',
+    'bookings.status': 'Статус',
 
     // caption
     'caption.age': '{age} років',
+    'caption.years_short': 'р.',
     'caption.reviews': '{count} відгуків',
     'caption.escort': '\u{1F697} Ескорт',
 

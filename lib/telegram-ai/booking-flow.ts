@@ -1178,8 +1178,8 @@ export async function showAvailableGirlsMenu(chatId: string, lang: Lang = 'cs'):
     }
   }
 
-  // Build girl cards for composite image
-  const girlCards: Array<{
+  // Build girl list for composite image + caption
+  const girlList: Array<{
     girlId: number;
     name: string;
     photoUrl: string;
@@ -1193,7 +1193,7 @@ export async function showAvailableGirlsMenu(chatId: string, lang: Lang = 'cs'):
   for (const [girlId, info] of girlShifts) {
     if (!info.photoUrl) continue;
     const extra = extraInfo.get(girlId);
-    girlCards.push({
+    girlList.push({
       girlId,
       name: info.name,
       photoUrl: info.photoUrl,
@@ -1205,27 +1205,43 @@ export async function showAvailableGirlsMenu(chatId: string, lang: Lang = 'cs'):
     });
   }
 
-  if (girlCards.length === 0) {
+  if (girlList.length === 0) {
     await sendMessage(chatId, t(lang, 'flow.no_girls_today'));
     return;
   }
 
-  // Generate composite image
-  const composite = await generateGirlsComposite(girlCards);
+  // Generate composite image (just circular photos, no text)
+  const composite = await generateGirlsComposite(girlList.map(g => g.photoUrl));
+
+  // Build caption with girl info
+  const captionLines = [`<b>✨ ${t(lang, 'flow.choose_girl')}</b>`, ''];
+  for (const g of girlList) {
+    let line = `<b>${g.name}</b>`;
+    const infoParts: string[] = [];
+    if (g.age > 0) infoParts.push(`${g.age} ${t(lang, 'caption.years_short')}`);
+    if (g.height) infoParts.push(`${g.height} cm`);
+    if (g.weight) infoParts.push(`${g.weight} kg`);
+    if (infoParts.length > 0) line += ` · ${infoParts.join(' · ')}`;
+    if (g.rating) line += ` ⭐ ${g.rating}/5`;
+    captionLines.push(line);
+  }
 
   // Build inline keyboard — 2 girls per row
   const buttons: Array<Array<{ text: string; callback_data: string }>> = [];
-  for (let i = 0; i < girlCards.length; i += 2) {
+  for (let i = 0; i < girlList.length; i += 2) {
     const row: Array<{ text: string; callback_data: string }> = [];
-    row.push({ text: `💋 ${girlCards[i].name}`, callback_data: `bk_girl:${girlCards[i].girlId}` });
-    if (i + 1 < girlCards.length) {
-      row.push({ text: `💋 ${girlCards[i + 1].name}`, callback_data: `bk_girl:${girlCards[i + 1].girlId}` });
+    row.push({ text: `💋 ${girlList[i].name}`, callback_data: `bk_girl:${girlList[i].girlId}` });
+    if (i + 1 < girlList.length) {
+      row.push({ text: `💋 ${girlList[i + 1].name}`, callback_data: `bk_girl:${girlList[i + 1].girlId}` });
     }
     buttons.push(row);
   }
 
+  // "My bookings" button at the bottom
+  buttons.push([{ text: `📋 ${t(lang, 'btn.my_bookings')}`, callback_data: 'bk_my_bookings' }]);
+
   await sendPhotoBuffer(chatId, composite, {
-    caption: `<b>\u2728 ${t(lang, 'flow.choose_girl')}</b>`,
+    caption: captionLines.join('\n'),
     replyMarkup: { inline_keyboard: buttons },
   });
 }
@@ -1433,6 +1449,12 @@ export async function handleBookingCallback(
     }
   }
 
+  // bk_my_bookings — show client's active bookings
+  if (callbackData === 'bk_my_bookings') {
+    await handleMyBookings(chatId, lang);
+    return true;
+  }
+
   // bk_cancel_pre — cancel before draft
   if (callbackData === 'bk_cancel_pre') {
     await sendMessage(chatId, t(lang, 'flow.cancelled_pre'));
@@ -1596,6 +1618,62 @@ export async function handleBookingCallback(
   }
 
   return false;
+}
+
+// ---------------------------------------------------------------------------
+// My bookings — show client's active reservations with cancel buttons
+// ---------------------------------------------------------------------------
+
+async function handleMyBookings(chatId: string, lang: Lang = 'cs'): Promise<void> {
+  const today = getPragueToday();
+
+  const result = await db.execute({
+    sql: `SELECT b.id, b.date, b.start_time, b.end_time, b.status,
+                 g.name AS girl_name
+          FROM bookings_v2 b
+          JOIN booking_clients bc ON bc.id = b.client_id
+          JOIN girls g ON g.id = b.girl_id
+          WHERE bc.telegram_id = ?
+            AND b.status IN ('pending', 'confirmed')
+            AND b.date >= ?
+          ORDER BY b.date ASC, b.start_time ASC`,
+    args: [chatId, today],
+  });
+
+  if (result.rows.length === 0) {
+    await sendMessage(chatId, t(lang, 'bookings.none'));
+    return;
+  }
+
+  // Send each booking as a message with cancel button
+  for (const row of result.rows) {
+    const bookingId = Number(row.id);
+    const girlName = String(row.girl_name);
+    const date = String(row.date);
+    const startTime = String(row.start_time).substring(0, 5);
+    const endTime = String(row.end_time).substring(0, 5);
+    const status = String(row.status);
+
+    const statusEmoji = status === 'confirmed' ? '✅' : '⏳';
+    const statusLabel = status === 'confirmed'
+      ? t(lang, 'status.confirmed')
+      : t(lang, 'status.pending');
+
+    const text = [
+      `${statusEmoji} <b>${girlName}</b>`,
+      `📅 ${formatDate(date, lang)}`,
+      `⏰ ${startTime}–${endTime}`,
+      `${t(lang, 'bookings.status')}: ${statusLabel}`,
+    ].join('\n');
+
+    await sendMessage(chatId, text, {
+      replyMarkup: {
+        inline_keyboard: [[
+          { text: `❌ ${t(lang, 'btn.cancel_booking')}`, callback_data: `bk_remind_cancel:${bookingId}` },
+        ]],
+      },
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
