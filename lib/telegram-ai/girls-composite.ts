@@ -1,9 +1,9 @@
 /**
- * Generate a composite image with Instagram-style circular profile photos.
+ * Generate a composite image with Instagram-style circular profile photos + names.
  * Uses sharp for image processing. Output: PNG Buffer.
  *
- * NOTE: No SVG text rendering — fonts are not available on Vercel serverless.
- * Girl info (name, age, etc.) goes into the Telegram caption instead.
+ * Names are rendered via sharp's text API (Pango) — works on serverless
+ * unlike SVG text which lacks fonts on Vercel.
  */
 
 import sharp from 'sharp';
@@ -13,23 +13,24 @@ const COLUMNS = 4;
 const PHOTO_DIAMETER = 130;
 const RING_WIDTH = 4;
 const RING_DIAMETER = PHOTO_DIAMETER + RING_WIDTH * 2;
-const CELL_SIZE = RING_DIAMETER + 16; // padding between circles
+const NAME_HEIGHT = 28;
+const CELL_WIDTH = RING_DIAMETER + 20;
+const CELL_HEIGHT = RING_DIAMETER + NAME_HEIGHT + 8;
 const PADDING = 16;
-const RING_COLOR = '#c850c0'; // pink/purple accent
+const RING_COLOR = '#c850c0';
 const BG_R = 26, BG_G = 26, BG_B = 46; // #1a1a2e
 
-/**
- * Create a circular mask SVG for cropping photos.
- */
+interface GirlPhoto {
+  name: string;
+  photoUrl: string;
+}
+
 function createCircleMask(size: number): Buffer {
   return Buffer.from(
     `<svg width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="white"/></svg>`
   );
 }
 
-/**
- * Create the colored ring SVG that sits behind each photo.
- */
 function createRingSvg(): Buffer {
   const r = RING_DIAMETER / 2;
   return Buffer.from(
@@ -37,16 +38,32 @@ function createRingSvg(): Buffer {
   );
 }
 
+function escapeMarkup(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 /**
- * Fetch a photo URL and return a circular-cropped buffer,
- * or null if fetching/processing fails.
+ * Render a name as a small PNG image using sharp's Pango text API.
  */
+async function renderName(name: string, maxWidth: number): Promise<Buffer> {
+  return sharp({
+    text: {
+      text: `<span foreground="white" font_desc="Sans Bold 13">${escapeMarkup(name)}</span>`,
+      rgba: true,
+      dpi: 72,
+      width: maxWidth,
+      align: 'centre',
+    },
+  })
+    .png()
+    .toBuffer();
+}
+
 async function fetchAndCropCircle(url: string): Promise<Buffer | null> {
   try {
     const response = await fetch(url);
     if (!response.ok) return null;
-    const arrayBuf = await response.arrayBuffer();
-    const buf = Buffer.from(arrayBuf);
+    const buf = Buffer.from(await response.arrayBuffer());
 
     const resized = await sharp(buf)
       .resize(PHOTO_DIAMETER, PHOTO_DIAMETER, { fit: 'cover' })
@@ -65,49 +82,67 @@ async function fetchAndCropCircle(url: string): Promise<Buffer | null> {
 }
 
 export async function generateGirlsComposite(
-  photoUrls: string[],
+  girls: GirlPhoto[],
 ): Promise<Buffer> {
   // Fetch all photos in parallel
-  const photos = await Promise.all(photoUrls.map(fetchAndCropCircle));
-  const validPhotos = photos.filter((p): p is Buffer => p !== null);
+  const results = await Promise.all(
+    girls.map(async (g) => {
+      const photo = await fetchAndCropCircle(g.photoUrl);
+      return { name: g.name, photo };
+    }),
+  );
+  const valid = results.filter((r): r is { name: string; photo: Buffer } => r.photo !== null);
 
-  if (validPhotos.length === 0) {
+  if (valid.length === 0) {
     return sharp({ create: { width: 1, height: 1, channels: 4, background: { r: BG_R, g: BG_G, b: BG_B, alpha: 1 } } })
       .png()
       .toBuffer();
   }
 
-  const cols = Math.min(COLUMNS, validPhotos.length);
-  const rows = Math.ceil(validPhotos.length / cols);
-  const canvasWidth = cols * CELL_SIZE + PADDING * 2;
-  const canvasHeight = rows * CELL_SIZE + PADDING * 2;
+  const cols = Math.min(COLUMNS, valid.length);
+  const rows = Math.ceil(valid.length / cols);
+  const canvasWidth = cols * CELL_WIDTH + PADDING * 2;
+  const canvasHeight = rows * CELL_HEIGHT + PADDING * 2;
 
   // Pre-render ring
-  const ringSvg = createRingSvg();
-  const ringBuf = await sharp(ringSvg).resize(RING_DIAMETER, RING_DIAMETER).png().toBuffer();
+  const ringBuf = await sharp(createRingSvg()).resize(RING_DIAMETER, RING_DIAMETER).png().toBuffer();
 
-  // Build composite layers
   const composites: sharp.OverlayOptions[] = [];
 
-  for (let i = 0; i < validPhotos.length; i++) {
+  for (let i = 0; i < valid.length; i++) {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    const centerX = PADDING + col * CELL_SIZE + CELL_SIZE / 2;
-    const centerY = PADDING + row * CELL_SIZE + CELL_SIZE / 2;
+    const cellX = PADDING + col * CELL_WIDTH;
+    const cellY = PADDING + row * CELL_HEIGHT;
+    const centerX = cellX + CELL_WIDTH / 2;
 
     // Ring
     composites.push({
       input: ringBuf,
       left: Math.round(centerX - RING_DIAMETER / 2),
-      top: Math.round(centerY - RING_DIAMETER / 2),
+      top: cellY,
     });
 
     // Photo
     composites.push({
-      input: validPhotos[i],
+      input: valid[i].photo,
       left: Math.round(centerX - PHOTO_DIAMETER / 2),
-      top: Math.round(centerY - PHOTO_DIAMETER / 2),
+      top: cellY + RING_WIDTH,
     });
+
+    // Name text below photo
+    try {
+      const nameBuf = await renderName(valid[i].name, CELL_WIDTH);
+      const nameMeta = await sharp(nameBuf).metadata();
+      const nameWidth = nameMeta.width ?? CELL_WIDTH;
+      composites.push({
+        input: nameBuf,
+        left: Math.round(centerX - nameWidth / 2),
+        top: cellY + RING_DIAMETER + 6,
+      });
+    } catch {
+      // If Pango text fails, skip name — photo is still shown
+    }
   }
 
   return sharp({

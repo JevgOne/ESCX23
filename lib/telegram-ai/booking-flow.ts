@@ -1178,31 +1178,12 @@ export async function showAvailableGirlsMenu(chatId: string, lang: Lang = 'cs'):
     }
   }
 
-  // Build girl list for composite image + caption
-  const girlList: Array<{
-    girlId: number;
-    name: string;
-    photoUrl: string;
-    age: number;
-    height: number | null;
-    weight: number | null;
-    rating: number | null;
-    reviewsCount: number;
-  }> = [];
+  // Build girl list for composite image
+  const girlList: Array<{ girlId: number; name: string; photoUrl: string }> = [];
 
   for (const [girlId, info] of girlShifts) {
     if (!info.photoUrl) continue;
-    const extra = extraInfo.get(girlId);
-    girlList.push({
-      girlId,
-      name: info.name,
-      photoUrl: info.photoUrl,
-      age: extra?.age ?? 0,
-      height: extra?.height ?? null,
-      weight: extra?.weight ?? null,
-      rating: extra?.rating ?? null,
-      reviewsCount: extra?.reviewsCount ?? 0,
-    });
+    girlList.push({ girlId, name: info.name, photoUrl: info.photoUrl });
   }
 
   if (girlList.length === 0) {
@@ -1210,21 +1191,10 @@ export async function showAvailableGirlsMenu(chatId: string, lang: Lang = 'cs'):
     return;
   }
 
-  // Generate composite image (just circular photos, no text)
-  const composite = await generateGirlsComposite(girlList.map(g => g.photoUrl));
-
-  // Build caption with girl info
-  const captionLines = [`<b>✨ ${t(lang, 'flow.choose_girl')}</b>`, ''];
-  for (const g of girlList) {
-    let line = `<b>${g.name}</b>`;
-    const infoParts: string[] = [];
-    if (g.age > 0) infoParts.push(`${g.age} ${t(lang, 'caption.years_short')}`);
-    if (g.height) infoParts.push(`${g.height} cm`);
-    if (g.weight) infoParts.push(`${g.weight} kg`);
-    if (infoParts.length > 0) line += ` · ${infoParts.join(' · ')}`;
-    if (g.rating) line += ` ⭐ ${g.rating}/5`;
-    captionLines.push(line);
-  }
+  // Generate composite image with circular photos + names
+  const composite = await generateGirlsComposite(
+    girlList.map(g => ({ name: g.name, photoUrl: g.photoUrl })),
+  );
 
   // Build inline keyboard — 2 girls per row
   const buttons: Array<Array<{ text: string; callback_data: string }>> = [];
@@ -1241,7 +1211,7 @@ export async function showAvailableGirlsMenu(chatId: string, lang: Lang = 'cs'):
   buttons.push([{ text: `📋 ${t(lang, 'btn.my_bookings')}`, callback_data: 'bk_my_bookings' }]);
 
   await sendPhotoBuffer(chatId, composite, {
-    caption: captionLines.join('\n'),
+    caption: `<b>✨ ${t(lang, 'flow.choose_girl')}</b>`,
     replyMarkup: { inline_keyboard: buttons },
   });
 }
