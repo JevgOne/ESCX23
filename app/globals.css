@@ -7940,6 +7940,26 @@ a.calendar-day:hover {
   }
 }
 
+/* ===== PHOTO ACTIONS BAR ===== */
+.photo-actions-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px;
+  display: flex;
+  gap: 4px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.photo-card-admin:hover .photo-actions-bar {
+  opacity: 1;
+}
+@media (hover: none) {
+  .photo-actions-bar { opacity: 1; }
+}
+
 /* ===== APPLICATION FORM ===== */
 .application-form {
   display: flex;
