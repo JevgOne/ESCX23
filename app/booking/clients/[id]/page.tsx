@@ -24,11 +24,11 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-const TRUST_META: Record<string, { label: string; color: string; bg: string; level: number }> = {
-  vip:      { label: 'VIP Klient',     color: '#fbbf24', bg: 'rgba(251,191,36,0.15)', level: 4 },
-  regular:  { label: 'Staly klient',   color: '#4ade80', bg: 'rgba(74,222,128,0.12)', level: 3 },
-  verified: { label: 'Overeny klient', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)', level: 2 },
-  new:      { label: 'Novy klient',    color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', level: 1 },
+const TRUST_META: Record<string, { label: string; desc: string; color: string; bg: string; level: number }> = {
+  vip:      { label: 'VIP',      desc: '10+ navstev, 0 no-show',           color: '#fbbf24', bg: 'rgba(251,191,36,0.15)', level: 4 },
+  regular:  { label: 'Staly',    desc: '5+ navstev, spolehlivy',           color: '#4ade80', bg: 'rgba(74,222,128,0.12)', level: 3 },
+  verified: { label: 'Overeny',  desc: '2+ navstevy, dorazil na rezervaci', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)', level: 2 },
+  new:      { label: 'Novy',     desc: 'Prvni rezervace, bez historie',    color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', level: 1 },
 };
 
 const TRUST_GRADIENT: Record<string, string> = {
@@ -58,10 +58,6 @@ const STATUS_META: Record<string, { label: string; color: string; bg: string; ic
 function fmtDate(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
   return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
-}
-
-function fmtMoney(n: number): string {
-  return n.toLocaleString('cs-CZ') + ' Kc';
 }
 
 function fmtRelativeDate(dateStr: string): string {
@@ -235,16 +231,6 @@ export default async function ClientDetailPage({ params }: Props) {
         </div>
 
         <div className="mc-stat-card">
-          <div className="mc-stat-icon" style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          </div>
-          <div className="mc-stat-data">
-            <span className="mc-stat-num" style={{ color: '#fbbf24' }}>{fmtMoney(client.totalSpent)}</span>
-            <span className="mc-stat-label">Utraceno celkem</span>
-          </div>
-        </div>
-
-        <div className="mc-stat-card">
           <div className="mc-stat-icon" style={{ background: 'rgba(167,139,250,0.12)', color: '#a78bfa' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           </div>
@@ -259,7 +245,7 @@ export default async function ClientDetailPage({ params }: Props) {
       <div className="mc-meters-row">
         <div className="mc-meter-card">
           <div className="mc-meter-header">
-            <span className="mc-meter-title">Duverihodnost</span>
+            <span className="mc-meter-title">Duveryhodnost</span>
             <span className="mc-meter-value" style={{ color: trust.color }}>{trust.label}</span>
           </div>
           <div className="mc-meter-track">
@@ -272,8 +258,12 @@ export default async function ClientDetailPage({ params }: Props) {
             </div>
           </div>
           <div className="mc-meter-labels">
-            <span>Novy</span><span>Overeny</span><span>Staly</span><span>VIP</span>
+            <span title="Prvni rezervace, bez historie">Novy</span>
+            <span title="2+ navstevy, dorazil">Overeny</span>
+            <span title="5+ navstev, spolehlivy">Staly</span>
+            <span title="10+ navstev, 0 no-show">VIP</span>
           </div>
+          <div className="mc-meter-sub">{trust.desc}</div>
         </div>
 
         <div className="mc-meter-card">
@@ -451,7 +441,6 @@ export default async function ClientDetailPage({ params }: Props) {
                     </div>
                     <div className="mc-active-right">
                       <span className="mc-status-pill" style={{ color: st.color, background: st.bg }}>{st.label}</span>
-                      {h.price != null && <span className="mc-active-price">{fmtMoney(h.price)}</span>}
                     </div>
                   </a>
                 );
@@ -479,7 +468,6 @@ export default async function ClientDetailPage({ params }: Props) {
                       <th>Delka</th>
                       <th>Kanal</th>
                       <th>Status</th>
-                      <th>Cena</th>
                       <th>Body</th>
                     </tr>
                   </thead>
@@ -502,7 +490,6 @@ export default async function ClientDetailPage({ params }: Props) {
                               <span className="mc-status-icon">{st.icon}</span> {st.label}
                             </span>
                           </td>
-                          <td className="mc-table-price">{h.price != null ? fmtMoney(h.price) : '--'}</td>
                           <td className="mc-table-points">{h.pointsEarned > 0 ? h.pointsEarned.toLocaleString('cs-CZ') : '--'}</td>
                         </tr>
                       );
@@ -527,7 +514,7 @@ export default async function ClientDetailPage({ params }: Props) {
                           <div className="mc-timeline-body">
                             <span className="mc-timeline-girl">{h.girlName}</span>
                             <span className="mc-timeline-dur">{h.durationMinutes}m</span>
-                            {h.price != null && <span className="mc-timeline-price">{fmtMoney(h.price)}</span>}
+                            <span className="mc-timeline-points">{h.pointsEarned > 0 ? `${h.pointsEarned.toLocaleString('cs-CZ')} b.` : ''}</span>
                           </div>
                         </div>
                       </a>
@@ -654,7 +641,7 @@ const STYLES = `
 /* ─── Stats Row ─── */
 .mc-stats-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   max-width: 1100px;
   margin: 0 auto 20px;
@@ -862,7 +849,6 @@ const STYLES = `
 .mc-active-girl { font-size: 13px; font-weight: 600; color: var(--coral); display: block; }
 .mc-active-date { font-size: 11px; color: var(--dim); }
 .mc-active-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.mc-active-price { font-size: 12px; font-weight: 600; color: var(--text); }
 
 /* ─── Status pill ─── */
 .mc-status-pill {
@@ -890,7 +876,6 @@ const STYLES = `
 .mc-table-link:hover { color: var(--coral); }
 .mc-table-time { color: var(--muted); font-family: ui-monospace, monospace; font-size: 11px; }
 .mc-table-girl { font-weight: 600; color: var(--coral); }
-.mc-table-price { font-weight: 600; }
 .mc-table-points { color: #fbbf24; font-weight: 700; }
 .mc-channel-tag {
   display: inline-block; padding: 2px 7px; border-radius: 5px;
@@ -939,7 +924,7 @@ const STYLES = `
 }
 .mc-timeline-girl { font-weight: 600; color: var(--coral); }
 .mc-timeline-dur { color: var(--dim); }
-.mc-timeline-price { margin-left: auto; font-weight: 600; color: var(--text); }
+.mc-timeline-points { margin-left: auto; font-weight: 700; color: #a78bfa; font-size: 11px; }
 
 /* ─── Responsive ─── */
 @media (max-width: 900px) {
