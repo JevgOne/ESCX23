@@ -360,7 +360,7 @@ export default async function BookingDashboardPage() {
                         return (
                           <a
                             key={slotIdx}
-                            href={isDraft ? undefined : `/booking/calendar?date=${today}&detail=${booking.id}`}
+                            href={`/booking/calendar?date=${today}${isDraft ? '' : `&detail=${booking.id}`}`}
                             className={`tl-booking tl-st-${statusClass}`}
                             style={{ gridColumn: `span ${span}` }}
                             title={`${booking.clientNickname} / ${booking.durationMinutes}min / ${booking.startTime}-${booking.endTime}`}

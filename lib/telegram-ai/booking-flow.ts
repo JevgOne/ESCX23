@@ -1242,7 +1242,13 @@ export async function handleGirlSelectedCallback(
   const todayDate = new Date(today + 'T12:00:00');
   const dates: { date: string; label: string; shift: string }[] = [];
 
-  for (let i = 0; i < 7; i++) {
+  // Only offer dates within the current schedule week (through Sunday).
+  // Schedules are activated by cron on Sunday night for the next week,
+  // so showing dates beyond Sunday would repeat the old weekly pattern.
+  const todayDow = todayDate.getDay(); // 0=Sun, 1=Mon, ...
+  const daysUntilSunday = todayDow === 0 ? 0 : 7 - todayDow;
+
+  for (let i = 0; i <= daysUntilSunday; i++) {
     const d = new Date(todayDate.getTime() + i * 86400000);
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 

@@ -559,7 +559,11 @@ export async function updateBookingStatus(
   }
 
   const current = await db.execute({
-    sql: 'SELECT id, status, client_id, price FROM bookings_v2 WHERE id = ?',
+    sql: `SELECT b.id, b.status, b.client_id, b.price, b.date, b.start_time, b.end_time,
+                 b.duration_minutes, g.name AS girl_name
+          FROM bookings_v2 b
+          LEFT JOIN girls g ON g.id = b.girl_id
+          WHERE b.id = ?`,
     args: [bookingId],
   });
   if (current.rows.length === 0) {
@@ -628,7 +632,48 @@ export async function updateBookingStatus(
     args: [bookingId, user.id, `${oldStatus} -> ${newStatus}${cancelReason ? ': ' + cancelReason : ''}`],
   });
 
+  // Notify client via Telegram when admin cancels booking
+  if (['cancelled_client', 'cancelled_girl', 'declined'].includes(newStatus) && booking.client_id) {
+    notifyClientCancelled(Number(booking.client_id), {
+      date: String(booking.date),
+      startTime: String(booking.start_time).substring(0, 5),
+      endTime: String(booking.end_time).substring(0, 5),
+      duration: Number(booking.duration_minutes),
+      girlName: booking.girl_name ? String(booking.girl_name) : '?',
+      reason: cancelReason ?? null,
+    }).catch(() => {});
+  }
+
   return { ok: true };
+}
+
+async function notifyClientCancelled(
+  clientId: number,
+  info: { date: string; startTime: string; endTime: string; duration: number; girlName: string; reason: string | null },
+): Promise<void> {
+  const client = await db.execute({
+    sql: 'SELECT telegram_id, language FROM booking_clients WHERE id = ? AND telegram_id IS NOT NULL LIMIT 1',
+    args: [clientId],
+  });
+  if (client.rows.length === 0) return;
+
+  const chatId = String(client.rows[0].telegram_id);
+  const lang = String(client.rows[0].language ?? 'cs');
+
+  const { sendMessage } = await import('./telegram');
+  const { t } = await import('./telegram-i18n');
+
+  const [y, m, d] = info.date.split('-');
+  const dateLabel = `${d}.${m}.`;
+  const lines = [
+    t(lang as 'cs' | 'en' | 'uk', 'notif.booking_cancelled'),
+    `${info.girlName}, ${dateLabel} ${info.startTime}–${info.endTime} (${info.duration} min)`,
+  ];
+  if (info.reason) {
+    lines.push(t(lang as 'cs' | 'en' | 'uk', 'notif.reason', { reason: info.reason }));
+  }
+
+  await sendMessage(chatId, lines.join('\n'));
 }
 
 // ---------------------------------------------------------------------------
