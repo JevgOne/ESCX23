@@ -238,6 +238,236 @@ export async function POST(request: Request) {
       results.push(`Created ${created} girl Studio accounts (password: ${defaultPassword}), ${girlsWithoutUser.rows.length - created} skipped`);
     }
 
+    // 5a. Diagnostic: show what cleanup would affect (read-only)
+    if (body.diagnoseCleanup) {
+      const diag: Record<string, unknown> = {};
+
+      // Bookings by source
+      const bySource = await db.execute(
+        `SELECT source, status, COUNT(*) as cnt FROM bookings_v2 GROUP BY source, status ORDER BY source, status`
+      );
+      diag.bookingsBySource = bySource.rows.map(r => ({
+        source: String(r.source ?? 'null'), status: String(r.status), count: Number(r.cnt),
+      }));
+
+      // Total bookings
+      const total = await db.execute(`SELECT COUNT(*) as cnt FROM bookings_v2`);
+      diag.totalBookings = Number(total.rows[0]?.cnt);
+
+      // LG-GCAL placeholder
+      const lgGcal = await db.execute(`SELECT * FROM booking_clients WHERE client_number = 'LG-GCAL'`);
+      diag.lgGcalClient = lgGcal.rows.length > 0 ? {
+        id: Number(lgGcal.rows[0].id),
+        nickname: String(lgGcal.rows[0].nickname),
+        totalVisits: Number(lgGcal.rows[0].total_visits),
+      } : null;
+
+      // ICS clients
+      const icsClients = await db.execute(
+        `SELECT id, client_number, nickname, total_visits, source FROM booking_clients WHERE client_number LIKE 'ICS-%' ORDER BY nickname`
+      );
+      diag.icsClients = icsClients.rows.map(r => ({
+        id: Number(r.id), clientNumber: String(r.client_number),
+        nickname: String(r.nickname), totalVisits: Number(r.total_visits), source: String(r.source ?? ''),
+      }));
+
+      // Known fake clients
+      const fakeClients = await db.execute(
+        `SELECT id, client_number, nickname, trust_level, total_visits, source
+         FROM booking_clients
+         WHERE nickname IN ('Miloslav2208', 'Vladimir1806', 'Martin2004', 'HynekSvoboda')
+         ORDER BY nickname`
+      );
+      diag.fakeClients = fakeClients.rows.map(r => ({
+        id: Number(r.id), clientNumber: String(r.client_number ?? ''),
+        nickname: String(r.nickname), trustLevel: String(r.trust_level ?? ''),
+        totalVisits: Number(r.total_visits), source: String(r.source ?? ''),
+      }));
+
+      // All clients summary
+      const clientsSummary = await db.execute(
+        `SELECT COUNT(*) as cnt, SUM(total_visits) as visits FROM booking_clients`
+      );
+      diag.clientsSummary = {
+        totalClients: Number(clientsSummary.rows[0]?.cnt),
+        totalVisitsSum: Number(clientsSummary.rows[0]?.visits),
+      };
+
+      // Clients with 0 visits (potential test accounts)
+      const zeroVisits = await db.execute(
+        `SELECT id, client_number, nickname, source FROM booking_clients WHERE total_visits = 0 ORDER BY nickname`
+      );
+      diag.clientsZeroVisits = zeroVisits.rows.map(r => ({
+        id: Number(r.id), clientNumber: String(r.client_number ?? ''),
+        nickname: String(r.nickname ?? ''), source: String(r.source ?? ''),
+      }));
+
+      // gcal_import bookings with notes (client names)
+      const { safeDecrypt: dec } = await import('@/lib/crypto');
+      const gcalNotes = await db.execute(
+        `SELECT notes, notes_encrypted, COUNT(*) as cnt FROM bookings_v2 WHERE source = 'gcal_import' GROUP BY COALESCE(notes_encrypted, notes) ORDER BY cnt DESC`
+      );
+      diag.gcalImportByClient = gcalNotes.rows.map(r => {
+        const name = dec(r.notes_encrypted ? String(r.notes_encrypted) : null)
+                     ?? (r.notes ? String(r.notes) : null) ?? '(empty)';
+        return { clientName: name, bookingCount: Number(r.cnt) };
+      });
+
+      // Booking drafts
+      const drafts = await db.execute(
+        `SELECT is_converted, COUNT(*) as cnt FROM booking_drafts GROUP BY is_converted`
+      );
+      diag.draftsByStatus = drafts.rows.map(r => ({
+        isConverted: Number(r.is_converted), count: Number(r.cnt),
+      }));
+
+      // Slot locks
+      const locks = await db.execute(`SELECT COUNT(*) as cnt FROM slot_locks`);
+      diag.slotLocks = Number(locks.rows[0]?.cnt);
+
+      // Audit log
+      const auditCnt = await db.execute(`SELECT COUNT(*) as cnt FROM booking_audit_log`);
+      diag.auditLogEntries = Number(auditCnt.rows[0]?.cnt);
+
+      return NextResponse.json({ success: true, diagnostics: diag });
+    }
+
+    // 5b. Full DB cleanup for production launch
+    if (body.cleanupForLaunch) {
+      const dry = !!body.dryRun;
+      results.push(`=== CLEANUP FOR LAUNCH ${dry ? '(DRY RUN)' : '(LIVE)'} ===`);
+
+      const { safeDecrypt: dec } = await import('@/lib/crypto');
+
+      // Step 1: gcal_import — match notes to client nicknames, add visits
+      const gcalBookings = await db.execute(
+        `SELECT notes, notes_encrypted, COUNT(*) AS cnt
+         FROM bookings_v2 WHERE source = 'gcal_import'
+         GROUP BY COALESCE(notes_encrypted, notes)`
+      );
+      let gcalMatched = 0;
+      let gcalUnmatched = 0;
+      for (const row of gcalBookings.rows) {
+        const nickname = dec(row.notes_encrypted ? String(row.notes_encrypted) : null)
+                         ?? (row.notes ? String(row.notes) : null);
+        if (!nickname) { gcalUnmatched++; continue; }
+
+        const cnt = Number(row.cnt);
+        const clientRes = await db.execute({
+          sql: 'SELECT id FROM booking_clients WHERE nickname = ? LIMIT 1',
+          args: [nickname.trim()],
+        });
+
+        if (clientRes.rows.length > 0) {
+          if (!dry) {
+            await db.execute({
+              sql: 'UPDATE booking_clients SET total_visits = total_visits + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+              args: [cnt, Number(clientRes.rows[0].id)],
+            });
+          }
+          results.push(`[gcal] "${nickname}" → client #${clientRes.rows[0].id}: +${cnt} visits`);
+          gcalMatched++;
+        } else {
+          results.push(`[gcal] "${nickname}": NO MATCH in booking_clients (${cnt} visits)`);
+          gcalUnmatched++;
+        }
+      }
+      results.push(`[gcal] ${gcalMatched} matched, ${gcalUnmatched} unmatched`);
+
+      // Step 2: ics_import — recalc total_visits from client_id
+      const icsClients = await db.execute(
+        `SELECT bc.id, bc.nickname, COUNT(b.id) as cnt
+         FROM booking_clients bc
+         JOIN bookings_v2 b ON b.client_id = bc.id AND b.source = 'ics_import'
+           AND b.status IN ('confirmed', 'completed', 'in_progress')
+         WHERE bc.client_number LIKE 'ICS-%'
+         GROUP BY bc.id`
+      );
+      for (const row of icsClients.rows) {
+        if (!dry) {
+          await db.execute({
+            sql: 'UPDATE booking_clients SET total_visits = total_visits + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            args: [Number(row.cnt), Number(row.id)],
+          });
+        }
+        results.push(`[ics] "${row.nickname}" (client #${row.id}): +${row.cnt} visits`);
+      }
+      results.push(`[ics] Updated ${icsClients.rows.length} ICS client(s)`);
+
+      // Step 3: Delete ALL import bookings
+      if (!dry) {
+        const del = await db.execute("DELETE FROM bookings_v2 WHERE source IN ('gcal_import', 'ics_import')");
+        results.push(`[import] Deleted ${del.rowsAffected} import booking(s)`);
+      } else {
+        const cnt = await db.execute("SELECT COUNT(*) as c FROM bookings_v2 WHERE source IN ('gcal_import', 'ics_import')");
+        results.push(`[import] Would delete ${Number(cnt.rows[0]?.c)} import booking(s)`);
+      }
+
+      // Step 4: Delete fake client bookings + remaining test bookings
+      const fakeNames = ['Miloslav2208', 'Vladimir1806', 'Martin2004'];
+      if (!dry) {
+        await db.execute({
+          sql: `DELETE FROM bookings_v2 WHERE client_id IN (
+            SELECT id FROM booking_clients WHERE nickname IN (${fakeNames.map(() => '?').join(',')})
+          )`,
+          args: fakeNames,
+        });
+      }
+      // Delete ALL remaining bookings (fresh start)
+      if (!dry) {
+        const delAll = await db.execute("DELETE FROM bookings_v2");
+        results.push(`[bookings] Deleted ${delAll.rowsAffected} remaining booking(s)`);
+      } else {
+        const cnt = await db.execute("SELECT COUNT(*) as c FROM bookings_v2 WHERE source NOT IN ('gcal_import', 'ics_import')");
+        results.push(`[bookings] Would delete ${Number(cnt.rows[0]?.c)} remaining booking(s)`);
+      }
+
+      // Step 5: Delete fake clients (no real bookings left)
+      if (!dry) {
+        const delFake = await db.execute({
+          sql: `DELETE FROM booking_clients WHERE nickname IN (${fakeNames.map(() => '?').join(',')})
+                AND id NOT IN (SELECT DISTINCT client_id FROM bookings_v2 WHERE client_id IS NOT NULL)`,
+          args: fakeNames,
+        });
+        results.push(`[clients] Deleted ${delFake.rowsAffected} fake client(s)`);
+      } else {
+        const cnt = await db.execute({
+          sql: `SELECT COUNT(*) as c FROM booking_clients WHERE nickname IN (${fakeNames.map(() => '?').join(',')})`,
+          args: fakeNames,
+        });
+        results.push(`[clients] Would delete up to ${Number(cnt.rows[0]?.c)} fake client(s)`);
+      }
+
+      // Step 6: Clear unconverted drafts
+      if (!dry) {
+        const delDrafts = await db.execute("DELETE FROM booking_drafts WHERE is_converted = 0");
+        results.push(`[drafts] Deleted ${delDrafts.rowsAffected} unconverted draft(s)`);
+      } else {
+        const cnt = await db.execute("SELECT COUNT(*) as c FROM booking_drafts WHERE is_converted = 0");
+        results.push(`[drafts] Would delete ${Number(cnt.rows[0]?.c)} unconverted draft(s)`);
+      }
+
+      // Step 7: Clear slot locks
+      if (!dry) {
+        const delLocks = await db.execute("DELETE FROM slot_locks");
+        results.push(`[locks] Deleted ${delLocks.rowsAffected} slot lock(s)`);
+      } else {
+        const cnt = await db.execute("SELECT COUNT(*) as c FROM slot_locks");
+        results.push(`[locks] Would delete ${Number(cnt.rows[0]?.c)} slot lock(s)`);
+      }
+
+      // Step 8: Clear audit log
+      if (!dry) {
+        const delAudit = await db.execute("DELETE FROM booking_audit_log");
+        results.push(`[audit] Deleted ${delAudit.rowsAffected} audit log entries`);
+      } else {
+        const cnt = await db.execute("SELECT COUNT(*) as c FROM booking_audit_log");
+        results.push(`[audit] Would delete ${Number(cnt.rows[0]?.c)} audit log entries`);
+      }
+
+      results.push(`=== CLEANUP ${dry ? 'DRY RUN COMPLETE' : 'DONE'} ===`);
+    }
+
     return NextResponse.json({ success: true, results });
   } catch (error) {
     console.error('[fix-data] POST error:', error);

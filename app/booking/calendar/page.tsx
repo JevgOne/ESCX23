@@ -55,7 +55,7 @@ export default async function BookingCalendarPage({ searchParams }: Props) {
   const hdrs = await headers();
   const ua = hdrs.get('user-agent') ?? '';
   const isMobile = /iPhone|Android|Mobile/i.test(ua);
-  const view = params.view === 'day' ? 'day' : params.view === 'week' ? 'week' : (isMobile ? 'day' : 'week');
+  const view = params.view === 'day' ? 'day' : params.view === 'week' ? 'week' : 'day';
   const pragueNow = getPragueNow();
   const today = toISODate(pragueNow);
 
@@ -105,6 +105,7 @@ export default async function BookingCalendarPage({ searchParams }: Props) {
 
   // Stats for day view
   const dayBookings = bookings.filter((b) => b.date === dateParam);
+  const dayGirls = girls.filter((g) => g.isWorking);
   const stats = computeDayStats(dayBookings, girls);
 
   // Detail overlay
@@ -206,14 +207,14 @@ export default async function BookingCalendarPage({ searchParams }: Props) {
       {view === 'day' ? (
         <>
           <CalendarDayView
-            girls={girls}
+            girls={dayGirls}
             bookings={dayBookings}
             date={dateParam}
             pragueHour={pragueNow.getHours()}
             pragueMinute={pragueNow.getMinutes()}
           />
           <CalendarMobileList
-            girls={girls}
+            girls={dayGirls}
             bookings={dayBookings}
             date={dateParam}
           />
