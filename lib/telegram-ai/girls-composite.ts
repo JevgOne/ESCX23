@@ -63,7 +63,7 @@ function createRingSvg(): Buffer {
 async function renderName(name: string, fontPath: string, maxWidth: number): Promise<Buffer> {
   return sharp({
     text: {
-      text: name,
+      text: `<span foreground="#ffffff">${name}</span>`,
       fontfile: fontPath,
       font: 'Inter',
       dpi: 150,
