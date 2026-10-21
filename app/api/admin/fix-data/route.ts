@@ -394,48 +394,50 @@ export async function POST(request: Request) {
       }
       results.push(`[ics] Updated ${icsClients.rows.length} ICS client(s)`);
 
-      // Step 3: Delete ALL import bookings
+      // Step 3: Clear FK-dependent tables BEFORE deleting bookings
       if (!dry) {
-        const del = await db.execute("DELETE FROM bookings_v2 WHERE source IN ('gcal_import', 'ics_import')");
-        results.push(`[import] Deleted ${del.rowsAffected} import booking(s)`);
+        const delNotif = await db.execute("DELETE FROM notifications WHERE booking_id IS NOT NULL");
+        results.push(`[notifications] Deleted ${delNotif.rowsAffected} booking notification(s)`);
+        try {
+          const delReminders = await db.execute("DELETE FROM booking_reminders");
+          results.push(`[reminders] Deleted ${delReminders.rowsAffected} booking reminder(s)`);
+        } catch { results.push('[reminders] Table not found (skip)'); }
       } else {
-        const cnt = await db.execute("SELECT COUNT(*) as c FROM bookings_v2 WHERE source IN ('gcal_import', 'ics_import')");
-        results.push(`[import] Would delete ${Number(cnt.rows[0]?.c)} import booking(s)`);
+        const cntN = await db.execute("SELECT COUNT(*) as c FROM notifications WHERE booking_id IS NOT NULL");
+        results.push(`[notifications] Would delete ${Number(cntN.rows[0]?.c)} booking notification(s)`);
+        try {
+          const cntR = await db.execute("SELECT COUNT(*) as c FROM booking_reminders");
+          results.push(`[reminders] Would delete ${Number(cntR.rows[0]?.c)} booking reminder(s)`);
+        } catch { results.push('[reminders] Table not found (skip)'); }
       }
 
-      // Step 4: Delete fake client bookings + remaining test bookings
-      const fakeNames = ['Miloslav2208', 'Vladimir1806', 'Martin2004'];
-      if (!dry) {
-        await db.execute({
-          sql: `DELETE FROM bookings_v2 WHERE client_id IN (
-            SELECT id FROM booking_clients WHERE nickname IN (${fakeNames.map(() => '?').join(',')})
-          )`,
-          args: fakeNames,
-        });
-      }
-      // Delete ALL remaining bookings (fresh start)
+      // Step 4: Delete ALL bookings (fresh start)
       if (!dry) {
         const delAll = await db.execute("DELETE FROM bookings_v2");
-        results.push(`[bookings] Deleted ${delAll.rowsAffected} remaining booking(s)`);
+        results.push(`[bookings] Deleted ${delAll.rowsAffected} booking(s)`);
       } else {
-        const cnt = await db.execute("SELECT COUNT(*) as c FROM bookings_v2 WHERE source NOT IN ('gcal_import', 'ics_import')");
-        results.push(`[bookings] Would delete ${Number(cnt.rows[0]?.c)} remaining booking(s)`);
+        const cnt = await db.execute("SELECT COUNT(*) as c FROM bookings_v2");
+        results.push(`[bookings] Would delete ${Number(cnt.rows[0]?.c)} booking(s)`);
       }
 
-      // Step 5: Delete fake clients (no real bookings left)
+      // Step 5: Delete fake clients + LG-GCAL placeholder + ICS clients
+      const fakeNames = ['Miloslav2208', 'Vladimir1806', 'Martin2004'];
       if (!dry) {
         const delFake = await db.execute({
-          sql: `DELETE FROM booking_clients WHERE nickname IN (${fakeNames.map(() => '?').join(',')})
-                AND id NOT IN (SELECT DISTINCT client_id FROM bookings_v2 WHERE client_id IS NOT NULL)`,
+          sql: `DELETE FROM booking_clients WHERE nickname IN (${fakeNames.map(() => '?').join(',')})`,
           args: fakeNames,
         });
-        results.push(`[clients] Deleted ${delFake.rowsAffected} fake client(s)`);
+        const delGcal = await db.execute("DELETE FROM booking_clients WHERE client_number = 'LG-GCAL'");
+        const delIcs = await db.execute("DELETE FROM booking_clients WHERE client_number LIKE 'ICS-%'");
+        results.push(`[clients] Deleted ${delFake.rowsAffected} fake + ${delGcal.rowsAffected} gcal + ${delIcs.rowsAffected} ICS client(s)`);
       } else {
-        const cnt = await db.execute({
+        const cntF = await db.execute({
           sql: `SELECT COUNT(*) as c FROM booking_clients WHERE nickname IN (${fakeNames.map(() => '?').join(',')})`,
           args: fakeNames,
         });
-        results.push(`[clients] Would delete up to ${Number(cnt.rows[0]?.c)} fake client(s)`);
+        const cntG = await db.execute("SELECT COUNT(*) as c FROM booking_clients WHERE client_number = 'LG-GCAL'");
+        const cntI = await db.execute("SELECT COUNT(*) as c FROM booking_clients WHERE client_number LIKE 'ICS-%'");
+        results.push(`[clients] Would delete ${Number(cntF.rows[0]?.c)} fake + ${Number(cntG.rows[0]?.c)} gcal + ${Number(cntI.rows[0]?.c)} ICS client(s)`);
       }
 
       // Step 6: Clear unconverted drafts
