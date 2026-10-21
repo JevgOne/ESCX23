@@ -3,12 +3,12 @@ import { put } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { headers } from 'next/headers';
 
-const ADMIN_SECRET = process.env.ADMIN_UPLOAD_SECRET || 'blog-covers-2026';
+const ADMIN_SECRET = process.env.ADMIN_UPLOAD_SECRET;
 
 export async function POST(request: NextRequest) {
   // Simple secret check (not session-based, for one-time CLI use)
   const authHeader = request.headers.get('x-admin-secret');
-  if (authHeader !== ADMIN_SECRET) {
+  if (!ADMIN_SECRET || authHeader !== ADMIN_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

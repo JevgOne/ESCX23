@@ -9,8 +9,15 @@ const API = `https://api.telegram.org/bot${BOT_TOKEN}`;
  * GET /api/telegram/setup
  * Registers the Telegram webhook URL via setWebhook API.
  * Run once after deploy (or after changing the domain).
+ * Protected by CRON_SECRET.
  */
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: Request): Promise<NextResponse> {
+  const auth = request.headers.get('authorization');
+  const secret = process.env.CRON_SECRET;
+  if (!secret || auth !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   if (!BOT_TOKEN) {
     return NextResponse.json({ error: 'TELEGRAM_BOT_TOKEN not configured' }, { status: 503 });
   }
