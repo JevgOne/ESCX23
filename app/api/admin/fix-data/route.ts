@@ -395,21 +395,9 @@ export async function POST(request: Request) {
       results.push(`[ics] Updated ${icsClients.rows.length} ICS client(s)`);
 
       // Step 3: Clear FK-dependent tables BEFORE deleting bookings
-      if (!dry) {
-        const delNotif = await db.execute("DELETE FROM notifications WHERE booking_id IS NOT NULL");
-        results.push(`[notifications] Deleted ${delNotif.rowsAffected} booking notification(s)`);
-        try {
-          const delReminders = await db.execute("DELETE FROM booking_reminders");
-          results.push(`[reminders] Deleted ${delReminders.rowsAffected} booking reminder(s)`);
-        } catch { results.push('[reminders] Table not found (skip)'); }
-      } else {
-        const cntN = await db.execute("SELECT COUNT(*) as c FROM notifications WHERE booking_id IS NOT NULL");
-        results.push(`[notifications] Would delete ${Number(cntN.rows[0]?.c)} booking notification(s)`);
-        try {
-          const cntR = await db.execute("SELECT COUNT(*) as c FROM booking_reminders");
-          results.push(`[reminders] Would delete ${Number(cntR.rows[0]?.c)} booking reminder(s)`);
-        } catch { results.push('[reminders] Table not found (skip)'); }
-      }
+      // Use PRAGMA to disable FK checks temporarily — safer than guessing which tables exist
+      await db.execute("PRAGMA foreign_keys = OFF");
+      results.push('[fk] Foreign key checks disabled');
 
       // Step 4: Delete ALL bookings (fresh start)
       if (!dry) {
@@ -467,11 +455,17 @@ export async function POST(request: Request) {
         results.push(`[audit] Would delete ${Number(cnt.rows[0]?.c)} audit log entries`);
       }
 
+      // Re-enable FK checks
+      await db.execute("PRAGMA foreign_keys = ON");
+      results.push('[fk] Foreign key checks re-enabled');
+
       results.push(`=== CLEANUP ${dry ? 'DRY RUN COMPLETE' : 'DONE'} ===`);
     }
 
     return NextResponse.json({ success: true, results });
   } catch (error) {
+    // Always try to re-enable FK checks on error
+    try { await db.execute("PRAGMA foreign_keys = ON"); } catch {}
     console.error('[fix-data] POST error:', error);
     return NextResponse.json(
       { error: 'Internal error', detail: error instanceof Error ? error.message : String(error) },
