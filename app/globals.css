@@ -1138,6 +1138,11 @@ footer::before {
   letter-spacing: 0.06em;
   box-shadow: 0 2px 8px -2px rgba(242,125,141,0.45);
 }
+.footer-partner-badges {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
 .footer-partner-badge {
   display: inline-block;
   opacity: 0.6;

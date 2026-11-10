@@ -191,9 +191,14 @@ export default async function SiteFooter() {
               {t('age_disclaimer')}
             </span>
           </div>
-          <a href="https://eroguide.cz/lovely-girls" target="_blank" rel="noopener noreferrer" className="footer-partner-badge">
-            <img src="https://eroguide.cz/api/media/file/163x48.webp" alt="Lovely Girls - Eroguide.cz" title="Lovely Girls - Eroguide.cz" width={163} height={48} loading="lazy" />
-          </a>
+          <div className="footer-partner-badges">
+            <a href="https://eroguide.cz/lovely-girls" target="_blank" rel="noopener noreferrer" className="footer-partner-badge">
+              <img src="https://eroguide.cz/brand/logo-eroguide.jpg" alt="Lovely Girls - Eroguide.cz" title="Lovely Girls - Eroguide.cz" width={163} height={48} loading="lazy" />
+            </a>
+            <a href="https://naprivat.net/venue/lovelygirls-1852/" target="_blank" rel="noopener" className="footer-partner-badge" title="Ověřený podnik na NaPrivat.net">
+              <img src="https://naprivat.net/img/banners/overeny_podnik.png" alt="Ověřený podnik na NaPrivat.net" width={163} height={48} loading="lazy" style={{ border: 0 }} />
+            </a>
+          </div>
         </div>
       </div>
     </footer>
