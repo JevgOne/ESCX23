@@ -24,12 +24,12 @@ export default async function HomeIntro({ locale }: { locale: string }) {
   const copy: Record<string, { h2: string; body: React.ReactNode; more: string }> = {
     en: {
       h2: 'Escort in Prague, in our own apartments',
-      more: 'Where you will meet',
+      more: 'Our apartments',
       body: (
         <>
           <p>
             LovelyGirls is a Prague escort agency with {companions} and three private
-            apartments of its own — {districts}. Every profile is verified in person: the
+            apartments in the city centre. Every profile is verified in person: the
             photographs are of the woman who opens the door. We work incall only, and who is
             working today is on the <Link href="/rozvrh">schedule</Link>.
           </p>
@@ -44,12 +44,12 @@ export default async function HomeIntro({ locale }: { locale: string }) {
     },
     cs: {
       h2: 'Escort v Praze, ve vlastních apartmánech',
-      more: 'Kde se potkáme',
+      more: 'Naše apartmány',
       body: (
         <>
           <p>
             LovelyGirls je pražská escort agentura — {companions} a tři vlastní privátní
-            apartmány: {districts}. Každý profil ověřujeme osobně, na fotkách je ta žena,
+            apartmány v centru Prahy. Každý profil ověřujeme osobně, na fotkách je ta žena,
             která vám otevře. Pracujeme výhradně formou incall a kdo dnes pracuje, najdete
             v <Link href="/rozvrh">rozvrhu</Link>.
           </p>
@@ -64,7 +64,7 @@ export default async function HomeIntro({ locale }: { locale: string }) {
     },
     de: {
       h2: 'Escort in Prag, in eigenen Apartments',
-      more: 'Wo wir uns treffen',
+      more: 'Unsere Apartments',
       body: (
         <>
           <p>
@@ -85,7 +85,7 @@ export default async function HomeIntro({ locale }: { locale: string }) {
     },
     uk: {
       h2: 'Ескорт у Празі, у власних апартаментах',
-      more: 'Де ми зустрінемось',
+      more: 'Наші апартаменти',
       body: (
         <>
           <p>
@@ -117,18 +117,16 @@ export default async function HomeIntro({ locale }: { locale: string }) {
         </div>
         <div className="home-intro-body">{c.body}</div>
         {facts.apartments.length > 0 && (
-          <div className="home-intro-links">
-            <span className="home-intro-links-label">{c.more}</span>
-            <div className="home-intro-chips">
+          <div className="home-intro-locations">
+            <div className="home-intro-locations-label">{c.more}</div>
+            <div className="home-intro-location-cards">
               {facts.apartments.map((a) => (
                 <Link
                   key={a.slug}
-                  // The i18n Link adds the locale prefix itself; localeHref would
-                // add a second one and produce /cs/cs/pobocka/praha-2.
-                href={`/pobocka/${a.slug}` as '/'}
-                  className="home-intro-chip"
+                  href={`/pobocka/${a.slug}` as '/'}
+                  className="home-intro-location-card"
                 >
-                  {a.district && a.district !== a.name ? `${a.name} (${a.district})` : a.name}
+                  {a.name}{a.district && a.district !== a.name ? ` · ${a.district}` : ''}
                 </Link>
               ))}
             </div>
