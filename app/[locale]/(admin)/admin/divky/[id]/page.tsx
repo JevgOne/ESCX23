@@ -110,7 +110,7 @@ export default async function AdminGirlDetailPage({
         </a>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '32px', alignItems: 'start' }}>
+      <div className="girl-detail-grid">
         <div>
           {primaryPhoto ? (
             <img
@@ -243,7 +243,7 @@ export default async function AdminGirlDetailPage({
             <div style={sectionTitle}>
               Data profilu
             </div>
-            <dl style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '8px 16px' }}>
+            <dl className="girl-detail-fields">
               {fields.map(({ label, value }) => (
                 <>
                   <dt key={`dt-${label}`} style={{ fontSize: '12px', color: 'var(--color-text-dim)', fontWeight: 500 }}>{label}</dt>

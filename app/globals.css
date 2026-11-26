@@ -2237,6 +2237,29 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   line-height: 1.5;
 }
 
+.girl-badge {
+  display: inline-flex;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+.girl-badge.new {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+.girl-badge.top {
+  background: rgba(234, 179, 8, 0.15);
+  color: #eab308;
+}
+.girl-badge.featured {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+}
+
 /* Admin notifications */
 .admin-notifications-list {
   display: flex;
@@ -2292,6 +2315,19 @@ html[lang="uk"] .featured-card::before { content: '✦ НОВЕ НА САЙТІ'
   flex: 1;
   padding: 24px 32px;
   overflow-x: hidden;
+}
+
+.girl-detail-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.girl-detail-fields {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 8px 16px;
 }
 
 .admin-topbar {
@@ -15511,22 +15547,35 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
     padding: 14px !important;
   }
 
-  /* Tables — horizontal scroll wrapper */
-  .data-table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+  /* DataTable → card layout on mobile */
+  .data-table thead { display: none; }
+  .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
+  .data-table tbody tr {
+    border: 1px solid var(--color-line);
+    border-radius: 10px;
+    background: var(--color-bg-card);
+    margin-bottom: 10px;
+    padding: 12px;
   }
-  .data-table thead th,
   .data-table tbody td {
-    padding: 10px 10px;
-    font-size: 12px;
-    white-space: nowrap;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-top: none;
+    white-space: normal;
   }
-  .data-table .thumb {
-    width: 32px;
-    height: 40px;
+  .data-table tbody td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-dim);
+    flex-shrink: 0;
+    margin-right: 12px;
   }
+  .data-table tbody td:first-child { border-top: none; }
 
   /* Admin action buttons — smaller on mobile */
   .admin-action-btn {
@@ -15571,6 +15620,48 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
     width: 100% !important;
     box-sizing: border-box;
     font-size: 16px !important; /* prevent iOS zoom */
+  }
+
+  /* Girl detail page — stack on mobile */
+  .girl-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .girl-detail-fields {
+    grid-template-columns: 1fr;
+    gap: 4px 0;
+  }
+  .girl-detail-fields dt {
+    margin-top: 8px;
+  }
+
+  /* Girl edit form — stack columns on mobile */
+  .gf2-row,
+  .gf2-row-3,
+  .gf2-new-row,
+  .gf2-new-row-3 {
+    grid-template-columns: 1fr !important;
+  }
+  .gf2-lang-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .ad-svc-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* OG page grid */
+  .og2-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Application detail */
+  .apd-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Stack inline grid/flex layouts on mobile */
+  .admin-main [style*="minmax(220px"] {
+    grid-template-columns: 1fr !important;
   }
 
   /* Mobile bottom bar is already not rendered on admin pages via layout.tsx */
@@ -15625,6 +15716,13 @@ textarea.apt-input { resize: vertical; max-width: 100%; }
     flex: 1;
     min-width: 0;
     font-size: 18px;
+  }
+
+  .admin-main {
+    padding: 12px 10px;
+  }
+  .gf2-lang-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 

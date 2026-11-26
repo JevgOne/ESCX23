@@ -48,7 +48,12 @@ function getColumns(locale: string): DataTableColumn<AdminGirlRow>[] { // eslint
     label: 'Jméno',
     render: (row) => (
       <div>
-        <div style={{ fontWeight: 600 }}>{row.name}</div>
+        <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          {row.name}
+          {row.isNew && <span className="girl-badge new">NOVÁ</span>}
+          {row.isTop && <span className="girl-badge top">TOP</span>}
+          {row.isFeatured && <span className="girl-badge featured">VIP</span>}
+        </div>
         <div style={{ fontSize: '11px', color: 'var(--color-text-dim)', fontFamily: 'monospace' }}>{row.age} let</div>
       </div>
     ),

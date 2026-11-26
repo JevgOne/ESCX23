@@ -12,6 +12,10 @@
       "schedule": "0 3 * * *"
     },
     {
+      "path": "/api/cron/cleanup-new-badge",
+      "schedule": "10 3 * * *"
+    },
+    {
       "path": "/api/cron/cleanup-daily-overrides",
       "schedule": "31 21 * * *"
     },

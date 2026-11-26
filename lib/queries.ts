@@ -12,10 +12,10 @@ import { pragueDateISO, pragueDayOfWeek, formatPragueTime, isWithinShift, isBefo
 
 export type GirlStatus = 'working' | 'later' | 'off';
 
-/** badge_type='new' from admin OR is_new=1 within 14 days of created_at. */
+/** is_new=1 OR badge_type='new', both expire 14 days after created_at. */
 function computeIsNew(dbIsNew: unknown, createdAt: unknown, badgeType?: unknown): boolean {
-  if (String(badgeType ?? '') === 'new') return true;
-  if (Number(dbIsNew) !== 1) return false;
+  const hasFlag = String(badgeType ?? '') === 'new' || Number(dbIsNew) === 1;
+  if (!hasFlag) return false;
   if (!createdAt) return true;
   const d = new Date(String(createdAt));
   return Date.now() - d.getTime() < 14 * 24 * 60 * 60 * 1000;
@@ -1127,12 +1127,16 @@ export interface AdminGirlRow {
   photoCount: number;
   createdAt: string;
   updatedAt: string | null;
+  isNew: boolean;
+  isTop: boolean;
+  isFeatured: boolean;
 }
 
 export async function getAllGirlsForAdmin(q?: string, status?: string): Promise<AdminGirlRow[]> {
   let sql = `
     SELECT
       g.id, g.slug, g.name, g.age, g.status, g.created_at, g.updated_at,
+      g.is_new, g.is_top, g.is_featured,
       (SELECT url FROM girl_photos WHERE girl_id = g.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS primary_photo,
       (SELECT COUNT(*) FROM girl_photos WHERE girl_id = g.id) AS photo_count
     FROM girls g
@@ -1162,6 +1166,9 @@ export async function getAllGirlsForAdmin(q?: string, status?: string): Promise<
     photoCount: Number(r.photo_count),
     createdAt: String(r.created_at),
     updatedAt: r.updated_at ? String(r.updated_at) : null,
+    isNew: Boolean(Number(r.is_new)),
+    isTop: Boolean(Number(r.is_top)),
+    isFeatured: Boolean(Number(r.is_featured)),
   }));
 }
 
