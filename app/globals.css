@@ -8267,7 +8267,7 @@ body {
   break-inside: avoid;
 }
 .home-intro-body p:last-child { margin-bottom: 0; }
-.home-intro a {
+.home-intro a:not(.home-intro-location-card) {
   color: var(--color-text);
   text-decoration: none;
   border-bottom: 1px solid rgba(242, 125, 141, 0.45);
