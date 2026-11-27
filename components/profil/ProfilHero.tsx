@@ -307,7 +307,7 @@ export default function ProfilHero({ girl, photos, verifiedLabel, locale = 'cs',
               {BADGE_CONFIG[badgeType].label[locale] ?? BADGE_CONFIG[badgeType].label.en}
             </span>
           )}
-          {!isVip && !badgeType && isNew && <span className="girl-tag-pill new">{NEW_LABEL[locale] ?? NEW_LABEL.en}</span>}
+          {!isVip && (badgeType === 'new' || (!badgeType && isNew)) && <span className="girl-tag-pill new">{NEW_LABEL[locale] ?? NEW_LABEL.en}</span>}
         </div>
       )}
 
